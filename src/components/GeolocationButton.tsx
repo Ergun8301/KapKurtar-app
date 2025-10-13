@@ -40,7 +40,7 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
           const { data, error: updateError } = await supabase
             .from(tableName)
             .update({ location: point })
-            .eq('id', userId)
+            .eq('auth_id', userId)
             .select();
 
           if (updateError) {
