@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapPin } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 import { GeolocationButton } from './GeolocationButton';
 import { useAuth } from '../hooks/useAuth';
 
