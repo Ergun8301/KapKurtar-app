@@ -659,6 +659,7 @@ const MerchantDashboardPage = () => {
                 userId={user.id}
                 onSuccess={() => {
                   setToast({ message: 'Votre position a été mise à jour avec succès !', type: 'success' });
+                  loadOffers();
                 }}
               />
             )}
