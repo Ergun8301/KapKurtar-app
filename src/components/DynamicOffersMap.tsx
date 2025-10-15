@@ -69,9 +69,13 @@ export const DynamicOffersMap: React.FC<DynamicOffersMapProps> = ({
       if (!isNaN(radius) && radius > 0) {
         setRadiusMeters(radius);
       }
+    } else {
+      // Initialize with default 5km = 5000m
+      localStorage.setItem('searchRadius', '5000');
+      setRadiusMeters(5000);
     }
 
-    // Listen for storage changes
+    // Listen for storage changes from other tabs/windows
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'searchRadius' && e.newValue) {
         const radius = parseInt(e.newValue, 10);
@@ -81,8 +85,21 @@ export const DynamicOffersMap: React.FC<DynamicOffersMapProps> = ({
       }
     };
 
+    // Listen for custom radius change events (same tab)
+    const handleRadiusChanged = (e: CustomEvent) => {
+      const radiusMeters = e.detail?.radiusMeters;
+      if (radiusMeters && radiusMeters > 0) {
+        setRadiusMeters(radiusMeters);
+      }
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('radiusChanged', handleRadiusChanged as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('radiusChanged', handleRadiusChanged as EventListener);
+    };
   }, []);
 
   // Fetch client location
@@ -179,6 +196,16 @@ export const DynamicOffersMap: React.FC<DynamicOffersMapProps> = ({
 
       {/* Map */}
       <div className="relative h-[500px]">
+        {/* Radius Display Badge */}
+        <div className="absolute top-4 right-4 z-10 bg-white rounded-lg shadow-lg px-4 py-2 border border-gray-200">
+          <div className="flex items-center space-x-2">
+            <MapPin className="w-4 h-4 text-green-600" />
+            <span className="text-sm font-semibold text-gray-900">
+              Rayon: {(radiusMeters / 1000).toFixed(1)} km
+            </span>
+          </div>
+        </div>
+
         {loading && (
           <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
             <div className="text-center">

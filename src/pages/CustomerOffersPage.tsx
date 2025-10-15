@@ -70,10 +70,21 @@ const CustomerOffersPage = () => {
       }
     };
 
+    // Listen for custom radius change events (same tab)
+    const handleRadiusChanged = (e: CustomEvent) => {
+      const radiusMeters = e.detail?.radiusMeters;
+      if (radiusMeters) {
+        setRadiusKm(Math.round(radiusMeters / 1000));
+        refetch();
+      }
+    };
+
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('radiusChanged', handleRadiusChanged as EventListener);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('radiusChanged', handleRadiusChanged as EventListener);
     };
   }, [searchParams, refetch]);
 

@@ -31,7 +31,17 @@ const SettingsPage = () => {
     if (savedSmsNotifications !== null) setSmsNotifications(savedSmsNotifications === 'true');
     if (savedLanguage) setLanguage(savedLanguage);
     if (savedTheme) setTheme(savedTheme);
-    if (savedSearchRadius) setSearchRadius(Number(savedSearchRadius));
+
+    // Load radius from localStorage (stored in meters, display in km)
+    if (savedSearchRadius) {
+      const radiusMeters = parseInt(savedSearchRadius, 10);
+      if (!isNaN(radiusMeters)) {
+        setSearchRadius(Math.round(radiusMeters / 1000));
+      }
+    } else {
+      // Initialize with default 10km = 10000m
+      localStorage.setItem('searchRadius', '10000');
+    }
   }, []);
 
   useEffect(() => {
@@ -63,9 +73,17 @@ const SettingsPage = () => {
   };
 
   const handleRadiusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newRadius = Number(e.target.value);
-    setSearchRadius(newRadius);
-    localStorage.setItem('searchRadius', String(newRadius));
+    const newRadiusKm = Number(e.target.value);
+    setSearchRadius(newRadiusKm);
+    // Convert km to meters for storage
+    const radiusMeters = newRadiusKm * 1000;
+    localStorage.setItem('searchRadius', String(radiusMeters));
+    setShowToast(true);
+
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('radiusChanged', {
+      detail: { radiusMeters }
+    }));
   };
 
   const handleDeleteAccount = async () => {
