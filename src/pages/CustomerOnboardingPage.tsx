@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { User, Phone, MapPin, Navigation } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { upsertClientProfile, setClientLocation } from '../api';
+import { useAuth } from '../hooks/useAuth';
 
 const CustomerOnboardingPage = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth();
+  const [localUser, setLocalUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [locationLoading, setLocationLoading] = useState(false);
@@ -20,13 +22,12 @@ const CustomerOnboardingPage = () => {
   });
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+    const initUser = async () => {
       if (!user) {
         navigate('/auth/customer');
         return;
       }
-      setUser(user);
+      setLocalUser(user);
 
       if (user.user_metadata) {
         setFormData(prev => ({
@@ -36,8 +37,8 @@ const CustomerOnboardingPage = () => {
         }));
       }
     };
-    getUser();
-  }, [navigate]);
+    initUser();
+  }, [user, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

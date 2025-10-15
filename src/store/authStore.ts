@@ -67,16 +67,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 }));
 
-// Initialize auth state
-supabase.auth.getSession().then(({ data: { session } }) => {
-  useAuthStore.getState().setUser(session?.user ?? null);
-  useAuthStore.getState().setLoading(false);
-  if (session?.user) {
-    useAuthStore.getState().checkUserType();
-  }
-});
-
-supabase.auth.onAuthStateChange((event, session) => {
+// Initialize auth state - single source of truth
+supabase.auth.onAuthStateChange((_event, session) => {
   useAuthStore.getState().setUser(session?.user ?? null);
   useAuthStore.getState().setLoading(false);
   if (session?.user) {

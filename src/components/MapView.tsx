@@ -4,6 +4,7 @@ import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../hooks/useAuth';
 
 delete (Icon.Default.prototype as any)._getIconUrl;
 Icon.Default.mergeOptions({
@@ -59,6 +60,7 @@ const MapController: React.FC<{ center: [number, number]; zoom: number }> = ({ c
 };
 
 export default function MapView() {
+  const { user } = useAuth();
   const [clientLocation, setClientLocation] = useState<ClientLocation | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [radius, setRadius] = useState<number>(() => {
@@ -74,7 +76,6 @@ export default function MapView() {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           setError('Non authentifié');
           setLoading(false);
@@ -120,7 +121,7 @@ export default function MapView() {
     };
 
     getUser();
-  }, [radius]);
+  }, [user, radius]);
 
   useEffect(() => {
     if (!clientId) return;
