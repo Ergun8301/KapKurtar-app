@@ -25,6 +25,7 @@ const CustomerOffersPage = () => {
   const [highlightOfferId, setHighlightOfferId] = useState<string | null>(null);
   const [reserving, setReserving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [showMap, setShowMap] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -41,10 +42,13 @@ const CustomerOffersPage = () => {
   useEffect(() => {
     const savedRadius = localStorage.getItem('searchRadius');
     if (savedRadius) {
-      const radius = parseInt(savedRadius, 10);
-      if (!isNaN(radius) && radius >= 1 && radius <= 50) {
-        setRadiusKm(radius);
+      const radiusMeters = parseInt(savedRadius, 10);
+      if (!isNaN(radiusMeters)) {
+        setRadiusKm(Math.round(radiusMeters / 1000));
       }
+    } else {
+      const radiusMeters = radiusKm * 1000;
+      localStorage.setItem('searchRadius', radiusMeters.toString());
     }
 
     const radiusParam = searchParams.get('radius');
@@ -133,6 +137,8 @@ const CustomerOffersPage = () => {
 
   const handleRadiusChange = (newRadius: number) => {
     setRadiusKm(newRadius);
+    const radiusMeters = newRadius * 1000;
+    localStorage.setItem('searchRadius', radiusMeters.toString());
     setSearchParams({ radius: newRadius.toString() });
   };
 
@@ -237,7 +243,8 @@ const CustomerOffersPage = () => {
       price_before: offer.price_before,
       distance_km: (offer.distance_m / 1000).toFixed(1),
       image_url: offer.image_url || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
-      discount: offer.discount_percent
+      discount: offer.discount_percent,
+      merchant_name: offer.merchant_name
     }));
 
   const userLocationCoords = location ? { lat: location.latitude, lng: location.longitude } : null;
@@ -357,9 +364,17 @@ const CustomerOffersPage = () => {
         {/* Map View */}
         {hasLocation && (
           <div className="mb-8">
-            <div className="mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <h3 className="text-2xl font-bold text-gray-900">Carte des offres</h3>
+              <button
+                onClick={() => setShowMap(!showMap)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md"
+              >
+                <Map className="w-5 h-5" />
+                <span>{showMap ? 'Masquer la carte' : '🗺 Afficher la carte'}</span>
+              </button>
             </div>
+            {showMap && (
             <OffersMap
               userLocation={userLocationCoords}
               offers={mapOffers}
@@ -373,6 +388,7 @@ const CustomerOffersPage = () => {
               centerLng={mapCenter?.lng}
               highlightOfferId={highlightOfferId || undefined}
             />
+            )}
           </div>
         )}
 

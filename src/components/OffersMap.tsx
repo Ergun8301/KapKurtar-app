@@ -16,6 +16,7 @@ interface OfferLocation {
   distance_km?: string;
   image_url: string;
   discount: number;
+  merchant_name?: string;
 }
 
 interface OffersMapProps {
@@ -296,8 +297,11 @@ export const OffersMap: React.FC<OffersMapProps> = ({
                     className="w-full h-32 object-cover rounded-lg mb-2"
                   />
                   <h4 className="font-bold text-gray-900 mb-1">{offer.title}</h4>
+                  {offer.merchant_name && (
+                    <p className="text-sm text-gray-700 mb-1 font-medium">{offer.merchant_name}</p>
+                  )}
                   {offer.distance_km && (
-                    <p className="text-sm text-gray-600 mb-2">{offer.distance_km} km away</p>
+                    <p className="text-sm text-green-600 font-semibold mb-2">📍 {offer.distance_km} km de distance</p>
                   )}
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
