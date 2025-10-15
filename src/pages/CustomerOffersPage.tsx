@@ -58,7 +58,24 @@ const CustomerOffersPage = () => {
         setRadiusKm(radius);
       }
     }
-  }, [searchParams]);
+
+    // Listen for storage changes from other tabs/windows
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'searchRadius' && e.newValue) {
+        const radiusMeters = parseInt(e.newValue, 10);
+        if (!isNaN(radiusMeters)) {
+          setRadiusKm(Math.round(radiusMeters / 1000));
+          refetch();
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [searchParams, refetch]);
 
   useEffect(() => {
     const fetchClientId = async () => {

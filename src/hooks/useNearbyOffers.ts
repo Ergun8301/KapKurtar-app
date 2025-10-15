@@ -57,6 +57,41 @@ export function useNearbyOffers({
 
       const radiusMeters = Math.round(radiusKm * 1000);
 
+      // Try the new dynamic function first
+      const { data: dynamicData, error: dynamicError } = await supabase.rpc('get_offers_nearby_dynamic', {
+        p_client_id: clientId,
+        p_radius_meters: radiusMeters
+      });
+
+      if (!dynamicError && dynamicData) {
+        // Map the dynamic response to match our interface
+        const mappedOffers: NearbyOffer[] = dynamicData.map((offer: any) => ({
+          id: offer.offer_id,
+          merchant_id: offer.merchant_id,
+          merchant_name: offer.merchant_name,
+          merchant_street: offer.merchant_street,
+          merchant_city: offer.merchant_city,
+          merchant_postal_code: offer.merchant_postal_code,
+          title: offer.title,
+          description: offer.description,
+          image_url: offer.image_url,
+          price_before: parseFloat(offer.price_before),
+          price_after: parseFloat(offer.price_after),
+          discount_percent: offer.discount_percent,
+          available_from: offer.available_from,
+          available_until: offer.available_until,
+          quantity: offer.quantity,
+          distance_m: offer.distance_meters,
+          offer_lat: offer.offer_lat,
+          offer_lng: offer.offer_lng,
+          created_at: offer.created_at
+        }));
+        setOffers(mappedOffers);
+        return;
+      }
+
+      // Fallback to old function
+      console.log('Trying fallback function get_offers_near_client...');
       const { data, error: rpcError } = await supabase.rpc('get_offers_near_client', {
         client_id: clientId,
         radius_meters: radiusMeters
@@ -64,7 +99,6 @@ export function useNearbyOffers({
 
       if (rpcError) {
         console.error('RPC Error:', rpcError);
-
         const fallbackData = await fetchOffersFallback(clientId, radiusMeters);
         setOffers(fallbackData);
       } else {
