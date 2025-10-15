@@ -84,8 +84,10 @@ export default function MapView() {
         const { data: client, error: clientError } = await supabase
           .from('clients')
           .select('id, location')
-          .eq('id', user.id)
+          .eq('auth_id', user.id)
           .maybeSingle();
+
+        console.log('Client trouvé:', client);
 
         if (clientError) {
           console.error('Erreur récupération client:', clientError);
