@@ -32,7 +32,7 @@ const CustomerOffersMapPage = () => {
   const centerLng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : undefined;
   const highlightOfferId = searchParams.get('offerId') || undefined;
 
-  const { location, loading: locationLoading } = useClientLocation(user?.id || null);
+  const { location, loading: locationLoading, geocodeStatus, refetch: refetchLocation } = useClientLocation(user?.id || null);
 
   const {
     offers: nearbyOffers,
@@ -190,6 +190,7 @@ const CustomerOffersMapPage = () => {
     : null;
 
   console.log('[MAP] mapCenter (state):', mapCenter);
+  console.log('[MAP] geocodeStatus:', geocodeStatus);
   console.log('[MAP] Priority: mapCenter > userLocationCoords > default');
 
   // Auto-center map when user location becomes available
@@ -200,6 +201,48 @@ const CustomerOffersMapPage = () => {
       console.log('[MAP] mapCenter updated to:', userLocationCoords);
     }
   }, [userLocationCoords, mapCenter]);
+
+  // Watch for geocoding completion and update map + offers
+  useEffect(() => {
+    if (geocodeStatus === 'done' && location && user?.id) {
+      console.log('[MAP] Geocoding completed, processing location update');
+
+      // Parse location from POINT or WKB format
+      const parseLocation = (locStr: string): { lat: number; lng: number } | null => {
+        // Try POINT(lng lat) format
+        const pointMatch = locStr.match(/POINT\(([-.\d]+)\s+([-.\d]+)\)/);
+        if (pointMatch) {
+          const lng = parseFloat(pointMatch[1]);
+          const lat = parseFloat(pointMatch[2]);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            return { lat, lng };
+          }
+        }
+
+        // Try hex WKB format (starts with 0101000020)
+        if (locStr.startsWith('0101000020')) {
+          console.log('[MAP] WKB format detected, needs conversion via Supabase');
+          return null;
+        }
+
+        return null;
+      };
+
+      const coords = parseLocation(location);
+      if (coords) {
+        console.log('[MAP] Geocode done, map centered at:', coords);
+        setMapCenter(coords);
+
+        // Refetch offers with new location
+        console.log('[MAP] Refetching offers after geocoding');
+        refetch();
+      } else {
+        console.warn('[MAP] Could not parse location:', location);
+        // Refetch location to get proper format
+        refetchLocation();
+      }
+    }
+  }, [geocodeStatus, location, user?.id]);
 
 
   // Show loading only if we're still waiting for initial location or offers

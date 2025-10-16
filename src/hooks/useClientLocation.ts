@@ -7,12 +7,15 @@ interface UseClientLocationReturn {
   error: string | null;
   requestGeolocation: () => Promise<void>;
   hasLocation: boolean;
+  geocodeStatus: string | null;
+  refetch: () => Promise<void>;
 }
 
 export function useClientLocation(clientId: string | null): UseClientLocationReturn {
   const [location, setLocation] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [geocodeStatus, setGeocodeStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!clientId) {
@@ -21,6 +24,38 @@ export function useClientLocation(clientId: string | null): UseClientLocationRet
     }
 
     fetchClientLocation();
+
+    // Set up real-time subscription for client changes
+    const subscription = supabase
+      .channel(`client-location-${clientId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'clients',
+          filter: `auth_id=eq.${clientId}`
+        },
+        (payload) => {
+          console.log('[LOCATION] Real-time update received:', payload);
+          const newData = payload.new as any;
+
+          if (newData.geocode_status) {
+            setGeocodeStatus(newData.geocode_status);
+            console.log('[LOCATION] Geocode status updated to:', newData.geocode_status);
+          }
+
+          if (newData.geocode_status === 'done' && newData.location) {
+            console.log('[LOCATION] Geocoding complete, updating location');
+            fetchClientLocation();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [clientId]);
 
   const fetchClientLocation = async () => {
@@ -31,9 +66,9 @@ export function useClientLocation(clientId: string | null): UseClientLocationRet
       setError(null);
 
       const { data, error: fetchError } = await supabase
-        .from('client_locations_view')
-        .select('location_text')
-        .eq('id', clientId)
+        .from('clients')
+        .select('location, geocode_status, geocoded_at')
+        .eq('auth_id', clientId)
         .maybeSingle();
 
       if (fetchError) {
@@ -42,8 +77,18 @@ export function useClientLocation(clientId: string | null): UseClientLocationRet
         return;
       }
 
-      if (data?.location_text) {
-        setLocation(data.location_text);
+      if (data) {
+        if (data.location) {
+          const locationStr = typeof data.location === 'string'
+            ? data.location
+            : `POINT(${(data.location as any).coordinates?.[0]} ${(data.location as any).coordinates?.[1]})`;
+          setLocation(locationStr);
+          console.log('[LOCATION] Location fetched:', locationStr);
+        }
+        if (data.geocode_status) {
+          setGeocodeStatus(data.geocode_status);
+          console.log('[LOCATION] Geocode status:', data.geocode_status);
+        }
       }
     } catch (err) {
       console.error('Error in fetchClientLocation:', err);
@@ -130,6 +175,8 @@ export function useClientLocation(clientId: string | null): UseClientLocationRet
     loading,
     error,
     requestGeolocation,
-    hasLocation: location !== null
+    hasLocation: location !== null,
+    geocodeStatus,
+    refetch: fetchClientLocation
   };
 }
