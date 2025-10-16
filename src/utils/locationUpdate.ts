@@ -6,6 +6,30 @@ export interface LocationUpdateResult {
   success: boolean;
 }
 
+function enrichAddress(address: string): string {
+  const trimmed = address.trim();
+
+  // Check if address already contains 'France'
+  if (trimmed.toLowerCase().includes('france')) {
+    console.log('[ADDRESS] Address already contains France:', trimmed);
+    return trimmed;
+  }
+
+  // Common French city patterns that need enrichment
+  const needsEnrichment = !/\d/.test(trimmed) && // No numbers (likely just city name)
+                          trimmed.split(',').length < 3; // Not detailed enough
+
+  if (needsEnrichment) {
+    // Add France to improve geocoding accuracy
+    const enriched = `${trimmed}, France`;
+    console.log('[ADDRESS] Enriched address:', enriched);
+    return enriched;
+  }
+
+  console.log('[ADDRESS] Address is detailed enough:', trimmed);
+  return trimmed;
+}
+
 export async function updateClientLocationAndFetchOffers(
   clientId: string,
   radiusMeters: number,
@@ -13,11 +37,13 @@ export async function updateClientLocationAndFetchOffers(
 ): Promise<LocationUpdateResult> {
   try {
     if (addressInput && addressInput.trim() !== '') {
-      console.log('[LOCATION] Manual address mode:', addressInput);
+      const enrichedAddress = enrichAddress(addressInput);
+      console.log('[LOCATION] Manual address mode (original):', addressInput);
+      console.log('[LOCATION] Manual address mode (enriched):', enrichedAddress);
 
       const { error: geocodeError } = await supabase.rpc('rpc_enqueue_client_geocode', {
         client_uuid: clientId,
-        address_text: addressInput
+        address_text: enrichedAddress
       });
 
       if (geocodeError) {

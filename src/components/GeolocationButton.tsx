@@ -33,27 +33,41 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
     setError(null);
 
     try {
-      console.log('[GEO] Starting geolocation with utility function');
+      console.log('[GEO] Starting high-accuracy geolocation');
 
+      // Get user coordinates first for immediate map centering
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        });
+      });
+
+      const coords = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
+
+      console.log('[GEO] Browser coordinates obtained:', coords);
+      console.log('[GEO] Accuracy:', position.coords.accuracy, 'meters');
+
+      // Update map center immediately
+      if (onSuccess) {
+        console.log('[GEO] Updated center to:', coords);
+        onSuccess(coords, []);
+      }
+
+      // Then update location in Supabase and fetch offers
       const result = await updateClientLocationAndFetchOffers(userId, radiusMeters);
 
       if (result.success) {
         console.log('[GEO] Success:', result.info);
         console.log('[GEO] Offers fetched:', result.data.length);
 
-        if (result.data.length > 0 && result.data[0]?.merchant_lat && result.data[0]?.merchant_lng) {
-          const firstOffer = result.data[0];
-          flyToLocation(firstOffer.merchant_lat, firstOffer.merchant_lng, 14);
-        }
-
+        // Call onSuccess again with offers data
         if (onSuccess) {
-          const coords = { lat: 0, lng: 0 };
-          navigator.geolocation.getCurrentPosition((pos) => {
-            coords.lat = pos.coords.latitude;
-            coords.lng = pos.coords.longitude;
-            flyToLocation(coords.lat, coords.lng, 14);
-            onSuccess(coords, result.data);
-          });
+          onSuccess(coords, result.data);
         }
 
         setSuccess(true);
@@ -63,7 +77,17 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
       }
     } catch (err: any) {
       console.error('[GEO] Exception:', err);
-      setError(err?.message || 'Une erreur est survenue');
+
+      let errorMessage = 'Une erreur est survenue';
+      if (err?.code === 1) {
+        errorMessage = 'Géolocalisation refusée. Veuillez autoriser l\'accès à votre position dans les paramètres de votre navigateur.';
+      } else if (err?.code === 2) {
+        errorMessage = 'Position indisponible. Vérifiez que les services de localisation sont activés.';
+      } else if (err?.code === 3) {
+        errorMessage = 'Délai de géolocalisation dépassé. Veuillez réessayer.';
+      }
+
+      setError(errorMessage);
     } finally {
       setIsUpdating(false);
     }

@@ -350,6 +350,8 @@ const CustomerOffersMapPage = () => {
                       try {
                         setLoadingPublic(true);
                         console.log('[ADDRESS] Sending manual address:', manualAddress);
+                        console.log('[ADDRESS] User ID:', user.id);
+                        console.log('[ADDRESS] Radius:', radiusKm * 1000, 'meters');
 
                         const result = await updateClientLocationAndFetchOffers(
                           user.id,
@@ -358,18 +360,19 @@ const CustomerOffersMapPage = () => {
                         );
 
                         if (result.success) {
+                          console.log('[ADDRESS] Address sent successfully');
                           setToast({ message: result.info, type: 'success' });
                           setManualAddress('');
 
-                          setTimeout(() => {
-                            console.log('[ADDRESS] Refetching offers after 2s');
-                            refetch();
-                          }, 2000);
+                          // The real-time subscription will handle the map update
+                          // when geocoding completes and location is updated
+                          console.log('[ADDRESS] Waiting for geocoding to complete...');
                         } else {
+                          console.error('[ADDRESS] Failed to send address:', result.info);
                           setToast({ message: result.info, type: 'error' });
                         }
                       } catch (err: any) {
-                        console.error('[ADDRESS] Error:', err);
+                        console.error('[ADDRESS] Exception:', err);
                         setToast({ message: err?.message || 'Erreur lors de l\'envoi de l\'adresse', type: 'error' });
                       } finally {
                         setLoadingPublic(false);
@@ -405,10 +408,17 @@ const CustomerOffersMapPage = () => {
               centerLng={mapCenter?.lng ?? centerLng}
               highlightOfferId={highlightOfferId}
               onGeolocationSuccess={(coords) => {
-                console.log('[MAP] onGeolocationSuccess called with:', coords);
+                console.log('[GEO] Geolocation success callback triggered');
+                console.log('[GEO] Received coordinates:', coords);
+                console.log('[GEO] Updated center to:', coords);
                 setMapCenter(coords);
-                console.log('[MAP] mapCenter state updated to:', coords);
-                refetch();
+                console.log('[GEO] Map center state set to:', coords);
+
+                // Trigger offers refetch after a short delay to allow location to be saved
+                setTimeout(() => {
+                  console.log('[GEO] Refetching offers with new location');
+                  refetch();
+                }, 500);
               }}
             />
 
