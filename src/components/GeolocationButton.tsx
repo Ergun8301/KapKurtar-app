@@ -2,19 +2,22 @@ import React, { useState } from 'react';
 import { Navigation, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { flyToLocation } from './OffersMap';
+import { updateClientLocationAndFetchOffers } from '../utils/locationUpdate';
 
 interface GeolocationButtonProps {
   userRole: 'client' | 'merchant';
   userId: string;
-  onSuccess?: (coords: { lat: number; lng: number }) => void;
+  onSuccess?: (coords: { lat: number; lng: number }, offers?: any[]) => void;
   className?: string;
+  radiusMeters?: number;
 }
 
 export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
   userRole,
   userId,
   onSuccess,
-  className = ''
+  className = '',
+  radiusMeters = 20000
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -29,71 +32,41 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
     setIsUpdating(true);
     setError(null);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        console.log('[GEO] navigator position:', { lat, lng });
+    try {
+      console.log('[GEO] Starting geolocation with utility function');
 
-        flyToLocation(lat, lng, 14);
-        console.log('[GEO] Called flyToLocation with:', { lat, lng });
+      const result = await updateClientLocationAndFetchOffers(userId, radiusMeters);
+
+      if (result.success) {
+        console.log('[GEO] Success:', result.info);
+        console.log('[GEO] Offers fetched:', result.data.length);
+
+        if (result.data.length > 0 && result.data[0]?.merchant_lat && result.data[0]?.merchant_lng) {
+          const firstOffer = result.data[0];
+          flyToLocation(firstOffer.merchant_lat, firstOffer.merchant_lng, 14);
+        }
 
         if (onSuccess) {
-          onSuccess({ lat, lng });
+          const coords = { lat: 0, lng: 0 };
+          navigator.geolocation.getCurrentPosition((pos) => {
+            coords.lat = pos.coords.latitude;
+            coords.lng = pos.coords.longitude;
+            flyToLocation(coords.lat, coords.lng, 14);
+            onSuccess(coords, result.data);
+          });
         }
 
         setSuccess(true);
-        setIsUpdating(false);
-
-        (async () => {
-          try {
-            const tableName = userRole === 'merchant' ? 'merchants' : 'clients';
-            const { data: upd, error: updErr } = await supabase
-              .from(tableName)
-              .update({ location: `POINT(${lng} ${lat})` })
-              .eq('auth_id', userId)
-              .select('id, location');
-
-            if (updErr) {
-              console.error('[GEO] supabase update error:', {
-                message: updErr.message,
-                details: updErr.details,
-                hint: updErr.hint,
-                code: updErr.code
-              });
-            } else {
-              console.log('[GEO] supabase updated:', upd);
-            }
-          } catch (err) {
-            console.error('[GEO] supabase exception:', err);
-          }
-        })();
-      },
-      (geoError) => {
-        console.error('Geolocation error:', geoError);
-        let errorMessage = 'Impossible d\'obtenir votre position';
-
-        switch (geoError.code) {
-          case geoError.PERMISSION_DENIED:
-            errorMessage = 'Géolocalisation refusée. Veuillez autoriser l\'accès dans les paramètres de votre navigateur.';
-            break;
-          case geoError.POSITION_UNAVAILABLE:
-            errorMessage = 'Votre position n\'est pas disponible actuellement.';
-            break;
-          case geoError.TIMEOUT:
-            errorMessage = 'La demande de position a expiré.';
-            break;
-        }
-
-        setError(errorMessage);
-        setIsUpdating(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
+      } else {
+        console.error('[GEO] Error:', result.info);
+        setError(result.info);
       }
-    );
+    } catch (err: any) {
+      console.error('[GEO] Exception:', err);
+      setError(err?.message || 'Une erreur est survenue');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   if (success) {

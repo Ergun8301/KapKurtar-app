@@ -10,6 +10,7 @@ import { QuantityModal } from '../components/QuantityModal';
 import { smartSortOffers, formatTimeLeft, getUrgencyColor } from '../utils/offersSorting';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { updateClientLocationAndFetchOffers } from '../utils/locationUpdate';
 
 const CustomerOffersMapPage = () => {
   const { user } = useAuth();
@@ -280,20 +281,52 @@ const CustomerOffersMapPage = () => {
                     />
                   </div>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (!manualAddress.trim()) {
-                        alert('Veuillez saisir une adresse.');
+                        setToast({ message: 'Veuillez saisir une adresse.', type: 'error' });
                         return;
                       }
-                      alert(`Adresse saisie : ${manualAddress}\n\n(La mise à jour Supabase sera ajoutée plus tard)`);
+
+                      if (!user?.id) {
+                        setToast({ message: 'Utilisateur non connecté.', type: 'error' });
+                        return;
+                      }
+
+                      try {
+                        setLoadingPublic(true);
+                        console.log('[ADDRESS] Sending manual address:', manualAddress);
+
+                        const result = await updateClientLocationAndFetchOffers(
+                          user.id,
+                          radiusKm * 1000,
+                          manualAddress
+                        );
+
+                        if (result.success) {
+                          setToast({ message: result.info, type: 'success' });
+                          setManualAddress('');
+
+                          setTimeout(() => {
+                            console.log('[ADDRESS] Refetching offers after 2s');
+                            refetch();
+                          }, 2000);
+                        } else {
+                          setToast({ message: result.info, type: 'error' });
+                        }
+                      } catch (err: any) {
+                        console.error('[ADDRESS] Error:', err);
+                        setToast({ message: err?.message || 'Erreur lors de l\'envoi de l\'adresse', type: 'error' });
+                      } finally {
+                        setLoadingPublic(false);
+                      }
                     }}
                     className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    disabled={!manualAddress.trim()}
+                    disabled={!manualAddress.trim() || loadingPublic}
                   >
-                    Valider l'adresse
+                    {loadingPublic ? 'Envoi en cours...' : 'Valider l\'adresse'}
                   </button>
                   <p className="text-xs text-gray-500">
-                    💡 Cette fonction capture uniquement l'adresse (lecture seule, aucune modification en base)
+                    💡 L'adresse sera envoyée à Supabase pour géocodage. Les offres seront mises à jour après traitement.
                   </p>
                 </div>
               </div>
