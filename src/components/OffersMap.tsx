@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
+import type { Map as LeafletMap } from 'leaflet';
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin, Navigation } from 'lucide-react';
@@ -124,6 +125,18 @@ const MapController: React.FC<{ center: [number, number]; zoom: number }> = ({ c
   return null;
 };
 
+let mapInstance: LeafletMap | null = null;
+
+export function flyToLocation(lat: number, lng: number, zoom = 14) {
+  console.log('[MAP] flyToLocation called:', { lat, lng, zoom, hasMapInstance: !!mapInstance });
+  if (mapInstance) {
+    mapInstance.setView([lat, lng], zoom, { animate: true });
+    console.log('[MAP] Map view set to:', { lat, lng, zoom });
+  } else {
+    console.warn('[MAP] Map instance not available yet');
+  }
+}
+
 export const OffersMap: React.FC<OffersMapProps> = ({
   userLocation,
   offers,
@@ -135,6 +148,7 @@ export const OffersMap: React.FC<OffersMapProps> = ({
   highlightOfferId,
   onGeolocationSuccess
 }) => {
+  const mapRef = useRef<LeafletMap | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([46.5, 3]);
   const [mapZoom, setMapZoom] = useState(6);
   const [isGeolocating, setIsGeolocating] = useState(false);
@@ -252,6 +266,14 @@ export const OffersMap: React.FC<OffersMapProps> = ({
           zoom={mapZoom}
           style={{ height: '100%', width: '100%' }}
           className="z-0"
+          ref={(container) => {
+            if (container) {
+              const map = container as any;
+              mapRef.current = map;
+              mapInstance = map;
+              console.log('[MAP] MapContainer ref set:', { map, center: mapCenter });
+            }
+          }}
         >
           <MapController center={mapCenter} zoom={mapZoom} />
           <TileLayer

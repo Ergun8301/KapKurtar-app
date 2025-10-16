@@ -174,6 +174,7 @@ const CustomerOffersMapPage = () => {
     : null;
 
   console.log('[MAP] mapCenter (state):', mapCenter);
+  console.log('[MAP] Priority: mapCenter > userLocationCoords > default');
 
 
   if (locationLoading || offersLoading || loadingPublic) {
@@ -255,6 +256,7 @@ const CustomerOffersMapPage = () => {
               onGeolocationSuccess={(coords) => {
                 console.log('[MAP] onGeolocationSuccess called with:', coords);
                 setMapCenter(coords);
+                console.log('[MAP] mapCenter state updated to:', coords);
                 refetch();
               }}
             />

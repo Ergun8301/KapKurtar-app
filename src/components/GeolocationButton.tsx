@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Navigation, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import { flyToLocation } from './OffersMap';
 
 interface GeolocationButtonProps {
   userRole: 'client' | 'merchant';
@@ -33,6 +34,9 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         console.log('[GEO] navigator position:', { lat, lng });
+
+        flyToLocation(lat, lng, 14);
+        console.log('[GEO] Called flyToLocation with:', { lat, lng });
 
         if (onSuccess) {
           onSuccess({ lat, lng });
