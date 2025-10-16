@@ -56,46 +56,46 @@ export function useNearbyOffers({
       setError(null);
 
       const radiusMeters = Math.round(radiusKm * 1000);
-      console.log('[RPC] get_offers_nearby_dynamic args:', { clientId, radiusMeters });
+      console.log('[RPC] get_offers_nearby_dynamic_v2 args:', { clientId, radiusMeters });
 
-      // Try the new dynamic function first
-      const { data: dynamicData, error: dynamicError } = await supabase.rpc('get_offers_nearby_dynamic', {
-        p_client_id: clientId,
-        p_radius_meters: radiusMeters
+      // Use the v2 function with merchant coordinates
+      const { data: dynamicData, error: dynamicError } = await supabase.rpc('get_offers_nearby_dynamic_v2', {
+        client_id: clientId,
+        radius_meters: radiusMeters
       });
 
-      console.log('[RPC] get_offers_nearby_dynamic result:', { dynamicData, dynamicError });
+      console.log('[RPC] get_offers_nearby_dynamic_v2 result:', { dynamicData, dynamicError });
 
       if (!dynamicError && dynamicData) {
         console.log('[RPC] dynamicData sample:', dynamicData[0]);
         console.log('[RPC] dynamicData count:', dynamicData.length);
 
-        // Map the dynamic response to match our interface
+        // Map the v2 response (using merchant coordinates)
         const mappedOffers: NearbyOffer[] = dynamicData.map((offer: any) => {
           const mapped = {
             id: offer.offer_id,
             merchant_id: offer.merchant_id,
-            merchant_name: offer.merchant_name,
+            merchant_name: offer.company_name,
             merchant_street: offer.merchant_street,
             merchant_city: offer.merchant_city,
             merchant_postal_code: offer.merchant_postal_code,
             title: offer.title,
-            description: offer.description,
+            description: offer.description || '',
             image_url: offer.image_url,
             price_before: parseFloat(offer.price_before),
             price_after: parseFloat(offer.price_after),
-            discount_percent: offer.discount_percent,
+            discount_percent: Math.round((1 - parseFloat(offer.price_after) / parseFloat(offer.price_before)) * 100),
             available_from: offer.available_from,
             available_until: offer.available_until,
             quantity: offer.quantity,
             distance_m: offer.distance_meters,
-            offer_lat: offer.offer_lat,
-            offer_lng: offer.offer_lng,
+            offer_lat: offer.merchant_lat,
+            offer_lng: offer.merchant_lng,
             created_at: offer.created_at
           };
 
           if (!mapped.offer_lat || !mapped.offer_lng) {
-            console.warn('[RPC] Offer missing lat/lng:', offer);
+            console.warn('[RPC] Offer missing merchant lat/lng:', offer);
           }
 
           return mapped;

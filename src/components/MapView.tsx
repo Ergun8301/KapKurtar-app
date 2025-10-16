@@ -128,16 +128,17 @@ export default function MapView() {
 
     const fetchOffers = async () => {
       try {
-        const { data, error: rpcError } = await supabase.rpc('get_offers_nearby_dynamic', {
-          p_client_id: clientId,
-          p_radius_meters: radius,
+        const { data, error: rpcError } = await supabase.rpc('get_offers_nearby_dynamic_v2', {
+          client_id: clientId,
+          radius_meters: radius,
         });
 
         if (rpcError) {
-          console.error('Erreur RPC:', rpcError);
+          console.error('Erreur RPC v2:', rpcError);
           setError(`Erreur: ${rpcError.message}`);
           setOffers([]);
         } else {
+          console.log('MapView fetched offers v2:', data);
           setOffers(data || []);
           setError(null);
         }

@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 /**
  * Example page demonstrating the usage of DynamicOffersMap component
- * This component uses the get_offers_nearby_dynamic SQL function
+ * This component uses the get_offers_nearby_dynamic_v2 SQL function
  *
  * Features:
  * - Automatically fetches client location from Supabase
@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
  * - Real-time updates when offers change
  * - Dynamic radius adjustment
  * - Distance calculation for each offer
+ * - Uses merchant coordinates for map markers
  */
 const DynamicMapExamplePage: React.FC = () => {
   const { user } = useAuth();
@@ -76,8 +77,8 @@ const DynamicMapExamplePage: React.FC = () => {
             Carte dynamique des offres
           </h1>
           <p className="text-gray-600">
-            Cette carte utilise la fonction <code className="bg-gray-200 px-2 py-1 rounded">get_offers_nearby_dynamic</code>
-            pour afficher les offres à proximité en temps réel.
+            Cette carte utilise la fonction <code className="bg-gray-200 px-2 py-1 rounded">get_offers_nearby_dynamic_v2</code>
+            pour afficher les offres à proximité en temps réel avec coordonnées du marchand.
           </p>
         </div>
 
@@ -116,10 +117,10 @@ const DynamicMapExamplePage: React.FC = () => {
             <div>
               <h4 className="font-medium text-gray-800 mb-2">1. Fonction SQL</h4>
               <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-{`-- Appel de la fonction
-SELECT * FROM get_offers_nearby_dynamic(
-  p_client_id := 'uuid-du-client',
-  p_radius_meters := 5000
+{`-- Appel de la fonction v2
+SELECT * FROM get_offers_nearby_dynamic_v2(
+  client_id := 'uuid-du-client',
+  radius_meters := 5000
 );`}
               </pre>
             </div>
@@ -127,14 +128,14 @@ SELECT * FROM get_offers_nearby_dynamic(
             <div>
               <h4 className="font-medium text-gray-800 mb-2">2. Depuis TypeScript/React</h4>
               <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-{`const { data, error } = await supabase.rpc('get_offers_nearby_dynamic', {
-  p_client_id: clientId,
-  p_radius_meters: 5000
+{`const { data, error } = await supabase.rpc('get_offers_nearby_dynamic_v2', {
+  client_id: clientId,
+  radius_meters: 5000
 });
 
 // data contient un tableau d'offres avec distance calculée
-// [{ offer_id, merchant_id, merchant_name, title,
-//    distance_meters, offer_lat, offer_lng, ... }]`}
+// [{ offer_id, merchant_id, company_name, title,
+//    distance_meters, merchant_lat, merchant_lng, ... }]`}
               </pre>
             </div>
 
