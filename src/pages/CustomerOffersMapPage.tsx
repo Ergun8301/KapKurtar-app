@@ -10,7 +10,6 @@ import { QuantityModal } from '../components/QuantityModal';
 import { smartSortOffers, formatTimeLeft, getUrgencyColor } from '../utils/offersSorting';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { updateClientLocationAndFetchOffers } from '../utils/locationUpdate';
 
 const CustomerOffersMapPage = () => {
   const { user } = useAuth();
@@ -24,15 +23,13 @@ const CustomerOffersMapPage = () => {
   const [publicOffers, setPublicOffers] = useState<any[]>([]);
   const [loadingPublic, setLoadingPublic] = useState(false);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
-  const [manualAddress, setManualAddress] = useState('');
-  const [showDebugData, setShowDebugData] = useState(false);
   const offerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const centerLat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : undefined;
   const centerLng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : undefined;
   const highlightOfferId = searchParams.get('offerId') || undefined;
 
-  const { location, loading: locationLoading, refetch: refetchLocation } = useClientLocation(user?.id || null);
+  const { location, loading: locationLoading } = useClientLocation(user?.id || null);
 
   const {
     offers: nearbyOffers,
@@ -192,20 +189,8 @@ const CustomerOffersMapPage = () => {
   console.log('[MAP] mapCenter (state):', mapCenter);
   console.log('[MAP] Priority: mapCenter > userLocationCoords > default');
 
-  // Auto-center map when user location becomes available
-  useEffect(() => {
-    if (userLocationCoords && !mapCenter) {
-      console.log('[MAP] Auto-centering map on user location:', userLocationCoords);
-      setMapCenter(userLocationCoords);
-      console.log('[MAP] mapCenter updated to:', userLocationCoords);
-    }
-  }, [userLocationCoords, mapCenter]);
 
-
-  // Show loading only if we're still waiting for initial location or offers
-  const isInitialLoading = (locationLoading && !location) || (offersLoading && nearbyOffers.length === 0 && user) || (loadingPublic && publicOffers.length === 0 && !user);
-
-  if (isInitialLoading) {
+  if (locationLoading || offersLoading || loadingPublic) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -269,146 +254,25 @@ const CustomerOffersMapPage = () => {
                 </div>
               </div>
             )}
-
-            {/* Manual Address Input */}
-            {user && (
-              <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                  📍 Choisissez votre localisation
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Utilisez la géolocalisation automatique ou saisissez une adresse manuellement
-                </p>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Adresse manuelle
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ex: 8 rue Antoine, 01000 Bourg-en-Bresse"
-                      value={manualAddress}
-                      onChange={(e) => setManualAddress(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                  </div>
-                  <button
-                    onClick={async () => {
-                      if (!manualAddress.trim()) {
-                        setToast({ message: 'Veuillez saisir une adresse.', type: 'error' });
-                        return;
-                      }
-
-                      if (!user?.id) {
-                        setToast({ message: 'Utilisateur non connecté.', type: 'error' });
-                        return;
-                      }
-
-                      try {
-                        setLoadingPublic(true);
-                        console.log('[ADDRESS] Geocoding manual address:', manualAddress);
-
-                        const result = await updateClientLocationAndFetchOffers(
-                          user.id,
-                          radiusKm * 1000,
-                          manualAddress
-                        );
-
-                        if (result.success && result.coords) {
-                          console.log('[ADDRESS] Address geocoded successfully');
-                          console.log('[ADDRESS] Coordinates:', result.coords);
-
-                          // Center map on geocoded coordinates
-                          setMapCenter(result.coords);
-                          console.log('[GEO] Updated center to:', result.coords);
-
-                          setToast({ message: result.info, type: 'success' });
-                          setManualAddress('');
-
-                          // Refetch location and offers
-                          refetchLocation();
-                          refetch();
-                        } else {
-                          console.error('[ADDRESS] Geocoding failed:', result.info);
-                          setToast({ message: result.info, type: 'error' });
-                        }
-                      } catch (err: any) {
-                        console.error('[ADDRESS] Exception:', err);
-                        setToast({ message: err?.message || 'Erreur lors du géocodage', type: 'error' });
-                      } finally {
-                        setLoadingPublic(false);
-                      }
-                    }}
-                    className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    disabled={!manualAddress.trim() || loadingPublic}
-                  >
-                    {loadingPublic ? 'Envoi en cours...' : 'Valider l\'adresse'}
-                  </button>
-                  <p className="text-xs text-gray-500">
-                    💡 L'adresse sera envoyée à Supabase pour géocodage. Les offres seront mises à jour après traitement.
-                  </p>
-                </div>
-              </div>
-            )}
             <OffersMap
               userLocation={mapCenter ?? userLocationCoords ?? { lat: 46.5, lng: 3 }}
               offers={mapOffers}
               radiusKm={radiusKm}
               onRadiusChange={(radius) => {
-                console.log('[PAGE] Radius changed to:', radius);
                 setRadiusKm(radius);
                 setShowAllOffers(false);
-                localStorage.setItem('searchRadius', radius.toString());
-                setTimeout(() => {
-                  console.log('[PAGE] Triggering refetch after radius change');
-                  refetch();
-                }, 100);
               }}
               onOfferClick={handleOfferClick}
               centerLat={mapCenter?.lat ?? centerLat}
               centerLng={mapCenter?.lng ?? centerLng}
               highlightOfferId={highlightOfferId}
               onGeolocationSuccess={(coords) => {
-                console.log('[GEO] Geolocation success callback triggered');
-                console.log('[GEO] Received coordinates:', coords);
-                console.log('[GEO] Updated center to:', coords);
+                console.log('[MAP] onGeolocationSuccess called with:', coords);
                 setMapCenter(coords);
-                console.log('[GEO] Map center state set to:', coords);
-
-                // Trigger offers refetch after a short delay to allow location to be saved
-                setTimeout(() => {
-                  console.log('[GEO] Refetching offers with new location');
-                  refetch();
-                }, 500);
+                console.log('[MAP] mapCenter state updated to:', coords);
+                refetch();
               }}
             />
-
-            {/* Debug Data Viewer */}
-            {user && nearbyOffers.length > 0 && (
-              <div className="mt-4">
-                <button
-                  onClick={() => setShowDebugData(!showDebugData)}
-                  className="text-sm text-gray-600 hover:text-gray-900 underline"
-                >
-                  {showDebugData ? '▼ Masquer' : '▶ Afficher'} les données brutes (vérification)
-                </button>
-                {showDebugData && (
-                  <div className="mt-2">
-                    <div className="bg-gray-100 rounded-lg p-3 mb-2">
-                      <p className="text-xs font-semibold text-gray-700 mb-1">
-                        Données de la fonction get_offers_nearby_dynamic_v2 :
-                      </p>
-                      <p className="text-xs text-gray-600 mb-2">
-                        {nearbyOffers.length} offre(s) trouvée(s) dans un rayon de {radiusKm} km
-                      </p>
-                    </div>
-                    <pre className="bg-gray-900 text-green-400 text-xs p-4 rounded-lg overflow-x-auto max-h-96 overflow-y-auto">
-                      {JSON.stringify(nearbyOffers, null, 2)}
-                    </pre>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         }
 

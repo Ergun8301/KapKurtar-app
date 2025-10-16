@@ -93,9 +93,7 @@ const LocationActivation: React.FC<{ onGeolocationSuccess?: (coords: { lat: numb
         <GeolocationButton
           userRole="client"
           userId={user.id}
-          radiusMeters={radiusKm * 1000}
-          onSuccess={(coords, offers) => {
-            console.log('[MAP] Geolocation success with offers:', offers?.length || 0);
+          onSuccess={(coords) => {
             if (onGeolocationSuccess) {
               onGeolocationSuccess(coords);
             } else {

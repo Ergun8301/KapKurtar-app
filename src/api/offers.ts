@@ -202,18 +202,16 @@ export const toggleOfferActive = async (offerId: string, isActive: boolean, merc
 
 export const getNearbyOffers = async (clientId: string, radius: number = 5000) => {
   try {
-    console.log('[API] Fetching nearby offers with v2:', { clientId, radius });
-    const { data, error } = await supabase.rpc('get_offers_nearby_dynamic_v2', {
+    const { data, error } = await supabase.rpc('get_offers_near_client', {
       client_id: clientId,
       radius_meters: radius
     });
 
     if (error) {
-      console.error('Error fetching nearby offers (v2):', error);
+      console.error('Error fetching nearby offers:', error);
       return [];
     }
 
-    console.log('[API] Nearby offers v2 result:', data?.length || 0);
     return data || [];
   } catch (error) {
     console.error('Exception fetching nearby offers:', error);

@@ -2,22 +2,19 @@ import React, { useState } from 'react';
 import { Navigation, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { flyToLocation } from './OffersMap';
-import { updateClientLocationAndFetchOffers } from '../utils/locationUpdate';
 
 interface GeolocationButtonProps {
   userRole: 'client' | 'merchant';
   userId: string;
-  onSuccess?: (coords: { lat: number; lng: number }, offers?: any[]) => void;
+  onSuccess?: (coords: { lat: number; lng: number }) => void;
   className?: string;
-  radiusMeters?: number;
 }
 
 export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
   userRole,
   userId,
   onSuccess,
-  className = '',
-  radiusMeters = 20000
+  className = ''
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -32,34 +29,71 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
     setIsUpdating(true);
     setError(null);
 
-    try {
-      console.log('[GEO] Starting GPS geolocation');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        console.log('[GEO] navigator position:', { lat, lng });
 
-      // Call utility function which handles GPS and Supabase update
-      const result = await updateClientLocationAndFetchOffers(userId, radiusMeters);
+        flyToLocation(lat, lng, 14);
+        console.log('[GEO] Called flyToLocation with:', { lat, lng });
 
-      if (result.success && result.coords) {
-        console.log('[GEO] Success:', result.info);
-        console.log('[GEO] GPS coordinates:', result.coords);
-        console.log('[GEO] Offers fetched:', result.data.length);
-
-        // Center map on GPS coordinates
         if (onSuccess) {
-          console.log('[GEO] Updated center to:', result.coords);
-          onSuccess(result.coords, result.data);
+          onSuccess({ lat, lng });
         }
 
         setSuccess(true);
-      } else {
-        console.error('[GEO] Error:', result.info);
-        setError(result.info);
+        setIsUpdating(false);
+
+        (async () => {
+          try {
+            const tableName = userRole === 'merchant' ? 'merchants' : 'clients';
+            const { data: upd, error: updErr } = await supabase
+              .from(tableName)
+              .update({ location: `POINT(${lng} ${lat})` })
+              .eq('auth_id', userId)
+              .select('id, location');
+
+            if (updErr) {
+              console.error('[GEO] supabase update error:', {
+                message: updErr.message,
+                details: updErr.details,
+                hint: updErr.hint,
+                code: updErr.code
+              });
+            } else {
+              console.log('[GEO] supabase updated:', upd);
+            }
+          } catch (err) {
+            console.error('[GEO] supabase exception:', err);
+          }
+        })();
+      },
+      (geoError) => {
+        console.error('Geolocation error:', geoError);
+        let errorMessage = 'Impossible d\'obtenir votre position';
+
+        switch (geoError.code) {
+          case geoError.PERMISSION_DENIED:
+            errorMessage = 'Géolocalisation refusée. Veuillez autoriser l\'accès dans les paramètres de votre navigateur.';
+            break;
+          case geoError.POSITION_UNAVAILABLE:
+            errorMessage = 'Votre position n\'est pas disponible actuellement.';
+            break;
+          case geoError.TIMEOUT:
+            errorMessage = 'La demande de position a expiré.';
+            break;
+        }
+
+        setError(errorMessage);
+        setIsUpdating(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       }
-    } catch (err: any) {
-      console.error('[GEO] Exception:', err);
-      setError(err?.message || 'Une erreur est survenue');
-    } finally {
-      setIsUpdating(false);
-    }
+    );
   };
 
   if (success) {
