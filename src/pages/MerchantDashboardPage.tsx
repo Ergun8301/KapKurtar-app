@@ -657,7 +657,7 @@ const MerchantDashboardPage = () => {
               <GeolocationButton
                 userRole="merchant"
                 userId={user.id}
-                onSuccess={() => {
+                onSuccess={(coords) => {
                   setToast({ message: 'Votre position a été mise à jour avec succès !', type: 'success' });
                   loadOffers();
                 }}

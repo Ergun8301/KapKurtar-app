@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 interface GeolocationButtonProps {
   userRole: 'client' | 'merchant';
   userId: string;
-  onSuccess?: () => void;
+  onSuccess?: (coords: { lat: number; lng: number }) => void;
   className?: string;
 }
 
@@ -61,8 +61,8 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
 
           if (onSuccess) {
             setTimeout(() => {
-              onSuccess();
-            }, 1500);
+              onSuccess({ lat: latitude, lng: longitude });
+            }, 500);
           }
 
         } catch (err) {

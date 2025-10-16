@@ -91,7 +91,7 @@ const LocationActivation: React.FC = () => {
         <GeolocationButton
           userRole="client"
           userId={user.id}
-          onSuccess={() => {
+          onSuccess={(coords) => {
             window.location.reload();
           }}
           className="flex justify-center"

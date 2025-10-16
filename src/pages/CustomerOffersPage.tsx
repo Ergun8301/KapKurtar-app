@@ -348,7 +348,7 @@ const CustomerOffersPage = () => {
                   <GeolocationButton
                     userRole="client"
                     userId={user.id}
-                    onSuccess={() => {
+                    onSuccess={(coords) => {
                       window.location.reload();
                     }}
                   />

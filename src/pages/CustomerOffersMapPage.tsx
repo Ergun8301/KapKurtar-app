@@ -22,6 +22,7 @@ const CustomerOffersMapPage = () => {
   const [showAllOffers, setShowAllOffers] = useState(false);
   const [publicOffers, setPublicOffers] = useState<any[]>([]);
   const [loadingPublic, setLoadingPublic] = useState(false);
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const offerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const centerLat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : undefined;
@@ -236,7 +237,7 @@ const CustomerOffersMapPage = () => {
               </div>
             )}
             <OffersMap
-              userLocation={userLocationCoords || { lat: 46.5, lng: 3 }}
+              userLocation={mapCenter || userLocationCoords || { lat: 46.5, lng: 3 }}
               offers={mapOffers}
               radiusKm={radiusKm}
               onRadiusChange={(radius) => {
@@ -244,8 +245,8 @@ const CustomerOffersMapPage = () => {
                 setShowAllOffers(false);
               }}
               onOfferClick={handleOfferClick}
-              centerLat={centerLat}
-              centerLng={centerLng}
+              centerLat={mapCenter?.lat || centerLat}
+              centerLng={mapCenter?.lng || centerLng}
               highlightOfferId={highlightOfferId}
             />
           </div>
