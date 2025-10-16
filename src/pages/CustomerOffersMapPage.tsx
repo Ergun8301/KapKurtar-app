@@ -192,8 +192,20 @@ const CustomerOffersMapPage = () => {
   console.log('[MAP] mapCenter (state):', mapCenter);
   console.log('[MAP] Priority: mapCenter > userLocationCoords > default');
 
+  // Auto-center map when user location becomes available
+  useEffect(() => {
+    if (userLocationCoords && !mapCenter) {
+      console.log('[MAP] Auto-centering map on user location:', userLocationCoords);
+      setMapCenter(userLocationCoords);
+      console.log('[MAP] mapCenter updated to:', userLocationCoords);
+    }
+  }, [userLocationCoords, mapCenter]);
 
-  if (locationLoading || offersLoading || loadingPublic) {
+
+  // Show loading only if we're still waiting for initial location or offers
+  const isInitialLoading = (locationLoading && !location) || (offersLoading && nearbyOffers.length === 0 && user) || (loadingPublic && publicOffers.length === 0 && !user);
+
+  if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
