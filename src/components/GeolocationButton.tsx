@@ -29,55 +29,41 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
     setError(null);
 
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
+      (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        console.log('[GEO] navigator:', { lat, lng });
+        console.log('[GEO] navigator position:', { lat, lng });
 
-        try {
-          const tableName = userRole === 'merchant' ? 'merchants' : 'clients';
-          const { data: upd, error: updErr } = await supabase
-            .from(tableName)
-            .update({ location: `POINT(${lng} ${lat})` })
-            .eq('auth_id', userId)
-            .select('id, location');
-
-          console.log('[GEO] supabase.update:', { upd, updErr });
-
-          if (updErr) {
-            console.error('[GEO] Update error details:', {
-              message: updErr.message,
-              details: updErr.details,
-              hint: updErr.hint,
-              code: updErr.code
-            });
-            setError(`Impossible de mettre à jour votre position: ${updErr.message}`);
-            setIsUpdating(false);
-            return;
-          }
-
-          const { data: check, error: checkErr } = await supabase
-            .from(tableName)
-            .select('id, st_astext(location) as location')
-            .eq('auth_id', userId)
-            .maybeSingle();
-
-          console.log('[GEO] supabase.check:', { check, checkErr });
-
-          setSuccess(true);
-          setIsUpdating(false);
-
-          if (onSuccess) {
-            setTimeout(() => {
-              onSuccess({ lat, lng });
-            }, 500);
-          }
-
-        } catch (err) {
-          console.error('[GEO] Exception:', err);
-          setError('Une erreur est survenue lors de la mise à jour.');
-          setIsUpdating(false);
+        if (onSuccess) {
+          onSuccess({ lat, lng });
         }
+
+        setSuccess(true);
+        setIsUpdating(false);
+
+        (async () => {
+          try {
+            const tableName = userRole === 'merchant' ? 'merchants' : 'clients';
+            const { data: upd, error: updErr } = await supabase
+              .from(tableName)
+              .update({ location: `POINT(${lng} ${lat})` })
+              .eq('auth_id', userId)
+              .select('id, location');
+
+            if (updErr) {
+              console.error('[GEO] supabase update error:', {
+                message: updErr.message,
+                details: updErr.details,
+                hint: updErr.hint,
+                code: updErr.code
+              });
+            } else {
+              console.log('[GEO] supabase updated:', upd);
+            }
+          } catch (err) {
+            console.error('[GEO] supabase exception:', err);
+          }
+        })();
       },
       (geoError) => {
         console.error('Geolocation error:', geoError);
