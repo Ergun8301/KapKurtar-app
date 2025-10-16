@@ -4,7 +4,6 @@ import { AddProductProvider } from './contexts/AddProductContext';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
 import CustomerTeaserPage from './pages/CustomerTeaserPage';
-import CustomerOffersPage from './pages/CustomerOffersPage';
 import CustomerOffersMapPage from './pages/CustomerOffersMapPage';
 import CustomerAuthPage from './pages/CustomerAuthPage';
 import MerchantAuthPage from './pages/MerchantAuthPage';
@@ -34,7 +33,7 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/customer/teaser" element={<CustomerTeaserPage />} />
-              <Route path="/offers" element={<CustomerOffersPage />} />
+              <Route path="/offers" element={<Navigate to="/offers/map" replace />} />
               <Route path="/offers/map" element={<CustomerOffersMapPage />} />
               <Route path="/customer/auth" element={<CustomerAuthPage />} />
               <Route path="/merchant/auth" element={<MerchantAuthPage />} />

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Clock, MapPinOff, Settings, LogOut, User, ShoppingCart } from 'lucide-react';
+import { Clock, MapPinOff, Settings, LogOut, User, ShoppingCart, MapPin } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useClientLocation } from '../hooks/useClientLocation';
 import { useNearbyOffers } from '../hooks/useNearbyOffers';
+import { getActiveOffers } from '../api/offers';
 import { createReservation } from '../api/reservations';
 import { OffersMap } from '../components/OffersMap';
 import { QuantityModal } from '../components/QuantityModal';
@@ -19,6 +20,8 @@ const CustomerOffersMapPage = () => {
   const [reserving, setReserving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [showAllOffers, setShowAllOffers] = useState(false);
+  const [publicOffers, setPublicOffers] = useState<any[]>([]);
+  const [loadingPublic, setLoadingPublic] = useState(false);
   const offerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const centerLat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : undefined;
@@ -33,12 +36,29 @@ const CustomerOffersMapPage = () => {
     refetch
   } = useNearbyOffers({
     clientId: user?.id || null,
-    radiusKm: showAllOffers ? 1000 : radiusKm, // 1000km = essentially all offers
+    radiusKm: showAllOffers ? 1000 : radiusKm,
     enabled: !!user && !!location
   });
 
+  useEffect(() => {
+    if (!user) {
+      const fetchPublicOffers = async () => {
+        setLoadingPublic(true);
+        try {
+          const offers = await getActiveOffers();
+          setPublicOffers(offers);
+        } catch (error) {
+          console.error('Error fetching public offers:', error);
+        } finally {
+          setLoadingPublic(false);
+        }
+      };
+      fetchPublicOffers();
+    }
+  }, [user]);
+
   // Smart sort offers
-  const sortedOffers = smartSortOffers(nearbyOffers);
+  const sortedOffers = user ? smartSortOffers(nearbyOffers) : publicOffers;
 
   // Prepare offers for map
   const mapOffers = sortedOffers
@@ -150,27 +170,8 @@ const CustomerOffersMapPage = () => {
       })()
     : null;
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
-          <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Sign In Required</h2>
-          <p className="text-gray-600 mb-6">
-            Please sign in to view offers near you and make reservations.
-          </p>
-          <button
-            onClick={() => navigate('/customer/auth')}
-            className="w-full bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors"
-          >
-            Sign In
-          </button>
-        </div>
-      </div>
-    );
-  }
 
-  if (locationLoading || offersLoading) {
+  if (locationLoading || offersLoading || loadingPublic) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -223,11 +224,19 @@ const CustomerOffersMapPage = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Map - Always show if user has location */}
-        {userLocationCoords && (
+        {/* Map - Show with user location or France default */}
+        {
           <div className="mb-8">
+            {!user && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-blue-600" />
+                  <p className="text-blue-900 font-medium">Sign in to see personalized offers near you</p>
+                </div>
+              </div>
+            )}
             <OffersMap
-              userLocation={userLocationCoords}
+              userLocation={userLocationCoords || { lat: 46.5, lng: 3 }}
               offers={mapOffers}
               radiusKm={radiusKm}
               onRadiusChange={(radius) => {
@@ -240,7 +249,7 @@ const CustomerOffersMapPage = () => {
               highlightOfferId={highlightOfferId}
             />
           </div>
-        )}
+        }
 
         {/* No offers message */}
         {!showAllOffers && sortedOffers.length === 0 && userLocationCoords && (
