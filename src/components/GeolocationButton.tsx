@@ -30,43 +30,51 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const { latitude, longitude } = position.coords;
-        const point = `POINT(${longitude} ${latitude})`;
-
-        console.log('Updating location:', { userRole, userId, latitude, longitude });
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        console.log('[GEO] navigator:', { lat, lng });
 
         try {
           const tableName = userRole === 'merchant' ? 'merchants' : 'clients';
-          const { data, error: updateError } = await supabase
+          const { data: upd, error: updErr } = await supabase
             .from(tableName)
-            .update({ location: point })
+            .update({ location: `POINT(${lng} ${lat})` })
             .eq('auth_id', userId)
-            .select();
+            .select('id, location');
 
-          if (updateError) {
-            console.error('Erreur géolocalisation Supabase:', {
-              message: updateError.message,
-              details: updateError.details,
-              hint: updateError.hint,
-              code: updateError.code
+          console.log('[GEO] supabase.update:', { upd, updErr });
+
+          if (updErr) {
+            console.error('[GEO] Update error details:', {
+              message: updErr.message,
+              details: updErr.details,
+              hint: updErr.hint,
+              code: updErr.code
             });
-            setError(`Impossible de mettre à jour votre position: ${updateError.message}`);
+            setError(`Impossible de mettre à jour votre position: ${updErr.message}`);
             setIsUpdating(false);
             return;
           }
 
-          console.log('Location updated successfully:', data);
+          const { data: check, error: checkErr } = await supabase
+            .from(tableName)
+            .select('id, st_astext(location) as location')
+            .eq('auth_id', userId)
+            .maybeSingle();
+
+          console.log('[GEO] supabase.check:', { check, checkErr });
+
           setSuccess(true);
           setIsUpdating(false);
 
           if (onSuccess) {
             setTimeout(() => {
-              onSuccess({ lat: latitude, lng: longitude });
+              onSuccess({ lat, lng });
             }, 500);
           }
 
         } catch (err) {
-          console.error('Erreur générale:', err);
+          console.error('[GEO] Exception:', err);
           setError('Une erreur est survenue lors de la mise à jour.');
           setIsUpdating(false);
         }

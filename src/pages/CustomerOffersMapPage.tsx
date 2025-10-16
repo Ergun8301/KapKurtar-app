@@ -167,9 +167,13 @@ const CustomerOffersMapPage = () => {
   const userLocationCoords = location
     ? (() => {
         const match = location.match(/POINT\(([^ ]+) ([^ ]+)\)/);
-        return match ? { lat: parseFloat(match[2]), lng: parseFloat(match[1]) } : null;
+        const coords = match ? { lat: parseFloat(match[2]), lng: parseFloat(match[1]) } : null;
+        console.log('[MAP] userLocationCoords (DB parsed):', coords);
+        return coords;
       })()
     : null;
+
+  console.log('[MAP] mapCenter (state):', mapCenter);
 
 
   if (locationLoading || offersLoading || loadingPublic) {
@@ -237,7 +241,7 @@ const CustomerOffersMapPage = () => {
               </div>
             )}
             <OffersMap
-              userLocation={mapCenter || userLocationCoords || { lat: 46.5, lng: 3 }}
+              userLocation={mapCenter ?? userLocationCoords ?? { lat: 46.5, lng: 3 }}
               offers={mapOffers}
               radiusKm={radiusKm}
               onRadiusChange={(radius) => {
@@ -245,8 +249,8 @@ const CustomerOffersMapPage = () => {
                 setShowAllOffers(false);
               }}
               onOfferClick={handleOfferClick}
-              centerLat={mapCenter?.lat || centerLat}
-              centerLng={mapCenter?.lng || centerLng}
+              centerLat={mapCenter?.lat ?? centerLat}
+              centerLng={mapCenter?.lng ?? centerLng}
               highlightOfferId={highlightOfferId}
             />
           </div>
