@@ -23,6 +23,8 @@ const CustomerOffersMapPage = () => {
   const [publicOffers, setPublicOffers] = useState<any[]>([]);
   const [loadingPublic, setLoadingPublic] = useState(false);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [manualAddress, setManualAddress] = useState('');
+  const [showDebugData, setShowDebugData] = useState(false);
   const offerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const centerLat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : undefined;
@@ -254,13 +256,61 @@ const CustomerOffersMapPage = () => {
                 </div>
               </div>
             )}
+
+            {/* Manual Address Input */}
+            {user && (
+              <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  📍 Choisissez votre localisation
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Utilisez la géolocalisation automatique ou saisissez une adresse manuellement
+                </p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Adresse manuelle
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: 8 rue Antoine, 01000 Bourg-en-Bresse"
+                      value={manualAddress}
+                      onChange={(e) => setManualAddress(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (!manualAddress.trim()) {
+                        alert('Veuillez saisir une adresse.');
+                        return;
+                      }
+                      alert(`Adresse saisie : ${manualAddress}\n\n(La mise à jour Supabase sera ajoutée plus tard)`);
+                    }}
+                    className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    disabled={!manualAddress.trim()}
+                  >
+                    Valider l'adresse
+                  </button>
+                  <p className="text-xs text-gray-500">
+                    💡 Cette fonction capture uniquement l'adresse (lecture seule, aucune modification en base)
+                  </p>
+                </div>
+              </div>
+            )}
             <OffersMap
               userLocation={mapCenter ?? userLocationCoords ?? { lat: 46.5, lng: 3 }}
               offers={mapOffers}
               radiusKm={radiusKm}
               onRadiusChange={(radius) => {
+                console.log('[PAGE] Radius changed to:', radius);
                 setRadiusKm(radius);
                 setShowAllOffers(false);
+                localStorage.setItem('searchRadius', radius.toString());
+                setTimeout(() => {
+                  console.log('[PAGE] Triggering refetch after radius change');
+                  refetch();
+                }, 100);
               }}
               onOfferClick={handleOfferClick}
               centerLat={mapCenter?.lat ?? centerLat}
@@ -273,6 +323,33 @@ const CustomerOffersMapPage = () => {
                 refetch();
               }}
             />
+
+            {/* Debug Data Viewer */}
+            {user && nearbyOffers.length > 0 && (
+              <div className="mt-4">
+                <button
+                  onClick={() => setShowDebugData(!showDebugData)}
+                  className="text-sm text-gray-600 hover:text-gray-900 underline"
+                >
+                  {showDebugData ? '▼ Masquer' : '▶ Afficher'} les données brutes (vérification)
+                </button>
+                {showDebugData && (
+                  <div className="mt-2">
+                    <div className="bg-gray-100 rounded-lg p-3 mb-2">
+                      <p className="text-xs font-semibold text-gray-700 mb-1">
+                        Données de la fonction get_offers_nearby_dynamic_v2 :
+                      </p>
+                      <p className="text-xs text-gray-600 mb-2">
+                        {nearbyOffers.length} offre(s) trouvée(s) dans un rayon de {radiusKm} km
+                      </p>
+                    </div>
+                    <pre className="bg-gray-900 text-green-400 text-xs p-4 rounded-lg overflow-x-auto max-h-96 overflow-y-auto">
+                      {JSON.stringify(nearbyOffers, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         }
 
