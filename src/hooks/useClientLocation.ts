@@ -5,9 +5,7 @@ interface UseClientLocationReturn {
   location: string | null;
   loading: boolean;
   error: string | null;
-  requestGeolocation: () => Promise<void>;
   hasLocation: boolean;
-  geocodeStatus: string | null;
   refetch: () => Promise<void>;
 }
 
@@ -15,7 +13,6 @@ export function useClientLocation(clientId: string | null): UseClientLocationRet
   const [location, setLocation] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [geocodeStatus, setGeocodeStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!clientId) {
@@ -24,38 +21,6 @@ export function useClientLocation(clientId: string | null): UseClientLocationRet
     }
 
     fetchClientLocation();
-
-    // Set up real-time subscription for client changes
-    const subscription = supabase
-      .channel(`client-location-${clientId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'clients',
-          filter: `auth_id=eq.${clientId}`
-        },
-        (payload) => {
-          console.log('[LOCATION] Real-time update received:', payload);
-          const newData = payload.new as any;
-
-          if (newData.geocode_status) {
-            setGeocodeStatus(newData.geocode_status);
-            console.log('[LOCATION] Geocode status updated to:', newData.geocode_status);
-          }
-
-          if (newData.geocode_status === 'done' && newData.location) {
-            console.log('[LOCATION] Geocoding complete, updating location');
-            fetchClientLocation();
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [clientId]);
 
   const fetchClientLocation = async () => {
@@ -77,18 +42,12 @@ export function useClientLocation(clientId: string | null): UseClientLocationRet
         return;
       }
 
-      if (data) {
-        if (data.location) {
-          const locationStr = typeof data.location === 'string'
-            ? data.location
-            : `POINT(${(data.location as any).coordinates?.[0]} ${(data.location as any).coordinates?.[1]})`;
-          setLocation(locationStr);
-          console.log('[LOCATION] Location fetched:', locationStr);
-        }
-        if (data.geocode_status) {
-          setGeocodeStatus(data.geocode_status);
-          console.log('[LOCATION] Geocode status:', data.geocode_status);
-        }
+      if (data?.location) {
+        const locationStr = typeof data.location === 'string'
+          ? data.location
+          : `POINT(${(data.location as any).coordinates?.[0]} ${(data.location as any).coordinates?.[1]})`;
+        setLocation(locationStr);
+        console.log('[LOCATION] Location fetched:', locationStr);
       }
     } catch (err) {
       console.error('Error in fetchClientLocation:', err);
@@ -98,85 +57,12 @@ export function useClientLocation(clientId: string | null): UseClientLocationRet
     }
   };
 
-  const requestGeolocation = async (): Promise<void> => {
-    if (!clientId) {
-      setError('Vous devez être connecté pour utiliser la géolocalisation');
-      return;
-    }
-
-    if (!navigator.geolocation) {
-      setError('La géolocalisation n\'est pas supportée par votre navigateur');
-      return;
-    }
-
-    return new Promise((resolve, reject) => {
-      setLoading(true);
-      setError(null);
-
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-
-          try {
-            const { error: updateError } = await supabase.rpc('update_client_location', {
-              client_id: clientId,
-              longitude: longitude,
-              latitude: latitude,
-              status: 'success'
-            });
-
-            if (updateError) {
-              console.error('Error updating client location:', updateError);
-              setError('Impossible de sauvegarder votre position');
-              reject(updateError);
-            } else {
-              setLocation(`POINT(${longitude} ${latitude})`);
-              resolve();
-            }
-          } catch (err) {
-            console.error('Error saving location:', err);
-            setError('Erreur lors de la sauvegarde de votre position');
-            reject(err);
-          } finally {
-            setLoading(false);
-          }
-        },
-        (err) => {
-          console.error('Geolocation error:', err);
-          let errorMessage = 'Impossible d\'obtenir votre position';
-
-          switch (err.code) {
-            case err.PERMISSION_DENIED:
-              errorMessage = 'Vous avez refusé l\'accès à votre position';
-              break;
-            case err.POSITION_UNAVAILABLE:
-              errorMessage = 'Votre position n\'est pas disponible';
-              break;
-            case err.TIMEOUT:
-              errorMessage = 'La demande de position a expiré';
-              break;
-          }
-
-          setError(errorMessage);
-          setLoading(false);
-          reject(err);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    });
-  };
 
   return {
     location,
     loading,
     error,
-    requestGeolocation,
     hasLocation: location !== null,
-    geocodeStatus,
     refetch: fetchClientLocation
   };
 }

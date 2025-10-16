@@ -33,41 +33,20 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
     setError(null);
 
     try {
-      console.log('[GEO] Starting high-accuracy geolocation');
+      console.log('[GEO] Starting GPS geolocation');
 
-      // Get user coordinates first for immediate map centering
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        });
-      });
-
-      const coords = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-      };
-
-      console.log('[GEO] Browser coordinates obtained:', coords);
-      console.log('[GEO] Accuracy:', position.coords.accuracy, 'meters');
-
-      // Update map center immediately
-      if (onSuccess) {
-        console.log('[GEO] Updated center to:', coords);
-        onSuccess(coords, []);
-      }
-
-      // Then update location in Supabase and fetch offers
+      // Call utility function which handles GPS and Supabase update
       const result = await updateClientLocationAndFetchOffers(userId, radiusMeters);
 
-      if (result.success) {
+      if (result.success && result.coords) {
         console.log('[GEO] Success:', result.info);
+        console.log('[GEO] GPS coordinates:', result.coords);
         console.log('[GEO] Offers fetched:', result.data.length);
 
-        // Call onSuccess again with offers data
+        // Center map on GPS coordinates
         if (onSuccess) {
-          onSuccess(coords, result.data);
+          console.log('[GEO] Updated center to:', result.coords);
+          onSuccess(result.coords, result.data);
         }
 
         setSuccess(true);
@@ -77,17 +56,7 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
       }
     } catch (err: any) {
       console.error('[GEO] Exception:', err);
-
-      let errorMessage = 'Une erreur est survenue';
-      if (err?.code === 1) {
-        errorMessage = 'Géolocalisation refusée. Veuillez autoriser l\'accès à votre position dans les paramètres de votre navigateur.';
-      } else if (err?.code === 2) {
-        errorMessage = 'Position indisponible. Vérifiez que les services de localisation sont activés.';
-      } else if (err?.code === 3) {
-        errorMessage = 'Délai de géolocalisation dépassé. Veuillez réessayer.';
-      }
-
-      setError(errorMessage);
+      setError(err?.message || 'Une erreur est survenue');
     } finally {
       setIsUpdating(false);
     }

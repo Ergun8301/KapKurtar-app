@@ -32,7 +32,7 @@ const CustomerOffersMapPage = () => {
   const centerLng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : undefined;
   const highlightOfferId = searchParams.get('offerId') || undefined;
 
-  const { location, loading: locationLoading, geocodeStatus, refetch: refetchLocation } = useClientLocation(user?.id || null);
+  const { location, loading: locationLoading, refetch: refetchLocation } = useClientLocation(user?.id || null);
 
   const {
     offers: nearbyOffers,
@@ -190,7 +190,6 @@ const CustomerOffersMapPage = () => {
     : null;
 
   console.log('[MAP] mapCenter (state):', mapCenter);
-  console.log('[MAP] geocodeStatus:', geocodeStatus);
   console.log('[MAP] Priority: mapCenter > userLocationCoords > default');
 
   // Auto-center map when user location becomes available
@@ -201,48 +200,6 @@ const CustomerOffersMapPage = () => {
       console.log('[MAP] mapCenter updated to:', userLocationCoords);
     }
   }, [userLocationCoords, mapCenter]);
-
-  // Watch for geocoding completion and update map + offers
-  useEffect(() => {
-    if (geocodeStatus === 'done' && location && user?.id) {
-      console.log('[MAP] Geocoding completed, processing location update');
-
-      // Parse location from POINT or WKB format
-      const parseLocation = (locStr: string): { lat: number; lng: number } | null => {
-        // Try POINT(lng lat) format
-        const pointMatch = locStr.match(/POINT\(([-.\d]+)\s+([-.\d]+)\)/);
-        if (pointMatch) {
-          const lng = parseFloat(pointMatch[1]);
-          const lat = parseFloat(pointMatch[2]);
-          if (!isNaN(lat) && !isNaN(lng)) {
-            return { lat, lng };
-          }
-        }
-
-        // Try hex WKB format (starts with 0101000020)
-        if (locStr.startsWith('0101000020')) {
-          console.log('[MAP] WKB format detected, needs conversion via Supabase');
-          return null;
-        }
-
-        return null;
-      };
-
-      const coords = parseLocation(location);
-      if (coords) {
-        console.log('[MAP] Geocode done, map centered at:', coords);
-        setMapCenter(coords);
-
-        // Refetch offers with new location
-        console.log('[MAP] Refetching offers after geocoding');
-        refetch();
-      } else {
-        console.warn('[MAP] Could not parse location:', location);
-        // Refetch location to get proper format
-        refetchLocation();
-      }
-    }
-  }, [geocodeStatus, location, user?.id]);
 
 
   // Show loading only if we're still waiting for initial location or offers
@@ -349,9 +306,7 @@ const CustomerOffersMapPage = () => {
 
                       try {
                         setLoadingPublic(true);
-                        console.log('[ADDRESS] Sending manual address:', manualAddress);
-                        console.log('[ADDRESS] User ID:', user.id);
-                        console.log('[ADDRESS] Radius:', radiusKm * 1000, 'meters');
+                        console.log('[ADDRESS] Geocoding manual address:', manualAddress);
 
                         const result = await updateClientLocationAndFetchOffers(
                           user.id,
@@ -359,21 +314,27 @@ const CustomerOffersMapPage = () => {
                           manualAddress
                         );
 
-                        if (result.success) {
-                          console.log('[ADDRESS] Address sent successfully');
+                        if (result.success && result.coords) {
+                          console.log('[ADDRESS] Address geocoded successfully');
+                          console.log('[ADDRESS] Coordinates:', result.coords);
+
+                          // Center map on geocoded coordinates
+                          setMapCenter(result.coords);
+                          console.log('[GEO] Updated center to:', result.coords);
+
                           setToast({ message: result.info, type: 'success' });
                           setManualAddress('');
 
-                          // The real-time subscription will handle the map update
-                          // when geocoding completes and location is updated
-                          console.log('[ADDRESS] Waiting for geocoding to complete...');
+                          // Refetch location and offers
+                          refetchLocation();
+                          refetch();
                         } else {
-                          console.error('[ADDRESS] Failed to send address:', result.info);
+                          console.error('[ADDRESS] Geocoding failed:', result.info);
                           setToast({ message: result.info, type: 'error' });
                         }
                       } catch (err: any) {
                         console.error('[ADDRESS] Exception:', err);
-                        setToast({ message: err?.message || 'Erreur lors de l\'envoi de l\'adresse', type: 'error' });
+                        setToast({ message: err?.message || 'Erreur lors du géocodage', type: 'error' });
                       } finally {
                         setLoadingPublic(false);
                       }
