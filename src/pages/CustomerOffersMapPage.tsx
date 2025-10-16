@@ -252,6 +252,11 @@ const CustomerOffersMapPage = () => {
               centerLat={mapCenter?.lat ?? centerLat}
               centerLng={mapCenter?.lng ?? centerLng}
               highlightOfferId={highlightOfferId}
+              onGeolocationSuccess={(coords) => {
+                console.log('[MAP] onGeolocationSuccess called with:', coords);
+                setMapCenter(coords);
+                refetch();
+              }}
             />
           </div>
         }

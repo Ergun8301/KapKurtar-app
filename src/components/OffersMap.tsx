@@ -28,6 +28,7 @@ interface OffersMapProps {
   centerLat?: number;
   centerLng?: number;
   highlightOfferId?: string;
+  onGeolocationSuccess?: (coords: { lat: number; lng: number }) => void;
 }
 
 // Fix Leaflet default icon issue with Vite
@@ -74,7 +75,7 @@ const isValidLatLng = (lat: any, lng: any): boolean => {
          lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
 };
 
-const LocationActivation: React.FC = () => {
+const LocationActivation: React.FC<{ onGeolocationSuccess?: (coords: { lat: number; lng: number }) => void }> = ({ onGeolocationSuccess }) => {
   const { user } = useAuth();
 
   return (
@@ -92,7 +93,11 @@ const LocationActivation: React.FC = () => {
           userRole="client"
           userId={user.id}
           onSuccess={(coords) => {
-            window.location.reload();
+            if (onGeolocationSuccess) {
+              onGeolocationSuccess(coords);
+            } else {
+              window.location.reload();
+            }
           }}
           className="flex justify-center"
         />
@@ -127,7 +132,8 @@ export const OffersMap: React.FC<OffersMapProps> = ({
   onOfferClick,
   centerLat,
   centerLng,
-  highlightOfferId
+  highlightOfferId,
+  onGeolocationSuccess
 }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>([46.5, 3]);
   const [mapZoom, setMapZoom] = useState(6);
@@ -192,7 +198,7 @@ export const OffersMap: React.FC<OffersMapProps> = ({
   };
 
   if (!userLocation || !isValidLatLng(userLocation.lat, userLocation.lng)) {
-    return <LocationActivation />;
+    return <LocationActivation onGeolocationSuccess={onGeolocationSuccess} />;
   }
 
   return (
