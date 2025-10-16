@@ -148,6 +148,10 @@ export const OffersMap: React.FC<OffersMapProps> = ({
   highlightOfferId,
   onGeolocationSuccess
 }) => {
+  console.log('[MAP] OffersMap received offers:', offers);
+  console.log('[MAP] OffersMap offers count:', offers.length);
+  console.log('[MAP] OffersMap userLocation:', userLocation);
+
   const mapRef = useRef<LeafletMap | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([46.5, 3]);
   const [mapZoom, setMapZoom] = useState(6);
@@ -300,15 +304,21 @@ export const OffersMap: React.FC<OffersMapProps> = ({
           <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
             <Popup>
               <div className="text-center">
-                <p className="font-semibold text-green-600">Your Location</p>
-                <p className="text-sm text-gray-600">Search radius: {radiusKm} km</p>
+                <p className="font-semibold text-blue-600">Vous êtes ici</p>
+                <p className="text-sm text-gray-600">Rayon de recherche: {radiusKm} km</p>
               </div>
             </Popup>
           </Marker>
           )}
 
           {/* Offer Markers */}
-          {offers.filter(offer => isValidLatLng(offer.lat, offer.lng)).map((offer) => (
+          {offers.filter(offer => {
+            const isValid = isValidLatLng(offer.lat, offer.lng);
+            if (!isValid) {
+              console.warn('[MAP] Invalid offer coordinates:', offer);
+            }
+            return isValid;
+          }).map((offer) => (
             <Marker
               key={offer.id}
               position={[offer.lat, offer.lng]}

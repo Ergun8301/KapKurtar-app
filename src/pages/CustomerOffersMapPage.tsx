@@ -41,6 +41,9 @@ const CustomerOffersMapPage = () => {
     enabled: !!user && !!location
   });
 
+  console.log('[PAGE] nearbyOffers from hook:', nearbyOffers);
+  console.log('[PAGE] nearbyOffers count:', nearbyOffers.length);
+
   useEffect(() => {
     if (!user) {
       const fetchPublicOffers = async () => {
@@ -63,7 +66,13 @@ const CustomerOffersMapPage = () => {
 
   // Prepare offers for map
   const mapOffers = sortedOffers
-    .filter(offer => offer.offer_lat && offer.offer_lng)
+    .filter(offer => {
+      const hasCoords = offer.offer_lat && offer.offer_lng;
+      if (!hasCoords) {
+        console.warn('[PAGE] Offer missing coordinates:', offer);
+      }
+      return hasCoords;
+    })
     .map(offer => ({
       id: offer.id,
       title: offer.title,
@@ -73,8 +82,12 @@ const CustomerOffersMapPage = () => {
       price_before: offer.price_before,
       distance_km: (offer.distance_m / 1000).toFixed(1),
       image_url: offer.image_url || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
-      discount: offer.discount_percent
+      discount: offer.discount_percent,
+      merchant_name: offer.merchant_name
     }));
+
+  console.log('[PAGE] mapOffers prepared for OffersMap:', mapOffers);
+  console.log('[PAGE] mapOffers count:', mapOffers.length);
 
   useEffect(() => {
     const savedRadius = localStorage.getItem('searchRadius');

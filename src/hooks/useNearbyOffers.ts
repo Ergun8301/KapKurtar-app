@@ -67,28 +67,42 @@ export function useNearbyOffers({
       console.log('[RPC] get_offers_nearby_dynamic result:', { dynamicData, dynamicError });
 
       if (!dynamicError && dynamicData) {
+        console.log('[RPC] dynamicData sample:', dynamicData[0]);
+        console.log('[RPC] dynamicData count:', dynamicData.length);
+
         // Map the dynamic response to match our interface
-        const mappedOffers: NearbyOffer[] = dynamicData.map((offer: any) => ({
-          id: offer.offer_id,
-          merchant_id: offer.merchant_id,
-          merchant_name: offer.merchant_name,
-          merchant_street: offer.merchant_street,
-          merchant_city: offer.merchant_city,
-          merchant_postal_code: offer.merchant_postal_code,
-          title: offer.title,
-          description: offer.description,
-          image_url: offer.image_url,
-          price_before: parseFloat(offer.price_before),
-          price_after: parseFloat(offer.price_after),
-          discount_percent: offer.discount_percent,
-          available_from: offer.available_from,
-          available_until: offer.available_until,
-          quantity: offer.quantity,
-          distance_m: offer.distance_meters,
-          offer_lat: offer.offer_lat,
-          offer_lng: offer.offer_lng,
-          created_at: offer.created_at
-        }));
+        const mappedOffers: NearbyOffer[] = dynamicData.map((offer: any) => {
+          const mapped = {
+            id: offer.offer_id,
+            merchant_id: offer.merchant_id,
+            merchant_name: offer.merchant_name,
+            merchant_street: offer.merchant_street,
+            merchant_city: offer.merchant_city,
+            merchant_postal_code: offer.merchant_postal_code,
+            title: offer.title,
+            description: offer.description,
+            image_url: offer.image_url,
+            price_before: parseFloat(offer.price_before),
+            price_after: parseFloat(offer.price_after),
+            discount_percent: offer.discount_percent,
+            available_from: offer.available_from,
+            available_until: offer.available_until,
+            quantity: offer.quantity,
+            distance_m: offer.distance_meters,
+            offer_lat: offer.offer_lat,
+            offer_lng: offer.offer_lng,
+            created_at: offer.created_at
+          };
+
+          if (!mapped.offer_lat || !mapped.offer_lng) {
+            console.warn('[RPC] Offer missing lat/lng:', offer);
+          }
+
+          return mapped;
+        });
+
+        console.log('[RPC] mappedOffers sample:', mappedOffers[0]);
+        console.log('[RPC] mappedOffers count:', mappedOffers.length);
         setOffers(mappedOffers);
         return;
       }
