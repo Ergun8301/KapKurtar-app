@@ -31,8 +31,8 @@ export function useClientLocation(clientId: string | null): UseClientLocationRet
       setError(null);
 
       const { data, error: fetchError } = await supabase
-        .from('clients')
-        .select('location')
+        .from('client_locations_view')
+        .select('location_text')
         .eq('id', clientId)
         .maybeSingle();
 
@@ -42,8 +42,8 @@ export function useClientLocation(clientId: string | null): UseClientLocationRet
         return;
       }
 
-      if (data?.location) {
-        setLocation(data.location);
+      if (data?.location_text) {
+        setLocation(data.location_text);
       }
     } catch (err) {
       console.error('Error in fetchClientLocation:', err);
