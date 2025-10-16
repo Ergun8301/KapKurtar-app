@@ -28,7 +28,7 @@ export async function updateClientLocationAndFetchOffers(
       console.log('[LOCATION] Address sent to Supabase for geocoding');
       return {
         data: [],
-        info: `Adresse envoyée à Supabase pour géocodage : ${addressInput}`,
+        info: 'Adresse envoyée à Supabase pour géocodage. Les offres seront mises à jour après traitement.',
         success: true
       };
     }
