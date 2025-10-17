@@ -28,10 +28,10 @@ const DevTestPage = () => {
 
   const runAllTests = async () => {
     setIsRunning(true);
-    
+
     // Test 1: Can read public offers
     await runTest('Read Generic Offers', async () => {
-      const offers = await getPublicOffers();
+      const offers = await getGenericOffers();
       return Array.isArray(offers);
     });
 
@@ -41,13 +41,24 @@ const DevTestPage = () => {
       return !error;
     });
 
-    // Test 3: Auth state
+    // Test 3: Fetch sample offers with merchants
+    await runTest('Fetch Offers with Merchants', async () => {
+      const { data, error } = await supabase
+        .from('offers')
+        .select('id,title,price_after,created_at,merchant_id, merchants(company_name)')
+        .order('created_at', { ascending: false })
+        .limit(3);
+      console.log(error ? '❌ Supabase select error:' : '✅ Offers result:', error || data);
+      return !error && Array.isArray(data);
+    });
+
+    // Test 4: Auth state
     await runTest('Auth State', async () => {
       const { data: { session } } = await supabase.auth.getSession();
       return session !== null;
     });
 
-    // Test 4: Location functions (if user is logged in)
+    // Test 5: Location functions (if user is logged in)
     if (user) {
       await runTest('Set Client Location', async () => {
         try {

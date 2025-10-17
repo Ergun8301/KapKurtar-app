@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+console.log('✅ SepetV2 connected to:', supabaseUrl || 'MISSING');
 console.log('Supabase environment check:', {
   hasUrl: !!supabaseUrl,
   hasKey: !!supabaseAnonKey,
