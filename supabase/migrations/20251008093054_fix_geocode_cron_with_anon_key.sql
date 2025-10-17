@@ -3,7 +3,7 @@
 
   1. Overview
     - Updates trigger function to use anon key instead of service role key
-    - Hardcodes the Supabase project URL (xrqmqfiqtyskbkmxydnc.supabase.co)
+    - Hardcodes the Supabase project URL (zhabjdyzawffsmvziojl.supabase.co)
     - Uses anon key which is safe to store in the database
 
   2. Security Note
@@ -23,8 +23,8 @@ SECURITY DEFINER
 AS $$
 DECLARE
   v_response_id bigint;
-  v_supabase_url text := 'https://xrqmqfiqtyskbkmxydnc.supabase.co';
-  v_anon_key text := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhycW1xZmlxdHlza2JrbXh5ZG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0ODEyNjQsImV4cCI6MjA3NTA1NzI2NH0.9B5vRp2NOt-uWYoFRcVBQOtUMx4kfqK-9aPyWJnc4VM';
+  v_supabase_url text := 'https://zhabjdyzawffsmvziojl.supabase.co';
+  v_anon_key text := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoYWJqZHl6YXdmZnNtdnppb2psIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2NDU1MDAsImV4cCI6MjA3NjIyMTUwMH0.pD9lmok87B4f8xe321Gk3mk-cx00789Wau7OQk_SuPw';
 BEGIN
   -- Make async HTTP request to Edge Function
   SELECT net.http_post(

@@ -67,14 +67,14 @@ La fonction :
 ### URL de la fonction
 
 ```
-https://xrqmqfiqtyskbkmxydnc.supabase.co/functions/v1/geocode-scheduler
+https://zhabjdyzawffsmvziojl.supabase.co/functions/v1/geocode-scheduler
 ```
 
 ### Test manuel de l'Edge Function
 
 **Option 1 : Via curl**
 ```bash
-curl -X POST "https://xrqmqfiqtyskbkmxydnc.supabase.co/functions/v1/geocode-scheduler" \
+curl -X POST "https://zhabjdyzawffsmvziojl.supabase.co/functions/v1/geocode-scheduler" \
   -H "Content-Type: application/json" \
   -d '{}'
 ```

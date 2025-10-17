@@ -38,7 +38,7 @@ DECLARE
   supabase_url text;
 BEGIN
   -- Use the project URL
-  supabase_url := 'https://xrqmqfiqtyskbkmxydnc.supabase.co';
+  supabase_url := 'https://zhabjdyzawffsmvziojl.supabase.co';
 
   -- Make HTTP POST request to the Edge Function
   SELECT * INTO response FROM http((
