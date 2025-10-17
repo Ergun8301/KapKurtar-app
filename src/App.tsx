@@ -1,8 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AddProductProvider } from './contexts/AddProductContext';
+import { supabase } from './lib/supabaseClient';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
+
+console.log("✅ SepetV2 connected to Supabase:", supabase);
 import CustomerTeaserPage from './pages/CustomerTeaserPage';
 import CustomerOffersMapPage from './pages/CustomerOffersMapPage';
 import CustomerAuthPage from './pages/CustomerAuthPage';
