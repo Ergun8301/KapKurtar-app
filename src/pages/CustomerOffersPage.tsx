@@ -219,12 +219,12 @@ const CustomerOffersPage = () => {
 
       if (result.success) {
         console.log('✅ [SEPET] Reservation SUCCESS!');
-        setToast({ message: '✓ Reservation confirmed!', type: 'success' });
+        setToast({ message: 'Réservation effectuée ✅', type: 'success' });
         setSelectedOfferId(null);
         refetch();
       } else {
         console.error('❌ [SEPET] Reservation FAILED:', result.error);
-        setToast({ message: result.error || 'Failed to create reservation', type: 'error' });
+        setToast({ message: result.error || 'Impossible de réserver ❌', type: 'error' });
       }
     } catch (error: any) {
       console.error('💥 [SEPET] Exception during reservation:', error);

@@ -54,18 +54,16 @@ export const createReservation = async (offerId: string, merchantId: string, qua
       return { success: false, error: 'Invalid offer: missing merchant information' };
     }
 
-    console.log('🚀 [SEPET API] Calling Supabase RPC: create_reservation_with_stock_check');
+    console.log('🚀 [SEPET API] Calling Supabase RPC: create_reservation_dynamic');
     console.log('📤 [SEPET API] RPC parameters:', {
       p_client_id: userId,
-      p_merchant_id: merchantId,
       p_offer_id: offerId,
       p_quantity: quantity
     });
 
     // Call PostgreSQL function for atomic reservation with stock deduction
-    const { data, error } = await supabase.rpc('create_reservation_with_stock_check', {
+    const { data, error } = await supabase.rpc('create_reservation_dynamic', {
       p_client_id: userId,
-      p_merchant_id: merchantId,
       p_offer_id: offerId,
       p_quantity: quantity
     });
@@ -79,23 +77,23 @@ export const createReservation = async (offerId: string, merchantId: string, qua
         details: error.details,
         hint: error.hint
       });
-      return { success: false, error: error.message };
+      return { success: false, error: 'Impossible de réserver ❌' };
     }
 
     console.log('📥 [SEPET API] RPC response received:', data);
 
-    // The function returns a JSON object with success/error
-    if (!data || !data.success) {
-      const errorMessage = data?.error || 'Failed to create reservation';
-      console.error('❌ [SEPET API] Reservation failed:', errorMessage);
-      return { success: false, error: errorMessage };
+    // The function returns a TABLE with reservation details
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      console.error('❌ [SEPET API] Reservation failed: no data returned');
+      return { success: false, error: 'Impossible de réserver ❌' };
     }
 
+    const reservationData = data[0];
     console.log('✅ [SEPET API] Reservation created successfully!');
-    console.log('📦 [SEPET API] Reservation data:', data.data);
-    console.log('📊 [SEPET API] Remaining stock:', data.data.remaining_stock);
+    console.log('📦 [SEPET API] Reservation data:', reservationData);
+    console.log('📊 [SEPET API] Remaining stock:', reservationData.new_quantity);
 
-    return { success: true, data: data.data };
+    return { success: true, data: reservationData };
   } catch (err: any) {
     console.error('💥 [SEPET API] Exception creating reservation:', err);
     return { success: false, error: err.message || 'An unexpected error occurred' };
