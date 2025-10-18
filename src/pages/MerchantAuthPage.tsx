@@ -22,7 +22,7 @@ const MerchantAuthPage = () => {
   useEffect(() => {
     if (initialized && user && role && profile) {
       if (role === 'merchant') {
-        navigate('/merchant/dashboard');
+        navigate('/merchant/dashboard'); // 👈 ici tu peux mettre /merchant/products si tu préfères
       } else if (role === 'client') {
         navigate('/offers');
       }
@@ -94,7 +94,7 @@ const MerchantAuthPage = () => {
   if (authLoading && !initialized) {
     return (
       <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3A6932]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6B35]"></div>
       </div>
     );
   }
@@ -105,7 +105,7 @@ const MerchantAuthPage = () => {
         <div className="w-full max-w-md space-y-6">
           <button
             onClick={() => navigate('/')}
-            className="inline-flex items-center text-[#3A6932] hover:text-[#2d5226] font-medium mb-4"
+            className="inline-flex items-center text-[#FF6B35] hover:text-[#e55a28] font-medium mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Retour
@@ -224,7 +224,7 @@ const MerchantAuthPage = () => {
                 {mode === 'login' && (
                   <p className="text-sm text-right mt-2">
                     <a
-                      href="/reset-password"
+                      href="/forgot-password"
                       className="text-[#FF6B35] hover:underline"
                     >
                       Mot de passe oublié ?
