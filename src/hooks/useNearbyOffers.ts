@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import type { GetOffersNearbyDynamicResponse } from '../types/supabase';
 
 export interface NearbyOffer {
   id: string;
@@ -56,32 +57,24 @@ export function useNearbyOffers({
       setError(null);
 
       const radiusMeters = Math.round(radiusKm * 1000);
-      console.log('[RPC] get_offers_nearby_dynamic args:', { p_client_id: clientId, p_radius_meters: radiusMeters });
 
       const { data, error: rpcError } = await supabase.rpc('get_offers_nearby_dynamic', {
         p_client_id: clientId,
         p_radius_meters: radiusMeters
       });
 
-      console.log('[RPC] get_offers_nearby_dynamic result:', { data, error: rpcError });
-
       if (rpcError) {
-        console.error('RPC Error:', rpcError);
         setError('Impossible de charger les offres à proximité');
         setOffers([]);
         return;
       }
 
       if (!data || data.length === 0) {
-        console.log('[RPC] No offers found');
         setOffers([]);
         return;
       }
 
-      console.log('[RPC] data sample:', data[0]);
-      console.log('[RPC] data count:', data.length);
-
-      const mappedOffers: NearbyOffer[] = data.map((offer: any) => ({
+      const mappedOffers: NearbyOffer[] = (data as GetOffersNearbyDynamicResponse[]).map((offer) => ({
         id: offer.offer_id,
         merchant_id: offer.merchant_id,
         merchant_name: '',
@@ -98,10 +91,8 @@ export function useNearbyOffers({
         created_at: ''
       }));
 
-      console.log('[RPC] mappedOffers count:', mappedOffers.length);
       setOffers(mappedOffers);
     } catch (err) {
-      console.error('Error fetching nearby offers:', err);
       setError('Impossible de charger les offres à proximité');
     } finally {
       setLoading(false);

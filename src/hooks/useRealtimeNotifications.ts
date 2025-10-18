@@ -42,9 +42,9 @@ export function useRealtimeNotifications(userId: string | null) {
       } else {
         setError(result.error || 'Failed to fetch notifications');
       }
-    } catch (err: any) {
-      console.error('Error fetching notifications:', err);
-      setError(err.message);
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message);
     } finally {
       setLoading(false);
     }

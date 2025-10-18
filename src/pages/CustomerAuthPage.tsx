@@ -48,21 +48,22 @@ const CustomerAuthPage = () => {
     }
   };
 
-  const setCustomerLocation = async () => {
+  const setCustomerLocation = async (userId: string) => {
     const locationData = sessionStorage.getItem('customerLocation');
     if (!locationData) return;
 
     try {
       const { lat, lon } = JSON.parse(locationData);
-      const { error } = await supabase.rpc('set_client_location', { lat, lon });
-      if (error) {
-        console.warn('Failed to set location:', error);
-      } else {
-        console.log('Location set successfully');
+      const { error } = await supabase.rpc('profiles_update_location', {
+        p_auth_id: userId,
+        p_lon: lon,
+        p_lat: lat
+      });
+      if (!error) {
         sessionStorage.removeItem('customerLocation');
       }
     } catch (error) {
-      console.warn('Failed to set customer location:', error);
+      // Silent fail
     }
   };
 
@@ -81,16 +82,16 @@ const CustomerAuthPage = () => {
 
     try {
       if (activeTab === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
         });
         if (error) throw error;
-        
-        // Set location if available
-        await setCustomerLocation();
-        
-        // Redirect to customer offers page
+
+        if (data.user) {
+          await setCustomerLocation(data.user.id);
+        }
+
         navigate('/offers');
       } else {
         const { data: authData, error: signUpError } = await supabase.auth.signUp({
@@ -115,36 +116,12 @@ const CustomerAuthPage = () => {
 
         const userId = authData.user.id;
 
-        // Wait for the profile to be created by the trigger
-        // Poll the database to confirm the client record exists
-        let clientExists = false;
-        let attempts = 0;
-        const maxAttempts = 10;
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-        while (!clientExists && attempts < maxAttempts) {
-          attempts++;
-          await new Promise(resolve => setTimeout(resolve, 300));
-
-          const { data: client, error: checkError } = await supabase
-            .from('clients')
-            .select('id')
-            .eq('id', userId)
-            .maybeSingle();
-
-          if (client && !checkError) {
-            clientExists = true;
-          }
-        }
-
-        if (!clientExists) {
-          throw new Error('Profile creation timeout. Please contact support.');
-        }
-
-        // Set location if available
-        await setCustomerLocation();
+        await setCustomerLocation(userId);
 
         setSuccess('Account created successfully! Redirecting...');
-        setTimeout(() => navigate('/app'), 1500);
+        setTimeout(() => navigate('/offers'), 1500);
       }
     } catch (err: any) {
       // Handle rate limiting error specifically
