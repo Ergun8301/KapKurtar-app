@@ -19,14 +19,36 @@ const MerchantAuthPage = () => {
     companyName: ''
   });
 
+  // 🧠 Redirection intelligente selon le statut du marchand
   useEffect(() => {
-    if (initialized && user && role && profile) {
-      if (role === 'merchant') {
-        navigate('/merchant/dashboard'); // 👈 ici tu peux mettre /merchant/products si tu préfères
-      } else if (role === 'client') {
+    const checkMerchantStatus = async () => {
+      if (initialized && user && role === 'merchant' && profile) {
+        // Vérifie si ce marchand a déjà des produits
+        const { data: products, error } = await supabase
+          .from('offers')
+          .select('id')
+          .eq('merchant_id', profile.id)
+          .limit(1);
+
+        if (error) {
+          console.error('Erreur lors de la vérification des produits :', error.message);
+          navigate('/merchant/dashboard');
+          return;
+        }
+
+        if (!products || products.length === 0) {
+          // Aucun produit → aller à la page d’ajout de produit
+          navigate('/merchant/add-product');
+        } else {
+          // Déjà actif → tableau de bord
+          navigate('/merchant/dashboard');
+        }
+      } else if (initialized && user && role === 'client') {
         navigate('/offers');
       }
-    }
+    };
+
+    checkMerchantStatus();
   }, [initialized, user, role, profile, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
