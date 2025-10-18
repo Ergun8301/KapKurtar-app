@@ -41,15 +41,15 @@ const CustomerOffersPage = () => {
   const categories = ['All', 'Bakery', 'Fruits', 'Ready Meals', 'Drinks'];
 
   useEffect(() => {
-    const savedRadius = localStorage.getItem('searchRadius');
+    const savedRadius = localStorage.getItem('radius_meters');
     if (savedRadius) {
       const radiusMeters = parseInt(savedRadius, 10);
       if (!isNaN(radiusMeters)) {
-        setRadiusKm(Math.round(radiusMeters / 1000));
+        setRadiusKm(Math.min(Math.round(radiusMeters / 1000), MAX_RADIUS_KM));
       }
     } else {
       const radiusMeters = radiusKm * 1000;
-      localStorage.setItem('searchRadius', radiusMeters.toString());
+      localStorage.setItem('radius_meters', radiusMeters.toString());
     }
 
     const radiusParam = searchParams.get('radius');
@@ -62,10 +62,10 @@ const CustomerOffersPage = () => {
 
     // Listen for storage changes from other tabs/windows
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'searchRadius' && e.newValue) {
+      if (e.key === 'radius_meters' && e.newValue) {
         const radiusMeters = parseInt(e.newValue, 10);
         if (!isNaN(radiusMeters)) {
-          setRadiusKm(Math.round(radiusMeters / 1000));
+          setRadiusKm(Math.min(Math.round(radiusMeters / 1000), MAX_RADIUS_KM));
           refetch();
         }
       }
@@ -168,7 +168,7 @@ const CustomerOffersPage = () => {
     const clampedRadius = Math.min(newRadius, MAX_RADIUS_KM);
     setRadiusKm(clampedRadius);
     const radiusMeters = clampedRadius * 1000;
-    localStorage.setItem('searchRadius', radiusMeters.toString());
+    localStorage.setItem('radius_meters', radiusMeters.toString());
     setSearchParams({ radius: clampedRadius.toString() });
   };
 
@@ -385,7 +385,7 @@ const CustomerOffersPage = () => {
 
             {nearbyOffers.length === 0 && !offersLoading && (
               <p className="text-gray-500 text-center py-4">
-                Aucune offre trouvée dans un rayon de {radiusKm} km
+                Aucune offre à proximité 🥖
               </p>
             )}
           </div>
@@ -411,7 +411,7 @@ const CustomerOffersPage = () => {
               radiusKm={radiusKm}
               onRadiusChange={(radius) => {
                 setRadiusKm(radius);
-                localStorage.setItem('searchRadius', radius.toString());
+                localStorage.setItem('radius_meters', (radius * 1000).toString());
               }}
               onOfferClick={handleOfferClickOnMap}
               centerLat={mapCenter?.lat}
@@ -451,10 +451,10 @@ const CustomerOffersPage = () => {
         {displayOffers.length === 0 && !isLoading ? (
           <div className="text-center py-16">
             <p className="text-xl text-gray-600 mb-4">
-              No offers available at the moment
+              Aucune offre à proximité 🥖
             </p>
             <p className="text-gray-500">
-              Check back soon for new deals from local merchants!
+              Essayez d'augmenter le rayon de recherche ou vérifiez plus tard.
             </p>
           </div>
         ) : (
