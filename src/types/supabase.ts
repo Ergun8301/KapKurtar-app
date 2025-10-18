@@ -26,3 +26,14 @@ export interface CreateReservationDynamicResponse {
   status: string;
   created_at: string;
 }
+
+export interface EnsureProfileExistsResponse {
+  profile_id: string;
+  auth_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  has_location: boolean;
+}
+
+export type UserRole = 'merchant' | 'client' | 'none';
