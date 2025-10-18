@@ -34,6 +34,27 @@ export interface EnsureProfileExistsResponse {
   last_name: string | null;
   email: string | null;
   has_location: boolean;
+  onboarding_completed: boolean;
+  preferences: Record<string, unknown>;
+  search_radius_meters: number;
+  city: string | null;
+  locale: string;
 }
 
 export type UserRole = 'merchant' | 'client' | 'none';
+
+export interface UserPreferences {
+  halal?: boolean;
+  vegan?: boolean;
+  eco?: boolean;
+}
+
+export interface MerchantOpeningHours {
+  monday?: { open: string; close: string };
+  tuesday?: { open: string; close: string };
+  wednesday?: { open: string; close: string };
+  thursday?: { open: string; close: string };
+  friday?: { open: string; close: string };
+  saturday?: { open: string; close: string };
+  sunday?: { open: string; close: string };
+}

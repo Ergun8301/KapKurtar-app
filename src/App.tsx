@@ -16,6 +16,7 @@ import MerchantsPage from './pages/MerchantsPage';
 import DownloadPage from './pages/DownloadPage';
 import CustomerOnboardingPage from './pages/CustomerOnboardingPage';
 import MerchantOnboardingPage from './pages/MerchantOnboardingPage';
+import ClientOnboardingPage from './pages/ClientOnboardingPage';
 import CustomerAppPage from './pages/CustomerAppPage';
 import MerchantDashboardPage from './pages/MerchantDashboardPage';
 import MerchantStatsPage from './pages/MerchantStatsPage';
@@ -57,6 +58,7 @@ function App() {
               <Route path="/merchants" element={<MerchantsPage />} />
               <Route path="/download" element={<DownloadPage />} />
               <Route path="/onboarding/customer" element={<CustomerOnboardingPage />} />
+              <Route path="/onboarding/client" element={<ClientOnboardingPage />} />
               <Route path="/onboarding/merchant" element={<MerchantOnboardingPage />} />
               <Route path="/app" element={<CustomerAppPage />} />
               <Route path="/profile" element={<ProfilePage />} />

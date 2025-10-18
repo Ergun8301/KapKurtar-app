@@ -1,396 +1,230 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, ArrowLeft, User, Phone, MapPin, Building, Navigation } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowLeft, Store } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import { useAuthFlow } from '../hooks/useAuthFlow';
+
+type AuthMode = 'login' | 'register';
 
 const MerchantAuthPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const { user, role, profile, loading: authLoading, initialized } = useAuthFlow();
+  const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [locationLoading, setLocationLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    company_name: '',
-    first_name: '',
-    last_name: '',
-    phone: '',
-    street: '',
-    city: '',
-    postal_code: '',
-    country: 'FR',
+    companyName: ''
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  useEffect(() => {
+    if (initialized && user && role && profile) {
+      if (role === 'merchant') {
+        navigate('/merchant/dashboard');
+      } else if (role === 'client') {
+        navigate('/offers');
+      }
+    }
+  }, [initialized, user, role, profile, navigate]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleLocationRequest = async () => {
-    setLocationLoading(true);
-    setError('');
-
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
-      });
-
-      const { latitude, longitude } = position.coords;
-      sessionStorage.setItem('merchantLocation', JSON.stringify({ lat: latitude, lon: longitude }));
-      setSuccess('Location saved! Will be used after registration.');
-    } catch (err: any) {
-      setError('Failed to get location. Please enable location services.');
-    } finally {
-      setLocationLoading(false);
-    }
-  };
-
-  const setMerchantLocation = async () => {
-    const locationData = sessionStorage.getItem('merchantLocation');
-    if (!locationData) return;
-
-    try {
-      const { lat, lon } = JSON.parse(locationData);
-      await supabase.rpc('set_merchant_location', { lat, lon });
-      sessionStorage.removeItem('merchantLocation');
-    } catch (error) {
-      console.warn('Failed to set merchant location:', error);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    setSuccess('');
 
     try {
-      if (activeTab === 'login') {
+      if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
         });
         if (error) throw error;
-        
-        // Set location if available
-        await setMerchantLocation();
-        
-        // Redirect to merchant dashboard
-        navigate('/merchant/dashboard');
       } else {
-        // Registration flow
-        const signUpOptions = {
-          data: {
-            user_type: 'merchant',
-            company_name: formData.company_name,
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            phone: formData.phone,
-            street: formData.street,
-            city: formData.city,
-            postal_code: formData.postal_code,
-            country: formData.country || 'FR'
-          },
-          emailRedirectTo: `${window.location.origin}/merchant/dashboard`
-        };
+        if (formData.password.length < 6) {
+          throw new Error('Le mot de passe doit contenir au moins 6 caractères');
+        }
+        if (!formData.companyName.trim()) {
+          throw new Error('Le nom de l\'entreprise est requis');
+        }
 
-        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
-          options: signUpOptions
         });
+        if (authError) throw authError;
 
-        if (signUpError) throw signUpError;
-
-        if (!authData.user) throw new Error('Registration failed - no user returned');
-
-        const userId = authData.user.id;
-
-        // Wait for the profile to be created by the trigger
-        let merchantExists = false;
-        let attempts = 0;
-        const maxAttempts = 5;
-
-        while (!merchantExists && attempts < maxAttempts) {
-          attempts++;
-          await new Promise(resolve => setTimeout(resolve, 400));
-
-          const { data: merchant, error: checkError } = await supabase
-            .from('merchants')
-            .select('id')
-            .eq('id', userId)
-            .maybeSingle();
-
-          if (merchant && !checkError) {
-            merchantExists = true;
-          }
+        if (authData.user) {
+          const { error: merchantError } = await supabase.from('merchants').insert({
+            profile_id: authData.user.id,
+            company_name: formData.companyName
+          });
+          if (merchantError) throw merchantError;
         }
-
-        if (!merchantExists) {
-          throw new Error('Profile creation timeout. Please try again or contact support.');
-        }
-
-        // Set location if available
-        await setMerchantLocation();
-
-        setSuccess('Merchant account created successfully! Redirecting...');
-        setTimeout(() => navigate('/merchant/dashboard'), 1500);
       }
-    } catch (err: any) {
-      console.error('Merchant auth error:', err);
-      const errorMessage = err.message || 'An error occurred';
-      setError(errorMessage);
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  if (authLoading && !initialized) {
+    return (
+      <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3A6932]"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Back to Merchant Info */}
-        <div className="text-center">
+    <div className="min-h-screen bg-[#FAFAF5] flex flex-col">
+      <div className="flex-1 flex items-center justify-center py-8 px-4">
+        <div className="w-full max-w-md space-y-6">
           <button
-            onClick={() => navigate('/merchants')}
-            className="inline-flex items-center text-green-600 hover:text-green-700 font-medium"
+            onClick={() => navigate('/')}
+            className="inline-flex items-center text-[#3A6932] hover:text-[#2d5226] font-medium mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Merchant Info
+            Retour
           </button>
-        </div>
 
-        {/* Header */}
-        <div className="text-center">
-          <div className="flex items-center justify-center mb-6">
-            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-3">
-              <span className="text-white font-bold text-xl">R</span>
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-[#FF6B35] rounded-2xl flex items-center justify-center shadow-lg">
+                <Store className="w-8 h-8 text-white" />
+              </div>
             </div>
-            <span className="font-bold text-2xl text-gray-900">ResQ Food</span>
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Merchant Partner Access</h2>
-          <p className="text-gray-600">Join our professional network and reduce food waste</p>
-        </div>
-
-        <div className="bg-white py-8 px-6 shadow-lg rounded-lg">
-          {/* Login/Register Tabs */}
-          <div className="flex mb-6">
-            <button
-              onClick={() => setActiveTab('login')}
-              className={`flex-1 py-2 px-4 text-center font-medium rounded-l-lg ${
-                activeTab === 'login'
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Login
-            </button>
-            <button
-              onClick={() => setActiveTab('register')}
-              className={`flex-1 py-2 px-4 text-center font-medium rounded-r-lg ${
-                activeTab === 'register'
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Register as Partner
-            </button>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {mode === 'login' ? 'Espace Commerçant' : 'Devenez Partenaire'}
+            </h1>
+            <p className="text-gray-600">
+              {mode === 'login'
+                ? 'Gérez vos offres et réduisez le gaspillage'
+                : 'Rejoignez SEPET et valorisez vos invendus'}
+            </p>
           </div>
 
-          {/* Error/Success Messages */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
-              {success}
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="email"
-                name="email"
-                placeholder="Business Email Address"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            {/* Password */}
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                required
-              />
+          <div className="bg-white rounded-3xl shadow-xl p-6 space-y-6">
+            <div className="flex bg-gray-100 rounded-2xl p-1">
               <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                onClick={() => setMode('login')}
+                className={`flex-1 py-3 text-center font-semibold rounded-xl transition-all ${
+                  mode === 'login'
+                    ? 'bg-white text-[#FF6B35] shadow-md'
+                    : 'text-gray-500'
+                }`}
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                Connexion
+              </button>
+              <button
+                onClick={() => setMode('register')}
+                className={`flex-1 py-3 text-center font-semibold rounded-xl transition-all ${
+                  mode === 'register'
+                    ? 'bg-white text-[#FF6B35] shadow-md'
+                    : 'text-gray-500'
+                }`}
+              >
+                Inscription
               </button>
             </div>
 
-            {/* Registration Fields */}
-            {activeTab === 'register' && (
-              <>
-                {/* Company Name */}
+            {error && (
+              <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {mode === 'register' && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Nom de l'entreprise
+                  </label>
+                  <div className="relative">
+                    <Store className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="text"
+                      name="companyName"
+                      value={formData.companyName}
+                      onChange={handleInputChange}
+                      className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent text-base"
+                      placeholder="Votre commerce"
+                      required={mode === 'register'}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email
+                </label>
                 <div className="relative">
-                  <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
-                    type="text"
-                    name="company_name"
-                    placeholder="Company/Restaurant Name"
-                    value={formData.company_name}
+                    type="email"
+                    name="email"
+                    value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent text-base"
+                    placeholder="commerce@example.com"
                     required
                   />
                 </div>
+              </div>
 
-                {/* Personal Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      name="first_name"
-                      placeholder="First Name"
-                      value={formData.first_name}
-                      onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      name="last_name"
-                      placeholder="Last Name"
-                      value={formData.last_name}
-                      onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Phone */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Mot de passe
+                </label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
-                    type="tel"
-                    name="phone"
-                    placeholder="Numéro de téléphone professionnel"
-                    value={formData.phone}
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full pl-12 pr-14 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent text-base"
+                    placeholder="••••••••"
+                    required
+                    minLength={6}
                   />
-                </div>
-
-                {/* Street Address */}
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    name="street"
-                    placeholder="Adresse du commerce (rue et numéro)"
-                    value={formData.street}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* Location Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                    <MapPin className="w-5 h-5 mr-2 text-green-500" />
-                    Business Location
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      name="city"
-                      placeholder="City"
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                    <input
-                      type="text"
-                      name="postal_code"
-                      placeholder="Postal Code"
-                      value={formData.postal_code}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <select
-                    name="country"
-                    value={formData.country}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  >
-                    <option value="FR">France</option>
-                    <option value="US">United States</option>
-                    <option value="CA">Canada</option>
-                    <option value="GB">United Kingdom</option>
-                    <option value="DE">Germany</option>
-                    <option value="ES">Spain</option>
-                    <option value="IT">Italy</option>
-                  </select>
-
-                  {/* Location Button */}
                   <button
                     type="button"
-                    onClick={handleLocationRequest}
-                    disabled={locationLoading}
-                    className="w-full bg-blue-500 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    <Navigation className="w-5 h-5 mr-2" />
-                    {locationLoading ? 'Getting Location...' : 'Use Current Business Location (Optional)'}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
-              </>
-            )}
+              </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-green-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Loading...' : activeTab === 'login' ? 'Login to Dashboard' : 'Register as Partner'}
-            </button>
-          </form>
-
-          {/* Forgot Password */}
-          {activeTab === 'login' && (
-            <div className="mt-6 text-center">
-              <button className="text-green-600 hover:text-green-700 text-sm font-medium">
-                Forgot your password?
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-[#FF6B35] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#e55a28] transition-all shadow-lg hover:shadow-xl disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Chargement...
+                  </div>
+                ) : mode === 'login' ? (
+                  'Se connecter'
+                ) : (
+                  'Créer mon espace'
+                )}
               </button>
-            </div>
-          )}
+            </form>
+          </div>
         </div>
       </div>
     </div>
