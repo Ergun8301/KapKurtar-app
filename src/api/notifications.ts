@@ -2,12 +2,12 @@ import { supabase } from '../lib/supabaseClient';
 
 export interface Notification {
   id: string;
-  user_id: string;
-  user_type: 'client' | 'merchant';
+  recipient_id: string;
+  sender_id?: string;
   title: string;
   message: string;
   type: 'reservation' | 'offer' | 'system' | 'review' | 'stock_empty' | 'daily_summary';
-  related_id: string | null;
+  offer_id: string | null;
   is_read: boolean;
   created_at: string;
 }
@@ -26,7 +26,7 @@ export const getNotifications = async () => {
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('recipient_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -56,7 +56,7 @@ export const getUnreadNotifications = async () => {
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('recipient_id', user.id)
       .eq('is_read', false)
       .order('created_at', { ascending: false });
 
@@ -107,7 +107,7 @@ export const markAllNotificationsAsRead = async () => {
     const { error } = await supabase
       .from('notifications')
       .update({ is_read: true })
-      .eq('user_id', user.id)
+      .eq('recipient_id', user.id)
       .eq('is_read', false);
 
     if (error) {
@@ -134,7 +134,7 @@ export const subscribeToNotifications = (
         event: 'INSERT',
         schema: 'public',
         table: 'notifications',
-        filter: `user_id=eq.${userId}`
+        filter: `recipient_id=eq.${userId}`
       },
       (payload) => {
         console.log('New notification received:', payload);

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Upload, Package, Clock, Pause, Play, Trash2, CreditCard as Edit } from 'lucide-react';
+import { Plus, X, Upload, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useAddProduct } from '../contexts/AddProductContext';
 import { uploadImageToSupabase } from '../lib/uploadImage';
 import { GeolocationButton } from '../components/GeolocationButton';
+import { NotificationBell } from '../components/NotificationBell';
+import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
+import { type Notification } from '../api/notifications';
 
 interface Offer {
   id: string;
@@ -32,6 +35,8 @@ const MerchantDashboardPage = () => {
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [togglingOfferId, setTogglingOfferId] = useState<string | null>(null);
+  const [showNotifications, setShowNotifications] = useState(true);
+  const { notifications, unreadCount } = useRealtimeNotifications(user?.id || null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -653,6 +658,7 @@ const MerchantDashboardPage = () => {
             <p className="text-gray-600 mt-1">{offers.length} total products</p>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationBell />
             {user && (
               <GeolocationButton
                 userRole="merchant"
@@ -671,6 +677,103 @@ const MerchantDashboardPage = () => {
               Add Product
             </button>
           </div>
+        </div>
+
+        {/* Notifications Section */}
+        <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Bell className="w-5 h-5 text-gray-600" />
+              <h3 className="text-lg font-semibold text-gray-900">
+                Notifications
+                {unreadCount > 0 && (
+                  <span className="ml-2 px-2 py-1 bg-red-500 text-white text-xs rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+              </h3>
+            </div>
+            {showNotifications ? (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+
+          {showNotifications && (
+            <div className="border-t border-gray-200">
+              {notifications.length === 0 ? (
+                <div className="px-6 py-8 text-center text-gray-500">
+                  Aucune nouvelle notification 📭
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+                  {notifications.slice(0, 10).map((notification: Notification) => {
+                    const formatTime = (dateString: string) => {
+                      const date = new Date(dateString);
+                      const now = new Date();
+                      const diffMs = now.getTime() - date.getTime();
+                      const diffMins = Math.floor(diffMs / 60000);
+                      const diffHours = Math.floor(diffMs / 3600000);
+
+                      if (diffMins < 1) return 'À l\'instant';
+                      if (diffMins < 60) return `Il y a ${diffMins}m`;
+                      if (diffHours < 24) return `Il y a ${diffHours}h`;
+
+                      return date.toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      });
+                    };
+
+                    const getNotificationColor = (type: string) => {
+                      switch (type) {
+                        case 'reservation':
+                          return 'bg-yellow-50 border-l-4 border-yellow-500';
+                        case 'stock_empty':
+                          return 'bg-red-50 border-l-4 border-red-500';
+                        case 'offer':
+                          return 'bg-blue-50 border-l-4 border-blue-500';
+                        default:
+                          return 'bg-gray-50 border-l-4 border-gray-500';
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={notification.id}
+                        className={`px-6 py-4 ${getNotificationColor(notification.type)} ${
+                          !notification.is_read ? 'font-semibold' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                              {notification.title}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {notification.message}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-2">
+                              {formatTime(notification.created_at)}
+                            </p>
+                          </div>
+                          {!notification.is_read && (
+                            <span className="ml-3 flex-shrink-0 w-2 h-2 bg-red-500 rounded-full mt-1"></span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
