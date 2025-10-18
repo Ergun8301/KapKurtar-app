@@ -71,7 +71,7 @@ const CustomerAuthPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/offers`
+          redirectTo: `${window.location.origin}/customer/auth`
         }
       });
       if (error) throw error;
