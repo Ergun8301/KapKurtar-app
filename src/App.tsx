@@ -8,7 +8,6 @@ import HomePage from './pages/HomePage';
 
 console.log("✅ SepetV2 connected to Supabase:", supabase);
 
-// Pages principales
 import CustomerTeaserPage from './pages/CustomerTeaserPage';
 import CustomerOffersMapPage from './pages/CustomerOffersMapPage';
 import CustomerAuthPage from './pages/CustomerAuthPage';
@@ -28,12 +27,10 @@ import DevTestPage from './pages/DevTestPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
-
-// ✅ Import des nouvelles pages reset password
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import ResetSuccess from './pages/ResetSuccess';
-
 import Footer from './components/Footer';
+
+// ✅ Ajout de la page de mise à jour de mot de passe
+import UpdatePasswordPage from './pages/UpdatePasswordPage';
 
 function App() {
   return (
@@ -52,26 +49,19 @@ function App() {
               top: 0,
               right: 0,
               zIndex: 9999,
-              background: 'white'
+              background: 'white',
             }}
           >
             Tester la connexion Supabase
           </button>
-
           <Header />
-
           <main>
             <Routes>
-              {/* Accueil */}
               <Route path="/" element={<HomePage />} />
-
-              {/* Client */}
               <Route path="/customer/teaser" element={<CustomerTeaserPage />} />
               <Route path="/offers" element={<Navigate to="/offers/map" replace />} />
               <Route path="/offers/map" element={<CustomerOffersMapPage />} />
               <Route path="/customer/auth" element={<CustomerAuthPage />} />
-
-              {/* Marchand */}
               <Route path="/merchant/auth" element={<MerchantAuthPage />} />
               <Route path="/merchant/info" element={<MerchantInfoPage />} />
               <Route path="/merchant" element={<Navigate to="/merchant/dashboard" replace />} />
@@ -81,8 +71,6 @@ function App() {
               <Route path="/merchant/profile" element={<MerchantProfilePage />} />
               <Route path="/merchant/settings" element={<MerchantSettingsPage />} />
               <Route path="/merchants" element={<MerchantsPage />} />
-
-              {/* Autres pages */}
               <Route path="/download" element={<DownloadPage />} />
               <Route path="/onboarding/customer" element={<CustomerOnboardingPage />} />
               <Route path="/onboarding/client" element={<ClientOnboardingPage />} />
@@ -93,12 +81,10 @@ function App() {
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/dev" element={<DevTestPage />} />
 
-              {/* ✅ Nouvelles routes Reset Password */}
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/reset-success" element={<ResetSuccess />} />
+              {/* ✅ Nouvelle route : page de mise à jour du mot de passe */}
+              <Route path="/update-password" element={<UpdatePasswordPage />} />
             </Routes>
           </main>
-
           <Footer />
         </div>
       </AddProductProvider>
