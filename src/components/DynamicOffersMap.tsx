@@ -58,6 +58,7 @@ export const DynamicOffersMap: React.FC<DynamicOffersMapProps> = ({
 }) => {
   const [clientLocation, setClientLocation] = useState<ClientLocation | null>(null);
   const [radiusMeters, setRadiusMeters] = useState(5000);
+  const MAX_RADIUS_METERS = 10000;
   const [mapCenter, setMapCenter] = useState<[number, number]>([46.5, 3]);
   const [mapZoom, setMapZoom] = useState(6);
 
@@ -67,7 +68,7 @@ export const DynamicOffersMap: React.FC<DynamicOffersMapProps> = ({
     if (savedRadius) {
       const radius = parseInt(savedRadius, 10);
       if (!isNaN(radius) && radius > 0) {
-        setRadiusMeters(radius);
+        setRadiusMeters(Math.min(radius, MAX_RADIUS_METERS));
       }
     } else {
       // Initialize with default 5km = 5000m
@@ -80,7 +81,7 @@ export const DynamicOffersMap: React.FC<DynamicOffersMapProps> = ({
       if (e.key === 'searchRadius' && e.newValue) {
         const radius = parseInt(e.newValue, 10);
         if (!isNaN(radius) && radius > 0) {
-          setRadiusMeters(radius);
+          setRadiusMeters(Math.min(radius, MAX_RADIUS_METERS));
         }
       }
     };
@@ -89,7 +90,7 @@ export const DynamicOffersMap: React.FC<DynamicOffersMapProps> = ({
     const handleRadiusChanged = (e: CustomEvent) => {
       const radiusMeters = e.detail?.radiusMeters;
       if (radiusMeters && radiusMeters > 0) {
-        setRadiusMeters(radiusMeters);
+        setRadiusMeters(Math.min(radiusMeters, MAX_RADIUS_METERS));
       }
     };
 

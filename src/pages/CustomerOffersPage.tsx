@@ -18,6 +18,7 @@ const CustomerOffersPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [clientId, setClientId] = useState<string | null>(null);
   const [radiusKm, setRadiusKm] = useState(10);
+  const MAX_RADIUS_KM = 10;
   const [showGeolocationPrompt, setShowGeolocationPrompt] = useState(false);
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [viewDetailsOfferId, setViewDetailsOfferId] = useState<string | null>(null);
@@ -54,8 +55,8 @@ const CustomerOffersPage = () => {
     const radiusParam = searchParams.get('radius');
     if (radiusParam) {
       const radius = parseInt(radiusParam, 10);
-      if (!isNaN(radius) && radius >= 1 && radius <= 50) {
-        setRadiusKm(radius);
+      if (!isNaN(radius) && radius >= 1 && radius <= MAX_RADIUS_KM) {
+        setRadiusKm(Math.min(radius, MAX_RADIUS_KM));
       }
     }
 
@@ -164,10 +165,11 @@ const CustomerOffersPage = () => {
   };
 
   const handleRadiusChange = (newRadius: number) => {
-    setRadiusKm(newRadius);
-    const radiusMeters = newRadius * 1000;
+    const clampedRadius = Math.min(newRadius, MAX_RADIUS_KM);
+    setRadiusKm(clampedRadius);
+    const radiusMeters = clampedRadius * 1000;
     localStorage.setItem('searchRadius', radiusMeters.toString());
-    setSearchParams({ radius: newRadius.toString() });
+    setSearchParams({ radius: clampedRadius.toString() });
   };
 
   const handleRequestLocation = async () => {
@@ -364,15 +366,15 @@ const CustomerOffersPage = () => {
                 <input
                   type="range"
                   min="1"
-                  max="30"
+                  max="10"
                   value={radiusKm}
                   onChange={(e) => handleRadiusChange(parseInt(e.target.value))}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
                   <span>1 km</span>
-                  <span>15 km</span>
-                  <span>30 km</span>
+                  <span>5 km</span>
+                  <span>10 km</span>
                 </div>
               </div>
             </div>

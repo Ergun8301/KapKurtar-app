@@ -15,7 +15,8 @@ const CustomerOffersMapPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [radiusKm, setRadiusKm] = useState(20);
+  const [radiusKm, setRadiusKm] = useState(10);
+  const MAX_RADIUS_KM = 10;
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [reserving, setReserving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -93,8 +94,8 @@ const CustomerOffersMapPage = () => {
     const savedRadius = localStorage.getItem('searchRadius');
     if (savedRadius) {
       const radius = parseInt(savedRadius, 10);
-      if (!isNaN(radius) && radius >= 1 && radius <= 50) {
-        setRadiusKm(radius);
+      if (!isNaN(radius) && radius >= 1 && radius <= MAX_RADIUS_KM) {
+        setRadiusKm(Math.min(radius, MAX_RADIUS_KM));
       }
     }
   }, []);

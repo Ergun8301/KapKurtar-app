@@ -113,35 +113,13 @@ export function useDynamicOffers({
   }, [clientId, radiusMeters, enabled]);
 
   useEffect(() => {
-    fetchOffers();
-
-    if (!autoRefresh || !clientId || !enabled) {
+    if (!clientId || !enabled) {
+      setLoading(false);
       return;
     }
 
-    // Subscribe to realtime updates on offers table
-    console.log('Setting up realtime subscription for offers...');
-    const channel = supabase
-      .channel('dynamic-offers-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'offers'
-        },
-        (payload) => {
-          console.log('Offers table changed (dynamic):', payload);
-          fetchOffers();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('Cleaning up realtime subscription...');
-      supabase.removeChannel(channel);
-    };
-  }, [fetchOffers, clientId, enabled, autoRefresh]);
+    fetchOffers();
+  }, [clientId, radiusMeters, enabled]);
 
   return {
     offers,

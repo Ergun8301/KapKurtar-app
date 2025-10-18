@@ -23,35 +23,14 @@ const FeaturedOffers = () => {
     loading: nearbyLoading
   } = useNearbyOffers({
     clientId: user?.id || null,
-    radiusKm: 50,
+    radiusKm: 10,
     enabled: !!user && !!clientLocation
   });
 
   useEffect(() => {
-    // For non-authenticated users, fetch all offers
+    // For non-authenticated users, fetch all offers once
     if (!user) {
       fetchOffers();
-
-      // Subscribe to realtime updates on offers table
-      const channel = supabase
-        .channel('featured-offers-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'offers'
-          },
-          (payload) => {
-            console.log('Featured offers table changed:', payload);
-            fetchOffers();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
     } else {
       // For authenticated users, use nearby offers from hook
       setLoading(nearbyLoading);
