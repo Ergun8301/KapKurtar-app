@@ -71,8 +71,8 @@ const CustomerAuthPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/customer/auth`
-        }
+          redirectTo: `${window.location.origin}/offers`, // après connexion Google → page offres
+        },
       });
       if (error) throw error;
     } catch (err) {
@@ -190,6 +190,17 @@ const CustomerAuthPage = () => {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+
+                {mode === 'login' && (
+                  <p className="text-sm text-right mt-2">
+                    <a
+                      href="/reset-password"
+                      className="text-[#3A6932] hover:underline"
+                    >
+                      Mot de passe oublié ?
+                    </a>
+                  </p>
+                )}
               </div>
 
               <button
