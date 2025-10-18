@@ -51,7 +51,7 @@ const MerchantAuthPage = () => {
           throw new Error('Le mot de passe doit contenir au moins 6 caractères');
         }
         if (!formData.companyName.trim()) {
-          throw new Error('Le nom de l\'entreprise est requis');
+          throw new Error("Le nom de l'entreprise est requis");
         }
 
         const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -81,8 +81,8 @@ const MerchantAuthPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/merchant/auth`
-        }
+          redirectTo: `${window.location.origin}/merchant/dashboard`,
+        },
       });
       if (error) throw error;
     } catch (err) {
@@ -220,6 +220,17 @@ const MerchantAuthPage = () => {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+
+                {mode === 'login' && (
+                  <p className="text-sm text-right mt-2">
+                    <a
+                      href="/reset-password"
+                      className="text-[#FF6B35] hover:underline"
+                    >
+                      Mot de passe oublié ?
+                    </a>
+                  </p>
+                )}
               </div>
 
               <button
