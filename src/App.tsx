@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AddProductProvider } from './contexts/AddProductContext';
 import { supabase } from './lib/supabaseClient';
-import { testFetchOffers } from './testSupabase';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
 
@@ -37,23 +36,6 @@ function App() {
     <Router>
       <AddProductProvider>
         <div className="min-h-screen bg-gray-50">
-          <button
-            onClick={testFetchOffers}
-            style={{
-              padding: '8px',
-              border: '1px solid #ccc',
-              borderRadius: 8,
-              cursor: 'pointer',
-              margin: '16px',
-              position: 'fixed',
-              top: 0,
-              right: 0,
-              zIndex: 9999,
-              background: 'white',
-            }}
-          >
-            Tester la connexion Supabase
-          </button>
           <Header />
           <main>
             <Routes>
