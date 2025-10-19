@@ -1,37 +1,75 @@
 import React, { useState, useEffect } from 'react';
-import { Store, Mail, Phone, MapPin, FileText, Camera, Save, User as UserIcon, Globe, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import {
+  Plus, X, Upload, Package, Clock, Pause, Play, Trash2,
+  CreditCard as Edit, Bell, ChevronDown, ChevronUp
+} from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
+import { useAddProduct } from '../contexts/AddProductContext';
 import { uploadImageToSupabase } from '../lib/uploadImage';
+import { GeolocationButton } from '../components/GeolocationButton';
+import { NotificationBell } from '../components/NotificationBell';
+import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
+import { type Notification } from '../api/notifications';
 
-interface MerchantProfile {
-  company_name: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  email: string | null;
-  phone: string | null;
-  street: string | null;
-  city: string | null;
-  postal_code: string | null;
-  country: string | null;
-  description: string | null;
-  logo_url: string | null;
+interface Offer {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string | null;
+  price_before: number;
+  price_after: number;
+  discount_percent: number | null;
+  available_from: string;
+  available_until: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  quantity: number;
 }
 
-const MerchantProfilePage = () => {
-  const navigate = useNavigate();
+const MerchantDashboardPage = () => {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<MerchantProfile | null>(null);
-  const [editedProfile, setEditedProfile] = useState<MerchantProfile | null>(null);
+  const { showAddProductModal, openAddProductModal, closeAddProductModal } = useAddProduct();
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [togglingOfferId, setTogglingOfferId] = useState<string | null>(null);
+  const [showNotifications, setShowNotifications] = useState(true);
+  const { notifications, unreadCount } = useRealtimeNotifications(user?.id || null);
+
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    image: null as File | null,
+    imagePreview: '',
+    price_before: '',
+    price_after: '',
+    quantity: '',
+    available_from: '',
+    available_until: '',
+    startNow: true,
+    duration: '2h',
+    customDuration: ''
+  });
 
   useEffect(() => {
-    loadProfile();
+    loadOffers();
+    if (!user) return;
+
+    const channel = supabase
+      .channel('merchant-offers-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'offers', filter: `merchant_id=eq.${user.id}` },
+        () => loadOffers()
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
   }, [user]);
 
   useEffect(() => {
@@ -41,435 +79,258 @@ const MerchantProfilePage = () => {
     }
   }, [toast]);
 
-  const loadProfile = async () => {
+  const loadOffers = async () => {
     if (!user) return;
-
     try {
       const { data, error } = await supabase
-        .from('merchants')
+        .from('offers')
         .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-
+        .eq('merchant_id', user.id)
+        .order('updated_at', { ascending: false });
       if (error) throw error;
-
-      if (data) {
-        const profileData: MerchantProfile = {
-          company_name: data.company_name,
-          first_name: data.first_name,
-          last_name: data.last_name,
-          email: data.email,
-          phone: data.phone,
-          street: data.street,
-          city: data.city,
-          postal_code: data.postal_code,
-          country: data.country,
-          description: data.description,
-          logo_url: data.logo_url
-        };
-        setProfile(profileData);
-        setEditedProfile(profileData);
-      }
+      setOffers(data || []);
     } catch (error: any) {
-      console.error('Error loading profile:', error);
-      setToast({ message: error.message || 'Failed to load profile', type: 'error' });
+      setToast({ message: error.message || 'Erreur chargement produits', type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setEditedProfile(prev => prev ? { ...prev, [name]: value } : null);
+  const calculateDiscount = (priceBefore: string, priceAfter: string): number => {
+    const before = parseFloat(priceBefore);
+    const after = parseFloat(priceAfter);
+    if (!before || !after || before <= 0) return 0;
+    return Math.round(((before - after) / before) * 100);
   };
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    if (file) {
+      const MAX_SIZE = 5 * 1024 * 1024;
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/avif'];
 
-    const MAX_SIZE = 5 * 1024 * 1024;
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/avif'];
+      if (file.size > MAX_SIZE) {
+        setToast({ message: 'Image trop volumineuse (max. 5 Mo).', type: 'error' });
+        return;
+      }
+      if (!validTypes.includes(file.type.toLowerCase())) {
+        setToast({ message: 'Format non pris en charge (JPG, PNG, WEBP, HEIC, AVIF).', type: 'error' });
+        return;
+      }
 
-    if (file.size > MAX_SIZE) {
-      setToast({ message: 'Image trop volumineuse (max. 5 Mo). Réduis la taille ou compresse-la avant d\'envoyer.', type: 'error' });
-      return;
-    }
-
-    if (!validTypes.includes(file.type.toLowerCase())) {
-      setToast({ message: 'Format non pris en charge. Formats acceptés : JPG, PNG, WEBP, HEIC, HEIF, AVIF.', type: 'error' });
-      return;
-    }
-
-    setIsUploadingLogo(true);
-    try {
-      const path = `merchant-logos/${user.id}.jpg`;
-      const publicUrl = await uploadImageToSupabase(file, path);
-
-      const { error: updateError } = await supabase
-        .from('merchants')
-        .update({ logo_url: publicUrl })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      await loadProfile();
-      setToast({ message: 'Logo uploaded successfully', type: 'success' });
-    } catch (error: any) {
-      console.error('Error uploading logo:', error);
-      setToast({ message: error.message || 'Failed to upload logo', type: 'error' });
-    } finally {
-      setIsUploadingLogo(false);
+      setFormData({ ...formData, image: file });
+      const reader = new FileReader();
+      reader.onloadend = () => setFormData(prev => ({ ...prev, imagePreview: reader.result as string }));
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleSave = async () => {
-    if (!user || !editedProfile) return;
+  const handlePublish = async () => {
+    if (!user) return;
+    if (!formData.title.trim() || !formData.price_before || !formData.price_after || !formData.quantity) {
+      setToast({ message: 'Tous les champs obligatoires doivent être remplis.', type: 'error' });
+      return;
+    }
 
-    setIsSaving(true);
+    setIsPublishing(true);
     try {
-      const { error } = await supabase
-        .from('merchants')
-        .update({
-          company_name: editedProfile.company_name,
-          first_name: editedProfile.first_name,
-          last_name: editedProfile.last_name,
-          phone: editedProfile.phone,
-          street: editedProfile.street,
-          city: editedProfile.city,
-          postal_code: editedProfile.postal_code,
-          country: editedProfile.country,
-          description: editedProfile.description,
-          logo_url: editedProfile.logo_url
-        })
-        .eq('id', user.id);
+      let imageUrl = null;
+      if (formData.image) {
+        const randomId = crypto.randomUUID();
+        const imagePath = `${user.id}/${randomId}.jpg`;
+        imageUrl = await uploadImageToSupabase(formData.image, 'product-images', imagePath);
+      }
 
+      const offerData = {
+        merchant_id: user.id,
+        title: formData.title,
+        description: formData.description,
+        image_url: imageUrl,
+        price_before: parseFloat(formData.price_before),
+        price_after: parseFloat(formData.price_after),
+        quantity: parseInt(formData.quantity),
+        available_from: formData.available_from,
+        available_until: formData.available_until,
+        is_active: true
+      };
+
+      const { data, error } = await supabase.from('offers').insert([offerData]).select().single();
       if (error) throw error;
 
-      await loadProfile();
-      setIsEditMode(false);
-      setToast({ message: 'Profile updated successfully', type: 'success' });
+      setOffers([data, ...offers]);
+      closeAddProductModal();
+      setToast({ message: '✅ Produit ajouté avec succès', type: 'success' });
     } catch (error: any) {
-      console.error('Error updating profile:', error);
-      setToast({ message: error.message || 'Failed to update profile', type: 'error' });
+      setToast({ message: error.message || 'Erreur lors de la publication', type: 'error' });
     } finally {
-      setIsSaving(false);
+      setIsPublishing(false);
     }
   };
 
-  if (loading) {
+  const handleUpdateOffer = async () => {
+    if (!user || !editingOffer) return;
+    setIsPublishing(true);
+    try {
+      let imageUrl = editingOffer.image_url;
+      if (formData.image) {
+        const randomId = crypto.randomUUID();
+        const imagePath = `${user.id}/${randomId}.jpg`;
+        imageUrl = await uploadImageToSupabase(formData.image, 'product-images', imagePath);
+      }
+
+      const updatedData = {
+        title: formData.title,
+        description: formData.description,
+        image_url: imageUrl,
+        price_before: parseFloat(formData.price_before),
+        price_after: parseFloat(formData.price_after),
+        quantity: parseInt(formData.quantity),
+        available_from: formData.available_from,
+        available_until: formData.available_until
+      };
+
+      const { data, error } = await supabase
+        .from('offers')
+        .update(updatedData)
+        .eq('id', editingOffer.id)
+        .eq('merchant_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      setOffers(offers.map(o => (o.id === editingOffer.id ? data : o)));
+      setToast({ message: '✅ Produit mis à jour avec succès', type: 'success' });
+    } catch (error: any) {
+      setToast({ message: error.message || 'Erreur de mise à jour', type: 'error' });
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  if (loading)
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
       </div>
     );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {toast && (
-          <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+    <div className="min-h-screen bg-gray-50">
+      {toast && (
+        <div
+          className={`fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg text-white ${
             toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-          } text-white`}>
-            {toast.message}
-          </div>
-        )}
-
-        <button
-          onClick={() => navigate('/merchant/dashboard')}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          }`}
         >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Dashboard
-        </button>
+          {toast.message}
+        </div>
+      )}
 
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative mb-4">
-              <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-                {editedProfile?.logo_url ? (
-                  <img src={editedProfile.logo_url} alt="Business Logo" className="w-full h-full object-cover" />
-                ) : (
-                  <Store className="w-16 h-16 text-gray-400" />
-                )}
-              </div>
-              {isEditMode && (
-                <label className="absolute bottom-0 right-0 bg-green-500 rounded-full p-2 cursor-pointer hover:bg-green-600 transition-colors shadow-lg">
-                  {isUploadingLogo ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                  ) : (
-                    <Camera className="w-5 h-5 text-white" />
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoUpload}
-                    className="hidden"
-                    disabled={isUploadingLogo}
-                  />
-                </label>
-              )}
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900">Business Profile</h1>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Mes Produits</h2>
+            <p className="text-gray-600 mt-1">{offers.length} produits au total</p>
           </div>
-
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Business Information</h2>
-            {!isEditMode ? (
-              <button
-                onClick={() => setIsEditMode(true)}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-              >
-                Edit
-              </button>
-            ) : (
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => {
-                    setIsEditMode(false);
-                    setEditedProfile(profile);
-                  }}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {isSaving ? 'Saving...' : 'Save'}
-                </button>
-              </div>
+          <div className="flex items-center gap-4">
+            <NotificationBell />
+            {user && (
+              <GeolocationButton
+                userRole="merchant"
+                userId={user.id}
+                onSuccess={() => setToast({ message: 'Position mise à jour ✅', type: 'success' })}
+              />
             )}
-          </div>
-
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Company Name
-              </label>
-              {isEditMode ? (
-                <div className="relative">
-                  <Store className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    name="company_name"
-                    value={editedProfile?.company_name || ''}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <Store className="w-5 h-5 text-gray-400 mr-3" />
-                  <span className="text-gray-900">{profile?.company_name || 'Not provided'}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  First Name
-                </label>
-                {isEditMode ? (
-                  <div className="relative">
-                    <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      name="first_name"
-                      value={editedProfile?.first_name || ''}
-                      onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <UserIcon className="w-5 h-5 text-gray-400 mr-3" />
-                    <span className="text-gray-900">{profile?.first_name || 'Not provided'}</span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Last Name
-                </label>
-                {isEditMode ? (
-                  <div className="relative">
-                    <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      name="last_name"
-                      value={editedProfile?.last_name || ''}
-                      onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <UserIcon className="w-5 h-5 text-gray-400 mr-3" />
-                    <span className="text-gray-900">{profile?.last_name || 'Not provided'}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <div className="flex items-center p-3 bg-gray-100 rounded-lg border border-gray-200">
-                <Mail className="w-5 h-5 text-gray-400 mr-3" />
-                <span className="text-gray-500">{profile?.email || 'Not provided'}</span>
-                <span className="ml-auto text-xs text-gray-400">Cannot be changed</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone
-              </label>
-              {isEditMode ? (
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={editedProfile?.phone || ''}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <Phone className="w-5 h-5 text-gray-400 mr-3" />
-                  <span className="text-gray-900">{profile?.phone || 'Not provided'}</span>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Street Address
-              </label>
-              {isEditMode ? (
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    name="street"
-                    value={editedProfile?.street || ''}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <MapPin className="w-5 h-5 text-gray-400 mr-3" />
-                  <span className="text-gray-900">{profile?.street || 'Not provided'}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  City
-                </label>
-                {isEditMode ? (
-                  <input
-                    type="text"
-                    name="city"
-                    value={editedProfile?.city || ''}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                ) : (
-                  <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <span className="text-gray-900">{profile?.city || 'Not provided'}</span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Postal Code
-                </label>
-                {isEditMode ? (
-                  <input
-                    type="text"
-                    name="postal_code"
-                    value={editedProfile?.postal_code || ''}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                ) : (
-                  <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <span className="text-gray-900">{profile?.postal_code || 'Not provided'}</span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Country
-                </label>
-                {isEditMode ? (
-                  <div className="relative">
-                    <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <select
-                      name="country"
-                      value={editedProfile?.country || 'FR'}
-                      onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none"
-                    >
-                      <option value="FR">France</option>
-                      <option value="BE">Belgium</option>
-                      <option value="DE">Germany</option>
-                      <option value="ES">Spain</option>
-                      <option value="IT">Italy</option>
-                    </select>
-                  </div>
-                ) : (
-                  <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <Globe className="w-5 h-5 text-gray-400 mr-3" />
-                    <span className="text-gray-900">{profile?.country || 'Not provided'}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Business Description
-              </label>
-              {isEditMode ? (
-                <div className="relative">
-                  <FileText className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
-                  <textarea
-                    name="description"
-                    value={editedProfile?.description || ''}
-                    onChange={handleInputChange}
-                    rows={4}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Tell customers about your business..."
-                  />
-                </div>
-              ) : (
-                <div className="flex items-start p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <FileText className="w-5 h-5 text-gray-400 mr-3 mt-0.5" />
-                  <span className="text-gray-900">{profile?.description || 'Not provided'}</span>
-                </div>
-              )}
-            </div>
+            <button
+              onClick={openAddProductModal}
+              className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium shadow-sm"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Ajouter un produit
+            </button>
           </div>
         </div>
+
+        {showAddProductModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Nouveau produit</h2>
+                <button onClick={closeAddProductModal} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nom du produit</label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={formData.title}
+                    onChange={e => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="Ex: Box de croissants frais"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Décris ton produit..."
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Image du produit</label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                    {formData.imagePreview ? (
+                      <div className="relative">
+                        <img src={formData.imagePreview} alt="Preview" className="max-h-48 mx-auto rounded" />
+                        <button
+                          onClick={() =>
+                            setFormData({ ...formData, image: null, imagePreview: '' })
+                          }
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="cursor-pointer">
+                        <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-600">Prendre une photo ou importer</p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  onClick={handlePublish}
+                  disabled={isPublishing}
+                  className="w-full py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+                >
+                  {isPublishing ? 'Publication...' : 'Publier'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default MerchantProfilePage;
+export default MerchantDashboardPage;
