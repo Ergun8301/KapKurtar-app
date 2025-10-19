@@ -1,149 +1,176 @@
-import { supabase } from '../lib/supabaseClient';
+// src/api/notifications.ts
+import { supabase } from "../lib/supabaseClient";
 
+// --- Types ---
 export interface Notification {
   id: string;
   recipient_id: string;
   sender_id?: string;
   title: string;
   message: string;
-  type: 'reservation' | 'offer' | 'system' | 'review' | 'stock_empty' | 'daily_summary';
+  type:
+    | "reservation"
+    | "offer"
+    | "system"
+    | "review"
+    | "stock_empty"
+    | "daily_summary";
   offer_id: string | null;
   is_read: boolean;
   created_at: string;
 }
 
-export const getNotifications = async () => {
+// ---------------------------------------------------------------------------
+// 🧠 UTILITAIRES
+// ---------------------------------------------------------------------------
+
+async function getCurrentUserId(): Promise<string | null> {
+  const { data, error } = await supabase.auth.getSession();
+  if (error || !data?.session?.user) return null;
+  return data.session.user.id;
+}
+
+// ---------------------------------------------------------------------------
+// 📬 RÉCUPÉRATION
+// ---------------------------------------------------------------------------
+
+/**
+ * Récupère les 50 dernières notifications du user connecté.
+ * Une seule requête par session.
+ */
+export const getNotifications = async (userId?: string) => {
   try {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-    if (sessionError || !session?.user) {
-      console.error('Session error:', sessionError);
-      return { success: false, error: 'User not authenticated', data: [] };
-    }
-
-    const user = session.user;
+    const uid = userId || (await getCurrentUserId());
+    if (!uid) return { success: false, error: "Utilisateur non authentifié", data: [] };
 
     const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('recipient_id', user.id)
-      .order('created_at', { ascending: false })
+      .from("notifications")
+      .select("*")
+      .eq("recipient_id", uid)
+      .order("created_at", { ascending: false })
       .limit(50);
 
-    if (error) {
-      console.error('Error fetching notifications:', error);
-      return { success: false, error: error.message, data: [] };
-    }
-
+    if (error) throw error;
     return { success: true, data: data || [] };
   } catch (err: any) {
-    console.error('Exception fetching notifications:', err);
+    console.error("getNotifications error:", err);
     return { success: false, error: err.message, data: [] };
   }
 };
 
-export const getUnreadNotifications = async () => {
+/**
+ * Récupère uniquement les notifications non lues.
+ */
+export const getUnreadNotifications = async (userId?: string) => {
   try {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-    if (sessionError || !session?.user) {
-      console.error('Session error:', sessionError);
-      return { success: false, error: 'User not authenticated', data: [] };
-    }
-
-    const user = session.user;
+    const uid = userId || (await getCurrentUserId());
+    if (!uid) return { success: false, error: "Utilisateur non authentifié", data: [] };
 
     const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('recipient_id', user.id)
-      .eq('is_read', false)
-      .order('created_at', { ascending: false });
+      .from("notifications")
+      .select("*")
+      .eq("recipient_id", uid)
+      .eq("is_read", false)
+      .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error('Error fetching unread notifications:', error);
-      return { success: false, error: error.message, data: [] };
-    }
-
+    if (error) throw error;
     return { success: true, data: data || [] };
   } catch (err: any) {
-    console.error('Exception fetching unread notifications:', err);
+    console.error("getUnreadNotifications error:", err);
     return { success: false, error: err.message, data: [] };
   }
 };
 
+// ---------------------------------------------------------------------------
+// ✅ MISE À JOUR D’ÉTAT
+// ---------------------------------------------------------------------------
+
+/**
+ * Marque une notification comme lue.
+ */
 export const markNotificationAsRead = async (notificationId: string) => {
   try {
-    const { data, error } = await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('id', notificationId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error marking notification as read:', error);
-      return { success: false, error: error.message };
-    }
-
-    return { success: true, data };
-  } catch (err: any) {
-    console.error('Exception marking notification as read:', err);
-    return { success: false, error: err.message };
-  }
-};
-
-export const markAllNotificationsAsRead = async () => {
-  try {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-    if (sessionError || !session?.user) {
-      console.error('Session error:', sessionError);
-      return { success: false, error: 'User not authenticated' };
-    }
-
-    const user = session.user;
-
     const { error } = await supabase
-      .from('notifications')
+      .from("notifications")
       .update({ is_read: true })
-      .eq('recipient_id', user.id)
-      .eq('is_read', false);
+      .eq("id", notificationId);
 
-    if (error) {
-      console.error('Error marking all notifications as read:', error);
-      return { success: false, error: error.message };
-    }
-
+    if (error) throw error;
     return { success: true };
   } catch (err: any) {
-    console.error('Exception marking all notifications as read:', err);
+    console.error("markNotificationAsRead error:", err);
     return { success: false, error: err.message };
   }
 };
 
+/**
+ * Marque toutes les notifications comme lues pour l'utilisateur connecté.
+ */
+export const markAllNotificationsAsRead = async (userId?: string) => {
+  try {
+    const uid = userId || (await getCurrentUserId());
+    if (!uid) return { success: false, error: "Utilisateur non authentifié" };
+
+    const { error } = await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("recipient_id", uid)
+      .eq("is_read", false);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err: any) {
+    console.error("markAllNotificationsAsRead error:", err);
+    return { success: false, error: err.message };
+  }
+};
+
+// ---------------------------------------------------------------------------
+// 🔔 ABONNEMENT EN TEMPS RÉEL
+// ---------------------------------------------------------------------------
+
+/**
+ * S’abonne au canal notifications en temps réel (INSERT uniquement).
+ * Nettoie automatiquement la connexion.
+ */
 export const subscribeToNotifications = (
   userId: string,
   onNotification: (notification: Notification) => void
 ) => {
+  if (!userId) {
+    console.warn("subscribeToNotifications: userId manquant");
+    return () => {};
+  }
+
+  // on crée un canal unique par user
+  const channelName = `notifications-${userId}`;
   const channel = supabase
-    .channel('notifications')
+    .channel(channelName, { config: { broadcast: { ack: true } } })
     .on(
-      'postgres_changes',
+      "postgres_changes",
       {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `recipient_id=eq.${userId}`
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+        filter: `recipient_id=eq.${userId}`,
       },
       (payload) => {
-        console.log('New notification received:', payload);
-        onNotification(payload.new as Notification);
+        const notif = payload.new as Notification;
+        console.debug("Realtime notification:", notif);
+        onNotification(notif);
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        console.log(`✅ Subscribed to realtime notifications for user ${userId}`);
+      }
+    });
 
-  return () => {
+  // nettoyage complet quand on quitte la page ou qu’on se déconnecte
+  const unsubscribe = () => {
     supabase.removeChannel(channel);
+    console.log(`🧹 Unsubscribed from notifications (${channelName})`);
   };
+
+  return unsubscribe;
 };
