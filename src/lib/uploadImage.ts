@@ -1,24 +1,37 @@
-import { supabase } from './supabaseClient';
+import { supabase } from './supabaseClient'
 
-export const uploadImageToSupabase = async (file: File, path: string): Promise<string> => {
+/**
+ * Upload une image dans le bucket Supabase "product-images"
+ * @param file - Le fichier image à uploader
+ * @param path - Le chemin dans le bucket (ex: offers/{merchant_id}/{uuid}.jpg)
+ * @returns L’URL publique de l’image uploadée
+ */
+export async function uploadImageToSupabase(file: File, path: string): Promise<string | null> {
   try {
-    const { error: uploadError } = await supabase.storage
-      .from('media')
+    // 🔹 1. Upload vers le bon bucket
+    const { data, error } = await supabase.storage
+      .from('product-images') // ⚠️ assure-toi que ce nom correspond bien à ton bucket
       .upload(path, file, {
-        upsert: true
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || 'image/jpeg',
       });
 
-    if (uploadError) throw uploadError;
+    if (error) {
+      console.error('❌ Erreur upload Supabase:', error.message);
+      throw error;
+    }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('media')
+    console.log('✅ Image uploadée avec succès :', data);
+
+    // 🔹 2. Générer l’URL publique
+    const { data: publicUrlData } = supabase.storage
+      .from('product-images')
       .getPublicUrl(path);
 
-    return publicUrl;
-  } catch (error) {
-    console.error('Error uploading image:', error);
-    throw error;
+    return publicUrlData.publicUrl || null;
+  } catch (err: any) {
+    console.error('❌ Erreur générale upload image:', err.message);
+    return null;
   }
-};
-
-export const uploadImage = uploadImageToSupabase;
+}
