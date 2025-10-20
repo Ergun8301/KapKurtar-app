@@ -54,6 +54,16 @@ const MerchantDashboardPage = () => {
   });
 
   useEffect(() => {
+    const checkExpiredOffers = async () => {
+      try {
+        await supabase.rpc('auto_expire_offers');
+        console.log('Fonction auto_expire_offers exécutée avec succès');
+      } catch (error) {
+        console.error('Erreur lors de la vérification des offres expirées :', error);
+      }
+    };
+
+    checkExpiredOffers();
     loadOffers();
 
     // Subscribe to realtime updates for merchant's offers
