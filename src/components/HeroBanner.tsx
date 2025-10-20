@@ -35,7 +35,6 @@ const HeroBanner = () => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
-
     return () => clearInterval(timer);
   }, [slides.length]);
 
@@ -71,9 +70,7 @@ const HeroBanner = () => {
       <div className="relative h-full flex items-center justify-center">
         <div className="text-center text-white px-4 max-w-5xl">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-            Save Money,{' '}
-            <span className="text-green-400">Save Food</span>,{' '}
-            <br />Save the Planet
+            Save Money, <span className="text-green-400">Save Food</span>, <br />Save the Planet
           </h1>
           <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed">
             Discover amazing deals on delicious meals from local restaurants while helping reduce food waste. 
@@ -81,13 +78,15 @@ const HeroBanner = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+            {/* ✅ Corrected redirection here */}
             <a
-              href="/customer/teaser"
+              href="/offers"
               className="bg-green-500 text-white px-8 py-4 rounded-lg font-semibold hover:bg-green-600 transition-colors inline-flex items-center text-lg shadow-lg"
             >
               Explore Offers
               <ArrowRight className="w-5 h-5 ml-2" />
             </a>
+
             <a
               href="/merchant/info"
               className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-gray-900 transition-colors text-lg"
@@ -110,6 +109,7 @@ const HeroBanner = () => {
       >
         <ChevronLeft className="w-6 h-6" />
       </button>
+
       <button
         onClick={nextSlide}
         className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-all z-10"
