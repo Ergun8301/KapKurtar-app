@@ -87,7 +87,7 @@ const ProfileCompletePage = () => {
       if (updateError) throw updateError;
 
       setSuccess('Profile completed successfully!');
-      setTimeout(() => navigate('/offers/map'), 2000);
+      setTimeout(() => navigate('/offers'), 2000);
     } catch (err: any) {
       setError(err.message || 'Failed to update profile');
     } finally {
@@ -276,7 +276,7 @@ const ProfileCompletePage = () => {
             <div className="flex justify-between items-center pt-6">
               <button
                 type="button"
-                onClick={() => navigate('/offers/map')}
+                onClick={() => navigate('/offers')}
                 className="text-gray-600 hover:text-gray-800 font-medium"
               >
                 Skip for now

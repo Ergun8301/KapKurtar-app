@@ -44,7 +44,7 @@ const MerchantAuthPage = () => {
           navigate('/merchant/dashboard');
         }
       } else if (initialized && user && role === 'client') {
-        navigate('/offers/map');
+        navigate('/offers');
       }
     };
 

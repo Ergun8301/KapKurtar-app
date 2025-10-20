@@ -23,7 +23,7 @@ const CustomerAuthPage = () => {
       if (!profile.onboarding_completed) {
         navigate('/onboarding/client');
       } else if (role === 'client') {
-        navigate('/offers/map');
+        navigate('/offers');
       } else if (role === 'merchant') {
         navigate('/merchant/dashboard');
       }

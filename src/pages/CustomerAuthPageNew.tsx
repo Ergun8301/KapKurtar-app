@@ -25,7 +25,7 @@ const CustomerAuthPage = () => {
       if (role === 'merchant') {
         navigate('/merchant');
       } else if (role === 'client') {
-        navigate('/offers/map');
+        navigate('/offers');
       }
     }
   }, [initialized, user, role, navigate]);
