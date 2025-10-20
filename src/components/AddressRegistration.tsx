@@ -21,6 +21,11 @@ export const AddressRegistration: React.FC = () => {
   }
 
   const handleGeocodeAddress = async () => {
+    // ⚠️ DISABLED: Nominatim geocoding removed - will be replaced with GPS-only approach
+    // TODO: Remove this function entirely or replace with alternative solution
+    setError('Address geocoding is currently disabled. Please use "Use Current Location" instead.');
+
+    /* COMMENTED OUT - OLD NOMINATIM IMPLEMENTATION
     if (!address.trim()) {
       setError('Please enter an address');
       return;
@@ -67,6 +72,7 @@ export const AddressRegistration: React.FC = () => {
     } finally {
       setLoading(false);
     }
+    */
   };
 
   const handleUseCurrentLocation = async () => {
