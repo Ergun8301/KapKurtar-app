@@ -45,7 +45,7 @@ const Header = () => {
   };
 
   const navigation = [
-    { name: 'Explore Offers', href: '/customer/teaser' },
+    { name: 'Explore Offers', href: '/offers' },
     { name: 'For Merchants', href: '/merchant/info' },
     { name: 'Download App', href: '/download' },
   ];
