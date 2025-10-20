@@ -11,7 +11,6 @@ import MerchantAuthPage from './pages/MerchantAuthPage';
 import ClientOnboardingPage from './pages/ClientOnboardingPage';
 import ProfileCompletePage from './pages/ProfileCompletePage';
 import MerchantDashboardPage from './pages/MerchantDashboardPage';
-import CustomerProfilePage from './pages/CustomerProfilePage';
 
 // Page carte (nouvelle version unifiée)
 import CustomerMapPage from './pages/CustomerMapPage';
@@ -42,7 +41,8 @@ function App() {
             {/* 👤 Parcours utilisateur */}
             <Route path="/onboarding" element={<ClientOnboardingPage />} />
             <Route path="/profile/complete" element={<ProfileCompletePage />} />
-            <Route path="/customer/profile" element={<CustomerProfilePage />} />
+            {/* 🔹 Ancienne page profil client supprimée */}
+            {/* <Route path="/customer/profile" element={<CustomerProfilePage />} /> */}
 
             {/* 🏪 Espace marchand */}
             <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
