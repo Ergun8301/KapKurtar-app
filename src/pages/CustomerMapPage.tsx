@@ -45,6 +45,8 @@ interface Offer {
   image_url?: string;
 }
 
+const DEFAULT_LOCATION = { lat: 46.2044, lng: 5.2258 };
+
 const MapController: React.FC<{ center: [number, number]; zoom: number }> = ({ center, zoom }) => {
   const map = useMap();
 
@@ -57,17 +59,17 @@ const MapController: React.FC<{ center: [number, number]; zoom: number }> = ({ c
 
 export default function CustomerMapPage() {
   const { user } = useAuth();
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>(DEFAULT_LOCATION);
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [radiusMeters, setRadiusMeters] = useState<number>(() => {
+  const [radiusKm, setRadiusKm] = useState<number>(() => {
     const saved = localStorage.getItem('searchRadius');
-    return saved ? parseInt(saved, 10) : 5000;
+    return saved ? parseInt(saved, 10) / 1000 : 5;
   });
   const [loading, setLoading] = useState(true);
-  const [geoError, setGeoError] = useState<string | null>(null);
+  const [geoStatus, setGeoStatus] = useState<'pending' | 'success' | 'denied' | 'error'>('pending');
   const [clientId, setClientId] = useState<string | null>(null);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([46.5, 3]);
-  const [mapZoom, setMapZoom] = useState(6);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lng]);
+  const [mapZoom, setMapZoom] = useState(12);
 
   useEffect(() => {
     const fetchClientId = async () => {
@@ -98,13 +100,13 @@ export default function CustomerMapPage() {
 
   const requestGeolocation = () => {
     if (!navigator.geolocation) {
-      setGeoError('La géolocalisation n\'est pas supportée par votre navigateur');
+      setGeoStatus('error');
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    setGeoError(null);
+    setGeoStatus('pending');
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -112,26 +114,22 @@ export default function CustomerMapPage() {
         const location = { lat: latitude, lng: longitude };
         setUserLocation(location);
         setMapCenter([latitude, longitude]);
+        setGeoStatus('success');
 
-        const radiusKm = radiusMeters / 1000;
-        setMapZoom(radiusKm <= 5 ? 13 : radiusKm <= 10 ? 12 : radiusKm <= 20 ? 11 : 10);
+        const zoom = radiusKm <= 5 ? 13 : radiusKm <= 10 ? 12 : radiusKm <= 20 ? 11 : 10;
+        setMapZoom(zoom);
 
         setLoading(false);
       },
       (error) => {
-        let errorMessage = 'Impossible d\'obtenir votre position';
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Vous avez refusé l\'accès à votre position. Veuillez autoriser la géolocalisation dans les paramètres de votre navigateur.';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Votre position n\'est pas disponible';
-            break;
-          case error.TIMEOUT:
-            errorMessage = 'La demande de position a expiré';
-            break;
+        console.error('Geolocation error:', error);
+        if (error.code === error.PERMISSION_DENIED) {
+          setGeoStatus('denied');
+        } else {
+          setGeoStatus('error');
         }
-        setGeoError(errorMessage);
+        setUserLocation(DEFAULT_LOCATION);
+        setMapCenter([DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lng]);
         setLoading(false);
       },
       {
@@ -147,13 +145,13 @@ export default function CustomerMapPage() {
   }, []);
 
   useEffect(() => {
-    if (!clientId || !userLocation) return;
+    if (!clientId || loading) return;
 
     const fetchOffers = async () => {
       try {
         const { data, error } = await supabase.rpc('get_offers_nearby_dynamic_v2', {
           client_id: clientId,
-          radius_meters: radiusMeters,
+          radius_meters: radiusKm * 1000,
         });
 
         if (error) {
@@ -169,19 +167,19 @@ export default function CustomerMapPage() {
     };
 
     fetchOffers();
-  }, [clientId, userLocation, radiusMeters]);
+  }, [clientId, userLocation, radiusKm, loading]);
 
-  const handleRadiusChange = (newRadius: number) => {
-    setRadiusMeters(newRadius);
-    localStorage.setItem('searchRadius', newRadius.toString());
+  const handleRadiusChange = (newRadiusKm: number) => {
+    setRadiusKm(newRadiusKm);
+    localStorage.setItem('searchRadius', (newRadiusKm * 1000).toString());
 
-    const radiusKm = newRadius / 1000;
-    setMapZoom(radiusKm <= 5 ? 13 : radiusKm <= 10 ? 12 : radiusKm <= 20 ? 11 : 10);
+    const zoom = newRadiusKm <= 5 ? 13 : newRadiusKm <= 10 ? 12 : newRadiusKm <= 20 ? 11 : 10;
+    setMapZoom(zoom);
   };
 
-  const radiusOptions = [2000, 5000, 10000, 15000, 20000];
+  const radiusOptions = [2, 5, 10, 15, 20];
 
-  if (loading) {
+  if (loading && geoStatus === 'pending') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -192,36 +190,36 @@ export default function CustomerMapPage() {
     );
   }
 
-  if (geoError || !userLocation) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Géolocalisation requise
-          </h3>
-          {geoError && (
-            <p className="text-red-600 mb-6">{geoError}</p>
-          )}
-          <p className="text-gray-600 mb-6">
-            Pour voir les offres autour de vous, nous avons besoin de votre position.
-          </p>
-          <button
-            onClick={requestGeolocation}
-            className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
-          >
-            <Navigation className="w-5 h-5" />
-            <span>Activer la géolocalisation</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          {geoStatus === 'denied' && (
+            <div className="bg-orange-100 border-l-4 border-orange-500 p-4">
+              <div className="flex items-center">
+                <AlertCircle className="w-5 h-5 text-orange-600 mr-3" />
+                <div className="flex-1">
+                  <p className="text-sm text-orange-800">
+                    <strong>Impossible d'accéder à votre position.</strong> Affichage de la zone de Bourg-en-Bresse par défaut.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {geoStatus === 'error' && (
+            <div className="bg-red-100 border-l-4 border-red-500 p-4">
+              <div className="flex items-center">
+                <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
+                <div className="flex-1">
+                  <p className="text-sm text-red-800">
+                    <strong>Erreur de géolocalisation.</strong> Position par défaut utilisée.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="p-4 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center space-x-2">
@@ -234,21 +232,22 @@ export default function CustomerMapPage() {
                     key={radius}
                     onClick={() => handleRadiusChange(radius)}
                     className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                      radiusMeters === radius
-                        ? 'bg-green-500 text-white shadow-md'
+                      radiusKm === radius
+                        ? 'bg-green-600 text-white shadow-md'
                         : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                     }`}
                   >
-                    {radius / 1000} km
+                    {radius} km
                   </button>
                 ))}
               </div>
               <button
                 onClick={requestGeolocation}
                 className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                title="Rafraîchir la position"
               >
                 <Navigation className="w-4 h-4" />
-                <span>Se géolocaliser</span>
+                <span>📍 Me géolocaliser</span>
               </button>
             </div>
           </div>
@@ -268,7 +267,7 @@ export default function CustomerMapPage() {
 
               <Circle
                 center={[userLocation.lat, userLocation.lng]}
-                radius={radiusMeters}
+                radius={radiusKm * 1000}
                 pathOptions={{
                   color: '#10b981',
                   fillColor: '#10b981',
@@ -280,9 +279,11 @@ export default function CustomerMapPage() {
               <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
                 <Popup>
                   <div className="text-center">
-                    <p className="font-semibold text-blue-600">Vous êtes ici</p>
+                    <p className="font-semibold text-blue-600">
+                      {geoStatus === 'success' ? 'Vous êtes ici' : 'Position par défaut (Bourg-en-Bresse)'}
+                    </p>
                     <p className="text-sm text-gray-600">
-                      Rayon: {(radiusMeters / 1000).toFixed(1)} km
+                      Rayon: {radiusKm} km
                     </p>
                   </div>
                 </Popup>
@@ -313,10 +314,10 @@ export default function CustomerMapPage() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <span className="text-lg font-bold text-green-600">
-                            €{offer.price_after.toFixed(2)}
+                            {offer.price_after.toFixed(2)}€
                           </span>
                           <span className="text-sm text-gray-400 line-through">
-                            €{offer.price_before.toFixed(2)}
+                            {offer.price_before.toFixed(2)}€
                           </span>
                         </div>
                         <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-bold">
@@ -332,18 +333,22 @@ export default function CustomerMapPage() {
           </div>
 
           <div className="p-4 bg-gray-50 border-t border-gray-200">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">
-                <span className="font-semibold text-gray-900">{offers.length}</span> offre
-                {offers.length !== 1 ? 's' : ''} trouvée{offers.length !== 1 ? 's' : ''} dans un
-                rayon de {(radiusMeters / 1000).toFixed(1)} km
-              </span>
-              {offers.length === 0 && (
-                <span className="text-orange-600 font-medium">
+            {offers.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 text-lg mb-2">Aucune offre dans ce rayon 🌍</p>
+                <p className="text-sm text-gray-400">
                   Essayez d'augmenter le rayon de recherche
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">
+                  <span className="font-semibold text-gray-900">{offers.length}</span> offre
+                  {offers.length !== 1 ? 's' : ''} trouvée{offers.length !== 1 ? 's' : ''} dans un
+                  rayon de {radiusKm} km
                 </span>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
