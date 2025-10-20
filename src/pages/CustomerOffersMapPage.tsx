@@ -26,7 +26,10 @@ export default function CustomerOffersMapPage() {
         if (!error) setOffers(data || []);
         setLoading(false);
       },
-      (err) => console.error(err)
+      (err) => {
+        console.error("Erreur de géolocalisation :", err);
+        setLoading(false);
+      }
     );
   }, [radius]);
 
@@ -59,28 +62,33 @@ export default function CustomerOffersMapPage() {
       {/* CONTENU */}
       {!loading && (
         <div className="grid md:grid-cols-2 gap-4 p-4">
-          {/* CARTE */}
+          {/* 🗺️ CARTE */}
           <div className="h-[400px] md:h-[600px] rounded-xl overflow-hidden shadow">
             {userLocation && (
-              <MapContainer
-                center={userLocation}
-                zoom={13}
-                className="h-full w-full"
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
+              <MapContainer center={userLocation} zoom={13} className="h-full w-full">
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+                {/* ✅ Marqueur de l'utilisateur */}
+                <Marker position={userLocation}>
+                  <Popup>
+                    <div className="text-center">
+                      <p className="font-bold text-green-600">📍 Vous êtes ici</p>
+                      <p>Rayon de recherche : {radius / 1000} km</p>
+                    </div>
+                  </Popup>
+                </Marker>
+
+                {/* ✅ Cercle du rayon */}
                 <Circle center={userLocation} radius={radius} color="green" />
+
+                {/* ✅ Marqueurs d’offres */}
                 {offers.map((offer, index) => (
-                  <Marker
-                    key={index}
-                    position={[offer.latitude, offer.longitude]}
-                  >
+                  <Marker key={index} position={[offer.latitude, offer.longitude]}>
                     <Popup>
                       <div className="text-center">
                         <h3 className="font-bold">{offer.title}</h3>
                         <p>{offer.price} €</p>
-                        <button className="mt-2 px-3 py-1 bg-green-600 text-white rounded-lg">
+                        <button className="mt-2 px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700">
                           Réserver
                         </button>
                       </div>
@@ -91,7 +99,7 @@ export default function CustomerOffersMapPage() {
             )}
           </div>
 
-          {/* LISTE DES OFFRES */}
+          {/* 🧾 LISTE DES OFFRES */}
           <div className="space-y-3 overflow-y-auto">
             <AnimatePresence>
               {offers.length > 0 ? (
