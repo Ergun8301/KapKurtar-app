@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MapPin, Navigation } from 'lucide-react';
 import { useAuthFlow } from '../hooks/useAuthFlow';
 
-interface NominatimResult {
+interface GeocodingResult {
   lat: string;
   lon: string;
   display_name: string;
@@ -21,11 +21,11 @@ export const AddressRegistration: React.FC = () => {
   }
 
   const handleGeocodeAddress = async () => {
-    // ⚠️ DISABLED: Nominatim geocoding removed - will be replaced with GPS-only approach
+    // ⚠️ DISABLED: Address geocoding removed - will be replaced with GPS-only approach
     // TODO: Remove this function entirely or replace with alternative solution
     setError('Address geocoding is currently disabled. Please use "Use Current Location" instead.');
 
-    /* COMMENTED OUT - OLD NOMINATIM IMPLEMENTATION
+    /* COMMENTED OUT - OLD GEOCODING IMPLEMENTATION
     if (!address.trim()) {
       setError('Please enter an address');
       return;
@@ -39,7 +39,7 @@ export const AddressRegistration: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+        `https://example.com/geocode?q=${encodeURIComponent(address)}&limit=1`,
         {
           headers: {
             'User-Agent': 'SEPET-App/1.0'
@@ -49,7 +49,7 @@ export const AddressRegistration: React.FC = () => {
 
       if (!response.ok) throw new Error('Geocoding failed');
 
-      const data: NominatimResult[] = await response.json();
+      const data: GeocodingResult[] = await response.json();
 
       if (data.length === 0) {
         throw new Error('Address not found');

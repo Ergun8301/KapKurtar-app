@@ -6,7 +6,7 @@ import { useAuthFlow } from '../hooks/useAuthFlow';
 
 type Step = 1 | 2 | 3;
 
-interface NominatimResult {
+interface GeocodingResult {
   lat: string;
   lon: string;
   display_name: string;
@@ -42,14 +42,9 @@ const ClientOnboardingPage = () => {
       const { latitude, longitude } = position.coords;
       await updateLocation(longitude, latitude);
 
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-        { headers: { 'User-Agent': 'SEPET-App/1.0' } }
-      );
-
-      const data = await response.json();
-      const cityName = data.address?.city || data.address?.town || data.address?.village || '';
-      setCity(cityName);
+      // TODO: Implement reverse geocoding with GPS-only approach
+      // For now, skip city name resolution
+      setCity('');
 
       setCurrentStep(2);
     } catch (err) {
@@ -68,15 +63,20 @@ const ClientOnboardingPage = () => {
     setLoading(true);
     setError('');
 
+    // TODO: Address geocoding disabled - implement GPS-only approach
+    setError('Address geocoding is currently disabled. Please use "Use Current Location" button.');
+    setLoading(false);
+
+    /* COMMENTED OUT - OLD GEOCODING IMPLEMENTATION
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`,
+        `https://example.com/geocode?q=${encodeURIComponent(city)}&limit=1`,
         { headers: { 'User-Agent': 'SEPET-App/1.0' } }
       );
 
-      const data: NominatimResult[] = await response.json();
+      const data: GeocodingResult[] = await response.json();
 
       if (data.length === 0) {
         throw new Error('Ville non trouvée');
@@ -91,6 +91,7 @@ const ClientOnboardingPage = () => {
     } finally {
       setLoading(false);
     }
+    */
   };
 
   const handleRadiusSubmit = () => {

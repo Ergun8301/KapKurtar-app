@@ -46,7 +46,6 @@ Complete authentication and user flow implementation connecting to Supabase back
 
 - **`src/components/AddressRegistration.tsx`**: Address registration widget
   - Shows when `profile.has_location === false`
-  - Geocodes address using Nominatim (with User-Agent)
   - Uses current location via geolocation API
   - Calls `profiles_update_location` RPC
 
@@ -97,10 +96,9 @@ Determines if user is 'merchant', 'client', or 'none' based on merchants table.
 1. After login, if `profile.has_location === false`
 2. `AddressRegistration` component shows banner
 3. User clicks "Register Address"
-4. User enters address OR uses current location
-5. Address is geocoded via Nominatim (respects rate limits, User-Agent)
-6. Calls `profiles_update_location(user.id, lon, lat)`
-7. Profile is refreshed, banner disappears
+4. User uses current location via GPS
+5. Calls `profiles_update_location(user.id, lon, lat)`
+6. Profile is refreshed, banner disappears
 
 ## Offers & Reservation Flow
 
@@ -126,7 +124,7 @@ Determines if user is 'merchant', 'client', or 'none' based on merchants table.
 - RLS policies enforce data access
 - Session JWT automatically passed
 - No service_role key exposed
-- Nominatim respects rate limits
+- GPS location used for geolocation
 
 ## TypeScript
 
