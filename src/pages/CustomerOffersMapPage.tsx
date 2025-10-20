@@ -11,13 +11,17 @@ export default function CustomerOffersMapPage() {
   const [radius, setRadius] = useState(5000);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
+  // 🌍 Position neutre si le GPS échoue (centrée sur le monde)
+  const worldCenter: [number, number] = [0, 0];
+
   useEffect(() => {
+    // 🛰️ Tente la géolocalisation navigateur
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
         setUserLocation(coords);
 
-        // 🔥 Appel Supabase : récupère les offres dans le rayon
+        // Appel Supabase : offres proches
         const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
           client_id: "00000000-0000-0000-0000-000000000000",
           radius_meters: radius,
@@ -26,10 +30,19 @@ export default function CustomerOffersMapPage() {
         if (!error) setOffers(data || []);
         setLoading(false);
       },
-      (err) => {
-        console.error("Erreur de géolocalisation :", err);
+      async (err) => {
+        console.warn("⚠️ Géolocalisation refusée :", err.message);
+        setUserLocation(worldCenter);
+
+        const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
+          client_id: "00000000-0000-0000-0000-000000000000",
+          radius_meters: radius,
+        });
+
+        if (!error) setOffers(data || []);
         setLoading(false);
-      }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   }, [radius]);
 
@@ -59,47 +72,54 @@ export default function CustomerOffersMapPage() {
         </div>
       )}
 
-      {/* CONTENU */}
+      {/* CONTENU PRINCIPAL */}
       {!loading && (
         <div className="grid md:grid-cols-2 gap-4 p-4">
-          {/* 🗺️ CARTE */}
+          {/* 🗺️ CARTE LEAFLET */}
           <div className="h-[400px] md:h-[600px] rounded-xl overflow-hidden shadow">
-            {userLocation && (
-              <MapContainer center={userLocation} zoom={13} className="h-full w-full">
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <MapContainer
+              center={userLocation || worldCenter}
+              zoom={userLocation ? 13 : 2}
+              className="h-full w-full"
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution="&copy; OpenStreetMap contributors"
+              />
 
-                {/* ✅ Marqueur de l'utilisateur */}
-                <Marker position={userLocation}>
-                  <Popup>
-                    <div className="text-center">
-                      <p className="font-bold text-green-600">📍 Vous êtes ici</p>
-                      <p>Rayon de recherche : {radius / 1000} km</p>
-                    </div>
-                  </Popup>
-                </Marker>
-
-                {/* ✅ Cercle du rayon */}
-                <Circle center={userLocation} radius={radius} color="green" />
-
-                {/* ✅ Marqueurs d’offres */}
-                {offers.map((offer, index) => (
-                  <Marker key={index} position={[offer.latitude, offer.longitude]}>
+              {/* ✅ Position utilisateur */}
+              {userLocation && userLocation !== worldCenter && (
+                <>
+                  <Marker position={userLocation}>
                     <Popup>
                       <div className="text-center">
-                        <h3 className="font-bold">{offer.title}</h3>
-                        <p>{offer.price} €</p>
-                        <button className="mt-2 px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                          Réserver
-                        </button>
+                        <p className="font-bold text-green-600">📍 Vous êtes ici</p>
+                        <p>Rayon de recherche : {radius / 1000} km</p>
                       </div>
                     </Popup>
                   </Marker>
-                ))}
-              </MapContainer>
-            )}
+                  <Circle center={userLocation} radius={radius} color="green" />
+                </>
+              )}
+
+              {/* 📦 Offres proches */}
+              {offers.map((offer, i) => (
+                <Marker key={i} position={[offer.latitude, offer.longitude]}>
+                  <Popup>
+                    <div className="text-center">
+                      <h3 className="font-bold">{offer.title}</h3>
+                      <p>{offer.price} €</p>
+                      <button className="mt-2 px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        Réserver
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
           </div>
 
-          {/* 🧾 LISTE DES OFFRES */}
+          {/* 📋 LISTE DES OFFRES */}
           <div className="space-y-3 overflow-y-auto">
             <AnimatePresence>
               {offers.length > 0 ? (
