@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import { AddProductProvider } from './contexts/AddProductContext';
 
 // Pages principales
 import HomePage from './pages/HomePage';
@@ -21,11 +22,12 @@ import NotFoundPage from './pages/NotFoundPage'; // ✅ présent et fonctionnel
 
 function App() {
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen bg-white">
-        <Header />
-        <main className="flex-grow">
-          <Routes>
+    <AddProductProvider>
+      <Router>
+        <div className="flex flex-col min-h-screen bg-white">
+          <Header />
+          <main className="flex-grow">
+            <Routes>
 
             {/* 🏠 Accueil */}
             <Route path="/" element={<HomePage />} />
@@ -58,6 +60,7 @@ function App() {
         <Footer />
       </div>
     </Router>
+    </AddProductProvider>
   );
 }
 
