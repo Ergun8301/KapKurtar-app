@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "../lib/supabaseClient";
+
+// Composant interne pour recentrer dynamiquement la carte
+function RecenterMap({ coords }: { coords: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(coords, 13);
+  }, [coords, map]);
+  return null;
+}
 
 export default function CustomerOffersMapPage() {
   const [offers, setOffers] = useState<any[]>([]);
@@ -11,38 +20,31 @@ export default function CustomerOffersMapPage() {
   const [radius, setRadius] = useState(5000);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
-  // 🌍 Position neutre si le GPS échoue (centrée sur le monde)
-  const worldCenter: [number, number] = [0, 0];
+  const worldCenter: [number, number] = [20, 0]; // Vue monde légère (centrée Afrique/Europe)
 
   useEffect(() => {
-    // 🛰️ Tente la géolocalisation navigateur
+    console.log("🌍 Initialisation de la géolocalisation...");
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        console.log("✅ Coordonnées détectées :", coords, "Précision (m):", pos.coords.accuracy);
         setUserLocation(coords);
 
-        // Appel Supabase : offres proches
         const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
           client_id: "00000000-0000-0000-0000-000000000000",
           radius_meters: radius,
         });
 
-        if (!error) setOffers(data || []);
+        if (error) console.error("Erreur Supabase:", error);
+        else setOffers(data || []);
         setLoading(false);
       },
-      async (err) => {
-        console.warn("⚠️ Géolocalisation refusée :", err.message);
+      (err) => {
+        console.warn("⚠️ Erreur géolocalisation :", err.message);
         setUserLocation(worldCenter);
-
-        const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
-          client_id: "00000000-0000-0000-0000-000000000000",
-          radius_meters: radius,
-        });
-
-        if (!error) setOffers(data || []);
         setLoading(false);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   }, [radius]);
 
@@ -75,7 +77,7 @@ export default function CustomerOffersMapPage() {
       {/* CONTENU PRINCIPAL */}
       {!loading && (
         <div className="grid md:grid-cols-2 gap-4 p-4">
-          {/* 🗺️ CARTE LEAFLET */}
+          {/* 🗺️ CARTE */}
           <div className="h-[400px] md:h-[600px] rounded-xl overflow-hidden shadow">
             <MapContainer
               center={userLocation || worldCenter}
@@ -87,13 +89,15 @@ export default function CustomerOffersMapPage() {
                 attribution="&copy; OpenStreetMap contributors"
               />
 
-              {/* ✅ Position utilisateur */}
-              {userLocation && userLocation !== worldCenter && (
+              {userLocation && (
                 <>
+                  <RecenterMap coords={userLocation} />
                   <Marker position={userLocation}>
                     <Popup>
                       <div className="text-center">
                         <p className="font-bold text-green-600">📍 Vous êtes ici</p>
+                        <p>Latitude : {userLocation[0].toFixed(4)}</p>
+                        <p>Longitude : {userLocation[1].toFixed(4)}</p>
                         <p>Rayon de recherche : {radius / 1000} km</p>
                       </div>
                     </Popup>
@@ -102,7 +106,6 @@ export default function CustomerOffersMapPage() {
                 </>
               )}
 
-              {/* 📦 Offres proches */}
               {offers.map((offer, i) => (
                 <Marker key={i} position={[offer.latitude, offer.longitude]}>
                   <Popup>
