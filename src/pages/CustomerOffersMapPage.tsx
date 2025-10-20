@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "../lib/supabaseClient";
 
-// Composant interne pour recentrer dynamiquement la carte
+// 🔄 Sous-composant pour recentrer la carte
 function RecenterMap({ coords }: { coords: [number, number] }) {
   const map = useMap();
   useEffect(() => {
@@ -20,28 +20,39 @@ export default function CustomerOffersMapPage() {
   const [radius, setRadius] = useState(5000);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
-  const worldCenter: [number, number] = [20, 0]; // Vue monde légère (centrée Afrique/Europe)
+  // 🌍 Position de secours (Bourg-en-Bresse)
+  const defaultLocation: [number, number] = [46.2127, 5.2297];
 
   useEffect(() => {
-    console.log("🌍 Initialisation de la géolocalisation...");
+    console.log("🚀 Initialisation de la géolocalisation navigateur...");
+
+    if (!("geolocation" in navigator)) {
+      console.error("❌ Géolocalisation non disponible dans ce navigateur");
+      setUserLocation(defaultLocation);
+      setLoading(false);
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
-        console.log("✅ Coordonnées détectées :", coords, "Précision (m):", pos.coords.accuracy);
+        console.log("✅ Coordonnées réelles :", coords, "Précision :", pos.coords.accuracy, "m");
         setUserLocation(coords);
 
+        // 🔥 Appel direct à Supabase
         const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
           client_id: "00000000-0000-0000-0000-000000000000",
           radius_meters: radius,
         });
 
-        if (error) console.error("Erreur Supabase:", error);
+        if (error) console.error("❌ Erreur Supabase:", error);
         else setOffers(data || []);
+
         setLoading(false);
       },
       (err) => {
         console.warn("⚠️ Erreur géolocalisation :", err.message);
-        setUserLocation(worldCenter);
+        setUserLocation(defaultLocation);
         setLoading(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -80,8 +91,8 @@ export default function CustomerOffersMapPage() {
           {/* 🗺️ CARTE */}
           <div className="h-[400px] md:h-[600px] rounded-xl overflow-hidden shadow">
             <MapContainer
-              center={userLocation || worldCenter}
-              zoom={userLocation ? 13 : 2}
+              center={userLocation || defaultLocation}
+              zoom={userLocation ? 13 : 6}
               className="h-full w-full"
             >
               <TileLayer
@@ -96,8 +107,8 @@ export default function CustomerOffersMapPage() {
                     <Popup>
                       <div className="text-center">
                         <p className="font-bold text-green-600">📍 Vous êtes ici</p>
-                        <p>Latitude : {userLocation[0].toFixed(4)}</p>
-                        <p>Longitude : {userLocation[1].toFixed(4)}</p>
+                        <p>Lat : {userLocation[0].toFixed(4)}</p>
+                        <p>Lon : {userLocation[1].toFixed(4)}</p>
                         <p>Rayon de recherche : {radius / 1000} km</p>
                       </div>
                     </Popup>
