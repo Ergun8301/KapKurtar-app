@@ -40,7 +40,7 @@ export default function CustomerOffersMapPage() {
         setUserLocation(coords);
 
         // 🔥 Appel direct à Supabase
-        const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
+        const { data, error } = await supabase.rpc("get_offers_nearby_dynamic_v2", {
           client_id: "00000000-0000-0000-0000-000000000000",
           radius_meters: radius,
         });

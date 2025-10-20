@@ -23,7 +23,7 @@ const CustomerAuthPage = () => {
       if (!profile.onboarding_completed) {
         navigate('/onboarding/client');
       } else if (role === 'client') {
-        navigate('/offers');
+        navigate('/offers/map');
       } else if (role === 'merchant') {
         navigate('/merchant/dashboard');
       }
@@ -71,7 +71,7 @@ const CustomerAuthPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/offers`,
+          redirectTo: `${window.location.origin}/offers/map`,
         },
       });
       if (error) throw error;

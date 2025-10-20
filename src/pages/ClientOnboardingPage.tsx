@@ -116,7 +116,7 @@ const ClientOnboardingPage = () => {
 
       if (error) throw error;
 
-      navigate('/offers');
+      navigate('/offers/map');
     } catch (err) {
       setError('Erreur lors de l\'enregistrement');
     } finally {
