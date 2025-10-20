@@ -58,12 +58,14 @@ export function useNearbyOffers({
 
       const radiusMeters = Math.round(radiusKm * 1000);
 
-      const { data, error: rpcError } = await supabase.rpc('get_offers_nearby_dynamic', {
+      // ✅ Correction : nouvelle fonction RPC
+      const { data, error: rpcError } = await supabase.rpc('get_offers_nearby_dynamic_v2', {
         p_client_id: clientId,
         p_radius_meters: radiusMeters
       });
 
       if (rpcError) {
+        console.error('Erreur RPC Supabase:', rpcError);
         setError('Impossible de charger les offres à proximité');
         setOffers([]);
         return;
@@ -74,25 +76,27 @@ export function useNearbyOffers({
         return;
       }
 
+      // ✅ Correction : adaptation aux nouveaux champs (id, distance_meters, etc.)
       const mappedOffers: NearbyOffer[] = (data as GetOffersNearbyDynamicResponse[]).map((offer) => ({
-        id: offer.offer_id,
+        id: offer.id, // anciennement offer.offer_id
         merchant_id: offer.merchant_id,
-        merchant_name: '',
+        merchant_name: offer.merchant_name || '',
         title: offer.title,
         description: offer.description || '',
-        image_url: null,
+        image_url: offer.image_url || null,
         price_before: parseFloat(offer.price_before),
         price_after: parseFloat(offer.price_after),
         discount_percent: offer.discount_percent,
-        available_from: '',
-        available_until: '',
+        available_from: offer.available_from || '',
+        available_until: offer.available_until || '',
         quantity: offer.quantity,
         distance_m: Math.round(offer.distance_meters),
-        created_at: ''
+        created_at: offer.created_at || ''
       }));
 
       setOffers(mappedOffers);
     } catch (err) {
+      console.error('Erreur JS côté client:', err);
       setError('Impossible de charger les offres à proximité');
     } finally {
       setLoading(false);
