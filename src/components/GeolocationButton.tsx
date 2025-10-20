@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Navigation, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
-import { flyToLocation } from './OffersMap';
 
 interface GeolocationButtonProps {
   userRole: 'client' | 'merchant';
