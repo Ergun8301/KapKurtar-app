@@ -17,7 +17,7 @@ import CustomerMapPage from './pages/CustomerMapPage';
 
 // Autres pages utiles
 import DownloadPage from './pages/DownloadPage';
-import NotFoundPage from './pages/NotFoundPage';
+import NotFoundPage from './pages/NotFoundPage'; // ✅ présent et fonctionnel
 
 function App() {
   return (
@@ -27,33 +27,28 @@ function App() {
         <main className="flex-grow">
           <Routes>
 
-            {/* 🏠 Page d'accueil */}
+            {/* 🏠 Accueil */}
             <Route path="/" element={<HomePage />} />
 
-            {/* 🗺️ Nouvelle page carte / offres */}
+            {/* 🗺️ Page carte / offres */}
             <Route path="/offers" element={<OffersPage />} />
             <Route path="/offers/map" element={<CustomerMapPage />} />
 
-            {/* 🔐 Authentification */}
+            {/* 🔐 Auth */}
             <Route path="/customer/auth" element={<CustomerAuthPage />} />
             <Route path="/merchant/auth" element={<MerchantAuthPage />} />
 
             {/* 👤 Parcours utilisateur */}
             <Route path="/onboarding" element={<ClientOnboardingPage />} />
             <Route path="/profile/complete" element={<ProfileCompletePage />} />
-            {/* 🔹 Ancienne page profil client supprimée */}
-            {/* <Route path="/customer/profile" element={<CustomerProfilePage />} /> */}
 
             {/* 🏪 Espace marchand */}
             <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
 
-            {/* 📱 Page de téléchargement de l'app */}
+            {/* 📱 Téléchargement app */}
             <Route path="/download" element={<DownloadPage />} />
 
-            {/* 🚫 Suppression de la vieille page teaser */}
-            {/* Ancienne route supprimée :
-                <Route path="/customer/teaser" element={<CustomerTeaserPage />} />
-                Elle redirige désormais vers la carte */}
+            {/* 🚫 Ancienne page teaser supprimée */}
             <Route path="/customer/teaser" element={<Navigate to="/offers" replace />} />
 
             {/* 404 */}
