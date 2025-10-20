@@ -32,7 +32,7 @@ interface OffersMapProps {
   onGeolocationSuccess?: (coords: { lat: number; lng: number }) => void;
 }
 
-// Fix Leaflet default icon issue with Vite
+// 🧭 Correction du problème d’icônes Leaflet avec Vite
 delete (Icon.Default.prototype as any)._getIconUrl;
 Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -40,13 +40,14 @@ Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// 🎨 Différents marqueurs
 const highlightIcon = new Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+  shadowSize: [41, 41],
 });
 
 const userIcon = new Icon({
@@ -55,7 +56,7 @@ const userIcon = new Icon({
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+  shadowSize: [41, 41],
 });
 
 const offerIcon = new Icon({
@@ -64,27 +65,24 @@ const offerIcon = new Icon({
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+  shadowSize: [41, 41],
 });
 
-const isValidCoordinate = (value: any): value is number => {
-  return typeof value === 'number' && !isNaN(value) && isFinite(value);
-};
+const isValidCoordinate = (value: any): value is number =>
+  typeof value === 'number' && !isNaN(value) && isFinite(value);
 
-const isValidLatLng = (lat: any, lng: any): boolean => {
-  return isValidCoordinate(lat) && isValidCoordinate(lng) &&
-         lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
-};
+const isValidLatLng = (lat: any, lng: any): boolean =>
+  isValidCoordinate(lat) && isValidCoordinate(lng) &&
+  lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
 
+// 🧭 Message temporaire tant que la géoloc n’est pas dispo
 const LocationActivation: React.FC<{ onGeolocationSuccess?: (coords: { lat: number; lng: number }) => void }> = ({ onGeolocationSuccess }) => {
   const { user } = useAuth();
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-8 text-center">
       <MapPin className="w-16 h-16 text-blue-500 mx-auto mb-4" />
-      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-        Activez votre géolocalisation
-      </h3>
+      <h3 className="text-xl font-semibold text-gray-900 mb-2">Activez votre géolocalisation</h3>
       <p className="text-gray-600 mb-6">
         Pour voir les offres à proximité sur la carte, nous avons besoin de votre position.
       </p>
@@ -94,11 +92,8 @@ const LocationActivation: React.FC<{ onGeolocationSuccess?: (coords: { lat: numb
           userRole="client"
           userId={user.id}
           onSuccess={(coords) => {
-            if (onGeolocationSuccess) {
-              onGeolocationSuccess(coords);
-            } else {
-              window.location.reload();
-            }
+            if (onGeolocationSuccess) onGeolocationSuccess(coords);
+            else window.location.reload();
           }}
           className="flex justify-center"
         />
@@ -111,31 +106,18 @@ const LocationActivation: React.FC<{ onGeolocationSuccess?: (coords: { lat: numb
   );
 };
 
+// 🧭 Contrôleur de la carte (supprimé le fallback [46.5, 3])
 const MapController: React.FC<{ center: [number, number]; zoom: number }> = ({ center, zoom }) => {
   const map = useMap();
-
   useEffect(() => {
     if (isValidLatLng(center[0], center[1])) {
       map.setView(center, zoom);
-    } else {
-      map.setView([46.5, 3], 6);
     }
   }, [center, zoom, map]);
-
   return null;
 };
 
 let mapInstance: LeafletMap | null = null;
-
-export function flyToLocation(lat: number, lng: number, zoom = 14) {
-  console.log('[MAP] flyToLocation called:', { lat, lng, zoom, hasMapInstance: !!mapInstance });
-  if (mapInstance) {
-    mapInstance.setView([lat, lng], zoom, { animate: true });
-    console.log('[MAP] Map view set to:', { lat, lng, zoom });
-  } else {
-    console.warn('[MAP] Map instance not available yet');
-  }
-}
 
 export const OffersMap: React.FC<OffersMapProps> = ({
   userLocation,
@@ -148,27 +130,21 @@ export const OffersMap: React.FC<OffersMapProps> = ({
   highlightOfferId,
   onGeolocationSuccess
 }) => {
-  console.log('[MAP] OffersMap received offers:', offers);
-  console.log('[MAP] OffersMap offers count:', offers.length);
-  console.log('[MAP] OffersMap userLocation:', userLocation);
-
   const mapRef = useRef<LeafletMap | null>(null);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([46.5, 3]);
+  const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
   const [mapZoom, setMapZoom] = useState(6);
   const [isGeolocating, setIsGeolocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [hasRequestedGeo, setHasRequestedGeo] = useState(false);
 
+  // 🎯 Correction principale — plus de fallback vers Moulins
   useEffect(() => {
-    if (isValidLatLng(centerLat, centerLng)) {
-      setMapCenter([centerLat!, centerLng!]);
-      setMapZoom(15);
-    } else if (userLocation && isValidLatLng(userLocation.lat, userLocation.lng)) {
+    if (userLocation && isValidLatLng(userLocation.lat, userLocation.lng)) {
       setMapCenter([userLocation.lat, userLocation.lng]);
       setMapZoom(radiusKm <= 10 ? 13 : radiusKm <= 20 ? 11 : radiusKm <= 30 ? 10 : 9);
-    } else {
-      setMapCenter([46.5, 3]);
-      setMapZoom(6);
+    } else if (isValidLatLng(centerLat, centerLng)) {
+      setMapCenter([centerLat!, centerLng!]);
+      setMapZoom(13);
     }
   }, [userLocation, radiusKm, centerLat, centerLng]);
 
@@ -176,7 +152,7 @@ export const OffersMap: React.FC<OffersMapProps> = ({
 
   const handleGeolocation = () => {
     if (!navigator.geolocation) {
-      setGeoError('La géolocalisation n\'est pas supportée par votre navigateur');
+      setGeoError('La géolocalisation n’est pas supportée par votre navigateur');
       return;
     }
 
@@ -192,13 +168,13 @@ export const OffersMap: React.FC<OffersMapProps> = ({
         setIsGeolocating(false);
       },
       (error) => {
-        let errorMessage = 'Impossible d\'obtenir votre position';
+        let errorMessage = 'Impossible d’obtenir votre position';
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Vous avez refusé l\'accès à votre position';
+            errorMessage = 'Vous avez refusé l’accès à votre position';
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Votre position n\'est pas disponible';
+            errorMessage = 'Votre position n’est pas disponible';
             break;
           case error.TIMEOUT:
             errorMessage = 'La demande de position a expiré';
@@ -207,21 +183,17 @@ export const OffersMap: React.FC<OffersMapProps> = ({
         setGeoError(errorMessage);
         setIsGeolocating(false);
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
   if (!userLocation || !isValidLatLng(userLocation.lat, userLocation.lng)) {
-    return <LocationActivation onGeolocationSuccess={onGeolocationSuccess} />;
+    return <p className="text-center text-gray-500 mt-10">Obtention de votre position…</p>;
   }
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-      {/* Geolocation Button */}
+      {/* 🧭 Bouton de géolocalisation */}
       {!hasRequestedGeo && (
         <div className="p-4 border-b border-gray-200 bg-blue-50">
           <button
@@ -230,20 +202,18 @@ export const OffersMap: React.FC<OffersMapProps> = ({
             className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
           >
             <Navigation className={`w-5 h-5 ${isGeolocating ? 'animate-pulse' : ''}`} />
-            <span>{isGeolocating ? 'Géolocalisation en cours...' : '📍 Me géolocaliser'}</span>
+            <span>{isGeolocating ? 'Géolocalisation en cours…' : '📍 Me géolocaliser'}</span>
           </button>
-          {geoError && (
-            <p className="text-red-600 text-sm mt-2 text-center">{geoError}</p>
-          )}
+          {geoError && <p className="text-red-600 text-sm mt-2 text-center">{geoError}</p>}
         </div>
       )}
 
-      {/* Radius Selector */}
+      {/* 🎚️ Sélecteur de rayon */}
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Navigation className="w-5 h-5 text-green-600" />
-            <span className="font-medium text-gray-700">Search Radius:</span>
+            <span className="font-medium text-gray-700">Rayon de recherche :</span>
           </div>
           <div className="flex space-x-2">
             {radiusOptions.map((radius) => (
@@ -263,119 +233,110 @@ export const OffersMap: React.FC<OffersMapProps> = ({
         </div>
       </div>
 
-      {/* Map */}
+      {/* 🗺️ Carte */}
       <div className="relative h-[500px]">
-        <MapContainer
-          center={mapCenter}
-          zoom={mapZoom}
-          style={{ height: '100%', width: '100%' }}
-          className="z-0"
-          ref={(container) => {
-            if (container) {
-              const map = container as any;
-              mapRef.current = map;
-              mapInstance = map;
-              console.log('[MAP] MapContainer ref set:', { map, center: mapCenter });
-            }
-          }}
-        >
-          <MapController center={mapCenter} zoom={mapZoom} />
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+        {mapCenter && (
+          <MapContainer
+            center={mapCenter}
+            zoom={mapZoom}
+            style={{ height: '100%', width: '100%' }}
+            className="z-0"
+            ref={(container) => {
+              if (container) {
+                const map = container as any;
+                mapRef.current = map;
+                mapInstance = map;
+              }
+            }}
+          >
+            <MapController center={mapCenter} zoom={mapZoom} />
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
 
-          {/* User Location Circle */}
-          {isValidLatLng(userLocation.lat, userLocation.lng) && (
+            {/* Cercle de rayon */}
             <Circle
               center={[userLocation.lat, userLocation.lng]}
               radius={radiusKm * 1000}
-              pathOptions={{
-                color: '#10b981',
-                fillColor: '#10b981',
-                fillOpacity: 0.1,
-                weight: 2
-              }}
+              pathOptions={{ color: '#10b981', fillColor: '#10b981', fillOpacity: 0.1, weight: 2 }}
             />
-          )}
 
-          {/* User Marker */}
-          {isValidLatLng(userLocation.lat, userLocation.lng) && (
-          <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
-            <Popup>
-              <div className="text-center">
-                <p className="font-semibold text-blue-600">Vous êtes ici</p>
-                <p className="text-sm text-gray-600">Rayon de recherche: {radiusKm} km</p>
-              </div>
-            </Popup>
-          </Marker>
-          )}
-
-          {/* Offer Markers */}
-          {offers.filter(offer => {
-            const isValid = isValidLatLng(offer.lat, offer.lng);
-            if (!isValid) {
-              console.warn('[MAP] Invalid offer coordinates:', offer);
-            }
-            return isValid;
-          }).map((offer) => (
-            <Marker
-              key={offer.id}
-              position={[offer.lat, offer.lng]}
-              icon={highlightOfferId === offer.id ? highlightIcon : offerIcon}
-              eventHandlers={{
-                click: () => onOfferClick(offer.id)
-              }}
-            >
+            {/* Marqueur utilisateur */}
+            <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
               <Popup>
-                <div className="w-64">
-                  <img
-                    src={offer.image_url}
-                    alt={offer.title}
-                    className="w-full h-32 object-cover rounded-lg mb-2"
-                  />
-                  <h4 className="font-bold text-gray-900 mb-1">{offer.title}</h4>
-                  {offer.merchant_name && (
-                    <p className="text-sm text-gray-700 mb-1 font-medium">{offer.merchant_name}</p>
-                  )}
-                  {offer.distance_km && (
-                    <p className="text-sm text-green-600 font-semibold mb-2">📍 {offer.distance_km} km de distance</p>
-                  )}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg font-bold text-green-600">${offer.price.toFixed(2)}</span>
-                      {offer.price_before && (
-                        <span className="text-sm text-gray-400 line-through">
-                          ${offer.price_before.toFixed(2)}
-                        </span>
-                      )}
-                    </div>
-                    <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-bold">
-                      -{offer.discount}%
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => onOfferClick(offer.id)}
-                    className="w-full bg-green-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-600 transition-colors"
-                  >
-                    View Offer
-                  </button>
+                <div className="text-center">
+                  <p className="font-semibold text-blue-600">Vous êtes ici</p>
+                  <p className="text-sm text-gray-600">Rayon de recherche : {radiusKm} km</p>
                 </div>
               </Popup>
             </Marker>
-          ))}
-        </MapContainer>
+
+            {/* Marqueurs offres */}
+            {offers
+              .filter((offer) => isValidLatLng(offer.lat, offer.lng))
+              .map((offer) => (
+                <Marker
+                  key={offer.id}
+                  position={[offer.lat, offer.lng]}
+                  icon={highlightOfferId === offer.id ? highlightIcon : offerIcon}
+                  eventHandlers={{ click: () => onOfferClick(offer.id) }}
+                >
+                  <Popup>
+                    <div className="w-64">
+                      <img
+                        src={offer.image_url}
+                        alt={offer.title}
+                        className="w-full h-32 object-cover rounded-lg mb-2"
+                      />
+                      <h4 className="font-bold text-gray-900 mb-1">{offer.title}</h4>
+                      {offer.merchant_name && (
+                        <p className="text-sm text-gray-700 mb-1 font-medium">{offer.merchant_name}</p>
+                      )}
+                      {offer.distance_km && (
+                        <p className="text-sm text-green-600 font-semibold mb-2">
+                          📍 {offer.distance_km} km de distance
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg font-bold text-green-600">
+                            ${offer.price.toFixed(2)}
+                          </span>
+                          {offer.price_before && (
+                            <span className="text-sm text-gray-400 line-through">
+                              ${offer.price_before.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-bold">
+                          -{offer.discount}%
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => onOfferClick(offer.id)}
+                        className="w-full bg-green-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-600 transition-colors"
+                      >
+                        Voir l’offre
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+          </MapContainer>
+        )}
       </div>
 
-      {/* Stats Footer */}
+      {/* 🧾 Pied de page infos */}
       <div className="p-4 bg-gray-50 border-t border-gray-200">
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">
-            <span className="font-semibold text-gray-900">{offers.length}</span> offer{offers.length !== 1 ? 's' : ''} within {radiusKm} km
+            <span className="font-semibold text-gray-900">{offers.length}</span>{' '}
+            offre{offers.length !== 1 ? 's' : ''} dans un rayon de {radiusKm} km
           </span>
           {offers.length === 0 && (
             <span className="text-orange-600 font-medium">
-              Try increasing the search radius
+              Augmentez le rayon pour voir plus d’offres
             </span>
           )}
         </div>
