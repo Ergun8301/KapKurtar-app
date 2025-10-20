@@ -8,7 +8,7 @@ import HomePage from './pages/HomePage';
 console.log("✅ SepetV2 connected to Supabase:", supabase);
 
 import CustomerTeaserPage from './pages/CustomerTeaserPage';
-import CustomerOffersMapPage from './pages/CustomerOffersMapPage';
+import CustomerMapPage from './pages/CustomerMapPage';
 import CustomerAuthPage from './pages/CustomerAuthPage';
 import MerchantAuthPage from './pages/MerchantAuthPage';
 import MerchantInfoPage from './pages/MerchantInfoPage';
@@ -42,7 +42,7 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/customer/teaser" element={<CustomerTeaserPage />} />
               <Route path="/offers" element={<Navigate to="/offers/map" replace />} />
-              <Route path="/offers/map" element={<CustomerOffersMapPage />} />
+              <Route path="/offers/map" element={<CustomerMapPage />} />
               <Route path="/customer/auth" element={<CustomerAuthPage />} />
               <Route path="/merchant/auth" element={<MerchantAuthPage />} />
               <Route path="/merchant/info" element={<MerchantInfoPage />} />
