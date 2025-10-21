@@ -23,7 +23,7 @@ const CustomerAuthPage = () => {
       if (!profile.onboarding_completed) {
         navigate('/onboarding/client');
       } else if (role === 'client') {
-        navigate('/offers');
+        navigate('/offers/map');
       } else if (role === 'merchant') {
         navigate('/merchant/dashboard');
       }
@@ -52,9 +52,15 @@ const CustomerAuthPage = () => {
           throw new Error('Le mot de passe doit contenir au moins 6 caractères');
         }
 
+        // ✅ Ajout du rôle client dans les métadonnées
         const { error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
+          options: {
+            data: {
+              source: 'client'
+            }
+          }
         });
         if (error) throw error;
       }
@@ -72,6 +78,8 @@ const CustomerAuthPage = () => {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/offers/map`,
+          data: { source: 'client' },
+          queryParams: { access_type: 'offline' }
         },
       });
       if (error) throw error;
