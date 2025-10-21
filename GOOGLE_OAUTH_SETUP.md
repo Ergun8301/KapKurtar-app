@@ -173,10 +173,112 @@ Error message displayed in component
 - [ ] Tested on localhost
 - [ ] Tested on production
 
+## 🔧 IMPORTANT: Fonction SQL Corrigée
+
+### ❌ Problème avec la première version
+
+La fonction SQL initiale utilisait `profiles.role` qui **n'existe pas** dans votre schéma.
+
+### ✅ Fonction SQL Correcte à Exécuter
+
+**Allez dans Supabase Dashboard → SQL Editor** et exécutez:
+
+```sql
+DROP FUNCTION IF EXISTS public.set_role_for_me(text);
+
+CREATE OR REPLACE FUNCTION public.set_role_for_me(p_role text)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_auth_id uuid;
+  v_profile_id uuid;
+  v_user_email text;
+BEGIN
+  -- 1. Get current authenticated user
+  v_auth_id := auth.uid();
+
+  IF v_auth_id IS NULL THEN
+    RAISE EXCEPTION 'User must be authenticated';
+  END IF;
+
+  -- 2. Validate role parameter
+  IF p_role NOT IN ('client', 'merchant') THEN
+    RAISE EXCEPTION 'Invalid role: must be client or merchant';
+  END IF;
+
+  -- 3. Get user email from auth.users
+  SELECT email INTO v_user_email
+  FROM auth.users
+  WHERE id = v_auth_id;
+
+  -- 4. Create or get profile
+  INSERT INTO profiles (auth_id, email, created_at, updated_at)
+  VALUES (v_auth_id, v_user_email, now(), now())
+  ON CONFLICT (auth_id)
+  DO UPDATE SET
+    updated_at = now(),
+    email = EXCLUDED.email
+  RETURNING id INTO v_profile_id;
+
+  -- 5. If merchant role, create merchant record
+  IF p_role = 'merchant' THEN
+    INSERT INTO merchants (profile_id, business_name, email, created_at, updated_at)
+    VALUES (v_profile_id, 'Mon Commerce', v_user_email, now(), now())
+    ON CONFLICT (profile_id)
+    DO UPDATE SET updated_at = now();
+  END IF;
+
+  RETURN p_role;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.set_role_for_me(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.set_role_for_me(text) TO anon;
+```
+
+### 🧪 Comment Tester
+
+**NE TESTEZ PAS depuis SQL Editor!** L'erreur "User must be authenticated" est normale car vous n'êtes pas connecté.
+
+**Testez depuis le frontend:**
+
+1. Ouvrez votre app et connectez-vous (email/password)
+2. Ouvrez la console (F12)
+3. Exécutez:
+```javascript
+const { data, error } = await supabase.rpc('set_role_for_me', { p_role: 'client' });
+console.log('Résultat:', data, error);
+```
+
+Si ça retourne `{ data: "client", error: null }` → ✅ **Ça marche!**
+
+### 📊 Vérification dans la base
+
+**Client:**
+```sql
+SELECT p.*, m.business_name
+FROM profiles p
+LEFT JOIN merchants m ON m.profile_id = p.id
+WHERE p.email = 'votre-email@example.com';
+-- Devrait montrer: profile + business_name = NULL
+```
+
+**Merchant:**
+```sql
+SELECT p.*, m.business_name
+FROM profiles p
+LEFT JOIN merchants m ON m.profile_id = p.id
+WHERE p.email = 'votre-email-merchant@example.com';
+-- Devrait montrer: profile + business_name = 'Mon Commerce'
+```
+
 ## 🚀 Next Steps
 
-1. Create Google Cloud OAuth credentials
-2. Enable Google provider in Supabase Dashboard
-3. Add redirect URLs in Supabase
-4. Test OAuth flow locally
-5. Deploy and test in production
+1. ✅ Appliquer la fonction SQL corrigée ci-dessus
+2. Create Google Cloud OAuth credentials
+3. Enable Google provider in Supabase Dashboard
+4. Add redirect URLs in Supabase
+5. Test OAuth flow locally
+6. Deploy and test in production
