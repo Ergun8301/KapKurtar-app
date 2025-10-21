@@ -1,24 +1,27 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import { AddProductProvider } from './contexts/AddProductContext';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import { AddProductProvider } from "./contexts/AddProductContext";
 
 // Pages principales
-import HomePage from './pages/HomePage';
-import OffersPage from './pages/OffersPage';
-import CustomerAuthPage from './pages/CustomerAuthPage';
-import MerchantAuthPage from './pages/MerchantAuthPage';
-import ClientOnboardingPage from './pages/ClientOnboardingPage';
-import ProfileCompletePage from './pages/ProfileCompletePage';
-import MerchantDashboardPage from './pages/MerchantDashboardPage';
+import HomePage from "./pages/HomePage";
+import OffersPage from "./pages/OffersPage";
+import CustomerAuthPage from "./pages/CustomerAuthPage";
+import MerchantAuthPage from "./pages/MerchantAuthPage";
+import ClientOnboardingPage from "./pages/ClientOnboardingPage";
+import ProfileCompletePage from "./pages/ProfileCompletePage";
+import MerchantDashboardPage from "./pages/MerchantDashboardPage";
 
 // Page carte (nouvelle version unifiée)
-import CustomerMapPage from './pages/CustomerMapPage';
+import CustomerMapPage from "./pages/CustomerMapPage";
 
 // Autres pages utiles
-import DownloadPage from './pages/DownloadPage';
-import NotFoundPage from './pages/NotFoundPage'; // ✅ présent et fonctionnel
+import DownloadPage from "./pages/DownloadPage";
+import NotFoundPage from "./pages/NotFoundPage";
+
+// Nouvelle page : Favoris ❤️
+import FavoritesPage from "./pages/FavoritesPage";
 
 function App() {
   return (
@@ -29,37 +32,41 @@ function App() {
           <main className="flex-grow">
             <Routes>
 
-            {/* 🏠 Accueil */}
-            <Route path="/" element={<HomePage />} />
+              {/* 🏠 Accueil */}
+              <Route path="/" element={<HomePage />} />
 
-            {/* 🗺️ Page carte / offres */}
-            <Route path="/offers" element={<OffersPage />} />
-            <Route path="/offers/map" element={<CustomerMapPage />} />
+              {/* 🗺️ Offres et carte */}
+              <Route path="/offers" element={<OffersPage />} />
+              <Route path="/offers/map" element={<CustomerMapPage />} />
 
-            {/* 🔐 Auth */}
-            <Route path="/customer/auth" element={<CustomerAuthPage />} />
-            <Route path="/merchant/auth" element={<MerchantAuthPage />} />
+              {/* ❤️ Favoris */}
+              <Route path="/favorites" element={<FavoritesPage />} />
 
-            {/* 👤 Parcours utilisateur */}
-            <Route path="/onboarding" element={<ClientOnboardingPage />} />
-            <Route path="/profile/complete" element={<ProfileCompletePage />} />
+              {/* 🔐 Authentification */}
+              <Route path="/customer/auth" element={<CustomerAuthPage />} />
+              <Route path="/merchant/auth" element={<MerchantAuthPage />} />
 
-            {/* 🏪 Espace marchand */}
-            <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
+              {/* 👤 Parcours utilisateur */}
+              <Route path="/onboarding" element={<ClientOnboardingPage />} />
+              <Route path="/profile/complete" element={<ProfileCompletePage />} />
 
-            {/* 📱 Téléchargement app */}
-            <Route path="/download" element={<DownloadPage />} />
+              {/* 🏪 Espace commerçant */}
+              <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
 
-            {/* 🚫 Ancienne page teaser supprimée */}
-            <Route path="/customer/teaser" element={<Navigate to="/offers" replace />} />
+              {/* 📱 Téléchargement de l’app */}
+              <Route path="/download" element={<DownloadPage />} />
 
-            {/* 404 */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
+              {/* 🚫 Redirection ancienne page */}
+              <Route path="/customer/teaser" element={<Navigate to="/offers" replace />} />
+
+              {/* 🚫 Page non trouvée */}
+              <Route path="*" element={<NotFoundPage />} />
+
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </Router>
     </AddProductProvider>
   );
 }
