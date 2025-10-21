@@ -1,8 +1,9 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { AddProductProvider } from "./contexts/AddProductContext";
+import { supabase } from "./lib/supabaseClient";
 
 // Pages principales
 import HomePage from "./pages/HomePage";
@@ -22,6 +23,33 @@ import ReviewsPage from "./pages/ReviewsPage";
 import DownloadPage from "./pages/DownloadPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
+/* 🔁 Vérifie la session et redirige selon le rôle */
+function SessionRedirect() {
+  const nav = useNavigate();
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setChecked(true); return; }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("auth_id", user.id)
+        .single();
+
+      if (!error && data?.role === "merchant") nav("/merchant/dashboard");
+      else if (!error && data?.role === "client") nav("/offers/map");
+
+      setChecked(true);
+    })();
+  }, [nav]);
+
+  if (!checked) return null;
+  return null;
+}
+
 function App() {
   return (
     <AddProductProvider>
@@ -29,6 +57,7 @@ function App() {
         <div className="flex flex-col min-h-screen bg-white">
           <Header />
           <main className="flex-grow">
+            <SessionRedirect />
             <Routes>
               {/* 🏠 Accueil */}
               <Route path="/" element={<HomePage />} />
