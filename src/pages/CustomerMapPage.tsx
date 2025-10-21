@@ -5,7 +5,9 @@ import 'leaflet/dist/leaflet.css';
 import { MapPin, Navigation, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../hooks/useAuth';
+import FavoriteButton from '../components/FavoriteButton'; // ❤️ nouveau composant
 
+// ---------- ICONES ----------
 delete (Icon.Default.prototype as any)._getIconUrl;
 Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -31,6 +33,7 @@ const offerIcon = new Icon({
   shadowSize: [41, 41]
 });
 
+// ---------- TYPES ----------
 interface Offer {
   offer_id: string;
   title: string;
@@ -40,6 +43,7 @@ interface Offer {
   discount_percent: number;
   offer_lat: number;
   offer_lng: number;
+  merchant_id: string;
   merchant_name: string;
   distance_meters: number;
   image_url?: string;
@@ -47,16 +51,16 @@ interface Offer {
 
 const DEFAULT_LOCATION = { lat: 46.2044, lng: 5.2258 };
 
+// ---------- MAP CONTROLLER ----------
 const MapController: React.FC<{ center: [number, number]; zoom: number }> = ({ center, zoom }) => {
   const map = useMap();
-
   useEffect(() => {
     map.setView(center, zoom);
   }, [center, zoom, map]);
-
   return null;
 };
 
+// ---------- PAGE PRINCIPALE ----------
 export default function CustomerMapPage() {
   const { user } = useAuth();
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>(DEFAULT_LOCATION);
@@ -71,33 +75,29 @@ export default function CustomerMapPage() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lng]);
   const [mapZoom, setMapZoom] = useState(12);
 
+  // 🔐 Récupération du client_id
   useEffect(() => {
     const fetchClientId = async () => {
       if (!user) return;
-
       try {
         const { data, error } = await supabase
           .from('clients')
           .select('id')
           .eq('auth_id', user.id)
           .maybeSingle();
-
         if (error) {
-          console.error('Error fetching client:', error);
+          console.error('Erreur client_id:', error);
           return;
         }
-
-        if (data) {
-          setClientId(data.id);
-        }
+        if (data) setClientId(data.id);
       } catch (err) {
-        console.error('Error:', err);
+        console.error('Erreur client_id:', err);
       }
     };
-
     fetchClientId();
   }, [user]);
 
+  // 📍 Géolocalisation
   const requestGeolocation = () => {
     if (!navigator.geolocation) {
       setGeoStatus('error');
@@ -115,14 +115,12 @@ export default function CustomerMapPage() {
         setUserLocation(location);
         setMapCenter([latitude, longitude]);
         setGeoStatus('success');
-
         const zoom = radiusKm <= 5 ? 13 : radiusKm <= 10 ? 12 : radiusKm <= 20 ? 11 : 10;
         setMapZoom(zoom);
-
         setLoading(false);
       },
       (error) => {
-        console.error('Geolocation error:', error);
+        console.error('Erreur GPS:', error);
         if (error.code === error.PERMISSION_DENIED) {
           setGeoStatus('denied');
         } else {
@@ -132,11 +130,7 @@ export default function CustomerMapPage() {
         setMapCenter([DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lng]);
         setLoading(false);
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
@@ -144,41 +138,40 @@ export default function CustomerMapPage() {
     requestGeolocation();
   }, []);
 
+  // 📡 Chargement des offres proches
   useEffect(() => {
     if (!clientId || loading) return;
-
     const fetchOffers = async () => {
       try {
         const { data, error } = await supabase.rpc('get_offers_nearby_dynamic_v2', {
           client_id: clientId,
           radius_meters: radiusKm * 1000,
         });
-
         if (error) {
-          console.error('Error fetching offers:', error);
+          console.error('Erreur offres:', error);
           setOffers([]);
         } else {
           setOffers(data || []);
         }
       } catch (err) {
-        console.error('Error:', err);
+        console.error('Erreur requête offres:', err);
         setOffers([]);
       }
     };
-
     fetchOffers();
   }, [clientId, userLocation, radiusKm, loading]);
 
+  // ⚙️ Changement de rayon
   const handleRadiusChange = (newRadiusKm: number) => {
     setRadiusKm(newRadiusKm);
     localStorage.setItem('searchRadius', (newRadiusKm * 1000).toString());
-
     const zoom = newRadiusKm <= 5 ? 13 : newRadiusKm <= 10 ? 12 : newRadiusKm <= 20 ? 11 : 10;
     setMapZoom(zoom);
   };
 
   const radiusOptions = [2, 5, 10, 15, 20];
 
+  // 🌀 Loader initial
   if (loading && geoStatus === 'pending') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -190,19 +183,19 @@ export default function CustomerMapPage() {
     );
   }
 
+  // ---------- RENDU ----------
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          {/* ALERTES GPS */}
           {geoStatus === 'denied' && (
             <div className="bg-orange-100 border-l-4 border-orange-500 p-4">
               <div className="flex items-center">
                 <AlertCircle className="w-5 h-5 text-orange-600 mr-3" />
-                <div className="flex-1">
-                  <p className="text-sm text-orange-800">
-                    <strong>Impossible d'accéder à votre position.</strong> Affichage de la zone de Bourg-en-Bresse par défaut.
-                  </p>
-                </div>
+                <p className="text-sm text-orange-800 font-medium">
+                  Accès à la position refusé — affichage par défaut sur Bourg-en-Bresse.
+                </p>
               </div>
             </div>
           )}
@@ -211,20 +204,19 @@ export default function CustomerMapPage() {
             <div className="bg-red-100 border-l-4 border-red-500 p-4">
               <div className="flex items-center">
                 <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
-                <div className="flex-1">
-                  <p className="text-sm text-red-800">
-                    <strong>Erreur de géolocalisation.</strong> Position par défaut utilisée.
-                  </p>
-                </div>
+                <p className="text-sm text-red-800 font-medium">
+                  Erreur de géolocalisation — position par défaut utilisée.
+                </p>
               </div>
             </div>
           )}
 
+          {/* CONTROLES */}
           <div className="p-4 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center space-x-2">
                 <MapPin className="w-5 h-5 text-green-600" />
-                <span className="font-medium text-gray-700">Rayon de recherche:</span>
+                <span className="font-medium text-gray-700">Rayon :</span>
               </div>
               <div className="flex space-x-2 flex-wrap">
                 {radiusOptions.map((radius) => (
@@ -252,6 +244,7 @@ export default function CustomerMapPage() {
             </div>
           </div>
 
+          {/* CARTE */}
           <div className="relative h-[600px]">
             <MapContainer
               center={mapCenter}
@@ -282,13 +275,12 @@ export default function CustomerMapPage() {
                     <p className="font-semibold text-blue-600">
                       {geoStatus === 'success' ? 'Vous êtes ici' : 'Position par défaut (Bourg-en-Bresse)'}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      Rayon: {radiusKm} km
-                    </p>
+                    <p className="text-sm text-gray-600">Rayon : {radiusKm} km</p>
                   </div>
                 </Popup>
               </Marker>
 
+              {/* 🟢 OFFRES AVEC COEUR */}
               {offers.map((offer) => (
                 <Marker
                   key={offer.offer_id}
@@ -296,7 +288,7 @@ export default function CustomerMapPage() {
                   icon={offerIcon}
                 >
                   <Popup>
-                    <div className="w-64">
+                    <div className="w-64 text-center">
                       {offer.image_url && (
                         <img
                           src={offer.image_url}
@@ -305,12 +297,11 @@ export default function CustomerMapPage() {
                         />
                       )}
                       <h4 className="font-bold text-gray-900 mb-1">{offer.title}</h4>
-                      <p className="text-sm text-gray-700 font-medium mb-1">
-                        {offer.merchant_name}
-                      </p>
+                      <p className="text-sm text-gray-700 font-medium mb-1">{offer.merchant_name}</p>
                       <p className="text-sm text-green-600 font-semibold mb-2">
                         📍 {(offer.distance_meters / 1000).toFixed(2)} km
                       </p>
+
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <span className="text-lg font-bold text-green-600">
@@ -324,7 +315,15 @@ export default function CustomerMapPage() {
                           -{offer.discount_percent}%
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600 line-clamp-2">{offer.description}</p>
+
+                      <p className="text-xs text-gray-600 line-clamp-2 mb-2">
+                        {offer.description}
+                      </p>
+
+                      {/* ❤️ Bouton Favori */}
+                      <div className="flex justify-center">
+                        <FavoriteButton merchantId={offer.merchant_id} />
+                      </div>
                     </div>
                   </Popup>
                 </Marker>
@@ -332,19 +331,18 @@ export default function CustomerMapPage() {
             </MapContainer>
           </div>
 
+          {/* BAS DE PAGE */}
           <div className="p-4 bg-gray-50 border-t border-gray-200">
             {offers.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500 text-lg mb-2">Aucune offre dans ce rayon 🌍</p>
-                <p className="text-sm text-gray-400">
-                  Essayez d'augmenter le rayon de recherche
-                </p>
+                <p className="text-sm text-gray-400">Essayez d’augmenter le rayon de recherche</p>
               </div>
             ) : (
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">
-                  <span className="font-semibold text-gray-900">{offers.length}</span> offre
-                  {offers.length !== 1 ? 's' : ''} trouvée{offers.length !== 1 ? 's' : ''} dans un
+                  <span className="font-semibold text-gray-900">{offers.length}</span>{' '}
+                  offre{offers.length > 1 ? 's' : ''} trouvée{offers.length > 1 ? 's' : ''} dans un
                   rayon de {radiusKm} km
                 </span>
               </div>
