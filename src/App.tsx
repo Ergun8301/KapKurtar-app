@@ -14,9 +14,11 @@ import ProfileCompletePage from "./pages/ProfileCompletePage";
 import MerchantDashboardPage from "./pages/MerchantDashboardPage";
 import CustomerMapPage from "./pages/CustomerMapPage";
 
-// Pages supplémentaires
+// Pages utilisateurs
 import FavoritesPage from "./pages/FavoritesPage";
 import CustomerHistoryPage from "./pages/CustomerHistoryPage";
+import ReviewsPage from "./pages/ReviewsPage";
+
 import DownloadPage from "./pages/DownloadPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -31,28 +33,31 @@ function App() {
               {/* 🏠 Accueil */}
               <Route path="/" element={<HomePage />} />
 
-              {/* 🗺️ Offres et carte */}
+              {/* 🗺️ Offres */}
               <Route path="/offers" element={<OffersPage />} />
               <Route path="/offers/map" element={<CustomerMapPage />} />
 
               {/* ❤️ Favoris */}
               <Route path="/favorites" element={<FavoritesPage />} />
 
-              {/* 🕒 Historique réservations */}
+              {/* 🕒 Historique */}
               <Route path="/history" element={<CustomerHistoryPage />} />
 
-              {/* 🔐 Authentification */}
+              {/* ⭐ Avis */}
+              <Route path="/reviews" element={<ReviewsPage />} />
+
+              {/* 🔐 Auth */}
               <Route path="/customer/auth" element={<CustomerAuthPage />} />
               <Route path="/merchant/auth" element={<MerchantAuthPage />} />
 
-              {/* 👤 Parcours utilisateur */}
+              {/* 👤 Onboarding */}
               <Route path="/onboarding" element={<ClientOnboardingPage />} />
               <Route path="/profile/complete" element={<ProfileCompletePage />} />
 
-              {/* 🏪 Espace commerçant */}
+              {/* 🏪 Marchands */}
               <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
 
-              {/* 📱 Téléchargement app */}
+              {/* 📱 Téléchargement */}
               <Route path="/download" element={<DownloadPage />} />
 
               {/* 🚫 Anciennes routes */}
