@@ -12,16 +12,13 @@ import MerchantAuthPage from "./pages/MerchantAuthPage";
 import ClientOnboardingPage from "./pages/ClientOnboardingPage";
 import ProfileCompletePage from "./pages/ProfileCompletePage";
 import MerchantDashboardPage from "./pages/MerchantDashboardPage";
-
-// Page carte (nouvelle version unifiée)
 import CustomerMapPage from "./pages/CustomerMapPage";
 
-// Autres pages utiles
+// Pages supplémentaires
+import FavoritesPage from "./pages/FavoritesPage";
+import CustomerHistoryPage from "./pages/CustomerHistoryPage";
 import DownloadPage from "./pages/DownloadPage";
 import NotFoundPage from "./pages/NotFoundPage";
-
-// Nouvelle page : Favoris ❤️
-import FavoritesPage from "./pages/FavoritesPage";
 
 function App() {
   return (
@@ -31,7 +28,6 @@ function App() {
           <Header />
           <main className="flex-grow">
             <Routes>
-
               {/* 🏠 Accueil */}
               <Route path="/" element={<HomePage />} />
 
@@ -41,6 +37,9 @@ function App() {
 
               {/* ❤️ Favoris */}
               <Route path="/favorites" element={<FavoritesPage />} />
+
+              {/* 🕒 Historique réservations */}
+              <Route path="/history" element={<CustomerHistoryPage />} />
 
               {/* 🔐 Authentification */}
               <Route path="/customer/auth" element={<CustomerAuthPage />} />
@@ -53,15 +52,14 @@ function App() {
               {/* 🏪 Espace commerçant */}
               <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
 
-              {/* 📱 Téléchargement de l’app */}
+              {/* 📱 Téléchargement app */}
               <Route path="/download" element={<DownloadPage />} />
 
-              {/* 🚫 Redirection ancienne page */}
+              {/* 🚫 Anciennes routes */}
               <Route path="/customer/teaser" element={<Navigate to="/offers" replace />} />
 
-              {/* 🚫 Page non trouvée */}
+              {/* 404 */}
               <Route path="*" element={<NotFoundPage />} />
-
             </Routes>
           </main>
           <Footer />
