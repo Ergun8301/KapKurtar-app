@@ -19,11 +19,10 @@ const MerchantAuthPage = () => {
     companyName: ''
   });
 
-  // 🧠 Redirection intelligente selon le statut du marchand
+  // 🧭 Redirection après login/inscription
   useEffect(() => {
     const checkMerchantStatus = async () => {
       if (initialized && user && role === 'merchant' && profile) {
-        // Vérifie si ce marchand a déjà des produits
         const { data: products, error } = await supabase
           .from('offers')
           .select('id')
@@ -31,16 +30,14 @@ const MerchantAuthPage = () => {
           .limit(1);
 
         if (error) {
-          console.error('Erreur lors de la vérification des produits :', error.message);
+          console.error('Erreur vérif produits :', error.message);
           navigate('/merchant/dashboard');
           return;
         }
 
         if (!products || products.length === 0) {
-          // Aucun produit → aller à la page d’ajout de produit
           navigate('/merchant/add-product');
         } else {
-          // Déjà actif → tableau de bord
           navigate('/merchant/dashboard');
         }
       } else if (initialized && user && role === 'client') {
@@ -76,19 +73,18 @@ const MerchantAuthPage = () => {
           throw new Error("Le nom de l'entreprise est requis");
         }
 
+        // ✅ Création du compte avec métadonnée source: 'merchant'
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
+          options: {
+            data: {
+              source: 'merchant',
+              company_name: formData.companyName
+            }
+          }
         });
         if (authError) throw authError;
-
-        if (authData.user) {
-          const { error: merchantError } = await supabase.from('merchants').insert({
-            profile_id: authData.user.id,
-            company_name: formData.companyName
-          });
-          if (merchantError) throw merchantError;
-        }
       }
     } catch (err) {
       const error = err as Error;
@@ -104,6 +100,8 @@ const MerchantAuthPage = () => {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/merchant/dashboard`,
+          queryParams: { access_type: 'offline' },
+          data: { source: 'merchant' }
         },
       });
       if (error) throw error;
