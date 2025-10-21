@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapPin, Navigation, AlertCircle } from 'lucide-react';
+import { MapPin, Navigation, AlertCircle, Star } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../hooks/useAuth';
 import FavoriteButton from '../components/FavoriteButton'; // ❤️ nouveau composant
@@ -49,6 +49,12 @@ interface Offer {
   image_url?: string;
 }
 
+interface MerchantRating {
+  merchant_id: string;
+  avg_rating: number;
+  review_count: number;
+}
+
 const DEFAULT_LOCATION = { lat: 46.2044, lng: 5.2258 };
 
 // ---------- MAP CONTROLLER ----------
@@ -65,6 +71,7 @@ export default function CustomerMapPage() {
   const { user } = useAuth();
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>(DEFAULT_LOCATION);
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [ratings, setRatings] = useState<Record<string, MerchantRating>>({});
   const [radiusKm, setRadiusKm] = useState<number>(() => {
     const saved = localStorage.getItem('searchRadius');
     return saved ? parseInt(saved, 10) / 1000 : 5;
@@ -161,6 +168,43 @@ export default function CustomerMapPage() {
     fetchOffers();
   }, [clientId, userLocation, radiusKm, loading]);
 
+  // ⭐ Charger la moyenne des avis
+  useEffect(() => {
+    const fetchRatings = async () => {
+      if (offers.length === 0) return;
+      const merchantIds = offers.map((o) => o.merchant_id);
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('merchant_id, rating')
+        .in('merchant_id', merchantIds);
+
+      if (error) {
+        console.error('Erreur chargement avis:', error);
+        return;
+      }
+
+      const grouped: Record<string, { sum: number; count: number }> = {};
+      data.forEach((r) => {
+        if (!grouped[r.merchant_id]) grouped[r.merchant_id] = { sum: 0, count: 0 };
+        grouped[r.merchant_id].sum += r.rating;
+        grouped[r.merchant_id].count += 1;
+      });
+
+      const result: Record<string, MerchantRating> = {};
+      Object.entries(grouped).forEach(([merchant_id, g]) => {
+        result[merchant_id] = {
+          merchant_id,
+          avg_rating: g.sum / g.count,
+          review_count: g.count,
+        };
+      });
+
+      setRatings(result);
+    };
+
+    fetchRatings();
+  }, [offers]);
+
   // ⚙️ Changement de rayon
   const handleRadiusChange = (newRadiusKm: number) => {
     setRadiusKm(newRadiusKm);
@@ -188,28 +232,6 @@ export default function CustomerMapPage() {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          {/* ALERTES GPS */}
-          {geoStatus === 'denied' && (
-            <div className="bg-orange-100 border-l-4 border-orange-500 p-4">
-              <div className="flex items-center">
-                <AlertCircle className="w-5 h-5 text-orange-600 mr-3" />
-                <p className="text-sm text-orange-800 font-medium">
-                  Accès à la position refusé — affichage par défaut sur Bourg-en-Bresse.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {geoStatus === 'error' && (
-            <div className="bg-red-100 border-l-4 border-red-500 p-4">
-              <div className="flex items-center">
-                <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
-                <p className="text-sm text-red-800 font-medium">
-                  Erreur de géolocalisation — position par défaut utilisée.
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* CONTROLES */}
           <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -244,7 +266,7 @@ export default function CustomerMapPage() {
             </div>
           </div>
 
-          {/* CARTE */}
+          {/* 🗺️ CARTE */}
           <div className="relative h-[600px]">
             <MapContainer
               center={mapCenter}
@@ -280,54 +302,71 @@ export default function CustomerMapPage() {
                 </Popup>
               </Marker>
 
-              {/* 🟢 OFFRES AVEC COEUR */}
-              {offers.map((offer) => (
-                <Marker
-                  key={offer.offer_id}
-                  position={[offer.offer_lat, offer.offer_lng]}
-                  icon={offerIcon}
-                >
-                  <Popup>
-                    <div className="w-64 text-center">
-                      {offer.image_url && (
-                        <img
-                          src={offer.image_url}
-                          alt={offer.title}
-                          className="w-full h-32 object-cover rounded-lg mb-2"
-                        />
-                      )}
-                      <h4 className="font-bold text-gray-900 mb-1">{offer.title}</h4>
-                      <p className="text-sm text-gray-700 font-medium mb-1">{offer.merchant_name}</p>
-                      <p className="text-sm text-green-600 font-semibold mb-2">
-                        📍 {(offer.distance_meters / 1000).toFixed(2)} km
-                      </p>
+              {/* 🟢 OFFRES AVEC NOTE ET COEUR */}
+              {offers.map((offer) => {
+                const rating = ratings[offer.merchant_id];
+                return (
+                  <Marker
+                    key={offer.offer_id}
+                    position={[offer.offer_lat, offer.offer_lng]}
+                    icon={offerIcon}
+                  >
+                    <Popup>
+                      <div className="w-64 text-center">
+                        {offer.image_url && (
+                          <img
+                            src={offer.image_url}
+                            alt={offer.title}
+                            className="w-full h-32 object-cover rounded-lg mb-2"
+                          />
+                        )}
+                        <h4 className="font-bold text-gray-900 mb-1">{offer.title}</h4>
+                        <div className="flex items-center justify-center mb-1">
+                          <p className="text-sm text-gray-700 font-medium">{offer.merchant_name}</p>
+                          {rating && (
+                            <div className="flex items-center ml-2">
+                              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 mr-1" />
+                              <span className="text-sm text-gray-700 font-semibold">
+                                {rating.avg_rating.toFixed(1)}
+                              </span>
+                              <span className="text-xs text-gray-400 ml-1">
+                                ({rating.review_count})
+                              </span>
+                            </div>
+                          )}
+                        </div>
 
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-lg font-bold text-green-600">
-                            {offer.price_after.toFixed(2)}€
-                          </span>
-                          <span className="text-sm text-gray-400 line-through">
-                            {offer.price_before.toFixed(2)}€
+                        <p className="text-sm text-green-600 font-semibold mb-2">
+                          📍 {(offer.distance_meters / 1000).toFixed(2)} km
+                        </p>
+
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-lg font-bold text-green-600">
+                              {offer.price_after.toFixed(2)}€
+                            </span>
+                            <span className="text-sm text-gray-400 line-through">
+                              {offer.price_before.toFixed(2)}€
+                            </span>
+                          </div>
+                          <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-bold">
+                            -{offer.discount_percent}%
                           </span>
                         </div>
-                        <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-bold">
-                          -{offer.discount_percent}%
-                        </span>
-                      </div>
 
-                      <p className="text-xs text-gray-600 line-clamp-2 mb-2">
-                        {offer.description}
-                      </p>
+                        <p className="text-xs text-gray-600 line-clamp-2 mb-2">
+                          {offer.description}
+                        </p>
 
-                      {/* ❤️ Bouton Favori */}
-                      <div className="flex justify-center">
-                        <FavoriteButton merchantId={offer.merchant_id} />
+                        {/* ❤️ Bouton Favori */}
+                        <div className="flex justify-center">
+                          <FavoriteButton merchantId={offer.merchant_id} />
+                        </div>
                       </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
+                    </Popup>
+                  </Marker>
+                );
+              })}
             </MapContainer>
           </div>
 
