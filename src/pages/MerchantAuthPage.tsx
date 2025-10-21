@@ -9,7 +9,7 @@ type AuthMode = 'login' | 'register';
 const MerchantAuthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, role, profile, loading: authLoading, initialized } = useAuthFlow();
+  const { user, role, profile, loading: authLoading, initialized, refetchProfile } = useAuthFlow();
   const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,9 +22,11 @@ const MerchantAuthPage = () => {
       if (!initialized) return;
       if (!user) return;
 
-      // Si retour d’un OAuth (paramètre ?google=1)
+      // Si retour d'un OAuth (paramètre ?google=1)
       if (location.search.includes('google=1')) {
         await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
+        await refetchProfile();
+        return;
       }
 
       // Si profil complet et rôle connu → redirection logique
@@ -63,6 +65,7 @@ const MerchantAuthPage = () => {
         });
         if (error) throw error;
         await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
+        await refetchProfile();
       } else {
         if (formData.password.length < 6)
           throw new Error('Le mot de passe doit contenir au moins 6 caractères');
@@ -76,6 +79,7 @@ const MerchantAuthPage = () => {
         if (authError) throw authError;
 
         await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
+        await refetchProfile();
       }
     } catch (err) {
       setError((err as Error).message);

@@ -9,7 +9,7 @@ type AuthMode = 'login' | 'register';
 const CustomerAuthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, role, profile, loading: authLoading, initialized } = useAuthFlow();
+  const { user, role, profile, loading: authLoading, initialized, refetchProfile } = useAuthFlow();
   const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,6 +25,8 @@ const CustomerAuthPage = () => {
       // Si retour OAuth Google
       if (location.search.includes('google=1')) {
         await supabase.rpc('set_role_for_me', { p_role: 'client' });
+        await refetchProfile();
+        return;
       }
 
       // Redirections automatiques
@@ -56,6 +58,7 @@ const CustomerAuthPage = () => {
         });
         if (error) throw error;
         await supabase.rpc('set_role_for_me', { p_role: 'client' });
+        await refetchProfile();
       } else {
         if (formData.password.length < 6)
           throw new Error('Le mot de passe doit contenir au moins 6 caractères');
@@ -67,6 +70,7 @@ const CustomerAuthPage = () => {
         if (signUpError) throw signUpError;
 
         await supabase.rpc('set_role_for_me', { p_role: 'client' });
+        await refetchProfile();
       }
     } catch (err) {
       setError((err as Error).message);
