@@ -196,6 +196,19 @@ const CustomerAuthPage = () => {
                     required
                     minLength={6}
                   />
+                  {/* 🔗 Lien mot de passe oublié */}
+{mode === 'login' && (
+  <div className="text-right mt-2">
+    <button
+      type="button"
+      onClick={() => navigate('/forgot-password')}
+      className="text-sm text-[#3A6932] hover:text-[#2d5226] font-medium"
+    >
+      Mot de passe oublié ?
+    </button>
+  </div>
+)}
+
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
