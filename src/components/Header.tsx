@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useAddProduct } from '../contexts/AddProductContext';
 import { NotificationBell } from './NotificationBell';
+import { logoutUser } from '../lib/logout'; // ✅ ajouté
 
 const Header = () => {
   const navigate = useNavigate();
@@ -34,10 +35,10 @@ const Header = () => {
     checkUserType();
   }, [user]);
 
+  // ✅ remplacé pour utiliser la fonction centralisée
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await logoutUser(navigate);
     setIsUserMenuOpen(false);
-    navigate('/');
   };
 
   const getUserDisplayName = () => {
@@ -93,107 +94,107 @@ const Header = () => {
                       onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                       className="flex items-center space-x-2 text-gray-700 hover:text-green-500 transition-colors"
                     >
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      {isMerchant ? (
-                        <Store className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <User className="w-4 h-4 text-green-600" />
-                      )}
-                    </div>
-                    <span className="hidden sm:block font-medium">{getUserDisplayName()}</span>
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        {isMerchant ? (
+                          <Store className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <User className="w-4 h-4 text-green-600" />
+                        )}
+                      </div>
+                      <span className="hidden sm:block font-medium">{getUserDisplayName()}</span>
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
 
-                  {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                      {isMerchant ? (
-                        <>
-                          <button
-                            onClick={() => {
-                              setIsUserMenuOpen(false);
-                              navigate('/merchant/dashboard');
-                            }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <LayoutDashboard className="w-4 h-4 mr-2" />
-                            My Dashboard
-                          </button>
-                          <button
-                            onClick={() => {
-                              setIsUserMenuOpen(false);
-                              navigate('/merchant/stats');
-                            }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <TrendingUp className="w-4 h-4 mr-2" />
-                            Statistics
-                          </button>
-                          <button
-                            onClick={() => {
-                              setIsUserMenuOpen(false);
-                              openAddProductModal();
-                            }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add Product
-                          </button>
-                          <button
-                            onClick={() => {
-                              setIsUserMenuOpen(false);
-                              navigate('/merchant/profile');
-                            }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Store className="w-4 h-4 mr-2" />
-                            Business Profile
-                          </button>
-                          <button
-                            onClick={() => {
-                              setIsUserMenuOpen(false);
-                              navigate('/merchant/settings');
-                            }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Settings className="w-4 h-4 mr-2" />
-                            Settings
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <a
-                            href="/profile"
-                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <User className="w-4 h-4 mr-2" />
-                            My Profile
-                          </a>
-                          <a
-                            href="/settings"
-                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Settings className="w-4 h-4 mr-2" />
-                            Settings
-                          </a>
-                          <a
-                            href="/notifications"
-                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Bell className="w-4 h-4 mr-2" />
-                            Notifications
-                          </a>
-                        </>
-                      )}
-                      <hr className="my-1" />
-                      <button
-                        onClick={handleSignOut}
-                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                      >
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Sign Out
-                      </button>
-                    </div>
-                  )}
+                    {isUserMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                        {isMerchant ? (
+                          <>
+                            <button
+                              onClick={() => {
+                                setIsUserMenuOpen(false);
+                                navigate('/merchant/dashboard');
+                              }}
+                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <LayoutDashboard className="w-4 h-4 mr-2" />
+                              My Dashboard
+                            </button>
+                            <button
+                              onClick={() => {
+                                setIsUserMenuOpen(false);
+                                navigate('/merchant/stats');
+                              }}
+                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <TrendingUp className="w-4 h-4 mr-2" />
+                              Statistics
+                            </button>
+                            <button
+                              onClick={() => {
+                                setIsUserMenuOpen(false);
+                                openAddProductModal();
+                              }}
+                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              Add Product
+                            </button>
+                            <button
+                              onClick={() => {
+                                setIsUserMenuOpen(false);
+                                navigate('/merchant/profile');
+                              }}
+                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <Store className="w-4 h-4 mr-2" />
+                              Business Profile
+                            </button>
+                            <button
+                              onClick={() => {
+                                setIsUserMenuOpen(false);
+                                navigate('/merchant/settings');
+                              }}
+                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <Settings className="w-4 h-4 mr-2" />
+                              Settings
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <a
+                              href="/profile"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <User className="w-4 h-4 mr-2" />
+                              My Profile
+                            </a>
+                            <a
+                              href="/settings"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <Settings className="w-4 h-4 mr-2" />
+                              Settings
+                            </a>
+                            <a
+                              href="/notifications"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <Bell className="w-4 h-4 mr-2" />
+                              Notifications
+                            </a>
+                          </>
+                        )}
+                        <hr className="my-1" />
+                        <button
+                          onClick={handleSignOut}
+                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          <LogOut className="w-4 h-4 mr-2" />
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
