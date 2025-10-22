@@ -1,28 +1,17 @@
 import { supabase } from '../lib/supabaseClient';
 
-/* ---------- EMAIL / PASSWORD AUTH ---------- */
-
+/* ===== EMAIL / PASSWORD ===== */
 export const signUp = async (email: string, password: string, userData?: any) => {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
+  const { data, error } = await supabase.auth.signUp({ email, password });
   return { data, error };
 };
 
 export const signIn = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   return { data, error };
 };
 
-/* ---------- GOOGLE AUTH (FIXED) ---------- */
-/**
- * Adds role awareness (client | merchant)
- * and redirects with ?google=1&role=...
- */
+/* ===== GOOGLE OAUTH (ROLE-AWARE) ===== */
 export const signInWithGoogle = async (role: 'client' | 'merchant') => {
   const redirectUrl = `${window.location.origin}/auth/callback?google=1&role=${role}`;
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -32,7 +21,7 @@ export const signInWithGoogle = async (role: 'client' | 'merchant') => {
   return { data, error };
 };
 
-/* ---------- SIGN OUT ---------- */
+/* ===== SIGN OUT ===== */
 export const signOut = async () => {
   try {
     const { error } = await supabase.auth.signOut();
@@ -43,7 +32,7 @@ export const signOut = async () => {
   }
 };
 
-/* ---------- PASSWORD RESET ---------- */
+/* ===== PASSWORD RESET ===== */
 export const resetPassword = async (email: string) => {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email);
   return { data, error };
@@ -54,11 +43,9 @@ export const updatePassword = async (newPassword: string) => {
   return { error };
 };
 
-export const getCurrentUser = () => {
-  return supabase.auth.getUser();
-};
+export const getCurrentUser = () => supabase.auth.getUser();
 
-/* ---------- CLIENT PROFILE ---------- */
+/* ===== CLIENT PROFILE ===== */
 export const getClientProfile = async (userId: string) => {
   try {
     const { data, error } = await supabase
@@ -66,7 +53,6 @@ export const getClientProfile = async (userId: string) => {
       .select('*')
       .eq('id', userId)
       .maybeSingle();
-
     if (error) throw error;
     return data;
   } catch (error) {
@@ -89,12 +75,10 @@ export const updateClientProfile = async (userId: string, profileData: any) => {
       )
       .select()
       .single();
-
     if (error) {
       console.error('Update error:', error);
       return { success: false, error: error.message };
     }
-
     return { success: true, data };
   } catch (err: any) {
     console.error('Update exception:', err);
@@ -102,11 +86,10 @@ export const updateClientProfile = async (userId: string, profileData: any) => {
   }
 };
 
-export const upsertClientProfile = async (userId: string, profileData: any) => {
-  return updateClientProfile(userId, profileData);
-};
+export const upsertClientProfile = async (userId: string, profileData: any) =>
+  updateClientProfile(userId, profileData);
 
-/* ---------- CLIENT LOCATION ---------- */
+/* ===== CLIENT LOCATION ===== */
 export const setClientLocation = async (
   userId: string,
   latitude: number,
@@ -118,24 +101,16 @@ export const setClientLocation = async (
       latitude,
       longitude,
     });
-
-    if (error) {
-      console.error('Error setting client location:', error);
-      return { success: false, error: error.message };
-    }
-
+    if (error) throw error;
     return { success: true, data };
   } catch (err: any) {
-    console.error('Exception setting client location:', err);
+    console.error('setClientLocation error:', err);
     return { success: false, error: err.message };
   }
 };
 
-/* ---------- MERCHANT PROFILE ---------- */
-export const upsertMerchantProfile = async (
-  merchantId: string,
-  profileData: any,
-) => {
+/* ===== MERCHANT PROFILE ===== */
+export const upsertMerchantProfile = async (merchantId: string, profileData: any) => {
   try {
     const { data, error } = await supabase
       .from('merchants')
@@ -149,20 +124,15 @@ export const upsertMerchantProfile = async (
       )
       .select()
       .single();
-
-    if (error) {
-      console.error('Update merchant error:', error);
-      return { success: false, error: error.message };
-    }
-
+    if (error) throw error;
     return { success: true, data };
   } catch (err: any) {
-    console.error('Update merchant exception:', err);
+    console.error('upsertMerchantProfile error:', err);
     return { success: false, error: err.message };
   }
 };
 
-/* ---------- MERCHANT LOCATION ---------- */
+/* ===== MERCHANT LOCATION ===== */
 export const setMerchantLocation = async (
   merchantId: string,
   latitude: number,
@@ -174,34 +144,21 @@ export const setMerchantLocation = async (
       latitude,
       longitude,
     });
-
-    if (error) {
-      console.error('Error setting merchant location:', error);
-      return { success: false, error: error.message };
-    }
-
+    if (error) throw error;
     return { success: true, data };
   } catch (err: any) {
-    console.error('Exception setting merchant location:', err);
+    console.error('setMerchantLocation error:', err);
     return { success: false, error: err.message };
   }
 };
 
-/* ---------- PROFILE PHOTO ---------- */
-export const uploadProfilePhoto = async (
-  file: File,
-  userId: string,
-): Promise<string> => {
+/* ===== AVATAR UPLOAD ===== */
+export const uploadProfilePhoto = async (file: File, userId: string): Promise<string> => {
   const fileExt = file.name.split('.').pop();
   const fileName = `${userId}-${Math.random()}.${fileExt}`;
   const filePath = `profiles/${fileName}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from('avatars')
-    .upload(filePath, file);
-
+  const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
   if (uploadError) throw uploadError;
-
   const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
   return data.publicUrl;
 };
