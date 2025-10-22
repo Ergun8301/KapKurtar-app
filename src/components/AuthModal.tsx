@@ -4,7 +4,6 @@ import {
   signUp,
   signIn,
   signInWithGoogle,
-  signInWithFacebook,
   resetPassword,
 } from '../api';
 
@@ -12,14 +11,14 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultMode?: 'signin' | 'signup' | 'forgot';
-  role?: 'client' | 'merchant'; // ✅ rôle ajouté
+  role?: 'client' | 'merchant'; // role aware
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
   defaultMode = 'signin',
-  role = 'client', // ✅ rôle par défaut client
+  role = 'client',
 }) => {
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>(defaultMode);
   const [showPassword, setShowPassword] = useState(false);
@@ -47,7 +46,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
           email: formData.email,
         });
         if (error) throw error;
-        setSuccess('Account created successfully! Please check your email.');
+        setSuccess('Account created successfully! Check your email.');
         setTimeout(() => {
           onClose();
           window.location.href = '/profile/complete';
@@ -64,25 +63,20 @@ const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  // ✅ Social login corrigé
-  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+  /* ---- Google OAuth only ---- */
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
     setError('');
 
     try {
-      if (provider === 'google') {
-        const { error } = await signInWithGoogle(role);
-        if (error) throw error;
-      } else {
-        const { error } = await signInWithFacebook();
-        if (error) throw error;
-      }
+      const { error } = await signInWithGoogle(role);
+      if (error) throw error;
 
       onClose();
-      // ✅ redirection avec paramètre de rôle
+      // redirect with role
       window.location.href = `/auth/callback?google=1&role=${role}`;
     } catch (err: any) {
-      setError(err.message || 'Social login failed');
+      setError(err.message || 'Google login failed');
     } finally {
       setIsLoading(false);
     }
@@ -139,10 +133,11 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
+          {/* Google button only */}
           {mode !== 'forgot' && (
             <div className="space-y-3 mb-6">
               <button
-                onClick={() => handleSocialLogin('google')}
+                onClick={handleGoogleLogin}
                 disabled={isLoading}
                 className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
               >
@@ -152,14 +147,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   className="w-5 h-5 mr-3"
                 />
                 Continue with Google
-              </button>
-              <button
-                onClick={() => handleSocialLogin('facebook')}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
-              >
-                <div className="w-5 h-5 mr-3 bg-blue-600 rounded"></div>
-                Continue with Facebook
               </button>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -172,6 +159,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
+          {/* Email/password form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -205,7 +193,11 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             )}
