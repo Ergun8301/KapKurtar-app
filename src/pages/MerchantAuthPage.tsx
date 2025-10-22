@@ -16,29 +16,41 @@ const MerchantAuthPage = () => {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ email: '', password: '', companyName: '' });
 
-  // ✅ 1. Gère retour Google OAuth et rôle merchant
+  // ✅ 1. Redirections automatiques après connexion
   useEffect(() => {
     (async () => {
-      if (!initialized) return;
-      if (!user) return;
+      if (!initialized || !user) return;
 
-      // Si retour d'un OAuth (paramètre ?google=1)
-      if (location.search.includes('google=1')) {
-        await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
-        await refetchProfile();
-        return;
-      }
-
-      // Si profil complet et rôle connu → redirection logique
       if (role === 'merchant' && profile) {
-        const { data: products } = await supabase
-          .from('offers')
+        const { data: profileData } = await supabase
+          .from('profiles')
           .select('id')
-          .eq('merchant_id', profile.id)
-          .limit(1);
+          .eq('auth_id', user.id)
+          .single();
 
-        if (!products || products.length === 0) navigate('/merchant/add-product');
-        else navigate('/merchant/dashboard');
+        if (profileData) {
+          const { data: merchantData } = await supabase
+            .from('merchants')
+            .select('id')
+            .eq('profile_id', profileData.id)
+            .maybeSingle();
+
+          if (merchantData) {
+            const { data: products } = await supabase
+              .from('offers')
+              .select('id')
+              .eq('merchant_id', merchantData.id)
+              .limit(1);
+
+            if (!products || products.length === 0) {
+              navigate('/merchant/add-product');
+            } else {
+              navigate('/merchant/dashboard');
+            }
+          } else {
+            navigate('/merchant/add-product');
+          }
+        }
       } else if (role === 'client') {
         navigate('/offers');
       }
@@ -59,12 +71,18 @@ const MerchantAuthPage = () => {
     setError('');
     try {
       if (mode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
         });
         if (error) throw error;
+
         await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
+        await supabase
+          .from('profiles')
+          .update({ role: 'merchant' })
+          .eq('auth_id', data.user.id);
+
         await refetchProfile();
       } else {
         if (formData.password.length < 6)
@@ -72,13 +90,18 @@ const MerchantAuthPage = () => {
         if (!formData.companyName.trim())
           throw new Error("Le nom de l'entreprise est requis");
 
-        const { error: authError } = await supabase.auth.signUp({
+        const { data, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
         });
         if (authError) throw authError;
 
         await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
+        await supabase
+          .from('profiles')
+          .update({ role: 'merchant' })
+          .eq('auth_id', data.user.id);
+
         await refetchProfile();
       }
     } catch (err) {
@@ -94,7 +117,7 @@ const MerchantAuthPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/merchant/auth?google=1`,
+          redirectTo: `${window.location.origin}/auth/callback?role=merchant`,
         },
       });
       if (error) throw error;

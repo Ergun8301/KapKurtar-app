@@ -16,26 +16,15 @@ const CustomerAuthPage = () => {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ email: '', password: '' });
 
-  // ✅ 1. Si retour OAuth: fixe rôle=client puis route
+  // ✅ 1. Redirections automatiques après connexion
   useEffect(() => {
-    (async () => {
-      if (!initialized) return;
-      if (!user) return;
+    if (!initialized || !user) return;
 
-      // Si retour OAuth Google
-      if (location.search.includes('google=1')) {
-        await supabase.rpc('set_role_for_me', { p_role: 'client' });
-        await refetchProfile();
-        return;
-      }
-
-      // Redirections automatiques
-      if (role === 'client' && profile) {
-        navigate('/offers/map');
-      } else if (role === 'merchant') {
-        navigate('/merchant/dashboard');
-      }
-    })();
+    if (role === 'client' && profile) {
+      navigate('/offers');
+    } else if (role === 'merchant') {
+      navigate('/merchant/dashboard');
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialized, user, role, profile]);
 
@@ -52,24 +41,35 @@ const CustomerAuthPage = () => {
     setError('');
     try {
       if (mode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
         });
         if (error) throw error;
+
         await supabase.rpc('set_role_for_me', { p_role: 'client' });
+        await supabase
+          .from('profiles')
+          .update({ role: 'client' })
+          .eq('auth_id', data.user.id);
+
         await refetchProfile();
       } else {
         if (formData.password.length < 6)
           throw new Error('Le mot de passe doit contenir au moins 6 caractères');
 
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
         });
         if (signUpError) throw signUpError;
 
         await supabase.rpc('set_role_for_me', { p_role: 'client' });
+        await supabase
+          .from('profiles')
+          .update({ role: 'client' })
+          .eq('auth_id', data.user.id);
+
         await refetchProfile();
       }
     } catch (err) {
@@ -85,7 +85,7 @@ const CustomerAuthPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/customer/auth?google=1`,
+          redirectTo: `${window.location.origin}/auth/callback?role=client`,
         },
       });
       if (error) throw error;

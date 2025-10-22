@@ -10,6 +10,7 @@ import HomePage from "./pages/HomePage";
 import OffersPage from "./pages/OffersPage";
 import CustomerAuthPage from "./pages/CustomerAuthPage";
 import MerchantAuthPage from "./pages/MerchantAuthPage";
+import AuthCallbackPage from "./pages/AuthCallbackPage";
 import ClientOnboardingPage from "./pages/ClientOnboardingPage";
 import ProfileCompletePage from "./pages/ProfileCompletePage";
 import MerchantDashboardPage from "./pages/MerchantDashboardPage";
@@ -78,6 +79,7 @@ function App() {
               {/* 🔐 Auth */}
               <Route path="/customer/auth" element={<CustomerAuthPage />} />
               <Route path="/merchant/auth" element={<MerchantAuthPage />} />
+              <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
               {/* 👤 Onboarding */}
               <Route path="/onboarding" element={<ClientOnboardingPage />} />
