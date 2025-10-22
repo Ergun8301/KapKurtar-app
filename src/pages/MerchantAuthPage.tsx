@@ -22,11 +22,9 @@ const MerchantAuthPage = () => {
       if (!initialized || !user) return;
 
       try {
-        // 🧩 Met à jour le rôle dans Supabase
         await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
         await supabase.from('profiles').update({ role: 'merchant' }).eq('auth_id', user.id);
 
-        // 🧱 Crée automatiquement une ligne merchant si inexistante
         const { data: profileRow } = await supabase
           .from('profiles')
           .select('id')
@@ -115,14 +113,23 @@ const MerchantAuthPage = () => {
         if (!formData.companyName.trim())
           throw new Error("Le nom de l'entreprise est requis");
 
-        const { error: signUpError } = await supabase.auth.signUp({
+        // 🔧 Inscription + création automatique du marchand
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
         });
         if (signUpError) throw signUpError;
+
+        if (signUpData?.user) {
+          try {
+            await supabase.rpc('create_merchant_from_profile_secure', { p_auth_id: signUpData.user.id });
+            console.log('✅ Merchant créé automatiquement après inscription email.');
+          } catch (rpcError) {
+            console.warn('⚠️ Erreur création merchant RPC:', rpcError);
+          }
+        }
       }
 
-      // ⏳ on laisse la redirection automatique s’occuper du reste
       await refetchProfile();
     } catch (err) {
       setError((err as Error).message);
