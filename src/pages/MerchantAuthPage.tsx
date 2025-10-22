@@ -16,11 +16,10 @@ const MerchantAuthPage = () => {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ email: '', password: '', companyName: '' });
 
-  // ✅ 1. Appliquer automatiquement le rôle merchant une fois la session prête
+  // ✅ 1. Appliquer automatiquement le rôle "merchant" une fois la session prête
   useEffect(() => {
     (async () => {
       if (!initialized || !user) return;
-
       try {
         await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
         await supabase.from('profiles').update({ role: 'merchant' }).eq('auth_id', user.id);
@@ -39,7 +38,6 @@ const MerchantAuthPage = () => {
             .maybeSingle();
 
           if (!existingMerchant) {
-            console.log('🆕 Création du merchant via RPC...');
             await supabase.rpc('get_or_create_merchant_for_profile');
             console.log('✅ Merchant créé automatiquement.');
           }
@@ -50,43 +48,45 @@ const MerchantAuthPage = () => {
     })();
   }, [initialized, user]);
 
-  // ✅ 2. Redirections automatiques après connexion
+  // ✅ 2. Redirection automatique après connexion / rechargement
   useEffect(() => {
-    (async () => {
-      if (!initialized || !user) return;
+    if (!initialized || !user) return;
 
-      if (role === 'merchant' && profile) {
-        const { data: profileData } = await supabase
-          .from('profiles')
+    const redirectMerchant = async () => {
+      const { data: profileRow } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
+        .maybeSingle();
+
+      if (profileRow) {
+        const { data: merchantData } = await supabase
+          .from('merchants')
           .select('id')
-          .eq('auth_id', user.id)
-          .single();
+          .eq('profile_id', profileRow.id)
+          .maybeSingle();
 
-        if (profileData) {
-          const { data: merchantData } = await supabase
-            .from('merchants')
+        if (merchantData) {
+          const { data: offers } = await supabase
+            .from('offers')
             .select('id')
-            .eq('profile_id', profileData.id)
-            .maybeSingle();
+            .eq('merchant_id', merchantData.id)
+            .limit(1);
 
-          if (merchantData) {
-            const { data: offers } = await supabase
-              .from('offers')
-              .select('id')
-              .eq('merchant_id', merchantData.id)
-              .limit(1);
-
-            if (!offers || offers.length === 0) navigate('/merchant/add-product');
-            else navigate('/merchant/dashboard');
-          } else {
+          if (!offers || offers.length === 0) {
             navigate('/merchant/add-product');
+          } else {
+            navigate('/merchant/dashboard');
           }
+        } else {
+          navigate('/merchant/add-product');
         }
-      } else if (role === 'client') {
-        navigate('/offers');
       }
-    })();
-  }, [initialized, user, role, profile]);
+    };
+
+    if (role === 'merchant') redirectMerchant();
+    else if (role === 'client') navigate('/offers');
+  }, [initialized, user, role, profile, navigate]);
 
   // ✅ 3. Gestion formulaire
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,7 +94,7 @@ const MerchantAuthPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // ✅ 4. Auth email/password
+  // ✅ 4. Connexion / Inscription e-mail
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -108,26 +108,59 @@ const MerchantAuthPage = () => {
         });
         if (error) throw error;
 
-        // 🧠 Forcer le rôle merchant et redirection immédiate
-        const { data: profile } = await supabase
+        // ⚡ On force ici la mise à jour du rôle et la redirection manuelle
+        await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
+        await refetchProfile();
+
+        // Vérifie si le merchant existe sinon le crée
+        const { data: profileRow } = await supabase
           .from('profiles')
-          .select('role')
+          .select('id')
           .eq('auth_id', data.user?.id)
           .maybeSingle();
 
-        if (profile?.role === 'merchant') {
-          navigate('/merchant/dashboard');
-        } else {
-          navigate('/offers');
+        if (profileRow) {
+          const { data: merchantData } = await supabase
+            .from('merchants')
+            .select('id')
+            .eq('profile_id', profileRow.id)
+            .maybeSingle();
+
+          if (!merchantData) {
+            await supabase.rpc('get_or_create_merchant_for_profile');
+          }
         }
 
-      } else {
+        // ✅ Redirection directe dashboard ou add-product
+        const { data: merchantRow } = await supabase
+          .from('merchants')
+          .select('id')
+          .eq('profile_id', profileRow?.id)
+          .maybeSingle();
+
+        if (merchantRow) {
+          const { data: offers } = await supabase
+            .from('offers')
+            .select('id')
+            .eq('merchant_id', merchantRow.id)
+            .limit(1);
+
+          if (!offers || offers.length === 0) {
+            navigate('/merchant/add-product');
+          } else {
+            navigate('/merchant/dashboard');
+          }
+        } else {
+          navigate('/merchant/add-product');
+        }
+      } 
+      else {
+        // ✅ Inscription e-mail
         if (formData.password.length < 6)
           throw new Error('Le mot de passe doit contenir au moins 6 caractères');
         if (!formData.companyName.trim())
           throw new Error("Le nom de l'entreprise est requis");
 
-        // 🔧 Inscription + création automatique du marchand
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -135,27 +168,24 @@ const MerchantAuthPage = () => {
         if (signUpError) throw signUpError;
 
         if (signUpData?.user) {
-          try {
-            await supabase.rpc('create_merchant_from_profile_secure', { p_auth_id: signUpData.user.id });
-            console.log('✅ Merchant créé automatiquement après inscription email.');
-          } catch (rpcError) {
-            console.warn('⚠️ Erreur création merchant RPC:', rpcError);
-          }
+          await supabase.rpc('create_merchant_from_profile_secure', {
+            p_auth_id: signUpData.user.id,
+          });
         }
 
-        // 🧩 Attente validation du mail → pas de redirection immédiate ici
-        alert('✅ Un e-mail de confirmation vous a été envoyé. Veuillez cliquer sur le lien pour activer votre compte.');
+        alert(
+          '✅ Un e-mail de confirmation vous a été envoyé. Veuillez cliquer sur le lien pour activer votre compte.'
+        );
       }
-
-      await refetchProfile();
     } catch (err) {
+      console.error(err);
       setError((err as Error).message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ✅ 5. Auth Google
+  // ✅ 5. Auth Google (inchangée)
   const handleGoogleAuth = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -179,7 +209,7 @@ const MerchantAuthPage = () => {
     );
   }
 
-  // ✅ 7. Interface
+  // ✅ 7. Interface (inchangée)
   return (
     <div className="min-h-screen bg-[#FAFAF5] flex flex-col">
       <div className="flex-1 flex items-center justify-center py-8 px-4">
@@ -213,9 +243,7 @@ const MerchantAuthPage = () => {
               <button
                 onClick={() => setMode('login')}
                 className={`flex-1 py-3 font-semibold rounded-xl ${
-                  mode === 'login'
-                    ? 'bg-white text-[#FF6B35] shadow-md'
-                    : 'text-gray-500'
+                  mode === 'login' ? 'bg-white text-[#FF6B35] shadow-md' : 'text-gray-500'
                 }`}
               >
                 Connexion
@@ -223,9 +251,7 @@ const MerchantAuthPage = () => {
               <button
                 onClick={() => setMode('register')}
                 className={`flex-1 py-3 font-semibold rounded-xl ${
-                  mode === 'register'
-                    ? 'bg-white text-[#FF6B35] shadow-md'
-                    : 'text-gray-500'
+                  mode === 'register' ? 'bg-white text-[#FF6B35] shadow-md' : 'text-gray-500'
                 }`}
               >
                 Inscription
@@ -260,9 +286,7 @@ const MerchantAuthPage = () => {
               )}
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
@@ -326,9 +350,7 @@ const MerchantAuthPage = () => {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500 font-medium">
-                  Ou continuer avec
-                </span>
+                <span className="px-4 bg-white text-gray-500 font-medium">Ou continuer avec</span>
               </div>
             </div>
 
@@ -338,10 +360,22 @@ const MerchantAuthPage = () => {
               className="w-full flex items-center justify-center px-4 py-4 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-semibold"
             >
               <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
               </svg>
               Google
             </button>
