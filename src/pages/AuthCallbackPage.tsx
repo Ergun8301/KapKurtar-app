@@ -14,50 +14,49 @@ const AuthCallbackPage = () => {
         const role = searchParams.get('role');
 
         if (!role || !['client', 'merchant'].includes(role)) {
-          setError('Invalid role parameter');
+          setError('Paramètre de rôle invalide');
           setLoading(false);
           return;
         }
 
+        // 🕒 Attente de session valide (Google OAuth)
         let retryCount = 0;
         const maxRetries = 5;
         let session = null;
 
         while (retryCount < maxRetries && !session) {
           const { data: { session: currentSession } } = await supabase.auth.getSession();
-
           if (currentSession) {
             session = currentSession;
             break;
           }
-
           await new Promise(resolve => setTimeout(resolve, 500));
           retryCount++;
         }
 
         if (!session) {
-          setError('Unable to retrieve session after OAuth');
+          setError('Impossible de récupérer la session après OAuth');
           setLoading(false);
           return;
         }
 
+        const user = session.user;
+        console.log('✅ Session OAuth récupérée pour:', user.email);
+
+        // ✅ Appliquer le rôle dans Supabase
         await supabase.rpc('set_role_for_me', { p_role: role });
+        await supabase.from('profiles').update({ role }).eq('auth_id', user.id);
 
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ role })
-          .eq('auth_id', session.user.id);
-
-        if (updateError) {
-          console.error('Error updating role in profiles:', updateError);
-        }
-
+        // 🧩 Si marchand → créer ligne merchant via RPC
         if (role === 'merchant') {
-          const { data: profileData } = await supabase
+          console.log('🧱 Vérification du profil marchand...');
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('id')
-            .eq('auth_id', session.user.id)
-            .single();
+            .eq('auth_id', user.id)
+            .maybeSingle();
+
+          if (profileError) console.error('Erreur récupération profil:', profileError);
 
           if (profileData) {
             const { data: merchantData } = await supabase
@@ -67,19 +66,26 @@ const AuthCallbackPage = () => {
               .maybeSingle();
 
             if (!merchantData) {
-              navigate('/merchant/add-product');
-            } else {
-              navigate('/merchant/dashboard');
+              console.log('🆕 Création du merchant via RPC...');
+              try {
+                await supabase.rpc('get_or_create_merchant_for_profile');
+                console.log('✅ Merchant créé avec succès.');
+              } catch (rpcError) {
+                console.error('Erreur RPC création marchand:', rpcError);
+              }
             }
-          } else {
-            navigate('/merchant/dashboard');
           }
+
+          // Redirection finale marchand
+          navigate('/merchant/dashboard');
         } else {
+          // Redirection finale client
           navigate('/offers');
         }
       } catch (err) {
         console.error('OAuth callback error:', err);
         setError((err as Error).message);
+      } finally {
         setLoading(false);
       }
     };
