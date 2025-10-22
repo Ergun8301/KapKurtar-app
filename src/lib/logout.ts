@@ -1,18 +1,41 @@
 import { supabase } from './supabaseClient';
 
+/**
+ * Déconnexion complète avec redirection (pour les composants React avec navigate)
+ */
 export async function logoutUser(navigate: (to: string) => void) {
   try {
-    // 1) Détruit la session Supabase
+    // 1️⃣ Détruit la session active
     await supabase.auth.signOut();
-
-    // 2) Vide tous les caches potentiels
-    try { localStorage.clear(); } catch {}
-    try { sessionStorage.clear(); } catch {}
-
-    // 3) Retour à l'accueil
-    navigate('/');
   } catch (err) {
-    console.error('Erreur lors de la déconnexion :', err);
-    alert("Une erreur est survenue lors de la déconnexion.");
+    console.warn('⚠️ Erreur Supabase lors du signOut (ignorée) :', err);
   }
+
+  // 2️⃣ Nettoie les caches locaux
+  try { localStorage.clear(); } catch {}
+  try { sessionStorage.clear(); } catch {}
+
+  // 3️⃣ Redirige vers la page d'accueil
+  try {
+    navigate('/');
+  } catch {
+    // fallback au cas où navigate ne soit pas dispo
+    window.location.assign('/');
+  }
+}
+
+/**
+ * Variante sans navigation (utile pour les hooks ou stores)
+ */
+export async function logoutNoNav() {
+  try {
+    await supabase.auth.signOut();
+  } catch (err) {
+    console.warn('⚠️ Erreur Supabase lors du signOut (ignorée) :', err);
+  }
+
+  try { localStorage.clear(); } catch {}
+  try { sessionStorage.clear(); } catch {}
+
+  // pas de navigate ici, on laisse le composant parent gérer la redirection
 }
