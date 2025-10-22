@@ -16,7 +16,43 @@ const MerchantAuthPage = () => {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ email: '', password: '', companyName: '' });
 
-  // ✅ 1. Redirections automatiques après connexion
+  // ✅ 1. Appliquer automatiquement le rôle merchant une fois la session prête
+  useEffect(() => {
+    (async () => {
+      if (!initialized || !user) return;
+
+      try {
+        // 🧩 Met à jour le rôle dans Supabase
+        await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
+        await supabase.from('profiles').update({ role: 'merchant' }).eq('auth_id', user.id);
+
+        // 🧱 Crée automatiquement une ligne merchant si inexistante
+        const { data: profileRow } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('auth_id', user.id)
+          .maybeSingle();
+
+        if (profileRow) {
+          const { data: existingMerchant } = await supabase
+            .from('merchants')
+            .select('id')
+            .eq('profile_id', profileRow.id)
+            .maybeSingle();
+
+          if (!existingMerchant) {
+            console.log('🆕 Création du merchant via RPC...');
+            await supabase.rpc('get_or_create_merchant_for_profile');
+            console.log('✅ Merchant créé automatiquement.');
+          }
+        }
+      } catch (err) {
+        console.error('Erreur mise à jour rôle merchant:', err);
+      }
+    })();
+  }, [initialized, user]);
+
+  // ✅ 2. Redirections automatiques après connexion
   useEffect(() => {
     (async () => {
       if (!initialized || !user) return;
@@ -36,17 +72,14 @@ const MerchantAuthPage = () => {
             .maybeSingle();
 
           if (merchantData) {
-            const { data: products } = await supabase
+            const { data: offers } = await supabase
               .from('offers')
               .select('id')
               .eq('merchant_id', merchantData.id)
               .limit(1);
 
-            if (!products || products.length === 0) {
-              navigate('/merchant/add-product');
-            } else {
-              navigate('/merchant/dashboard');
-            }
+            if (!offers || offers.length === 0) navigate('/merchant/add-product');
+            else navigate('/merchant/dashboard');
           } else {
             navigate('/merchant/add-product');
           }
@@ -55,20 +88,20 @@ const MerchantAuthPage = () => {
         navigate('/offers');
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialized, user, role, profile]);
 
-  // ✅ 2. Gestion formulaire
+  // ✅ 3. Gestion formulaire
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // ✅ 3. Auth email/password
+  // ✅ 4. Auth email/password
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+
     try {
       if (mode === 'login') {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -76,34 +109,21 @@ const MerchantAuthPage = () => {
           password: formData.password,
         });
         if (error) throw error;
-
-        await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
-        await supabase
-          .from('profiles')
-          .update({ role: 'merchant' })
-          .eq('auth_id', data.user.id);
-
-        await refetchProfile();
       } else {
         if (formData.password.length < 6)
           throw new Error('Le mot de passe doit contenir au moins 6 caractères');
         if (!formData.companyName.trim())
           throw new Error("Le nom de l'entreprise est requis");
 
-        const { data, error: authError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
         });
-        if (authError) throw authError;
-
-        await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
-        await supabase
-          .from('profiles')
-          .update({ role: 'merchant' })
-          .eq('auth_id', data.user.id);
-
-        await refetchProfile();
+        if (signUpError) throw signUpError;
       }
+
+      // ⏳ on laisse la redirection automatique s’occuper du reste
+      await refetchProfile();
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -111,7 +131,7 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // ✅ 4. Auth Google avec retour contrôlé
+  // ✅ 5. Auth Google
   const handleGoogleAuth = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -126,7 +146,7 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // ✅ 5. Loader
+  // ✅ 6. Loader
   if (authLoading && !initialized) {
     return (
       <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
@@ -135,7 +155,7 @@ const MerchantAuthPage = () => {
     );
   }
 
-  // ✅ 6. Interface
+  // ✅ 7. Interface
   return (
     <div className="min-h-screen bg-[#FAFAF5] flex flex-col">
       <div className="flex-1 flex items-center justify-center py-8 px-4">
@@ -254,11 +274,7 @@ const MerchantAuthPage = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
