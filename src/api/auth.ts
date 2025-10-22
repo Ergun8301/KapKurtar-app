@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
-import { logoutNoNav } from '../lib/logout'; // ✅ unifie la déconnexion
+import { logoutNoNav } from '../lib/logout';
 
 // ---------- Email / Password ----------
 
@@ -15,13 +15,13 @@ export const signIn = async (email: string, password: string) => {
 
 // ---------- OAuth (Google / Facebook) ----------
 
-// ✅ Garde l’API existante (compat), mais sans redirection role-aware
+// ⚙️ Auth classique Google (sans rôle)
 export const signInWithGoogle = async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
   return { data, error };
 };
 
-// ✅ Nouvelle version role-aware : redirige vers /auth/callback?role=client|merchant
+// ⚙️ Auth Google avec redirection selon rôle (client ou marchand)
 export const signInWithGoogleForRole = async (role: 'client' | 'merchant') => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -32,7 +32,7 @@ export const signInWithGoogleForRole = async (role: 'client' | 'merchant') => {
   return { data, error };
 };
 
-// (facultatif si tu utilises Facebook)
+// (facultatif)
 export const signInWithFacebook = async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'facebook' });
   return { data, error };
@@ -42,7 +42,7 @@ export const signInWithFacebook = async () => {
 
 export const signOut = async () => {
   try {
-    await logoutNoNav(); // ✅ déconnexion + clear caches centralisés
+    await logoutNoNav();
     return { error: null };
   } catch (err: any) {
     console.warn('SignOut error (treated as success):', err);
@@ -52,21 +52,35 @@ export const signOut = async () => {
 
 // ---------- Password flows ----------
 
+// 🧩 Envoie l’e-mail de réinitialisation
 export const resetPassword = async (email: string) => {
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email);
-  return { data, error };
+  try {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/update-password`,
+    });
+    return { data, error };
+  } catch (err: any) {
+    console.error('Reset password error:', err);
+    return { data: null, error: err };
+  }
 };
 
+// 🧩 Met à jour le mot de passe (après clic sur lien Supabase)
 export const updatePassword = async (newPassword: string) => {
-  const { error } = await supabase.auth.updateUser({ password: newPassword });
-  return { error };
+  try {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return { error };
+  } catch (err: any) {
+    console.error('Update password error:', err);
+    return { error: err };
+  }
 };
 
-export const getCurrentUser = () => {
-  return supabase.auth.getUser();
-};
+// ---------- Utils ----------
 
-// ---------- Client profile helpers (si tu utilises encore la table clients) ----------
+export const getCurrentUser = () => supabase.auth.getUser();
+
+// ---------- Client helpers ----------
 
 export const getClientProfile = async (userId: string) => {
   try {
@@ -75,7 +89,6 @@ export const getClientProfile = async (userId: string) => {
       .select('*')
       .eq('id', userId)
       .maybeSingle();
-
     if (error) throw error;
     return data;
   } catch (error) {
@@ -111,6 +124,8 @@ export const updateClientProfile = async (userId: string, profileData: any) => {
   }
 };
 
+// ---------- Avatar ----------
+
 export const uploadProfilePhoto = async (file: File, userId: string): Promise<string> => {
   const fileExt = file.name.split('.').pop();
   const fileName = `${userId}-${Math.random()}.${fileExt}`;
@@ -123,10 +138,6 @@ export const uploadProfilePhoto = async (file: File, userId: string): Promise<st
   return data.publicUrl;
 };
 
-export const upsertClientProfile = async (userId: string, profileData: any) => {
-  return updateClientProfile(userId, profileData);
-};
-
 // ---------- Location helpers ----------
 
 export const setClientLocation = async (userId: string, latitude: number, longitude: number) => {
@@ -136,15 +147,10 @@ export const setClientLocation = async (userId: string, latitude: number, longit
       latitude,
       longitude,
     });
-
-    if (error) {
-      console.error('Error setting client location:', error);
-      return { success: false, error: error.message };
-    }
-
+    if (error) throw error;
     return { success: true, data };
   } catch (err: any) {
-    console.error('Exception setting client location:', err);
+    console.error('Error setting client location:', err);
     return { success: false, error: err.message };
   }
 };
@@ -156,20 +162,15 @@ export const setMerchantLocation = async (merchantId: string, latitude: number, 
       latitude,
       longitude,
     });
-
-    if (error) {
-      console.error('Error setting merchant location:', error);
-      return { success: false, error: error.message };
-    }
-
+    if (error) throw error;
     return { success: true, data };
   } catch (err: any) {
-    console.error('Exception setting merchant location:', err);
+    console.error('Error setting merchant location:', err);
     return { success: false, error: err.message };
   }
 };
 
-// ---------- Merchant profile (si tu utilises la table merchants) ----------
+// ---------- Merchant helpers ----------
 
 export const upsertMerchantProfile = async (merchantId: string, profileData: any) => {
   try {
