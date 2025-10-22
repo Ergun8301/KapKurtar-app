@@ -1,31 +1,23 @@
 import React, { useState } from 'react';
 import { X, Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import {
-  signUp,
-  signIn,
-  signInWithGoogle,
-  resetPassword,
-} from '../api';
+import { signUp, signIn, signInWithGoogle, signInWithFacebook, resetPassword } from '../api';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultMode?: 'signin' | 'signup' | 'forgot';
-  role?: 'client' | 'merchant'; // role aware
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({
-  isOpen,
-  onClose,
-  defaultMode = 'signin',
-  role = 'client',
-}) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 'signin' }) => {
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>(defaultMode);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
 
   if (!isOpen) return null;
 
@@ -46,15 +38,15 @@ const AuthModal: React.FC<AuthModalProps> = ({
           email: formData.email,
         });
         if (error) throw error;
-        setSuccess('Account created successfully! Check your email.');
+        setSuccess('Account created successfully! Please check your email for verification.');
         setTimeout(() => {
           onClose();
           window.location.href = '/profile/complete';
-        }, 1500);
+        }, 2000);
       } else if (mode === 'forgot') {
         const { error } = await resetPassword(formData.email);
         if (error) throw error;
-        setSuccess('Password reset email sent.');
+        setSuccess('Password reset email sent! Please check your inbox.');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');
@@ -63,20 +55,20 @@ const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  /* ---- Google OAuth only ---- */
-  const handleGoogleLogin = async () => {
+  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
     setIsLoading(true);
     setError('');
 
     try {
-      const { error } = await signInWithGoogle(role);
+      const { error } = provider === 'google' 
+        ? await signInWithGoogle() 
+        : await signInWithFacebook();
+      
       if (error) throw error;
-
       onClose();
-      // redirect with role
-      window.location.href = `/auth/callback?google=1&role=${role}`;
+      window.location.href = '/offers';
     } catch (err: any) {
-      setError(err.message || 'Google login failed');
+      setError(err.message || 'Social login failed');
     } finally {
       setIsLoading(false);
     }
@@ -112,16 +104,22 @@ const AuthModal: React.FC<AuthModalProps> = ({
           </button>
         </div>
 
-        {/* Body */}
         <div className="p-6">
+          {/* Title */}
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
               {mode === 'signin' && 'Welcome back'}
               {mode === 'signup' && 'Create your account'}
               {mode === 'forgot' && 'Reset your password'}
             </h2>
+            <p className="mt-2 text-gray-600">
+              {mode === 'signin' && 'Sign in to start saving on delicious meals'}
+              {mode === 'signup' && 'Join thousands saving food and money'}
+              {mode === 'forgot' && 'Enter your email to receive reset instructions'}
+            </p>
           </div>
 
+          {/* Error/Success Messages */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
               {error}
@@ -133,20 +131,24 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
-          {/* Google button only */}
+          {/* Social Login (only for signin/signup) */}
           {mode !== 'forgot' && (
             <div className="space-y-3 mb-6">
               <button
-                onClick={handleGoogleLogin}
+                onClick={() => handleSocialLogin('google')}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+                className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
-                <img
-                  src="https://www.google.com/favicon.ico"
-                  alt="Google"
-                  className="w-5 h-5 mr-3"
-                />
+                <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 mr-3" />
                 Continue with Google
+              </button>
+              <button
+                onClick={() => handleSocialLogin('facebook')}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                <div className="w-5 h-5 mr-3 bg-blue-600 rounded"></div>
+                Continue with Facebook
               </button>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -159,7 +161,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
-          {/* Email/password form */}
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -167,10 +169,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 type="email"
                 placeholder="Email address"
                 value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
               />
             </div>
@@ -182,10 +182,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Password"
                   value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   required
                 />
                 <button
@@ -193,11 +191,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             )}
@@ -205,19 +199,17 @@ const AuthModal: React.FC<AuthModalProps> = ({
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-green-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-600 disabled:opacity-50"
+              className="w-full bg-green-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading
-                ? 'Loading...'
-                : mode === 'signin'
-                ? 'Sign In'
-                : mode === 'signup'
-                ? 'Create Account'
-                : 'Send Reset Email'}
+              {isLoading ? 'Loading...' : 
+                mode === 'signin' ? 'Sign In' : 
+                mode === 'signup' ? 'Create Account' : 
+                'Send Reset Email'
+              }
             </button>
           </form>
 
-          {/* Footer */}
+          {/* Footer Links */}
           <div className="mt-6 text-center space-y-3">
             {mode === 'signin' && (
               <>
