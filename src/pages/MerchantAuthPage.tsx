@@ -317,6 +317,19 @@ const MerchantAuthPage = () => {
                     required
                     minLength={6}
                   />
+                  {/* 🔗 Lien mot de passe oublié */}
+{mode === 'login' && (
+  <div className="text-right mt-2">
+    <button
+      type="button"
+      onClick={() => navigate('/forgot-password')}
+      className="text-sm text-[#FF6B35] hover:text-[#e55a28] font-medium"
+    >
+      Mot de passe oublié ?
+    </button>
+  </div>
+)}
+
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
