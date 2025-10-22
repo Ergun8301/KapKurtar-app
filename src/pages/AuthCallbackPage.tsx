@@ -68,7 +68,7 @@ const AuthCallbackPage = () => {
             if (!merchantData) {
               console.log('🆕 Création du merchant via RPC...');
               try {
-                await supabase.rpc('get_or_create_merchant_for_profile');
+                await supabase.rpc('create_merchant_from_profile');
                 console.log('✅ Merchant créé avec succès.');
               } catch (rpcError) {
                 console.error('Erreur RPC création marchand:', rpcError);
