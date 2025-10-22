@@ -1,25 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";
 
 const AuthCallbackPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const handleOAuthCallback = async () => {
       try {
-        const role = searchParams.get('role');
+        const role = searchParams.get("role");
 
-        if (!role || !['client', 'merchant'].includes(role)) {
-          setError('Paramètre de rôle invalide');
+        if (!role || !["client", "merchant"].includes(role)) {
+          setError("Paramètre de rôle invalide");
           setLoading(false);
           return;
         }
 
-        // 🕒 Attente de session valide (Google OAuth)
+        // 🕒 Attente d'une session valide (Google OAuth)
         let retryCount = 0;
         const maxRetries = 10;
         let session = null;
@@ -30,60 +30,62 @@ const AuthCallbackPage = () => {
             session = currentSession;
             break;
           }
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           retryCount++;
         }
 
         if (!session) {
-          setError('Impossible de récupérer la session après OAuth');
+          setError("Impossible de récupérer la session après OAuth");
           setLoading(false);
           return;
         }
 
         const user = session.user;
-        console.log('✅ Session OAuth récupérée pour:', user.email);
+        console.log("✅ Session OAuth récupérée pour:", user.email);
 
-        // ✅ Appliquer le rôle dans Supabase
-        await supabase.rpc('set_role_for_me', { p_role: role });
-        await supabase.from('profiles').update({ role }).eq('auth_id', user.id);
+        // ✅ Mettre à jour le rôle dans Supabase
+        await supabase.rpc("set_role_for_me", { p_role: role });
+        await supabase.from("profiles").update({ role }).eq("auth_id", user.id);
 
-        // 🧩 Si marchand → créer ligne merchant via RPC
-        if (role === 'merchant') {
-          console.log('🧱 Vérification du profil marchand...');
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('auth_id', user.id)
-            .maybeSingle();
+        // 🧩 Si rôle = marchand → créer profil marchand via Edge Function
+        if (role === "merchant") {
+          console.log("🧱 Vérification du profil marchand...");
 
-          if (profileError) console.error('Erreur récupération profil:', profileError);
-
-          if (profileData) {
-            const { data: merchantData } = await supabase
-              .from('merchants')
-              .select('id')
-              .eq('profile_id', profileData.id)
-              .maybeSingle();
-
-            if (!merchantData) {
-              console.log('🆕 Création du merchant via RPC...');
-              try {
-                await supabase.rpc('create_merchant_from_profile_secure', { p_auth_id: user.id });
-                console.log('✅ Merchant créé avec succès.');
-              } catch (rpcError) {
-                console.error('Erreur RPC création marchand:', rpcError);
+          try {
+            const token = session.access_token;
+            const response = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-merchant-profile`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  company_name: user.email || "Sans Nom",
+                  email: user.email,
+                }),
               }
+            );
+
+            const result = await response.json();
+            if (result.success) {
+              console.log("✅ Merchant créé via Edge Function:", result.merchant);
+            } else {
+              console.warn("⚠️ Edge Function n'a pas créé de merchant:", result.error);
             }
+          } catch (edgeError) {
+            console.error("❌ Erreur lors de la création du merchant:", edgeError);
           }
 
-          // Redirection finale marchand
-          navigate('/merchant/dashboard');
+          // Redirection finale vers tableau de bord marchand
+          navigate("/merchant/dashboard");
         } else {
-          // Redirection finale client
-          navigate('/offers');
+          // Redirection finale vers les offres client
+          navigate("/offers");
         }
       } catch (err) {
-        console.error('OAuth callback error:', err);
+        console.error("OAuth callback error:", err);
         setError((err as Error).message);
       } finally {
         setLoading(false);
@@ -115,7 +117,7 @@ const AuthCallbackPage = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Erreur de connexion</h2>
             <p className="text-gray-600 mb-6">{error}</p>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
               className="w-full bg-[#3A6932] text-white py-3 rounded-xl font-semibold hover:bg-[#2d5226] transition-colors"
             >
               Retour à l'accueil
