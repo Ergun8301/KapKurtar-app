@@ -21,7 +21,7 @@ const AuthCallbackPage = () => {
 
         // 🕒 Attente de session valide (Google OAuth)
         let retryCount = 0;
-        const maxRetries = 5;
+        const maxRetries = 10;
         let session = null;
 
         while (retryCount < maxRetries && !session) {
