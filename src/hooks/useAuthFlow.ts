@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
+import { logoutNoNav } from '../lib/logout'; // ✅ ajouté
 import type { EnsureProfileExistsResponse, UserRole } from '../types/supabase';
 
 interface AuthFlowState {
@@ -118,8 +119,16 @@ export function useAuthFlow() {
     }
   };
 
+  // ✅ version corrigée et centralisée
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await logoutNoNav(); // déconnexion + clear sans navigation
+    setState({
+      user: null,
+      profile: null,
+      role: null,
+      loading: false,
+      initialized: true
+    });
   };
 
   return {
