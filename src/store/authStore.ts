@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
+import { logoutNoNav } from '../lib/logout'; // ✅ ajouté
 
 interface AuthState {
   user: User | null;
@@ -17,18 +18,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   loading: true,
   userType: null,
+
   setUser: (user) => set({ user }),
   setLoading: (loading) => set({ loading }),
   setUserType: (userType) => set({ userType }),
+
+  // ✅ version unifiée de la déconnexion
   signOut: async () => {
     try {
-      await supabase.auth.signOut();
+      await logoutNoNav(); // déconnexion + clear complet sans navigate
     } catch (error) {
-      // Ignore signOut errors and proceed with clearing local state
-      console.warn('SignOut error (clearing local state anyway):', error);
+      console.warn('⚠️ Erreur de signOut (ignorée) :', error);
     }
-    set({ user: null, userType: null });
+
+    set({
+      user: null,
+      userType: null,
+      loading: false,
+    });
   },
+
   checkUserType: async () => {
     const { user } = get();
     if (!user) {
@@ -37,7 +46,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     try {
-      // Check if user is a merchant
+      // 🔍 Vérifie si utilisateur est un marchand
       const { data: merchant } = await supabase
         .from('merchants')
         .select('id')
@@ -46,31 +55,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (merchant) {
         set({ userType: 'merchant' });
+        return;
+      }
+
+      // 🔍 Sinon vérifie si client
+      const { data: client } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (client) {
+        set({ userType: 'customer' });
       } else {
-        // Check if user is a client
-        const { data: client } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
-        
-        if (client) {
-          set({ userType: 'customer' });
-        } else {
-          set({ userType: 'customer' }); // Default to customer
-        }
+        set({ userType: 'customer' }); // par défaut
       }
     } catch (error) {
-      console.error('Error checking user type:', error);
-      set({ userType: 'customer' }); // Default to customer
+      console.error('Erreur lors de la détection du type utilisateur :', error);
+      set({ userType: 'customer' }); // fallback
     }
   },
 }));
 
-// Initialize auth state - single source of truth
+// ✅ Initialisation automatique du store en fonction de la session Supabase
 supabase.auth.onAuthStateChange((_event, session) => {
   useAuthStore.getState().setUser(session?.user ?? null);
   useAuthStore.getState().setLoading(false);
+
   if (session?.user) {
     useAuthStore.getState().checkUserType();
   } else {
