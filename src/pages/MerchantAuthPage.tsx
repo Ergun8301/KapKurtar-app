@@ -18,18 +18,18 @@ const MerchantAuthPage = () => {
   // ---------- helpers ----------
   const ensureMerchantBootstrap = async (authId: string) => {
     try {
-      // 1️⃣ Forcer le rôle merchant dans le profil (idempotent)
+      // 1️⃣ Forcer le rôle merchant dans le profil
       const { error: roleError } = await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
       if (roleError) console.warn('⚠️ set_role_for_me:', roleError.message);
 
-      // 2️⃣ Update direct (défensif si le trigger met du temps)
+      // 2️⃣ Update direct du profil si le trigger tarde
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ role: 'merchant' })
         .eq('auth_id', authId);
       if (updateError) console.warn('⚠️ update profile:', updateError.message);
 
-      // 3️⃣ Création du marchand (⚠️ il FAUT passer p_auth_id)
+      // 3️⃣ Crée le marchand s’il n’existe pas encore
       const { error: merchantError } = await supabase.rpc('get_or_create_merchant_for_profile', {
         p_auth_id: authId,
       });
@@ -42,7 +42,6 @@ const MerchantAuthPage = () => {
   const goToMerchantHome = async () => {
     try {
       if (!user) return navigate('/merchant/dashboard');
-
       const { data: prof } = await supabase
         .from('profiles')
         .select('id')
@@ -75,31 +74,20 @@ const MerchantAuthPage = () => {
     navigate('/merchant/dashboard');
   };
 
-  // ---------- 1) (SUPPRIMÉ) : pas d’auto-bootstrap silencieux au montage ----------
-  // Cela évite de “promouvoir” un client en marchand juste en ouvrant la page.
-
-  // ---------- 2) Redirections ----------
+  // ---------- Redirections ----------
   useEffect(() => {
     if (!initialized || !user) return;
-
-    if (role === 'merchant') {
-      // L’utilisateur est bien marchand → vers le dashboard / add-product si besoin
-      goToMerchantHome();
-    } else if (role === 'client') {
-      // Surtout ne pas appeler ensureMerchantBootstrap ici !
-      // Un client reste client et va sur les offres.
-      navigate('/offers');
-    }
-    // Si role null → on attend le submit / OAuth
+    if (role === 'merchant') goToMerchantHome();
+    else if (role === 'client') navigate('/offers');
   }, [initialized, user, role, profile, navigate]);
 
-  // ---------- 3) Formulaire ----------
+  // ---------- Formulaire ----------
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // ---------- 4) Email / Password ----------
+  // ---------- Auth e-mail / password ----------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -114,13 +102,37 @@ const MerchantAuthPage = () => {
         if (error) throw error;
 
         if (data.user) {
-          // ✅ Ici on crée bien la ligne merchants (avec p_auth_id)
           await ensureMerchantBootstrap(data.user.id);
-          await supabase.rpc('get_or_create_merchant_for_profile', { p_auth_id: user.id });
+
+          // ✅ Sauvegarde défensive : si la ligne marchand n’existe pas, on la crée
+          try {
+            const { data: prof } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('auth_id', data.user.id)
+              .maybeSingle();
+
+            if (prof?.id) {
+              await supabase
+                .from('merchants')
+                .upsert(
+                  {
+                    profile_id: prof.id,
+                    company_name: formData.companyName.trim() || 'Mon Commerce',
+                    email: formData.email,
+                  },
+                  { onConflict: 'profile_id' }
+                );
+            }
+          } catch (safeErr) {
+            console.warn('⚠️ merchant upsert safeguard:', (safeErr as Error).message);
+          }
+
           await refetchProfile();
           await goToMerchantHome();
         }
       } else {
+        // ----------- REGISTER -----------
         if (formData.password.length < 6)
           throw new Error('Le mot de passe doit contenir au moins 6 caractères');
         if (!formData.companyName.trim())
@@ -132,12 +144,33 @@ const MerchantAuthPage = () => {
         });
         if (signUpError) throw signUpError;
 
-        // Selon tes settings, la session peut ne pas être active tant que l’e-mail n’est pas confirmé.
-        // On essaye quand même (idempotent). Si pas de session, l’appel RPC sera ignoré côté RLS.
         if (signUpData?.user) {
           await ensureMerchantBootstrap(signUpData.user.id);
+
+          // ✅ Même sauvegarde défensive
+          try {
+            const { data: prof } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('auth_id', signUpData.user.id)
+              .maybeSingle();
+
+            if (prof?.id) {
+              await supabase
+                .from('merchants')
+                .upsert(
+                  {
+                    profile_id: prof.id,
+                    company_name: formData.companyName.trim() || 'Mon Commerce',
+                    email: formData.email,
+                  },
+                  { onConflict: 'profile_id' }
+                );
+            }
+          } catch (safeErr) {
+            console.warn('⚠️ merchant upsert safeguard:', (safeErr as Error).message);
+          }
         }
-await supabase.rpc('get_or_create_merchant_for_profile', { p_auth_id: user.id });
 
         alert('✅ Vérifiez votre e-mail pour confirmer votre compte.');
       }
@@ -148,7 +181,7 @@ await supabase.rpc('get_or_create_merchant_for_profile', { p_auth_id: user.id })
     }
   };
 
-  // ---------- 5) Google OAuth ----------
+  // ---------- Google OAuth ----------
   const handleGoogleAuth = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -163,7 +196,7 @@ await supabase.rpc('get_or_create_merchant_for_profile', { p_auth_id: user.id })
     }
   };
 
-  // ---------- 6) Loader ----------
+  // ---------- Loader ----------
   if (authLoading && !initialized) {
     return (
       <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
@@ -172,7 +205,7 @@ await supabase.rpc('get_or_create_merchant_for_profile', { p_auth_id: user.id })
     );
   }
 
-  // ---------- 7) UI ----------
+  // ---------- UI ----------
   return (
     <div className="min-h-screen bg-[#FAFAF5] flex flex-col">
       <div className="flex-1 flex items-center justify-center py-8 px-4">
