@@ -116,6 +116,7 @@ const MerchantAuthPage = () => {
         if (data.user) {
           // ✅ Ici on crée bien la ligne merchants (avec p_auth_id)
           await ensureMerchantBootstrap(data.user.id);
+          await supabase.rpc('get_or_create_merchant_for_profile', { p_auth_id: user.id });
           await refetchProfile();
           await goToMerchantHome();
         }
@@ -136,6 +137,7 @@ const MerchantAuthPage = () => {
         if (signUpData?.user) {
           await ensureMerchantBootstrap(signUpData.user.id);
         }
+await supabase.rpc('get_or_create_merchant_for_profile', { p_auth_id: user.id });
 
         alert('✅ Vérifiez votre e-mail pour confirmer votre compte.');
       }
