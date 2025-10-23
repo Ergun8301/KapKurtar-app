@@ -1,3 +1,4 @@
+// src/components/GeolocationButton.tsx
 import React, { useState } from 'react';
 import { Navigation, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
@@ -29,75 +30,61 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
     setError(null);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        console.log('[GEO] navigator position:', { lat, lng });
+        console.log('[GEO] Position navigateur:', { lat, lng });
 
-        flyToLocation(lat, lng, 14);
-        console.log('[GEO] Called flyToLocation with:', { lat, lng });
+        // --- Mise à jour dans la table profiles ---
+        try {
+          const { data, error: updErr } = await supabase
+            .from('profiles')
+            .update({ location: `POINT(${lng} ${lat})` })
+            .eq('id', userId)
+            .select('id, location')
+            .single();
 
-        if (onSuccess) {
-          onSuccess({ lat, lng });
+          if (updErr) {
+            console.error('[GEO] Erreur Supabase:', updErr);
+            setError('Erreur lors de la mise à jour de votre position.');
+          } else {
+            console.log('[GEO] Profil mis à jour avec succès:', data);
+            setSuccess(true);
+            if (onSuccess) onSuccess({ lat, lng });
+          }
+        } catch (err) {
+          console.error('[GEO] Exception Supabase:', err);
+          setError('Erreur inattendue lors de la mise à jour.');
         }
 
-        setSuccess(true);
         setIsUpdating(false);
-
-        (async () => {
-          try {
-            const tableName = userRole === 'merchant' ? 'merchants' : 'clients';
-            const { data: upd, error: updErr } = await supabase
-              .from(tableName)
-              .update({ location: `POINT(${lng} ${lat})` })
-              .eq('auth_id', userId)
-              .select('id, location');
-
-            if (updErr) {
-              console.error('[GEO] supabase update error:', {
-                message: updErr.message,
-                details: updErr.details,
-                hint: updErr.hint,
-                code: updErr.code
-              });
-            } else {
-              console.log('[GEO] supabase updated:', upd);
-            }
-          } catch (err) {
-            console.error('[GEO] supabase exception:', err);
-          }
-        })();
       },
       (geoError) => {
-        console.error('Geolocation error:', geoError);
-        let errorMessage = 'Impossible d\'obtenir votre position';
-
+        console.error('Erreur de géolocalisation:', geoError);
+        let msg = 'Impossible d’obtenir votre position.';
         switch (geoError.code) {
           case geoError.PERMISSION_DENIED:
-            errorMessage = 'Géolocalisation refusée. Veuillez autoriser l\'accès dans les paramètres de votre navigateur.';
+            msg = 'Géolocalisation refusée. Autorisez-la dans les paramètres du navigateur.';
             break;
           case geoError.POSITION_UNAVAILABLE:
-            errorMessage = 'Votre position n\'est pas disponible actuellement.';
+            msg = 'Position non disponible.';
             break;
           case geoError.TIMEOUT:
-            errorMessage = 'La demande de position a expiré.';
+            msg = 'Le délai de géolocalisation a expiré.';
             break;
         }
-
-        setError(errorMessage);
+        setError(msg);
         setIsUpdating(false);
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
   if (success) {
     return (
-      <div className={`flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg ${className}`}>
+      <div
+        className={`flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg ${className}`}
+      >
         <CheckCircle className="w-5 h-5" />
         <span className="font-medium">Position mise à jour avec succès !</span>
       </div>
