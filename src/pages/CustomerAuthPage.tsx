@@ -18,11 +18,12 @@ const CustomerAuthPage = () => {
   // ✅ 1. Redirection automatique après connexion
   useEffect(() => {
     if (!initialized || !user) return;
+
     if (role === 'client') navigate('/offers');
     else if (role === 'merchant') navigate('/merchant/dashboard');
   }, [initialized, user, role, navigate]);
 
-  // ✅ 2. Gestion formulaire
+  // ✅ 2. Gestion du formulaire
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -33,29 +34,38 @@ const CustomerAuthPage = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+
     try {
       if (mode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
         });
         if (error) throw error;
 
-        await supabase.rpc('set_role_for_me', { p_role: 'client' });
-        await refetchProfile();
-
-        navigate('/offers');
+        if (data.user) {
+          // 🧠 rôle client garanti
+          await supabase.rpc('set_role_for_me', { p_role: 'client' });
+          await refetchProfile();
+          navigate('/offers');
+        }
       } else {
         if (formData.password.length < 6)
           throw new Error('Le mot de passe doit contenir au moins 6 caractères');
 
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
         });
         if (error) throw error;
 
-        alert('✅ Un e-mail de confirmation vous a été envoyé. Veuillez cliquer sur le lien pour activer votre compte.');
+        if (data?.user) {
+          await supabase.rpc('set_role_for_me', { p_role: 'client' });
+        }
+
+        alert(
+          '✅ Un e-mail de confirmation vous a été envoyé. Veuillez cliquer sur le lien pour activer votre compte.'
+        );
       }
     } catch (err) {
       setError((err as Error).message);
