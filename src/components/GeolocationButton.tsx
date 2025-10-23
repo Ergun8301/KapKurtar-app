@@ -1,75 +1,127 @@
 import React, { useState } from 'react';
+import { Navigation, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
-interface Props {
-  userId: string | null;
+interface GeolocationButtonProps {
+  userRole: 'client' | 'merchant';
+  userId: string;
+  onSuccess?: (coords: { lat: number; lng: number }) => void;
+  className?: string;
 }
 
-const GeolocationButton: React.FC<Props> = ({ userId }) => {
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
+export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
+  userRole,
+  userId,
+  onSuccess,
+  className = ''
+}) => {
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleGeolocate = async () => {
-    if (!userId) {
-      setStatus('⚠️ Utilisateur non connecté.');
+  const handleActivateGeolocation = async () => {
+    if (!('geolocation' in navigator)) {
+      setError('Votre navigateur ne supporte pas la géolocalisation.');
       return;
     }
 
-    setLoading(true);
-    setStatus('Obtention de la position...');
+    setIsUpdating(true);
+    setError(null);
 
-    try {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          console.log('[GEO] Position navigateur:', { latitude, longitude });
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        console.log('[GEO] navigator position:', { lat, lng });
 
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('auth_id', userId)
-            .single();
+        flyToLocation(lat, lng, 14);
+        console.log('[GEO] Called flyToLocation with:', { lat, lng });
 
-          if (profile) {
-            const { error } = await supabase
-              .from('profiles')
-              .update({
-                location: `SRID=4326;POINT(${longitude} ${latitude})`,
-              })
-              .eq('id', profile.id);
-
-            if (error) throw error;
-
-            setStatus('✅ Position enregistrée avec succès.');
-          } else {
-            setStatus('⚠️ Aucun profil correspondant trouvé.');
-          }
-        },
-        (err) => {
-          console.error('[GEO] Erreur:', err);
-          setStatus('❌ Erreur de géolocalisation.');
+        if (onSuccess) {
+          onSuccess({ lat, lng });
         }
-      );
-    } catch (err) {
-      console.error('[GEO] Exception:', err);
-      setStatus('❌ Erreur inattendue.');
-    } finally {
-      setLoading(false);
-    }
+
+        setSuccess(true);
+        setIsUpdating(false);
+
+        (async () => {
+          try {
+            const tableName = userRole === 'merchant' ? 'merchants' : 'clients';
+            const { data: upd, error: updErr } = await supabase
+              .from(tableName)
+              .update({ location: POINT(${lng} ${lat}) })
+              .eq('auth_id', userId)
+              .select('id, location');
+
+            if (updErr) {
+              console.error('[GEO] supabase update error:', {
+                message: updErr.message,
+                details: updErr.details,
+                hint: updErr.hint,
+                code: updErr.code
+              });
+            } else {
+              console.log('[GEO] supabase updated:', upd);
+            }
+          } catch (err) {
+            console.error('[GEO] supabase exception:', err);
+          }
+        })();
+      },
+      (geoError) => {
+        console.error('Geolocation error:', geoError);
+        let errorMessage = 'Impossible d\'obtenir votre position';
+
+        switch (geoError.code) {
+          case geoError.PERMISSION_DENIED:
+            errorMessage = 'Géolocalisation refusée. Veuillez autoriser l\'accès dans les paramètres de votre navigateur.';
+            break;
+          case geoError.POSITION_UNAVAILABLE:
+            errorMessage = 'Votre position n\'est pas disponible actuellement.';
+            break;
+          case geoError.TIMEOUT:
+            errorMessage = 'La demande de position a expiré.';
+            break;
+        }
+
+        setError(errorMessage);
+        setIsUpdating(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   };
 
+  if (success) {
+    return (
+      <div className={`flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg ${className}`}>
+        <CheckCircle className="w-5 h-5" />
+        <span className="font-medium">Position mise à jour avec succès !</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="text-center space-y-3">
+    <div className={className}>
       <button
-        onClick={handleGeolocate}
-        disabled={loading}
-        className="bg-[#FF6B35] hover:bg-[#e55a28] text-white px-6 py-3 rounded-xl font-semibold transition-all disabled:bg-gray-400"
+        onClick={handleActivateGeolocation}
+        disabled={isUpdating}
+        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed shadow-md"
       >
-        {loading ? '📍 Localisation...' : '📍 Activer ma géolocalisation'}
+        <Navigation className={`w-5 h-5 ${isUpdating ? 'animate-pulse' : ''}`} />
+        <span>
+          {isUpdating ? 'Mise à jour en cours...' : '📍 Activer ma géolocalisation'}
+        </span>
       </button>
-      {status && <p className="text-sm text-gray-600">{status}</p>}
+
+      {error && (
+        <div className="mt-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded">
+          {error}
+        </div>
+      )}
     </div>
   );
 };
-
-export default GeolocationButton;
