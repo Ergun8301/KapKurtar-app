@@ -26,6 +26,10 @@ interface Offer {
 }
 
 const MerchantDashboardPage = () => {
+    useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const { user } = useAuth();
   const { showAddProductModal, openAddProductModal, closeAddProductModal } = useAddProduct();
   const [offers, setOffers] = useState<Offer[]>([]);
