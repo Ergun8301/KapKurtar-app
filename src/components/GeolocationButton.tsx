@@ -1,11 +1,5 @@
-// src/components/GeolocationButton.tsx
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-
-// ✅ Typage universel compatible Bolt/Vite
-type GeoPosition = {
-  coords: { latitude: number; longitude: number };
-};
 
 interface Props {
   userId: string | null;
@@ -25,48 +19,40 @@ const GeolocationButton: React.FC<Props> = ({ userId }) => {
     setStatus('Obtention de la position...');
 
     try {
-      // ✅ Récupération position navigateur
-      const position = await new Promise<GeoPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject)
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          console.log('[GEO] Position navigateur:', { latitude, longitude });
+
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('auth_id', userId)
+            .single();
+
+          if (profile) {
+            const { error } = await supabase
+              .from('profiles')
+              .update({
+                location: `SRID=4326;POINT(${longitude} ${latitude})`,
+              })
+              .eq('id', profile.id);
+
+            if (error) throw error;
+
+            setStatus('✅ Position enregistrée avec succès.');
+          } else {
+            setStatus('⚠️ Aucun profil correspondant trouvé.');
+          }
+        },
+        (err) => {
+          console.error('[GEO] Erreur:', err);
+          setStatus('❌ Erreur de géolocalisation.');
+        }
       );
-
-      const { latitude, longitude } = position.coords;
-      console.log('[GEO] Position navigateur:', { latitude, longitude });
-
-      // ✅ Recherche du profil (maybeSingle pour éviter 406)
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('auth_id', userId)
-        .maybeSingle();
-
-      if (profileError) {
-        console.warn('[GEO] Erreur recherche profil:', profileError);
-      }
-
-      if (!profile) {
-        console.warn('[GEO] Aucun profil trouvé pour cet utilisateur.');
-        setStatus('⚠️ Aucun profil trouvé.');
-        return;
-      }
-
-      const { id: profileId } = profile;
-
-      // ✅ Mise à jour du point géographique
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          location: `SRID=4326;POINT(${longitude} ${latitude})`,
-        })
-        .eq('id', profileId);
-
-      if (updateError) throw updateError;
-
-      setStatus('✅ Localisation enregistrée avec succès.');
-      console.log('[GEO] Localisation enregistrée pour profil:', profileId);
     } catch (err) {
-      console.error('[GEO] Erreur géolocalisation:', err);
-      setStatus('❌ Erreur lors de la géolocalisation.');
+      console.error('[GEO] Exception:', err);
+      setStatus('❌ Erreur inattendue.');
     } finally {
       setLoading(false);
     }
