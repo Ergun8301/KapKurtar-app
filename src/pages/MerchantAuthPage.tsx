@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft, Store } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuthFlow } from '../hooks/useAuthFlow';
@@ -8,7 +8,6 @@ type AuthMode = 'login' | 'register';
 
 const MerchantAuthPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, role, profile, loading: authLoading, initialized, refetchProfile } = useAuthFlow();
   const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
@@ -19,19 +18,21 @@ const MerchantAuthPage = () => {
   // ---------- helpers ----------
   const ensureMerchantBootstrap = async (authId: string) => {
     try {
-      // 1️⃣ Forcer le rôle merchant dans le profil
+      // 1️⃣ Forcer le rôle merchant dans le profil (idempotent)
       const { error: roleError } = await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
       if (roleError) console.warn('⚠️ set_role_for_me:', roleError.message);
 
-      // 2️⃣ Update direct du profil si le trigger tarde
+      // 2️⃣ Update direct (défensif si le trigger met du temps)
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ role: 'merchant' })
         .eq('auth_id', authId);
       if (updateError) console.warn('⚠️ update profile:', updateError.message);
 
-      // 3️⃣ Crée le marchand s’il n’existe pas (RPC idempotente)
-      const { error: merchantError } = await supabase.rpc('get_or_create_merchant_for_profile');
+      // 3️⃣ Création du marchand (⚠️ il FAUT passer p_auth_id)
+      const { error: merchantError } = await supabase.rpc('get_or_create_merchant_for_profile', {
+        p_auth_id: authId,
+      });
       if (merchantError) console.warn('⚠️ get_or_create_merchant_for_profile:', merchantError.message);
     } catch (err) {
       console.error('Erreur ensureMerchantBootstrap:', err);
@@ -40,11 +41,28 @@ const MerchantAuthPage = () => {
 
   const goToMerchantHome = async () => {
     try {
-      const { data: prof } = await supabase.from('profiles').select('id').eq('auth_id', user!.id).maybeSingle();
+      if (!user) return navigate('/merchant/dashboard');
+
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
+        .maybeSingle();
+
       if (prof?.id) {
-        const { data: merch } = await supabase.from('merchants').select('id').eq('profile_id', prof.id).maybeSingle();
+        const { data: merch } = await supabase
+          .from('merchants')
+          .select('id')
+          .eq('profile_id', prof.id)
+          .maybeSingle();
+
         if (merch?.id) {
-          const { data: offers } = await supabase.from('offers').select('id').eq('merchant_id', merch.id).limit(1);
+          const { data: offers } = await supabase
+            .from('offers')
+            .select('id')
+            .eq('merchant_id', merch.id)
+            .limit(1);
+
           if (!offers || offers.length === 0) {
             navigate('/merchant/add-product');
             return;
@@ -57,27 +75,23 @@ const MerchantAuthPage = () => {
     navigate('/merchant/dashboard');
   };
 
-  // ---------- 1) Auto bootstrap si session déjà là ----------
-  useEffect(() => {
-    (async () => {
-      if (!initialized || !user) return;
-      await ensureMerchantBootstrap(user.id);
-    })();
-  }, [initialized, user]);
+  // ---------- 1) (SUPPRIMÉ) : pas d’auto-bootstrap silencieux au montage ----------
+  // Cela évite de “promouvoir” un client en marchand juste en ouvrant la page.
 
   // ---------- 2) Redirections ----------
   useEffect(() => {
-    (async () => {
-      if (!initialized || !user) return;
-      if (role === 'merchant') {
-        await goToMerchantHome();
-      } else if (role === 'client') {
-        await ensureMerchantBootstrap(user.id);
-        await refetchProfile();
-        await goToMerchantHome();
-      }
-    })();
-  }, [initialized, user, role, profile]);
+    if (!initialized || !user) return;
+
+    if (role === 'merchant') {
+      // L’utilisateur est bien marchand → vers le dashboard / add-product si besoin
+      goToMerchantHome();
+    } else if (role === 'client') {
+      // Surtout ne pas appeler ensureMerchantBootstrap ici !
+      // Un client reste client et va sur les offres.
+      navigate('/offers');
+    }
+    // Si role null → on attend le submit / OAuth
+  }, [initialized, user, role, profile, navigate]);
 
   // ---------- 3) Formulaire ----------
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,6 +114,7 @@ const MerchantAuthPage = () => {
         if (error) throw error;
 
         if (data.user) {
+          // ✅ Ici on crée bien la ligne merchants (avec p_auth_id)
           await ensureMerchantBootstrap(data.user.id);
           await refetchProfile();
           await goToMerchantHome();
@@ -116,6 +131,8 @@ const MerchantAuthPage = () => {
         });
         if (signUpError) throw signUpError;
 
+        // Selon tes settings, la session peut ne pas être active tant que l’e-mail n’est pas confirmé.
+        // On essaye quand même (idempotent). Si pas de session, l’appel RPC sera ignoré côté RLS.
         if (signUpData?.user) {
           await ensureMerchantBootstrap(signUpData.user.id);
         }
