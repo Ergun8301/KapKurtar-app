@@ -2,6 +2,11 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
+// ✅ Typage universel compatible Bolt/Vite
+type GeoPosition = {
+  coords: { latitude: number; longitude: number };
+};
+
 interface Props {
   userId: string | null;
 }
@@ -20,14 +25,15 @@ const GeolocationButton: React.FC<Props> = ({ userId }) => {
     setStatus('Obtention de la position...');
 
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) =>
+      // ✅ Récupération position navigateur
+      const position = await new Promise<GeoPosition>((resolve, reject) =>
         navigator.geolocation.getCurrentPosition(resolve, reject)
       );
 
       const { latitude, longitude } = position.coords;
       console.log('[GEO] Position navigateur:', { latitude, longitude });
 
-      // ✅ On récupère le profil via maybeSingle() pour éviter 406
+      // ✅ Recherche du profil (maybeSingle pour éviter 406)
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -46,7 +52,7 @@ const GeolocationButton: React.FC<Props> = ({ userId }) => {
 
       const { id: profileId } = profile;
 
-      // ✅ Mise à jour de la colonne location (type geography(Point))
+      // ✅ Mise à jour du point géographique
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -60,7 +66,7 @@ const GeolocationButton: React.FC<Props> = ({ userId }) => {
       console.log('[GEO] Localisation enregistrée pour profil:', profileId);
     } catch (err) {
       console.error('[GEO] Erreur géolocalisation:', err);
-      setStatus('Erreur lors de la géolocalisation.');
+      setStatus('❌ Erreur lors de la géolocalisation.');
     } finally {
       setLoading(false);
     }
