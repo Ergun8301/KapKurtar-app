@@ -1,5 +1,4 @@
-// src/pages/MerchantAuthPage.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft, Store } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
@@ -7,108 +6,95 @@ import { useAuthFlow } from '../hooks/useAuthFlow';
 
 type AuthMode = 'login' | 'register';
 
-const MerchantAuthPage: React.FC = () => {
+const MerchantAuthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, role, profile, loading: authLoading, initialized, refetchProfile } = useAuthFlow();
-
   const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ email: '', password: '', companyName: '' });
 
-  const roleAppliedOnce = useRef(false);
-  const redirectedOnce = useRef(false);
-
-  const getProfileIdByAuthId = async (authId: string) => {
-    const { data: pr, error: prErr } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('auth_id', authId)
-      .maybeSingle();
-
-    if (prErr) console.warn('[merchant] profiles lookup warning:', prErr);
-    return pr?.id ?? null;
-  };
-
-  const getMerchantIdForUser = async (authId: string) => {
-    const profileId = await getProfileIdByAuthId(authId);
-    if (profileId) {
-      const { data: byProfile } = await supabase
-        .from('merchants')
-        .select('id')
-        .eq('profile_id', profileId)
-        .maybeSingle();
-      if (byProfile?.id) return byProfile.id;
-    }
-    const { data: byAuth } = await supabase
-      .from('merchants')
-      .select('id')
-      .eq('id', authId)
-      .maybeSingle();
-    return byAuth?.id ?? null;
-  };
-
-  const ensureMerchantExists = async (authId: string) => {
-    const existingId = await getMerchantIdForUser(authId);
-    if (existingId) return existingId;
-    await supabase.rpc('get_or_create_merchant_for_profile').catch(() => {});
-    return await getMerchantIdForUser(authId);
-  };
-
-  const redirectAfterLogin = async (authId: string) => {
-    if (redirectedOnce.current) return;
-    redirectedOnce.current = true;
-
-    const merchantId = await ensureMerchantExists(authId);
-    if (!merchantId) {
-      navigate('/merchant/add-product');
-      return;
-    }
-
-    const { data: offers } = await supabase
-      .from('offers')
-      .select('id')
-      .eq('merchant_id', merchantId)
-      .limit(1);
-
-    if (!offers || offers.length === 0) navigate('/merchant/add-product');
-    else navigate('/merchant/dashboard');
-  };
-
+  // ✅ 1. Assigne automatiquement le rôle "merchant" après session
   useEffect(() => {
     (async () => {
-      if (!initialized || !user || roleAppliedOnce.current) return;
+      if (!initialized || !user) return;
+
       try {
-        roleAppliedOnce.current = true;
-        await supabase.rpc('set_role_for_me', { p_role: 'merchant' }).catch(() => {});
+        await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
         await supabase.from('profiles').update({ role: 'merchant' }).eq('auth_id', user.id);
-        await ensureMerchantExists(user.id);
-        await refetchProfile();
+
+        const { data: profileRow } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('auth_id', user.id)
+          .maybeSingle();
+
+        if (profileRow) {
+          const { data: existingMerchant } = await supabase
+            .from('merchants')
+            .select('id')
+            .eq('profile_id', profileRow.id)
+            .maybeSingle();
+
+          if (!existingMerchant) {
+            console.log('🆕 Création du merchant via RPC...');
+            await supabase.rpc('get_or_create_merchant_for_profile');
+            console.log('✅ Merchant créé automatiquement.');
+          }
+        }
       } catch (err) {
-        console.error('[merchant] set role error:', err);
+        console.error('Erreur assignation rôle merchant:', err);
       }
     })();
-  }, [initialized, user, refetchProfile]);
+  }, [initialized, user]);
 
+  // ✅ 2. Redirection automatique après login / signup
   useEffect(() => {
-    if (!initialized || !user) return;
-    if (role === 'client') {
-      if (!redirectedOnce.current) {
-        redirectedOnce.current = true;
+    (async () => {
+      if (!initialized || !user) return;
+
+      if (role === 'merchant' && profile) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('auth_id', user.id)
+          .single();
+
+        if (profileData) {
+          const { data: merchantData } = await supabase
+            .from('merchants')
+            .select('id')
+            .eq('profile_id', profileData.id)
+            .maybeSingle();
+
+          if (merchantData) {
+            const { data: offers } = await supabase
+              .from('offers')
+              .select('id')
+              .eq('merchant_id', merchantData.id)
+              .limit(1);
+
+            if (!offers || offers.length === 0) navigate('/merchant/add-product');
+            else navigate('/merchant/dashboard');
+          } else {
+            navigate('/merchant/add-product');
+          }
+        }
+      } else if (role === 'client') {
         navigate('/offers');
       }
-      return;
-    }
-    if (role === 'merchant') redirectAfterLogin(user.id);
-  }, [initialized, user, role, navigate]);
+    })();
+  }, [initialized, user, role, profile]);
 
+  // ✅ 3. Gestion du formulaire
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // ✅ 4. Auth email/password
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -121,13 +107,18 @@ const MerchantAuthPage: React.FC = () => {
           password: formData.password,
         });
         if (error) throw error;
-        const authId = data.user?.id;
-        if (!authId) throw new Error('Session invalide.');
-        await supabase.rpc('set_role_for_me', { p_role: 'merchant' }).catch(() => {});
-        await supabase.from('profiles').update({ role: 'merchant' }).eq('auth_id', authId);
-        await ensureMerchantExists(authId);
-        await refetchProfile();
-        await redirectAfterLogin(authId);
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('auth_id', data.user?.id)
+          .maybeSingle();
+
+        if (profile?.role === 'merchant') {
+          navigate('/merchant/dashboard');
+        } else {
+          navigate('/offers');
+        }
       } else {
         if (formData.password.length < 6)
           throw new Error('Le mot de passe doit contenir au moins 6 caractères');
@@ -139,23 +130,28 @@ const MerchantAuthPage: React.FC = () => {
           password: formData.password,
         });
         if (signUpError) throw signUpError;
+
         if (signUpData?.user) {
-          await supabase
-            .rpc('create_merchant_from_profile_secure', { p_auth_id: signUpData.user.id })
-            .catch(() => {});
+          try {
+            await supabase.rpc('create_merchant_from_profile_secure', { p_auth_id: signUpData.user.id });
+            console.log('✅ Merchant créé automatiquement après inscription email.');
+          } catch (rpcError) {
+            console.warn('⚠️ Erreur création merchant RPC:', rpcError);
+          }
         }
-        alert(
-          '✅ Un e-mail de confirmation vous a été envoyé. Veuillez cliquer sur le lien pour activer votre compte.'
-        );
+
+        alert('✅ Un e-mail de confirmation vous a été envoyé. Veuillez cliquer sur le lien pour activer votre compte.');
       }
-    } catch (err: any) {
-      console.error(err);
-      setError(err?.message ?? 'Une erreur est survenue');
+
+      await refetchProfile();
+    } catch (err) {
+      setError((err as Error).message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ✅ 5. Auth Google (role merchant)
   const handleGoogleAuth = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -165,11 +161,12 @@ const MerchantAuthPage: React.FC = () => {
         },
       });
       if (error) throw error;
-    } catch (err: any) {
-      setError(err?.message ?? 'Une erreur est survenue');
+    } catch (err) {
+      setError((err as Error).message);
     }
   };
 
+  // ✅ 6. Loader
   if (authLoading && !initialized) {
     return (
       <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
@@ -178,6 +175,7 @@ const MerchantAuthPage: React.FC = () => {
     );
   }
 
+  // ✅ 7. Interface principale
   return (
     <div className="min-h-screen bg-[#FAFAF5] flex flex-col">
       <div className="flex-1 flex items-center justify-center py-8 px-4">
@@ -207,11 +205,14 @@ const MerchantAuthPage: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-3xl shadow-xl p-6 space-y-6">
+            {/* Tabs Connexion / Inscription */}
             <div className="flex bg-gray-100 rounded-2xl p-1">
               <button
                 onClick={() => setMode('login')}
                 className={`flex-1 py-3 font-semibold rounded-xl ${
-                  mode === 'login' ? 'bg-white text-[#FF6B35] shadow-md' : 'text-gray-500'
+                  mode === 'login'
+                    ? 'bg-white text-[#FF6B35] shadow-md'
+                    : 'text-gray-500'
                 }`}
               >
                 Connexion
@@ -219,19 +220,23 @@ const MerchantAuthPage: React.FC = () => {
               <button
                 onClick={() => setMode('register')}
                 className={`flex-1 py-3 font-semibold rounded-xl ${
-                  mode === 'register' ? 'bg-white text-[#FF6B35] shadow-md' : 'text-gray-500'
+                  mode === 'register'
+                    ? 'bg-white text-[#FF6B35] shadow-md'
+                    : 'text-gray-500'
                 }`}
               >
                 Inscription
               </button>
             </div>
 
+            {/* Erreur */}
             {error && (
               <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
 
+            {/* Formulaire */}
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === 'register' && (
                 <div>
@@ -253,6 +258,7 @@ const MerchantAuthPage: React.FC = () => {
                 </div>
               )}
 
+              {/* Email */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                 <div className="relative">
@@ -269,10 +275,9 @@ const MerchantAuthPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Mot de passe */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Mot de passe
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Mot de passe</label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
@@ -285,6 +290,8 @@ const MerchantAuthPage: React.FC = () => {
                     required
                     minLength={6}
                   />
+
+                  {/* Afficher / masquer mot de passe */}
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -293,8 +300,22 @@ const MerchantAuthPage: React.FC = () => {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+
+                {/* 🔗 Lien mot de passe oublié */}
+                {mode === 'login' && (
+                  <div className="text-right mt-2">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/forgot-password')}
+                      className="text-sm text-[#FF6B35] hover:text-[#e55a28] font-medium"
+                    >
+                      Mot de passe oublié ?
+                    </button>
+                  </div>
+                )}
               </div>
 
+              {/* Bouton submit */}
               <button
                 type="submit"
                 disabled={isLoading}
@@ -313,6 +334,7 @@ const MerchantAuthPage: React.FC = () => {
               </button>
             </form>
 
+            {/* OU Google */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200"></div>
