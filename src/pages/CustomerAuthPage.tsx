@@ -8,53 +8,39 @@ type AuthMode = 'login' | 'register';
 
 const CustomerAuthPage = () => {
   const navigate = useNavigate();
-  const { user, role, profile, loading: authLoading, initialized, refetchProfile } = useAuthFlow();
+  const { user, role, loading: authLoading, initialized, refetchProfile } = useAuthFlow();
   const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ email: '', password: '' });
 
-  // ✅ 1. Appliquer automatiquement le rôle client une fois la session prête
-  useEffect(() => {
-    (async () => {
-      if (!initialized || !user) return;
-      try {
-        await supabase.rpc('set_role_for_me', { p_role: 'client' });
-        await supabase.from('profiles').update({ role: 'client' }).eq('auth_id', user.id);
-      } catch (err) {
-        console.error('Erreur assignation rôle client:', err);
-      }
-    })();
-  }, [initialized, user]);
-
-  // ✅ 2. Redirection automatique après connexion
+  // ✅ 1. Redirection automatique après connexion
   useEffect(() => {
     if (!initialized || !user) return;
     if (role === 'client') navigate('/offers');
     else if (role === 'merchant') navigate('/merchant/dashboard');
   }, [initialized, user, role, navigate]);
 
-  // ✅ 3. Gestion formulaire
+  // ✅ 2. Gestion formulaire
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // ✅ 4. Connexion / Inscription e-mail
+  // ✅ 3. Connexion / Inscription e-mail
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
     try {
       if (mode === 'login') {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
         });
         if (error) throw error;
 
-        // 🧠 Force le rôle client + recharge profil
         await supabase.rpc('set_role_for_me', { p_role: 'client' });
         await refetchProfile();
 
@@ -63,15 +49,13 @@ const CustomerAuthPage = () => {
         if (formData.password.length < 6)
           throw new Error('Le mot de passe doit contenir au moins 6 caractères');
 
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
         });
-        if (signUpError) throw signUpError;
+        if (error) throw error;
 
-        alert(
-          '✅ Un e-mail de confirmation vous a été envoyé. Veuillez cliquer sur le lien pour activer votre compte.'
-        );
+        alert('✅ Un e-mail de confirmation vous a été envoyé. Veuillez cliquer sur le lien pour activer votre compte.');
       }
     } catch (err) {
       setError((err as Error).message);
@@ -80,7 +64,7 @@ const CustomerAuthPage = () => {
     }
   };
 
-  // ✅ 5. Auth Google (rôle client)
+  // ✅ 4. Auth Google (rôle client)
   const handleGoogleAuth = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -95,7 +79,7 @@ const CustomerAuthPage = () => {
     }
   };
 
-  // ✅ 6. Loader
+  // ✅ 5. Loader
   if (authLoading && !initialized) {
     return (
       <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
@@ -104,7 +88,7 @@ const CustomerAuthPage = () => {
     );
   }
 
-  // ✅ 7. Interface
+  // ✅ 6. Interface
   return (
     <div className="min-h-screen bg-[#FAFAF5] flex flex-col">
       <div className="flex-1 flex items-center justify-center py-8 px-4">
@@ -196,19 +180,17 @@ const CustomerAuthPage = () => {
                     required
                     minLength={6}
                   />
-                  {/* 🔗 Lien mot de passe oublié */}
-{mode === 'login' && (
-  <div className="text-right mt-2">
-    <button
-      type="button"
-      onClick={() => navigate('/forgot-password')}
-      className="text-sm text-[#3A6932] hover:text-[#2d5226] font-medium"
-    >
-      Mot de passe oublié ?
-    </button>
-  </div>
-)}
-
+                  {mode === 'login' && (
+                    <div className="text-right mt-2">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/forgot-password')}
+                        className="text-sm text-[#3A6932] hover:text-[#2d5226] font-medium"
+                      >
+                        Mot de passe oublié ?
+                      </button>
+                    </div>
+                  )}
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -252,22 +234,10 @@ const CustomerAuthPage = () => {
               className="w-full flex items-center justify-center px-4 py-4 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-semibold"
             >
               <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
               Google
             </button>
