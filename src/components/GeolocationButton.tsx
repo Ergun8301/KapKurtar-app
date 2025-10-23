@@ -1,109 +1,83 @@
 // src/components/GeolocationButton.tsx
 import React, { useState } from 'react';
-import { Navigation, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
-interface GeolocationButtonProps {
-  userRole: 'client' | 'merchant';
-  userId: string; // correspond à auth.users.id
-  onSuccess?: (coords: { lat: number; lng: number }) => void;
-  className?: string;
+interface Props {
+  userId: string | null;
 }
 
-export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
-  userRole,
-  userId,
-  onSuccess,
-  className = ''
-}) => {
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const GeolocationButton: React.FC<Props> = ({ userId }) => {
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
 
-  const handleActivateGeolocation = async () => {
-    if (!('geolocation' in navigator)) {
-      setError('Votre navigateur ne supporte pas la géolocalisation.');
+  const handleGeolocate = async () => {
+    if (!userId) {
+      setStatus('⚠️ Utilisateur non connecté.');
       return;
     }
 
-    setIsUpdating(true);
-    setError(null);
+    setLoading(true);
+    setStatus('Obtention de la position...');
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        console.log('[GEO] Position navigateur:', { lat, lng });
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject)
+      );
 
-        try {
-          const { data, error: updErr } = await supabase
-            .from('profiles')
-            .update({ location: `POINT(${lng} ${lat})` })
-            .eq('auth_id', userId) // ✅ on cible la bonne clé ici
-            .select('id, location');
+      const { latitude, longitude } = position.coords;
+      console.log('[GEO] Position navigateur:', { latitude, longitude });
 
-          if (updErr) {
-            console.error('[GEO] Erreur Supabase:', updErr);
-            setError('Erreur lors de la mise à jour de votre position.');
-          } else if (data && data.length > 0) {
-            console.log('[GEO] Profil mis à jour:', data[0]);
-            setSuccess(true);
-            if (onSuccess) onSuccess({ lat, lng });
-          } else {
-            console.warn('[GEO] Aucun profil trouvé pour cet utilisateur.');
-            setError("Aucun profil correspondant trouvé.");
-          }
-        } catch (err) {
-          console.error('[GEO] Exception Supabase:', err);
-          setError('Erreur inattendue lors de la mise à jour.');
-        }
+      // ✅ On récupère le profil via maybeSingle() pour éviter 406
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', userId)
+        .maybeSingle();
 
-        setIsUpdating(false);
-      },
-      (geoError) => {
-        console.error('Erreur de géolocalisation:', geoError);
-        let msg = 'Impossible d’obtenir votre position.';
-        switch (geoError.code) {
-          case geoError.PERMISSION_DENIED:
-            msg = 'Géolocalisation refusée. Autorisez-la dans les paramètres du navigateur.';
-            break;
-          case geoError.POSITION_UNAVAILABLE:
-            msg = 'Position non disponible.';
-            break;
-          case geoError.TIMEOUT:
-            msg = 'Le délai de géolocalisation a expiré.';
-            break;
-        }
-        setError(msg);
-        setIsUpdating(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+      if (profileError) {
+        console.warn('[GEO] Erreur recherche profil:', profileError);
+      }
+
+      if (!profile) {
+        console.warn('[GEO] Aucun profil trouvé pour cet utilisateur.');
+        setStatus('⚠️ Aucun profil trouvé.');
+        return;
+      }
+
+      const { id: profileId } = profile;
+
+      // ✅ Mise à jour de la colonne location (type geography(Point))
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          location: `SRID=4326;POINT(${longitude} ${latitude})`,
+        })
+        .eq('id', profileId);
+
+      if (updateError) throw updateError;
+
+      setStatus('✅ Localisation enregistrée avec succès.');
+      console.log('[GEO] Localisation enregistrée pour profil:', profileId);
+    } catch (err) {
+      console.error('[GEO] Erreur géolocalisation:', err);
+      setStatus('Erreur lors de la géolocalisation.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (success) {
-    return (
-      <div className={`flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg ${className}`}>
-        <CheckCircle className="w-5 h-5" />
-        <span className="font-medium">Position mise à jour avec succès !</span>
-      </div>
-    );
-  }
-
   return (
-    <div className={className}>
+    <div className="text-center space-y-3">
       <button
-        onClick={handleActivateGeolocation}
-        disabled={isUpdating}
-        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed shadow-md"
+        onClick={handleGeolocate}
+        disabled={loading}
+        className="bg-[#FF6B35] hover:bg-[#e55a28] text-white px-6 py-3 rounded-xl font-semibold transition-all disabled:bg-gray-400"
       >
-        <Navigation className={`w-5 h-5 ${isUpdating ? 'animate-pulse' : ''}`} />
-        <span>{isUpdating ? 'Mise à jour en cours...' : '📍 Activer ma géolocalisation'}</span>
+        {loading ? '📍 Localisation...' : '📍 Activer ma géolocalisation'}
       </button>
-
-      {error && (
-        <div className="mt-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded">{error}</div>
-      )}
+      {status && <p className="text-sm text-gray-600">{status}</p>}
     </div>
   );
 };
+
+export default GeolocationButton;
