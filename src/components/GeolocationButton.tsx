@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 
 interface GeolocationButtonProps {
   userRole: 'client' | 'merchant';
-  userId: string;
+  userId: string; // correspond à auth.users.id
   onSuccess?: (coords: { lat: number; lng: number }) => void;
   className?: string;
 }
@@ -35,22 +35,23 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
         const lng = position.coords.longitude;
         console.log('[GEO] Position navigateur:', { lat, lng });
 
-        // --- Mise à jour dans la table profiles ---
         try {
           const { data, error: updErr } = await supabase
             .from('profiles')
             .update({ location: `POINT(${lng} ${lat})` })
-            .eq('id', userId)
-            .select('id, location')
-            .single();
+            .eq('auth_id', userId) // ✅ on cible la bonne clé ici
+            .select('id, location');
 
           if (updErr) {
             console.error('[GEO] Erreur Supabase:', updErr);
             setError('Erreur lors de la mise à jour de votre position.');
-          } else {
-            console.log('[GEO] Profil mis à jour avec succès:', data);
+          } else if (data && data.length > 0) {
+            console.log('[GEO] Profil mis à jour:', data[0]);
             setSuccess(true);
             if (onSuccess) onSuccess({ lat, lng });
+          } else {
+            console.warn('[GEO] Aucun profil trouvé pour cet utilisateur.');
+            setError("Aucun profil correspondant trouvé.");
           }
         } catch (err) {
           console.error('[GEO] Exception Supabase:', err);
@@ -82,9 +83,7 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
 
   if (success) {
     return (
-      <div
-        className={`flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg ${className}`}
-      >
+      <div className={`flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg ${className}`}>
         <CheckCircle className="w-5 h-5" />
         <span className="font-medium">Position mise à jour avec succès !</span>
       </div>
@@ -99,15 +98,11 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
         className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed shadow-md"
       >
         <Navigation className={`w-5 h-5 ${isUpdating ? 'animate-pulse' : ''}`} />
-        <span>
-          {isUpdating ? 'Mise à jour en cours...' : '📍 Activer ma géolocalisation'}
-        </span>
+        <span>{isUpdating ? 'Mise à jour en cours...' : '📍 Activer ma géolocalisation'}</span>
       </button>
 
       {error && (
-        <div className="mt-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded">
-          {error}
-        </div>
+        <div className="mt-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded">{error}</div>
       )}
     </div>
   );
