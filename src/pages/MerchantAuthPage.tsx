@@ -16,7 +16,7 @@ const MerchantAuthPage = () => {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ email: '', password: '', companyName: '' });
 
-  // ✅ 1. Assigne automatiquement le rôle "merchant" après session
+  // 🧩 1. Assigne le rôle "merchant" et crée le profil si nécessaire
   useEffect(() => {
     (async () => {
       if (!initialized || !user) return;
@@ -39,30 +39,36 @@ const MerchantAuthPage = () => {
             .maybeSingle();
 
           if (!existingMerchant) {
-            console.log('🆕 Création du merchant via RPC...');
+            console.log('🆕 Création automatique du marchand...');
             await supabase.rpc('get_or_create_merchant_for_profile');
-            console.log('✅ Merchant créé automatiquement.');
           }
         }
       } catch (err) {
-        console.error('Erreur assignation rôle merchant:', err);
+        console.error('Erreur lors de la création du marchand :', err);
       }
     })();
   }, [initialized, user]);
 
-  // ✅ 2. Redirection automatique après login / signup
+  // 🧭 2. Redirection automatique une fois le rôle confirmé
   useEffect(() => {
     (async () => {
       if (!initialized || !user) return;
 
-      if (role === 'merchant' && profile) {
+      try {
+        // 🔁 On vérifie que le profil est bien prêt (rôle non null)
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('id')
+          .select('id, role')
           .eq('auth_id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (profileData) {
+        if (!profileData) {
+          console.warn('Profil non encore créé, rechargement...');
+          setTimeout(() => window.location.reload(), 1200);
+          return;
+        }
+
+        if (profileData.role === 'merchant') {
           const { data: merchantData } = await supabase
             .from('merchants')
             .select('id')
@@ -81,24 +87,26 @@ const MerchantAuthPage = () => {
           } else {
             navigate('/merchant/add-product');
           }
+        } else if (profileData.role === 'client') {
+          navigate('/offers');
         }
-      } else if (role === 'client') {
-        navigate('/offers');
+      } catch (err) {
+        console.error('Erreur lors de la redirection :', err);
       }
     })();
-  }, [initialized, user, role, profile]);
+  }, [initialized, user]);
 
-  // ✅ 3. Gestion du formulaire
+  // ✍️ 3. Gestion du formulaire
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // ✅ 4. Auth email/password
+  // 🔐 4. Authentification email / mot de passe
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
+    setIsLoading(true);
 
     try {
       if (mode === 'login') {
@@ -108,39 +116,20 @@ const MerchantAuthPage = () => {
         });
         if (error) throw error;
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('auth_id', data.user?.id)
-          .maybeSingle();
-
-        if (profile?.role === 'merchant') {
-          navigate('/merchant/dashboard');
-        } else {
-          navigate('/offers');
-        }
+        navigate('/merchant/dashboard');
       } else {
         if (formData.password.length < 6)
           throw new Error('Le mot de passe doit contenir au moins 6 caractères');
         if (!formData.companyName.trim())
           throw new Error("Le nom de l'entreprise est requis");
 
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
         });
-        if (signUpError) throw signUpError;
+        if (error) throw error;
 
-        if (signUpData?.user) {
-          try {
-            await supabase.rpc('create_merchant_from_profile_secure', { p_auth_id: signUpData.user.id });
-            console.log('✅ Merchant créé automatiquement après inscription email.');
-          } catch (rpcError) {
-            console.warn('⚠️ Erreur création merchant RPC:', rpcError);
-          }
-        }
-
-        alert('✅ Un e-mail de confirmation vous a été envoyé. Veuillez cliquer sur le lien pour activer votre compte.');
+        alert('✅ Vérifiez votre e-mail pour confirmer votre compte.');
       }
 
       await refetchProfile();
@@ -151,7 +140,7 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // ✅ 5. Auth Google (role merchant)
+  // 🔄 5. Authentification Google pour marchands
   const handleGoogleAuth = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -166,16 +155,16 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // ✅ 6. Loader
+  // ⏳ 6. Loader d’attente
   if (authLoading && !initialized) {
     return (
-      <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6B35]"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAF5]">
+        <div className="animate-spin h-12 w-12 border-4 border-[#FF6B35] border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
-  // ✅ 7. Interface principale
+  // 🖥️ 7. Interface principale
   return (
     <div className="min-h-screen bg-[#FAFAF5] flex flex-col">
       <div className="flex-1 flex items-center justify-center py-8 px-4">
@@ -205,7 +194,7 @@ const MerchantAuthPage = () => {
           </div>
 
           <div className="bg-white rounded-3xl shadow-xl p-6 space-y-6">
-            {/* Tabs Connexion / Inscription */}
+            {/* Tabs */}
             <div className="flex bg-gray-100 rounded-2xl p-1">
               <button
                 onClick={() => setMode('login')}
@@ -229,14 +218,12 @@ const MerchantAuthPage = () => {
               </button>
             </div>
 
-            {/* Erreur */}
             {error && (
               <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
 
-            {/* Formulaire */}
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === 'register' && (
                 <div>
@@ -258,7 +245,6 @@ const MerchantAuthPage = () => {
                 </div>
               )}
 
-              {/* Email */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                 <div className="relative">
@@ -275,7 +261,6 @@ const MerchantAuthPage = () => {
                 </div>
               </div>
 
-              {/* Mot de passe */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Mot de passe</label>
                 <div className="relative">
@@ -290,8 +275,6 @@ const MerchantAuthPage = () => {
                     required
                     minLength={6}
                   />
-
-                  {/* Afficher / masquer mot de passe */}
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -301,7 +284,6 @@ const MerchantAuthPage = () => {
                   </button>
                 </div>
 
-                {/* 🔗 Lien mot de passe oublié */}
                 {mode === 'login' && (
                   <div className="text-right mt-2">
                     <button
@@ -315,26 +297,15 @@ const MerchantAuthPage = () => {
                 )}
               </div>
 
-              {/* Bouton submit */}
               <button
                 type="submit"
                 disabled={isLoading}
                 className="w-full bg-[#FF6B35] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#e55a28] transition-all shadow-lg hover:shadow-xl disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Chargement...
-                  </div>
-                ) : mode === 'login' ? (
-                  'Se connecter'
-                ) : (
-                  'Créer mon espace'
-                )}
+                {isLoading ? 'Chargement...' : mode === 'login' ? 'Se connecter' : 'Créer mon espace'}
               </button>
             </form>
 
-            {/* OU Google */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200"></div>
@@ -350,22 +321,10 @@ const MerchantAuthPage = () => {
               className="w-full flex items-center justify-center px-4 py-4 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-semibold"
             >
               <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
               Google
             </button>
