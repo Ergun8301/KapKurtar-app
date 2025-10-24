@@ -54,7 +54,8 @@ const OffersMapPage = () => {
     geoBtn.onclick = () => handleLocate();
     map.getContainer().appendChild(geoBtn);
 
-    locateUser(); // auto-locate
+    // Lancement automatique de la géolocalisation
+    locateUser();
 
     return () => map.remove();
   }, []);
@@ -62,9 +63,12 @@ const OffersMapPage = () => {
   // === GEOLOC USER ===
   const locateUser = () => {
     if (!navigator.geolocation) {
+      console.warn("Géolocalisation non supportée");
       setLoading(false);
       return;
     }
+
+    setLoading(true);
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -93,23 +97,38 @@ const OffersMapPage = () => {
 
   const handleLocate = () => locateUser();
 
-  // === FETCH OFFERS ===
+  // === FETCH OFFERS (corrigé) ===
   const fetchOffers = async (coords: [number, number]) => {
     try {
-      if (!user) return;
-      const { data: client } = await supabase
-        .from("clients")
+      if (!user) {
+        console.warn("Utilisateur non connecté");
+        return;
+      }
+
+      // 🔍 Récupère le profil client dans "profiles"
+      const { data: client, error: clientError } = await supabase
+        .from("profiles")
         .select("id")
         .eq("auth_id", user.id)
-        .maybeSingle();
+        .single();
 
-      if (client) {
-        const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
-          p_client_id: client.id,
-          p_radius_meters: 10000,
-        });
-        if (error) console.error(error);
-        else setOffers(data || []);
+      if (clientError) {
+        console.error("Erreur profil client:", clientError);
+        return;
+      }
+
+      // 📡 Appelle la fonction RPC Supabase
+      const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
+        p_client_id: client.id,
+        p_radius_meters: 10000,
+      });
+
+      if (error) {
+        console.error("Erreur RPC:", error);
+        setOffers([]);
+      } else {
+        console.log(`✅ ${data?.length || 0} offre(s) trouvée(s)`);
+        setOffers(data || []);
       }
     } catch (e) {
       console.error("Erreur fetch offers:", e);
@@ -119,6 +138,9 @@ const OffersMapPage = () => {
   // === MARKERS ===
   useEffect(() => {
     if (!mapRef.current || !offers.length) return;
+
+    // Supprime les anciens marqueurs avant d'en ajouter de nouveaux
+    document.querySelectorAll(".mapboxgl-marker").forEach((m) => m.remove());
 
     offers.forEach((offer) => {
       const marker = new mapboxgl.Marker({ color: "#10b981" })
@@ -136,7 +158,7 @@ const OffersMapPage = () => {
     });
   }, [offers]);
 
-  // === LOADING ===
+  // === LOADING STATE ===
   if (loading)
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -157,7 +179,9 @@ const OffersMapPage = () => {
       <div className="w-full md:w-1/2 overflow-y-auto bg-white border-l border-gray-200 p-4">
         <h2 className="text-xl font-bold mb-4 text-gray-800">Offres à proximité</h2>
         {offers.length === 0 ? (
-          <p className="text-gray-500 text-center mt-10">Aucune offre disponible autour de vous</p>
+          <p className="text-gray-500 text-center mt-10">
+            Aucune offre disponible autour de vous
+          </p>
         ) : (
           <div className="space-y-4">
             {offers.map((offer) => (
