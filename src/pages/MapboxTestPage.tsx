@@ -13,67 +13,39 @@ const MapboxTestPage = () => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // 🌍 Carte globe Turquie initiale
+    // 🚀 Carte immédiate centrée sur la Turquie (fallback)
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
       center: [35.2433, 38.9637],
-      zoom: 1.8,
+      zoom: 4.2, // déjà rapproché dès l’ouverture
       projection: "globe",
     });
 
     mapRef.current = map;
 
-    // 🌎 Animation du globe en rotation lente
-    let rotate = true;
-    function rotateGlobe() {
-      if (!rotate) return;
-      const center = map.getCenter();
-      map.easeTo({
-        center: [center.lng + 0.2, center.lat],
-        duration: 8000, // ⏱️ plus rapide qu’avant (10s → 8s)
-        easing: (n) => n,
-      });
-      requestAnimationFrame(rotateGlobe);
+    // 🛰️ Tentative de géolocalisation instantanée dès le chargement
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { longitude, latitude } = pos.coords;
+          setIsLocated(true);
+          map.flyTo({
+            center: [longitude, latitude],
+            zoom: 13,
+            speed: 1.3,
+            curve: 1.3,
+          });
+          if (userMarker.current) userMarker.current.remove();
+          userMarker.current = new mapboxgl.Marker({ color: "#007bff" })
+            .setLngLat([longitude, latitude])
+            .setPopup(new mapboxgl.Popup().setHTML("📍 Vous êtes ici"))
+            .addTo(map);
+        },
+        () => console.warn("Localisation refusée ou indisponible"),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
     }
-    rotateGlobe();
-
-    // 🎬 Cinématique d’intro : zoom vers la Turquie plus vite (1.8 s au lieu de 3 s)
-    setTimeout(() => {
-      map.flyTo({
-        center: [35.2433, 38.9637],
-        zoom: 4,
-        speed: 1.2, // un peu plus rapide
-        curve: 1.2,
-        essential: true,
-      });
-    }, 1800);
-
-    // 📍 Géolocalisation auto (après 3,5 s au lieu de 5 s)
-    setTimeout(() => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            rotate = false;
-            const { longitude, latitude } = pos.coords;
-            setIsLocated(true);
-            map.flyTo({
-              center: [longitude, latitude],
-              zoom: 13,
-              speed: 1.5,
-              curve: 1.5,
-            });
-            if (userMarker.current) userMarker.current.remove();
-            userMarker.current = new mapboxgl.Marker({ color: "#007bff" })
-              .setLngLat([longitude, latitude])
-              .setPopup(new mapboxgl.Popup().setHTML("📍 Vous êtes ici"))
-              .addTo(map);
-          },
-          () => console.warn("Localisation refusée ou indisponible"),
-          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-        );
-      }
-    }, 3500);
 
     return () => map.remove();
   }, []);
@@ -89,7 +61,7 @@ const MapboxTestPage = () => {
           center: [longitude, latitude],
           zoom: 13,
           speed: 1.2,
-          curve: 1.5,
+          curve: 1.4,
         });
         if (userMarker.current) userMarker.current.remove();
         userMarker.current = new mapboxgl.Marker({ color: "#ff3b30" })
@@ -98,13 +70,13 @@ const MapboxTestPage = () => {
           .addTo(mapRef.current!);
       },
       () => alert("Impossible de récupérer votre position"),
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
   return (
     <div className="relative flex flex-col items-center w-full">
-      {/* 🗺️ Conteneur carte */}
+      {/* 🗺️ Carte */}
       <div
         ref={mapContainer}
         className="w-[95%] md:w-[90%] lg:w-[85%] h-[80vh] md:h-[85vh] lg:h-[90vh] rounded-xl shadow-md border border-gray-200"
