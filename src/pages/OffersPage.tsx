@@ -336,7 +336,6 @@ export default function OffersPage() {
   url="https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&tileSize=512&zoomOffset=-1&format=png"
 />
 
-
             <Circle
               center={[userLocation.lat, userLocation.lng]}
               radius={radiusKm * 1000}
