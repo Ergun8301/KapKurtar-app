@@ -11,7 +11,7 @@ const MapboxTestPage = () => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Création de la carte 🌍
+    // 🌍 Création de la carte
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
@@ -22,23 +22,31 @@ const MapboxTestPage = () => {
 
     mapRef.current = map;
 
-    // Animation du globe 🌎
+    // 🌎 Animation du globe
     let rotate = true;
     function rotateGlobe() {
       if (!rotate) return;
       const center = map.getCenter();
-      map.easeTo({ center: [center.lng + 0.1, center.lat], duration: 20000, easing: (n) => n });
+      map.easeTo({
+        center: [center.lng + 0.1, center.lat],
+        duration: 20000,
+        easing: (n) => n,
+      });
       requestAnimationFrame(rotateGlobe);
     }
     rotateGlobe();
 
-    // Géolocalisation auto si autorisée 📍
+    // 📍 Géolocalisation automatique si autorisée
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           rotate = false;
           const { longitude, latitude } = pos.coords;
-          map.flyTo({ center: [longitude, latitude], zoom: 13, speed: 1.2 });
+          map.flyTo({
+            center: [longitude, latitude],
+            zoom: 13,
+            speed: 1.2,
+          });
           new mapboxgl.Marker({ color: "#007bff" })
             .setLngLat([longitude, latitude])
             .setPopup(new mapboxgl.Popup().setHTML("📍 Vous êtes ici"))
@@ -52,13 +60,17 @@ const MapboxTestPage = () => {
     return () => map.remove();
   }, []);
 
-  // 📍 Bouton “Ma position actuelle”
+  // 🎯 Bouton “Ma position actuelle”
   const handleLocate = () => {
     if (!mapRef.current || !navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { longitude, latitude } = pos.coords;
-        mapRef.current.flyTo({ center: [longitude, latitude], zoom: 13, speed: 1.2 });
+        mapRef.current.flyTo({
+          center: [longitude, latitude],
+          zoom: 13,
+          speed: 1.2,
+        });
         new mapboxgl.Marker({ color: "#ff3b30" })
           .setLngLat([longitude, latitude])
           .setPopup(new mapboxgl.Popup().setHTML("📍 Ma position actuelle"))
@@ -69,10 +81,14 @@ const MapboxTestPage = () => {
     );
   };
 
+  // 💻 Rendu
   return (
-    <div className="relative flex flex-col items-center w-full min-h-[70vh] md:min-h-[80vh] lg:min-h-[85vh]">
+    <div className="relative flex flex-col items-center w-full">
       {/* 🗺️ Conteneur carte */}
-      <div ref={mapContainer} className="w-full h-full rounded-xl shadow-md" />
+      <div
+        ref={mapContainer}
+        className="w-full h-[80vh] md:h-[85vh] lg:h-[90vh] rounded-xl shadow-md"
+      />
 
       {/* 📍 Bouton fixe sur la carte */}
       <button
