@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { Icon } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Navigation, AlertCircle, Eye } from "lucide-react";
+import { AlertCircle, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
@@ -187,11 +187,27 @@ export default function OffersPage() {
           ))}
         </MapContainer>
 
+        {/* 📍 Bouton GPS iPhone-style (haut droite) */}
         <button
           onClick={requestGeolocation}
-          className="absolute top-4 left-4 bg-white px-3 py-2 rounded-lg shadow text-sm font-medium flex items-center gap-1"
+          className="absolute top-4 right-4 z-[1000] flex items-center justify-center w-10 h-10 rounded-full shadow-md bg-white hover:bg-gray-100 transition-all border border-gray-200 active:scale-95"
+          title="Me géolocaliser"
         >
-          <Navigation className="w-4 h-4 text-blue-600" /> Me géolocaliser
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="rgb(59,130,246)"
+            className="w-5 h-5"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 2v2m0 16v2m10-10h-2M4 12H2m16.95 7.05l-1.414-1.414M6.464 6.464 5.05 5.05m13.9 0-1.414 1.414M6.464 17.536 5.05 18.95"
+            />
+          </svg>
         </button>
       </div>
 
