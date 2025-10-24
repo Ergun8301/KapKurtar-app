@@ -337,7 +337,7 @@ export default function OffersPage() {
   tileSize={512}
   zoomOffset={-1}
 />
-            
+
             <Circle
               center={[userLocation.lat, userLocation.lng]}
               radius={radiusKm * 1000}
