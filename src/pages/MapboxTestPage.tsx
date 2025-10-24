@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css"; // ✅ correction du message console
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -9,15 +10,13 @@ const MapboxTestPage: React.FC = () => {
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Initialisation de la carte Mapbox
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/streets-v12",
-      center: [2.35, 48.85], // Paris
+      center: [32.85, 39.93], // Ankara
       zoom: 11,
     });
 
-    // Ajout du contrôle de navigation (zoom, rotation)
     map.addControl(new mapboxgl.NavigationControl(), "top-right");
 
     return () => map.remove();
