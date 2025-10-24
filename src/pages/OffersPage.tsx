@@ -188,6 +188,7 @@ export default function OffersPage() {
           center={activeCenter}
           zoom={12}
           style={{ height: "100%", width: "100%" }}
+          zoomControl={false} // ❌ supprime les boutons + et –
         >
           <MapController center={activeCenter} />
 
