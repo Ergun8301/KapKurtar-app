@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+// src/pages/OffersPage.tsx
+import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { Icon } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { AlertCircle, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
@@ -10,21 +11,28 @@ import { useAuth } from "../hooks/useAuth";
 // --- Icônes Leaflet
 delete (Icon.Default.prototype as any)._getIconUrl;
 Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
 const userIcon = new Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
 
 const offerIcon = new Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
@@ -46,7 +54,13 @@ interface Offer {
 
 const DEFAULT_LOCATION = { lat: 46.2044, lng: 5.2258 };
 
-const MapController = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
+const MapController = ({
+  center,
+  zoom,
+}: {
+  center: [number, number];
+  zoom: number;
+}) => {
   const map = useMap();
   useEffect(() => {
     map.setView(center, zoom);
@@ -61,12 +75,17 @@ export default function OffersPage() {
   const [userLocation, setUserLocation] = useState(DEFAULT_LOCATION);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [geoStatus, setGeoStatus] = useState<"pending" | "success" | "denied" | "error">("pending");
+  const [geoStatus, setGeoStatus] = useState<
+    "pending" | "success" | "denied" | "error"
+  >("pending");
   const [mapCenter, setMapCenter] = useState<[number, number]>([
     DEFAULT_LOCATION.lat,
     DEFAULT_LOCATION.lng,
   ]);
   const [mapZoom, setMapZoom] = useState(12);
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   // --- Géolocalisation
   const requestGeolocation = () => {
@@ -75,7 +94,6 @@ export default function OffersPage() {
       setLoading(false);
       return;
     }
-
     setGeoStatus("pending");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -104,7 +122,6 @@ export default function OffersPage() {
   // --- Charger les offres
   useEffect(() => {
     if (loading) return;
-
     const fetchOffers = async () => {
       try {
         const { data: client } = await supabase
@@ -112,7 +129,6 @@ export default function OffersPage() {
           .select("id")
           .eq("auth_id", user?.id)
           .maybeSingle();
-
         if (client) {
           const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
             p_client_id: client.id,
@@ -125,9 +141,39 @@ export default function OffersPage() {
         console.error("Erreur fetch offers:", err);
       }
     };
-
     fetchOffers();
   }, [user, userLocation, loading]);
+
+  // --- Geocoding Mapbox
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (!query || query.length < 3) {
+        setSuggestions([]);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+            query
+          )}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&language=fr`
+        );
+        const data = await res.json();
+        setSuggestions(data.features || []);
+      } catch (err) {
+        console.error("Erreur Geocoding:", err);
+      }
+    };
+    const timer = setTimeout(fetchSuggestions, 400);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  const handleSelectSuggestion = (feature: any) => {
+    const [lng, lat] = feature.center;
+    setMapCenter([lat, lng]);
+    setMapZoom(14);
+    setSuggestions([]);
+    setQuery(feature.place_name);
+  };
 
   const handleOfferClick = (offer: Offer) => {
     setMapCenter([offer.offer_lat, offer.offer_lng]);
@@ -148,7 +194,35 @@ export default function OffersPage() {
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
       {/* 🗺️ Carte à gauche */}
-      <div className="md:w-1/2 h-[50vh] md:h-auto relative border-r border-gray-200">
+      <div className="relative md:w-1/2 h-[50vh] md:h-auto border-r border-gray-200">
+        {/* 🔍 Barre de recherche intégrée */}
+        <div className="absolute top-4 left-4 right-4 z-[1000] flex items-center justify-center">
+          <div className="relative w-full md:w-3/4 lg:w-2/3">
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Rechercher une adresse ou un lieu..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full px-4 py-2 bg-white border rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            {suggestions.length > 0 && (
+              <ul className="absolute mt-1 bg-white border rounded-md shadow-md max-h-60 overflow-auto w-full z-[2000]">
+                {suggestions.map((feature) => (
+                  <li
+                    key={feature.id}
+                    onClick={() => handleSelectSuggestion(feature)}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                  >
+                    {feature.place_name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* 🌍 Carte principale */}
         <MapContainer
           center={mapCenter}
           zoom={mapZoom}
@@ -213,7 +287,9 @@ export default function OffersPage() {
 
       {/* 💸 Liste des offres à droite */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">
+          Offres à proximité
+        </h2>
 
         {offers.length === 0 ? (
           <p className="text-gray-500 text-center mt-10">
