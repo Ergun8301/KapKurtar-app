@@ -21,106 +21,122 @@ interface Offer {
   latitude: number;
 }
 
-const OffersPage = () => {
+const OffersMapPage = () => {
   const { user } = useAuth();
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  const [offers, setOffers] = useState<Offer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [coords, setCoords] = useState<[number, number]>([2.35, 48.85]); // Paris par défaut
-  const [radius, setRadius] = useState<number>(10000); // 10 km
+  const userMarker = useRef<mapboxgl.Marker | null>(null);
 
-  // === INITIALISATION DE LA CARTE ===
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [isLocated, setIsLocated] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [userCoords, setUserCoords] = useState<[number, number]>([35.2433, 39.0]); // Turquie par défaut
+
+  // === INIT MAP ===
   useEffect(() => {
     if (!mapContainer.current) return;
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
-      center: coords,
-      zoom: 10,
+      center: [35.2433, 39.0],
+      zoom: 5.1,
       projection: "globe",
     });
 
     mapRef.current = map;
-    getUserLocation();
+
+    // 🌍 Bouton de géolocalisation manuelle (petite icône)
+    const geoBtn = document.createElement("button");
+    geoBtn.className =
+      "absolute z-10 top-4 left-4 bg-white rounded-full shadow p-2 hover:bg-gray-100";
+    geoBtn.innerHTML = "📍";
+    geoBtn.onclick = () => handleLocate();
+    map.getContainer().appendChild(geoBtn);
+
+    locateUser(); // auto-locate
 
     return () => map.remove();
   }, []);
 
-  // === GEOLOCALISATION ===
-  const getUserLocation = () => {
+  // === GEOLOC USER ===
+  const locateUser = () => {
     if (!navigator.geolocation) {
-      console.warn("Géolocalisation non supportée");
-      fetchOffers(coords);
+      setLoading(false);
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const newCoords: [number, number] = [
-          pos.coords.longitude,
-          pos.coords.latitude,
-        ];
-        setCoords(newCoords);
-        mapRef.current?.flyTo({ center: newCoords, zoom: 13 });
-        await fetchOffers(newCoords);
+        const { longitude, latitude } = pos.coords;
+        setUserCoords([longitude, latitude]);
+        setIsLocated(true);
+        mapRef.current?.flyTo({ center: [longitude, latitude], zoom: 13 });
+
+        // Marqueur utilisateur
+        if (userMarker.current) userMarker.current.remove();
+        userMarker.current = new mapboxgl.Marker({ color: "#ff3b30" })
+          .setLngLat([longitude, latitude])
+          .setPopup(new mapboxgl.Popup().setHTML("<b>Vous êtes ici 📍</b>"))
+          .addTo(mapRef.current!);
+
+        await fetchOffers([longitude, latitude]);
         setLoading(false);
       },
       (err) => {
-        console.warn("Erreur géolocalisation :", err);
-        fetchOffers(coords);
+        console.warn("Erreur géolocalisation:", err);
         setLoading(false);
-      }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
-  // === CHARGER LES OFFRES DE SUPABASE ===
-  const fetchOffers = async (position: [number, number]) => {
+  const handleLocate = () => locateUser();
+
+  // === FETCH OFFERS ===
+  const fetchOffers = async (coords: [number, number]) => {
     try {
       if (!user) return;
       const { data: client } = await supabase
-        .from("profiles")
+        .from("clients")
         .select("id")
         .eq("auth_id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (!client) return;
-
-      const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
-        p_client_id: client.id,
-        p_radius_meters: radius,
-      });
-
-      if (error) {
-        console.error("Erreur RPC :", error);
-        return;
+      if (client) {
+        const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
+          p_client_id: client.id,
+          p_radius_meters: 10000,
+        });
+        if (error) console.error(error);
+        else setOffers(data || []);
       }
-
-      setOffers(data || []);
-      console.log(`✅ ${data?.length || 0} offre(s) trouvée(s)`);
-
-      // Ajouter les marqueurs
-      data?.forEach((offer: Offer) => {
-        new mapboxgl.Marker({ color: "#10b981" })
-          .setLngLat([offer.longitude, offer.latitude])
-          .setPopup(
-            new mapboxgl.Popup().setHTML(`
-              <div style="max-width:180px">
-                <strong>${offer.title}</strong><br/>
-                <small>${offer.merchant_name}</small><br/>
-                <span style="color:green;font-weight:bold">${offer.price_after}€</span>
-              </div>
-            `)
-          )
-          .addTo(mapRef.current!);
-      });
-    } catch (err) {
-      console.error("Erreur fetchOffers :", err);
+    } catch (e) {
+      console.error("Erreur fetch offers:", e);
     }
   };
 
-  // === RENDU ===
+  // === MARKERS ===
+  useEffect(() => {
+    if (!mapRef.current || !offers.length) return;
+
+    offers.forEach((offer) => {
+      const marker = new mapboxgl.Marker({ color: "#10b981" })
+        .setLngLat([offer.longitude, offer.latitude])
+        .setPopup(
+          new mapboxgl.Popup().setHTML(`
+            <div style="max-width:180px">
+              <strong>${offer.title}</strong><br/>
+              <small>${offer.merchant_name}</small><br/>
+              <span style="color:green;font-weight:bold">${offer.price_after}€</span>
+            </div>
+          `)
+        )
+        .addTo(mapRef.current!);
+    });
+  }, [offers]);
+
+  // === LOADING ===
   if (loading)
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -131,6 +147,7 @@ const OffersPage = () => {
       </div>
     );
 
+  // === RENDER ===
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-100px)] bg-gray-50">
       {/* 🗺️ CARTE */}
@@ -138,14 +155,9 @@ const OffersPage = () => {
 
       {/* 💸 OFFRES */}
       <div className="w-full md:w-1/2 overflow-y-auto bg-white border-l border-gray-200 p-4">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">
-          Offres à proximité
-        </h2>
-
+        <h2 className="text-xl font-bold mb-4 text-gray-800">Offres à proximité</h2>
         {offers.length === 0 ? (
-          <p className="text-gray-500 text-center mt-10">
-            Aucune offre disponible autour de vous
-          </p>
+          <p className="text-gray-500 text-center mt-10">Aucune offre disponible autour de vous</p>
         ) : (
           <div className="space-y-4">
             {offers.map((offer) => (
@@ -189,4 +201,4 @@ const OffersPage = () => {
   );
 };
 
-export default OffersPage;
+export default OffersMapPage;
