@@ -91,9 +91,9 @@ export default function OffersPage() {
         const loc = { lat: latitude, lng: longitude };
         setUserLocation(loc);
         setCenter([latitude, longitude]);
-        setSearchLocation(null); // ✅ efface l’adresse recherchée
-        setQuery("");            // ✅ vide la barre de recherche
-        setSuggestions([]);      // ✅ supprime la liste
+        setSearchLocation(null);
+        setQuery("");
+        setSuggestions([]);
         setLoading(false);
       },
       () => setLoading(false),
@@ -128,7 +128,7 @@ export default function OffersPage() {
 
   // ---------- BARRE DE RECHERCHE MAPBOX ----------
   useEffect(() => {
-    if (isSelecting) return; // bloque les requêtes après clic
+    if (isSelecting) return;
     if (query.length < 3) return setSuggestions([]);
     const load = async () => {
       const res = await fetch(
@@ -186,9 +186,17 @@ export default function OffersPage() {
       {/* 🗺️ Carte */}
       <div className="relative flex-1 border-r border-gray-200">
         <MapContainer
-          whenCreated={(map) => (mapRef.current = map)}
+          whenCreated={(map) => {
+            mapRef.current = map;
+            // ✅ Corrige le bug du bouton “+”
+            L.DomEvent.disableClickPropagation(map.getContainer());
+            L.DomEvent.disableScrollPropagation(map.getContainer());
+            // ✅ Force la création correcte des contrôles de zoom
+            L.control.zoom({ position: "topleft" }).addTo(map);
+          }}
           center={activeCenter}
           zoom={12}
+          zoomControl={true}
           style={{ height: "100%", width: "100%" }}
         >
           <MapController center={activeCenter} />
@@ -250,8 +258,11 @@ export default function OffersPage() {
           ))}
         </MapContainer>
 
-        {/* 🔍 Barre de recherche + GPS */}
-        <div className="absolute top-4 left-4 right-16 z-[1000] flex justify-center">
+        {/* 🔍 Barre de recherche */}
+        <div
+          className="absolute top-4 left-4 right-16 z-[1000] flex justify-center pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="relative w-[95%] md:w-3/4 lg:w-2/3">
             <input
               type="text"
@@ -312,7 +323,10 @@ export default function OffersPage() {
         </button>
 
         {/* 🎚️ Slider */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
+        <div
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200 pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
           <input
             type="range"
             min={1}
