@@ -13,43 +13,43 @@ const MapboxTestPage = () => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // 🌍 Carte globe Turquie initiale
+    // 🌍 1. Initialisation : globe entier centré sur la Turquie
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
       center: [35.2433, 38.9637],
-      zoom: 1.8,
+      zoom: 1.3, // légèrement plus éloigné pour voir le globe complet
       projection: "globe",
     });
 
     mapRef.current = map;
 
-    // 🌎 Animation du globe en rotation lente
+    // 🌎 2. Rotation fluide du globe
     let rotate = true;
     function rotateGlobe() {
       if (!rotate) return;
       const center = map.getCenter();
       map.easeTo({
-        center: [center.lng + 0.2, center.lat],
-        duration: 10000,
+        center: [center.lng + 0.3, center.lat],
+        duration: 12000,
         easing: (n) => n,
       });
       requestAnimationFrame(rotateGlobe);
     }
     rotateGlobe();
 
-    // 🎬 Cinématique d’intro : zoom vers la Turquie après 3s
+    // 🎬 3. Zoom automatique après 2 secondes (au lieu de 5)
     setTimeout(() => {
       map.flyTo({
         center: [35.2433, 38.9637],
-        zoom: 4,
-        speed: 0.8,
-        curve: 1.2,
+        zoom: 4.5,
+        speed: 1.4,
+        curve: 1.4,
         essential: true,
       });
-    }, 3000);
+    }, 2000);
 
-    // 📍 Géolocalisation auto (après 5s pour laisser l’animation)
+    // 📍 4. Géolocalisation automatique si autorisée
     setTimeout(() => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -70,15 +70,15 @@ const MapboxTestPage = () => {
               .addTo(map);
           },
           () => console.warn("Localisation refusée ou indisponible"),
-          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
       }
-    }, 5000);
+    }, 4000);
 
     return () => map.remove();
   }, []);
 
-  // 🎯 Bouton manuel “Centrer sur moi”
+  // 🎯 5. Bouton manuel "Centrer sur moi"
   const handleLocate = () => {
     if (!mapRef.current || !navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
@@ -89,7 +89,7 @@ const MapboxTestPage = () => {
           center: [longitude, latitude],
           zoom: 13,
           speed: 1.2,
-          curve: 1.5,
+          curve: 1.3,
         });
         if (userMarker.current) userMarker.current.remove();
         userMarker.current = new mapboxgl.Marker({ color: "#ff3b30" })
@@ -98,7 +98,7 @@ const MapboxTestPage = () => {
           .addTo(mapRef.current!);
       },
       () => alert("Impossible de récupérer votre position"),
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
