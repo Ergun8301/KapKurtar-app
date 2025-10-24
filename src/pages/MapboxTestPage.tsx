@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { LocateFixed } from "lucide-react"; // petite icône GPS moderne
+import { MapPin } from "lucide-react"; // ✅ icône Google-style (pin rose)
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -13,18 +13,18 @@ const MapboxTestPage = () => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // 🌍 1. Initialisation : globe Turquie vue équilibrée
+    // 🌍 Carte centrée sur la Turquie avec un zoom plus proche
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
       center: [35.2433, 38.9637],
-      zoom: 1.5, // légèrement plus proche qu’avant
+      zoom: 2.1, // ✅ globe un peu plus rapproché
       projection: "globe",
     });
 
     mapRef.current = map;
 
-    // 🌎 2. Effet rotation douce du globe
+    // 🌎 Rotation lente du globe
     let rotate = true;
     function rotateGlobe() {
       if (!rotate) return;
@@ -38,17 +38,17 @@ const MapboxTestPage = () => {
     }
     rotateGlobe();
 
-    // 🎬 3. Zoom automatique vers la Turquie après 2 secondes
+    // 🎬 Zoom doux sur la Turquie après 1,8 s
     setTimeout(() => {
       map.flyTo({
         center: [35.2433, 38.9637],
         zoom: 4.8,
         speed: 1.2,
-        curve: 1.4,
+        curve: 1.3,
       });
-    }, 2000);
+    }, 1800);
 
-    // 📍 4. Géolocalisation automatique si autorisée
+    // 📍 Géolocalisation automatique si autorisée
     setTimeout(() => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -62,7 +62,7 @@ const MapboxTestPage = () => {
               curve: 1.3,
             });
             if (userMarker.current) userMarker.current.remove();
-            userMarker.current = new mapboxgl.Marker({ color: "#007bff" })
+            userMarker.current = new mapboxgl.Marker({ color: "#ff007a" }) // ✅ rose Google style
               .setLngLat([longitude, latitude])
               .setPopup(new mapboxgl.Popup().setHTML("📍 Vous êtes ici"))
               .addTo(map);
@@ -71,12 +71,12 @@ const MapboxTestPage = () => {
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
       }
-    }, 4000);
+    }, 3500);
 
     return () => map.remove();
   }, []);
 
-  // 🎯 5. Bouton rond discret “centrer sur moi”
+  // 🎯 Bouton flottant minimaliste (style Google Maps)
   const handleLocate = () => {
     if (!mapRef.current || !navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
@@ -89,7 +89,7 @@ const MapboxTestPage = () => {
           curve: 1.3,
         });
         if (userMarker.current) userMarker.current.remove();
-        userMarker.current = new mapboxgl.Marker({ color: "#ff3b30" })
+        userMarker.current = new mapboxgl.Marker({ color: "#ff007a" })
           .setLngLat([longitude, latitude])
           .setPopup(new mapboxgl.Popup().setHTML("📍 Ma position actuelle"))
           .addTo(mapRef.current!);
@@ -100,17 +100,20 @@ const MapboxTestPage = () => {
   };
 
   return (
-    <div className="relative flex flex-col items-center w-screen h-screen overflow-hidden">
-      {/* 🗺️ Carte plein écran */}
-      <div ref={mapContainer} className="absolute inset-0 rounded-none" />
+    <div className="relative flex flex-col items-center w-full min-h-[75vh] md:min-h-[80vh] lg:min-h-[85vh]">
+      {/* 🗺️ Carte — encadrée, pas plein écran */}
+      <div
+        ref={mapContainer}
+        className="w-[95%] md:w-[90%] lg:w-[85%] h-[75vh] rounded-xl shadow-lg border border-gray-200 overflow-hidden"
+      />
 
-      {/* 📍 Bouton rond flottant */}
+      {/* 📍 Bouton rond stylé */}
       <button
         onClick={handleLocate}
-        className="absolute top-4 right-4 bg-white/90 text-gray-800 p-2 rounded-full shadow-md hover:bg-white hover:scale-105 transition-all"
+        className="absolute top-5 right-5 bg-white/90 p-3 rounded-full shadow-md hover:bg-white hover:scale-105 transition-all"
         title="Centrer sur moi"
       >
-        <LocateFixed className="w-5 h-5 text-red-500" />
+        <MapPin className="w-5 h-5 text-pink-500" />
       </button>
     </div>
   );
