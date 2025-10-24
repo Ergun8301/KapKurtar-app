@@ -1,10 +1,9 @@
 // src/pages/OffersPage.tsx
 import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
-import { Icon } from "leaflet";
+import L, { Icon } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Eye } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Eye, X, Maximize2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 
@@ -39,8 +38,6 @@ const offerIcon = new Icon({
 
 const searchIcon = new Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
   iconSize: [32, 32],
   iconAnchor: [16, 32],
 });
@@ -49,85 +46,58 @@ const searchIcon = new Icon({
 interface Offer {
   offer_id: string;
   title: string;
-  description: string;
+  merchant_name: string;
   price_before: number;
   price_after: number;
-  discount_percent: number;
+  distance_meters: number;
   offer_lat: number;
   offer_lng: number;
-  merchant_name: string;
-  distance_meters: number;
   image_url?: string;
 }
 
 const DEFAULT_LOCATION = { lat: 46.2044, lng: 5.2258 };
 
-const MapController = ({
-  center,
-  zoom,
-}: {
-  center: [number, number];
-  zoom: number;
-}) => {
+// --- Hook pour recentrer la carte
+const MapController = ({ center }: { center: [number, number] }) => {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, zoom);
-  }, [center, zoom, map]);
+    map.setView(center);
+  }, [center, map]);
   return null;
 };
 
 export default function OffersPage() {
   const { user } = useAuth();
-  const navigate = useNavigate();
-
-  const [userLocation, setUserLocation] = useState(DEFAULT_LOCATION);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [geoStatus, setGeoStatus] = useState<
-    "pending" | "success" | "denied" | "error"
-  >("pending");
-  const [mapCenter, setMapCenter] = useState<[number, number]>([
+  const [userLocation, setUserLocation] = useState(DEFAULT_LOCATION);
+  const [center, setCenter] = useState<[number, number]>([
     DEFAULT_LOCATION.lat,
     DEFAULT_LOCATION.lng,
   ]);
-  const [mapZoom, setMapZoom] = useState(12);
-
-  const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [searchLocation, setSearchLocation] = useState<[number, number] | null>(
     null
   );
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
   const [radiusKm, setRadiusKm] = useState<number>(
     Number(localStorage.getItem("radiusKm")) || 10
   );
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  const mapRef = useRef<L.Map>(null);
 
   // --- Géolocalisation
   const requestGeolocation = () => {
-    if (!navigator.geolocation) {
-      setGeoStatus("error");
-      setLoading(false);
-      return;
-    }
-    setGeoStatus("pending");
+    if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        setUserLocation({ lat: latitude, lng: longitude });
-        setMapCenter([latitude, longitude]);
-        setGeoStatus("success");
-        setMapZoom(13);
+        const loc = { lat: latitude, lng: longitude };
+        setUserLocation(loc);
+        setCenter([latitude, longitude]);
         setLoading(false);
       },
-      (err) => {
-        console.warn("Geolocation error:", err);
-        setGeoStatus(err.code === err.PERMISSION_DENIED ? "denied" : "error");
-        setUserLocation(DEFAULT_LOCATION);
-        setMapCenter([DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lng]);
-        setLoading(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
+      () => setLoading(false),
+      { enableHighAccuracy: true, timeout: 8000 }
     );
   };
 
@@ -135,138 +105,97 @@ export default function OffersPage() {
     requestGeolocation();
   }, []);
 
-  // --- Charger les offres dynamiquement
+  // --- Récupération des offres
   useEffect(() => {
-    if (loading) return;
+    if (!user) return;
     const fetchOffers = async () => {
-      try {
-        const { data: client } = await supabase
-          .from("clients")
-          .select("id")
-          .eq("auth_id", user?.id)
-          .maybeSingle();
-
-        if (client) {
-          const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
-            p_client_id: client.id,
-            p_radius_meters: radiusKm * 1000,
-          });
-          if (error) console.error(error);
-          setOffers(data || []);
-        }
-      } catch (err) {
-        console.error("Erreur fetch offers:", err);
+      const { data: client } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("auth_id", user.id)
+        .maybeSingle();
+      if (client) {
+        const { data } = await supabase.rpc("get_offers_nearby_dynamic", {
+          p_client_id: client.id,
+          p_radius_meters: radiusKm * 1000,
+        });
+        setOffers(data || []);
       }
     };
     fetchOffers();
-  }, [user, userLocation, radiusKm, loading]);
+  }, [user, center, radiusKm]);
 
   // --- Geocoding Mapbox
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (!query || query.length < 3) {
-        setSuggestions([]);
-        return;
-      }
-      try {
-        const res = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-            query
-          )}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&language=fr`
-        );
-        const data = await res.json();
-        setSuggestions(data.features || []);
-      } catch (err) {
-        console.error("Erreur Geocoding:", err);
-      }
+    const load = async () => {
+      if (query.length < 3) return setSuggestions([]);
+      const res = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+          query
+        )}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&language=fr`
+      );
+      const data = await res.json();
+      setSuggestions(data.features || []);
     };
-    const timer = setTimeout(fetchSuggestions, 400);
-    return () => clearTimeout(timer);
+    const t = setTimeout(load, 400);
+    return () => clearTimeout(t);
   }, [query]);
 
-  const handleSelectSuggestion = (feature: any) => {
+  const handleSelect = (feature: any) => {
     const [lng, lat] = feature.center;
-    setMapCenter([lat, lng]);
-    setMapZoom(14);
+    setCenter([lat, lng]);
     setSearchLocation([lat, lng]);
-    setSuggestions([]);
     setQuery(feature.place_name);
+    setSuggestions([]);
   };
 
-  const handleOfferClick = (offer: Offer) => {
-    setMapCenter([offer.offer_lat, offer.offer_lng]);
-    setMapZoom(15);
+  // --- Ajuste la vue pour montrer le cercle entier
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const r = radiusKm * 1000;
+    const circle = L.circle(center, { radius: r });
+    map.fitBounds(circle.getBounds(), { padding: [50, 50] });
+  }, [radiusKm, center]);
+
+  // --- Fonctions utilitaires
+  const handleRadiusChange = (val: number) => {
+    setRadiusKm(val);
+    localStorage.setItem("radiusKm", String(val));
   };
 
-  const handleRadiusChange = (value: number) => {
-    setRadiusKm(value);
-    localStorage.setItem("radiusKm", String(value));
-  };
+  const activeCenter = searchLocation || [userLocation.lat, userLocation.lng];
 
-  if (loading && geoStatus === "pending") {
+  if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin h-10 w-10 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-3" />
-          <p className="text-gray-600">Chargement de la carte...</p>
-        </div>
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin h-10 w-10 border-4 border-green-500 border-t-transparent rounded-full" />
       </div>
     );
-  }
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
-      {/* 🗺️ Carte à gauche */}
-      <div className="relative md:w-1/2 h-[50vh] md:h-auto border-r border-gray-200">
-        {/* 🔍 Barre de recherche */}
-        <div className="absolute top-4 left-4 right-4 z-[1000] flex items-center justify-center">
-          <div className="relative w-full md:w-3/4 lg:w-2/3">
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="Rechercher une adresse ou un lieu..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full px-4 py-2 bg-white border rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-            {suggestions.length > 0 && (
-              <ul className="absolute mt-1 bg-white border rounded-md shadow-md max-h-60 overflow-auto w-full z-[2000]">
-                {suggestions.map((feature) => (
-                  <li
-                    key={feature.id}
-                    onClick={() => handleSelectSuggestion(feature)}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                  >
-                    {feature.place_name}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
+    <div
+      className={`${
+        isFullScreen
+          ? "fixed inset-0 z-[2000] bg-white"
+          : "flex flex-col md:flex-row h-[calc(100vh-100px)]"
+      } transition-all`}
+    >
+      {/* 🗺️ Carte */}
+      <div className="relative flex-1 border-r border-gray-200">
+        {/* Overlay sombre autour du cercle */}
+        <div className="absolute inset-0 pointer-events-none z-[500] bg-black/30 backdrop-blur-[1px]" />
 
-        {/* 🎚️ Slider de rayon */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[1000] bg-white rounded-full shadow-lg px-4 py-2 flex items-center space-x-2 border">
-          <span className="text-sm text-gray-700 font-medium">
-            Rayon : {radiusKm} km
-          </span>
-          <input
-            type="range"
-            min={1}
-            max={30}
-            value={radiusKm}
-            onChange={(e) => handleRadiusChange(Number(e.target.value))}
-            className="w-32 accent-green-500 cursor-pointer"
-          />
-        </div>
-
-        {/* 🌍 Carte principale */}
+        {/* Carte Leaflet */}
         <MapContainer
-          center={mapCenter}
-          zoom={mapZoom}
+          whenCreated={(map) => (mapRef.current = map)}
+          center={activeCenter}
+          zoom={12}
           style={{ height: "100%", width: "100%" }}
         >
-          <MapController center={mapCenter} zoom={mapZoom} />
+          <MapController center={activeCenter} />
           <TileLayer
             attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
             url={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${
@@ -276,113 +205,186 @@ export default function OffersPage() {
             zoomOffset={-1}
           />
 
-          {/* 🔵 Position utilisateur */}
+          {/* Zone de rayon claire */}
+          <Circle
+            center={activeCenter}
+            radius={radiusKm * 1000}
+            pathOptions={{
+              color: "transparent",
+              fillColor: "rgba(255,255,255,0.6)",
+              fillOpacity: 0.8,
+            }}
+          />
+
+          {/* Points */}
           <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
             <Popup>📍 Vous êtes ici</Popup>
           </Marker>
 
-          {/* 🔘 Cercle de rayon */}
-          <Circle
-            center={[userLocation.lat, userLocation.lng]}
-            radius={radiusKm * 1000}
-            pathOptions={{
-              color: "rgba(34,197,94,0.6)",
-              fillColor: "rgba(34,197,94,0.2)",
-              fillOpacity: 0.2,
-            }}
-          />
-
-          {/* 📍 Adresse recherchée */}
           {searchLocation && (
             <Marker position={searchLocation} icon={searchIcon}>
               <Popup>📍 Adresse recherchée</Popup>
             </Marker>
           )}
 
-          {/* 🏪 Offres */}
-          {offers.map((offer) => (
+          {offers.map((o) => (
             <Marker
-              key={offer.offer_id}
-              position={[offer.offer_lat, offer.offer_lng]}
+              key={o.offer_id}
+              position={[o.offer_lat, o.offer_lng]}
               icon={offerIcon}
             >
               <Popup>
-                <strong>{offer.title}</strong>
+                <strong>{o.title}</strong>
                 <br />
-                {offer.merchant_name}
+                {o.merchant_name}
                 <br />
-                <span className="text-green-600 font-semibold">
-                  {offer.price_after.toFixed(2)}€
-                </span>
-                <br />
-                <span className="text-sm text-gray-500">
-                  {(offer.distance_meters / 1000).toFixed(2)} km
-                </span>
+                {(o.distance_meters / 1000).toFixed(2)} km
                 <br />
                 <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}`}
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${o.offer_lat},${o.offer_lng}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline text-sm"
                 >
-                  🗺️ Voir l’itinéraire
+                  🗺️ Voir dans Google Maps
                 </a>
               </Popup>
             </Marker>
           ))}
         </MapContainer>
+
+        {/* 🔍 Barre recherche + bouton GPS */}
+        <div className="absolute top-4 left-4 right-16 z-[1000] flex justify-center">
+          <div className="relative w-full md:w-3/4 lg:w-2/3">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher une adresse ou un lieu..."
+              className="w-full px-4 py-2 bg-white/90 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-green-400"
+            />
+            {suggestions.length > 0 && (
+              <ul className="absolute mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto w-full">
+                {suggestions.map((f) => (
+                  <li
+                    key={f.id}
+                    onClick={() => handleSelect(f)}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                  >
+                    {f.place_name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* 📍 Bouton GPS */}
+        <button
+          onClick={requestGeolocation}
+          className="absolute top-4 right-4 z-[1000] flex items-center justify-center w-10 h-10 rounded-full bg-white/90 border border-gray-300 shadow hover:bg-gray-100 active:scale-95"
+          title="Me géolocaliser"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="rgb(59,130,246)"
+            className="w-5 h-5"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 2v2m0 16v2m10-10h-2M4 12H2m16.95 7.05l-1.414-1.414M6.464 6.464 5.05 5.05m13.9 0-1.414 1.414M6.464 17.536 5.05 18.95"
+            />
+          </svg>
+        </button>
+
+        {/* 🎚️ Slider simplifié */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/90 rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
+          <input
+            type="range"
+            min={1}
+            max={30}
+            value={radiusKm}
+            onChange={(e) => handleRadiusChange(Number(e.target.value))}
+            className="w-36 accent-green-500 cursor-pointer focus:outline-none"
+          />
+          <span className="text-sm text-gray-700 font-medium">{radiusKm} km</span>
+        </div>
+
+        {/* ⛶ Bouton plein écran */}
+        <button
+          onClick={() => setIsFullScreen(true)}
+          className="absolute bottom-4 right-4 z-[1000] bg-white/90 border border-gray-300 rounded-full p-2 shadow hover:bg-gray-100"
+          title="Agrandir la carte"
+        >
+          <Maximize2 className="w-4 h-4 text-gray-600" />
+        </button>
+
+        {/* ❌ Fermer plein écran */}
+        {isFullScreen && (
+          <button
+            onClick={() => setIsFullScreen(false)}
+            className="absolute top-4 right-4 z-[2001] bg-white rounded-full p-2 shadow border hover:bg-gray-100"
+          >
+            <X className="w-5 h-5 text-gray-700" />
+          </button>
+        )}
       </div>
 
       {/* 💸 Liste des offres */}
-      <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">
-          Offres à proximité
-        </h2>
-
-        {offers.length === 0 ? (
-          <p className="text-gray-500 text-center mt-10">
-            Aucune offre disponible dans ce rayon.
-          </p>
-        ) : (
-          <div className="space-y-4">
-            {offers.map((offer) => (
-              <div
-                key={offer.offer_id}
-                onClick={() => handleOfferClick(offer)}
-                className="flex bg-white rounded-lg shadow-sm hover:shadow-md transition cursor-pointer overflow-hidden"
-              >
-                {offer.image_url && (
-                  <img
-                    src={offer.image_url}
-                    alt={offer.title}
-                    className="w-24 h-24 object-cover"
-                  />
-                )}
-                <div className="flex-1 p-3">
-                  <h3 className="font-semibold text-gray-800">{offer.title}</h3>
-                  <p className="text-sm text-gray-500">{offer.merchant_name}</p>
-                  <p className="text-green-600 font-semibold">
-                    {(offer.distance_meters / 1000).toFixed(2)} km
-                  </p>
-                  <div className="flex items-center justify-between mt-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-bold text-green-600">
-                        {offer.price_after.toFixed(2)}€
-                      </span>
-                      <span className="line-through text-gray-400 text-sm">
-                        {offer.price_before.toFixed(2)}€
-                      </span>
+      {!isFullScreen && (
+        <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">
+            Offres à proximité
+          </h2>
+          {offers.length === 0 ? (
+            <p className="text-gray-500 text-center mt-10">
+              Aucune offre disponible dans ce rayon.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {offers.map((o) => (
+                <div
+                  key={o.offer_id}
+                  className="flex bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
+                >
+                  {o.image_url && (
+                    <img
+                      src={o.image_url}
+                      alt={o.title}
+                      className="w-24 h-24 object-cover"
+                    />
+                  )}
+                  <div className="flex-1 p-3">
+                    <h3 className="font-semibold text-gray-800">{o.title}</h3>
+                    <p className="text-sm text-gray-500">{o.merchant_name}</p>
+                    <p className="text-green-600 font-semibold">
+                      {(o.distance_meters / 1000).toFixed(2)} km
+                    </p>
+                    <div className="flex items-center justify-between mt-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-green-600">
+                          {o.price_after.toFixed(2)} €
+                        </span>
+                        <span className="line-through text-gray-400 text-sm">
+                          {o.price_before.toFixed(2)} €
+                        </span>
+                      </div>
+                      <button className="flex items-center gap-1 text-green-700 hover:text-green-900">
+                        <Eye className="w-4 h-4" /> Voir
+                      </button>
                     </div>
-                    <button className="flex items-center gap-1 text-green-700 hover:text-green-900">
-                      <Eye className="w-4 h-4" /> Voir
-                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
