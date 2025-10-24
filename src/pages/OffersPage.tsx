@@ -7,7 +7,7 @@ import { Eye, X, Maximize2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 
-// --- Icônes Leaflet
+// --- Icônes
 delete (Icon.Default.prototype as any)._getIconUrl;
 Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -21,8 +21,6 @@ Icon.Default.mergeOptions({
 const userIcon = new Icon({
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
@@ -30,8 +28,6 @@ const userIcon = new Icon({
 const offerIcon = new Icon({
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
@@ -42,7 +38,6 @@ const searchIcon = new Icon({
   iconAnchor: [16, 32],
 });
 
-// --- Types
 interface Offer {
   offer_id: string;
   title: string;
@@ -57,7 +52,6 @@ interface Offer {
 
 const DEFAULT_LOCATION = { lat: 46.2044, lng: 5.2258 };
 
-// --- Hook pour recentrer la carte
 const MapController = ({ center }: { center: [number, number] }) => {
   const map = useMap();
   useEffect(() => {
@@ -75,15 +69,16 @@ export default function OffersPage() {
     DEFAULT_LOCATION.lat,
     DEFAULT_LOCATION.lng,
   ]);
-  const [searchLocation, setSearchLocation] = useState<[number, number] | null>(
-    null
-  );
+  const [searchLocation, setSearchLocation] = useState<[number, number] | null>(null);
   const [radiusKm, setRadiusKm] = useState<number>(
     Number(localStorage.getItem("radiusKm")) || 10
   );
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   const mapRef = useRef<L.Map>(null);
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isSelecting, setIsSelecting] = useState(false);
 
   // --- Géolocalisation
   const requestGeolocation = () => {
@@ -105,7 +100,7 @@ export default function OffersPage() {
     requestGeolocation();
   }, []);
 
-  // --- Récupération des offres
+  // --- Charger les offres
   useEffect(() => {
     if (!user) return;
     const fetchOffers = async () => {
@@ -125,12 +120,11 @@ export default function OffersPage() {
     fetchOffers();
   }, [user, center, radiusKm]);
 
-  // --- Geocoding Mapbox
-  const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  // --- Barre de recherche Mapbox
   useEffect(() => {
+    if (isSelecting) return;
+    if (query.length < 3) return setSuggestions([]);
     const load = async () => {
-      if (query.length < 3) return setSuggestions([]);
       const res = await fetch(
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
           query
@@ -141,32 +135,42 @@ export default function OffersPage() {
     };
     const t = setTimeout(load, 400);
     return () => clearTimeout(t);
-  }, [query]);
+  }, [query, isSelecting]);
 
   const handleSelect = (feature: any) => {
     const [lng, lat] = feature.center;
+    setIsSelecting(true);
     setCenter([lat, lng]);
     setSearchLocation([lat, lng]);
     setQuery(feature.place_name);
     setSuggestions([]);
+    setTimeout(() => setIsSelecting(false), 800);
   };
 
-  // --- Ajuste la vue pour montrer le cercle entier
+  // --- Recentrage automatique
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     const r = radiusKm * 1000;
     const circle = L.circle(center, { radius: r });
-    map.fitBounds(circle.getBounds(), { padding: [50, 50] });
+    setTimeout(() => {
+      map.fitBounds(circle.getBounds(), { padding: [50, 50] });
+    }, 200);
   }, [radiusKm, center]);
 
-  // --- Fonctions utilitaires
+  // --- Recalcule taille carte plein écran
+  useEffect(() => {
+    if (isFullScreen && mapRef.current) {
+      setTimeout(() => mapRef.current!.invalidateSize(), 400);
+    }
+  }, [isFullScreen]);
+
+  const activeCenter = searchLocation || [userLocation.lat, userLocation.lng];
+
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
   };
-
-  const activeCenter = searchLocation || [userLocation.lat, userLocation.lng];
 
   if (loading)
     return (
@@ -185,10 +189,6 @@ export default function OffersPage() {
     >
       {/* 🗺️ Carte */}
       <div className="relative flex-1 border-r border-gray-200">
-        {/* Overlay sombre autour du cercle */}
-        <div className="absolute inset-0 pointer-events-none z-[500] bg-black/30 backdrop-blur-[1px]" />
-
-        {/* Carte Leaflet */}
         <MapContainer
           whenCreated={(map) => (mapRef.current = map)}
           center={activeCenter}
@@ -205,14 +205,14 @@ export default function OffersPage() {
             zoomOffset={-1}
           />
 
-          {/* Zone de rayon claire */}
+          {/* 🟢 Cercle clair */}
           <Circle
             center={activeCenter}
             radius={radiusKm * 1000}
             pathOptions={{
-              color: "transparent",
-              fillColor: "rgba(255,255,255,0.6)",
-              fillOpacity: 0.8,
+              color: "rgba(0,0,0,0.2)",
+              fillColor: "rgba(255,255,255,0.4)",
+              fillOpacity: 0.6,
             }}
           />
 
@@ -253,7 +253,7 @@ export default function OffersPage() {
           ))}
         </MapContainer>
 
-        {/* 🔍 Barre recherche + bouton GPS */}
+        {/* 🔍 Barre de recherche + GPS */}
         <div className="absolute top-4 left-4 right-16 z-[1000] flex justify-center">
           <div className="relative w-full md:w-3/4 lg:w-2/3">
             <input
@@ -261,7 +261,7 @@ export default function OffersPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Rechercher une adresse ou un lieu..."
-              className="w-full px-4 py-2 bg-white/90 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-green-400"
+              className="w-full px-4 py-2 bg-white/90 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-green-400 text-gray-700"
             />
             {suggestions.length > 0 && (
               <ul className="absolute mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto w-full">
@@ -302,7 +302,7 @@ export default function OffersPage() {
           </svg>
         </button>
 
-        {/* 🎚️ Slider simplifié */}
+        {/* 🎚️ Slider simple */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/90 rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
           <input
             type="range"
@@ -315,7 +315,7 @@ export default function OffersPage() {
           <span className="text-sm text-gray-700 font-medium">{radiusKm} km</span>
         </div>
 
-        {/* ⛶ Bouton plein écran */}
+        {/* ⛶ Plein écran */}
         <button
           onClick={() => setIsFullScreen(true)}
           className="absolute bottom-4 right-4 z-[1000] bg-white/90 border border-gray-300 rounded-full p-2 shadow hover:bg-gray-100"
@@ -324,7 +324,6 @@ export default function OffersPage() {
           <Maximize2 className="w-4 h-4 text-gray-600" />
         </button>
 
-        {/* ❌ Fermer plein écran */}
         {isFullScreen && (
           <button
             onClick={() => setIsFullScreen(false)}
@@ -338,9 +337,7 @@ export default function OffersPage() {
       {/* 💸 Liste des offres */}
       {!isFullScreen && (
         <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">
-            Offres à proximité
-          </h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
           {offers.length === 0 ? (
             <p className="text-gray-500 text-center mt-10">
               Aucune offre disponible dans ce rayon.
