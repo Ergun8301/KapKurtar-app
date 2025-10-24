@@ -1,12 +1,12 @@
-// src/pages/OffersPage.tsx
 import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import L, { Icon } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Eye, X, Maximize2 } from "lucide-react";
+import { Eye } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 
+// ---------- ICONES ----------
 delete (Icon.Default.prototype as any)._getIconUrl;
 Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -37,6 +37,7 @@ const searchIcon = new Icon({
   iconAnchor: [16, 32],
 });
 
+// ---------- INTERFACE ----------
 interface Offer {
   offer_id: string;
   title: string;
@@ -51,6 +52,7 @@ interface Offer {
 
 const DEFAULT_LOCATION = { lat: 46.2044, lng: 5.2258 };
 
+// ---------- CONTROLEUR DE LA CARTE ----------
 const MapController = ({ center }: { center: [number, number] }) => {
   const map = useMap();
   useEffect(() => {
@@ -59,6 +61,7 @@ const MapController = ({ center }: { center: [number, number] }) => {
   return null;
 };
 
+// ---------- PAGE PRINCIPALE ----------
 export default function OffersPage() {
   const { user } = useAuth();
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -72,14 +75,14 @@ export default function OffersPage() {
   const [radiusKm, setRadiusKm] = useState<number>(
     Number(localStorage.getItem("radiusKm")) || 10
   );
-  const [isFullScreen, setIsFullScreen] = useState(false);
+
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
 
   const mapRef = useRef<L.Map>(null);
 
-  // --- GEOLOC
+  // ---------- GÉOLOCALISATION ----------
   const requestGeolocation = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
@@ -94,11 +97,12 @@ export default function OffersPage() {
       { enableHighAccuracy: true, timeout: 8000 }
     );
   };
+
   useEffect(() => {
     requestGeolocation();
   }, []);
 
-  // --- OFFERS
+  // ---------- CHARGEMENT DES OFFRES ----------
   useEffect(() => {
     if (!user) return;
     const fetchOffers = async () => {
@@ -107,6 +111,7 @@ export default function OffersPage() {
         .select("id")
         .eq("auth_id", user.id)
         .maybeSingle();
+
       if (client) {
         const { data } = await supabase.rpc("get_offers_nearby_dynamic", {
           p_client_id: client.id,
@@ -118,9 +123,9 @@ export default function OffersPage() {
     fetchOffers();
   }, [user, center, radiusKm]);
 
-  // --- SEARCH (Mapbox)
+  // ---------- BARRE DE RECHERCHE MAPBOX ----------
   useEffect(() => {
-    if (isSelecting) return;
+    if (isSelecting) return; // 🔒 bloque les requêtes après clic
     if (query.length < 3) return setSuggestions([]);
     const load = async () => {
       const res = await fetch(
@@ -137,15 +142,21 @@ export default function OffersPage() {
 
   const handleSelect = (feature: any) => {
     const [lng, lat] = feature.center;
-    setIsSelecting(true);
+    setIsSelecting(true); // bloque la recherche
     setCenter([lat, lng]);
     setSearchLocation([lat, lng]);
     setQuery(feature.place_name);
     setSuggestions([]);
-    setTimeout(() => setIsSelecting(false), 500);
   };
 
-  // --- FIT BOUNDS
+  // Réactive la recherche uniquement si on retape quelque chose
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+    if (isSelecting) setIsSelecting(false);
+  };
+
+  // ---------- RECENTRAGE AUTOMATIQUE ----------
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -153,14 +164,8 @@ export default function OffersPage() {
     setTimeout(() => map.fitBounds(circle.getBounds(), { padding: [50, 50] }), 250);
   }, [radiusKm, center]);
 
-  // --- FULLSCREEN FIX
-  useEffect(() => {
-    if (isFullScreen && mapRef.current) {
-      setTimeout(() => mapRef.current!.invalidateSize(), 300);
-    }
-  }, [isFullScreen]);
-
   const activeCenter = searchLocation || [userLocation.lat, userLocation.lng];
+
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
@@ -173,14 +178,9 @@ export default function OffersPage() {
       </div>
     );
 
+  // ---------- RENDU ----------
   return (
-    <div
-      className={`${
-        isFullScreen
-          ? "fixed inset-0 z-[2000] bg-white"
-          : "flex flex-col md:flex-row h-[calc(100vh-100px)]"
-      } transition-all`}
-    >
+    <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
       {/* 🗺️ Carte */}
       <div className="relative flex-1 border-r border-gray-200">
         <MapContainer
@@ -190,6 +190,7 @@ export default function OffersPage() {
           style={{ height: "100%", width: "100%" }}
         >
           <MapController center={activeCenter} />
+
           <TileLayer
             attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
             url={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${
@@ -199,12 +200,12 @@ export default function OffersPage() {
             zoomOffset={-1}
           />
 
-          {/* 🔘 Cercle discret */}
+          {/* 🔘 Cercle discret noir */}
           <Circle
             center={activeCenter}
             radius={radiusKm * 1000}
             pathOptions={{
-              color: "rgba(0,0,0,0.5)", // fin trait noir
+              color: "rgba(0,0,0,0.7)",
               weight: 1.5,
               fillOpacity: 0,
             }}
@@ -247,13 +248,13 @@ export default function OffersPage() {
           ))}
         </MapContainer>
 
-        {/* 🔍 Barre + GPS */}
+        {/* 🔍 Barre de recherche + GPS */}
         <div className="absolute top-4 left-4 right-16 z-[1000] flex justify-center">
           <div className="relative w-[95%] md:w-3/4 lg:w-2/3">
             <input
               type="text"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={handleChange}
               placeholder="Rechercher une adresse ou un lieu..."
               className="w-full px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm focus:outline-none text-gray-700"
             />
@@ -285,7 +286,7 @@ export default function OffersPage() {
           </div>
         </div>
 
-        {/* 📍 GPS */}
+        {/* 📍 Bouton GPS */}
         <button
           onClick={requestGeolocation}
           className="absolute top-4 right-4 z-[1000] flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-100 active:scale-95"
@@ -320,74 +321,54 @@ export default function OffersPage() {
           />
           <span className="text-sm text-gray-700 font-medium">{radiusKm} km</span>
         </div>
-
-        {/* ⛶ Plein écran */}
-        <button
-          onClick={() => setIsFullScreen(true)}
-          className="absolute bottom-4 right-4 z-[1000] bg-white border border-gray-300 rounded-full p-2 shadow hover:bg-gray-100"
-          title="Agrandir la carte"
-        >
-          <Maximize2 className="w-4 h-4 text-gray-600" />
-        </button>
-
-        {isFullScreen && (
-          <button
-            onClick={() => setIsFullScreen(false)}
-            className="absolute top-4 right-4 z-[2001] bg-white rounded-full p-2 shadow border hover:bg-gray-100"
-          >
-            <X className="w-5 h-5 text-gray-700" />
-          </button>
-        )}
       </div>
 
-      {/* 💸 Liste */}
-      {!isFullScreen && (
-        <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
-          {offers.length === 0 ? (
-            <p className="text-gray-500 text-center mt-10">
-              Aucune offre disponible dans ce rayon.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {offers.map((o) => (
-                <div
-                  key={o.offer_id}
-                  className="flex bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
-                >
-                  {o.image_url && (
-                    <img
-                      src={o.image_url}
-                      alt={o.title}
-                      className="w-24 h-24 object-cover"
-                    />
-                  )}
-                  <div className="flex-1 p-3">
-                    <h3 className="font-semibold text-gray-800">{o.title}</h3>
-                    <p className="text-sm text-gray-500">{o.merchant_name}</p>
-                    <p className="text-green-600 font-semibold">
-                      {(o.distance_meters / 1000).toFixed(2)} km
-                    </p>
-                    <div className="flex items-center justify-between mt-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-green-600">
-                          {o.price_after.toFixed(2)} €
-                        </span>
-                        <span className="line-through text-gray-400 text-sm">
-                          {o.price_before.toFixed(2)} €
-                        </span>
-                      </div>
-                      <button className="flex items-center gap-1 text-green-700 hover:text-green-900">
-                        <Eye className="w-4 h-4" /> Voir
-                      </button>
+      {/* 💸 Liste des offres */}
+      <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
+        {offers.length === 0 ? (
+          <p className="text-gray-500 text-center mt-10">
+            Aucune offre disponible dans ce rayon.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {offers.map((o) => (
+              <div
+                key={o.offer_id}
+                className="flex bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
+              >
+                {o.image_url && (
+                  <img
+                    src={o.image_url}
+                    alt={o.title}
+                    className="w-24 h-24 object-cover"
+                  />
+                )}
+                <div className="flex-1 p-3">
+                  <h3 className="font-semibold text-gray-800">{o.title}</h3>
+                  <p className="text-sm text-gray-500">{o.merchant_name}</p>
+                  <p className="text-green-600 font-semibold">
+                    {(o.distance_meters / 1000).toFixed(2)} km
+                  </p>
+                  <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-green-600">
+                        {o.price_after.toFixed(2)} €
+                      </span>
+                      <span className="line-through text-gray-400 text-sm">
+                        {o.price_before.toFixed(2)} €
+                      </span>
                     </div>
+                    <button className="flex items-center gap-1 text-green-700 hover:text-green-900">
+                      <Eye className="w-4 h-4" /> Voir
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
