@@ -8,13 +8,13 @@ import { supabase } from "./lib/supabaseClient";
 // Pages principales
 import HomePage from "./pages/HomePage";
 import OffersPage from "./pages/OffersPage";
+import OffersMapPage from "./pages/OffersMapPage"; // ✅ Page officielle des offres avec Mapbox
 import CustomerAuthPage from "./pages/CustomerAuthPage";
 import MerchantAuthPage from "./pages/MerchantAuthPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import ClientOnboardingPage from "./pages/ClientOnboardingPage";
 import ProfileCompletePage from "./pages/ProfileCompletePage";
 import MerchantDashboardPage from "./pages/MerchantDashboardPage";
-import CustomerMapPage from "./pages/CustomerMapPage";
 
 // Pages utilisateurs
 import FavoritesPage from "./pages/FavoritesPage";
@@ -23,10 +23,6 @@ import ReviewsPage from "./pages/ReviewsPage";
 
 import DownloadPage from "./pages/DownloadPage";
 import NotFoundPage from "./pages/NotFoundPage";
-
-// ✅ Page Mapbox test et nouvelle carte pro
-import MapboxTestPage from "./pages/MapboxTestPage";
-import OffersMapPage from "./pages/OffersMapPage";
 
 /* 🔁 Vérifie la session et redirige selon le rôle */
 function SessionRedirect() {
@@ -45,7 +41,7 @@ function SessionRedirect() {
         .single();
 
       if (!error && data?.role === "merchant") nav("/merchant/dashboard");
-      else if (!error && data?.role === "client") nav("/offers/map");
+      else if (!error && data?.role === "client") nav("/offers/map"); // ✅ route unique vers la carte Mapbox
 
       setChecked(true);
     })();
@@ -69,8 +65,7 @@ function App() {
 
               {/* 🗺️ Offres */}
               <Route path="/offers" element={<OffersPage />} />
-              <Route path="/offers/map" element={<CustomerMapPage />} />
-              <Route path="/offers/mapbox" element={<OffersMapPage />} /> {/* ✅ Nouvelle carte Mapbox */}
+              <Route path="/offers/map" element={<OffersMapPage />} /> {/* ✅ Nouvelle carte Mapbox */}
 
               {/* ❤️ Favoris */}
               <Route path="/favorites" element={<FavoritesPage />} />
@@ -95,9 +90,6 @@ function App() {
 
               {/* 📱 Téléchargement */}
               <Route path="/download" element={<DownloadPage />} />
-
-              {/* 🧭 Carte Mapbox de test */}
-              <Route path="/mapbox-test" element={<MapboxTestPage />} />
 
               {/* 🚫 Anciennes routes */}
               <Route path="/customer/teaser" element={<Navigate to="/offers" replace />} />
