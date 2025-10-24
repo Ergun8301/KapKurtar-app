@@ -1,5 +1,67 @@
-// [...] (imports et icônes identiques)
+import { useState, useEffect, useRef } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
+import L, { Icon } from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { Eye } from "lucide-react";
+import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../hooks/useAuth";
 
+// ---------- ICONES ----------
+delete (Icon.Default.prototype as any)._getIconUrl;
+Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
+
+const userIcon = new Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+const offerIcon = new Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+const searchIcon = new Icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+});
+
+// ---------- INTERFACE ----------
+interface Offer {
+  offer_id: string;
+  title: string;
+  merchant_name: string;
+  price_before: number;
+  price_after: number;
+  distance_meters: number;
+  offer_lat: number;
+  offer_lng: number;
+  image_url?: string;
+}
+
+const DEFAULT_LOCATION = { lat: 46.2044, lng: 5.2258 };
+
+// ---------- CONTROLEUR DE LA CARTE ----------
+const MapController = ({ center }: { center: [number, number] }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center);
+  }, [center, map]);
+  return null;
+};
+
+// ---------- PAGE PRINCIPALE ----------
 export default function OffersPage() {
   const { user } = useAuth();
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -22,11 +84,6 @@ export default function OffersPage() {
 
   // ---------- GÉOLOCALISATION ----------
   const requestGeolocation = () => {
-    // ✅ Efface la recherche et recentre sur soi
-    setQuery("");
-    setSuggestions([]);
-    setSearchLocation(null);
-
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -34,6 +91,9 @@ export default function OffersPage() {
         const loc = { lat: latitude, lng: longitude };
         setUserLocation(loc);
         setCenter([latitude, longitude]);
+        setSearchLocation(null); // ✅ efface l’adresse recherchée
+        setQuery("");            // ✅ vide la barre de recherche
+        setSuggestions([]);      // ✅ supprime la liste
         setLoading(false);
       },
       () => setLoading(false),
@@ -68,7 +128,7 @@ export default function OffersPage() {
 
   // ---------- BARRE DE RECHERCHE MAPBOX ----------
   useEffect(() => {
-    if (isSelecting) return;
+    if (isSelecting) return; // bloque les requêtes après clic
     if (query.length < 3) return setSuggestions([]);
     const load = async () => {
       const res = await fetch(
@@ -123,15 +183,16 @@ export default function OffersPage() {
   // ---------- RENDU ----------
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
+      {/* 🗺️ Carte */}
       <div className="relative flex-1 border-r border-gray-200">
         <MapContainer
           whenCreated={(map) => (mapRef.current = map)}
           center={activeCenter}
           zoom={12}
           style={{ height: "100%", width: "100%" }}
-          zoomControl={false}
         >
           <MapController center={activeCenter} />
+
           <TileLayer
             attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
             url={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${
@@ -140,6 +201,8 @@ export default function OffersPage() {
             tileSize={512}
             zoomOffset={-1}
           />
+
+          {/* 🔘 Cercle discret noir */}
           <Circle
             center={activeCenter}
             radius={radiusKm * 1000}
@@ -149,14 +212,18 @@ export default function OffersPage() {
               fillOpacity: 0,
             }}
           />
+
+          {/* Points */}
           <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
             <Popup>📍 Vous êtes ici</Popup>
           </Marker>
+
           {searchLocation && (
             <Marker position={searchLocation} icon={searchIcon}>
               <Popup>📍 Adresse recherchée</Popup>
             </Marker>
           )}
+
           {offers.map((o) => (
             <Marker
               key={o.offer_id}
@@ -169,20 +236,29 @@ export default function OffersPage() {
                 {o.merchant_name}
                 <br />
                 {(o.distance_meters / 1000).toFixed(2)} km
+                <br />
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${o.offer_lat},${o.offer_lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline text-sm"
+                >
+                  🗺️ Voir dans Google Maps
+                </a>
               </Popup>
             </Marker>
           ))}
         </MapContainer>
 
-        {/* 🔍 BARRE DE RECHERCHE alignée */}
-        <div className="absolute top-4 left-6 right-6 z-[1000] flex justify-center">
-          <div className="relative w-full max-w-2xl mx-auto">
+        {/* 🔍 Barre de recherche + GPS */}
+        <div className="absolute top-4 left-4 right-16 z-[1000] flex justify-center">
+          <div className="relative w-[95%] md:w-3/4 lg:w-2/3">
             <input
               type="text"
               value={query}
               onChange={handleChange}
               placeholder="Rechercher une adresse ou un lieu..."
-              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm text-gray-700 outline-none focus:ring-0 active:ring-0"
+              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm focus:outline-none text-gray-700"
             />
             {query && (
               <button
@@ -191,7 +267,7 @@ export default function OffersPage() {
                   setSuggestions([]);
                   setSearchLocation(null);
                 }}
-                className="absolute right-3 top-2 text-gray-500 hover:text-gray-700 outline-none focus:ring-0 active:ring-0"
+                className="absolute right-3 top-2 text-gray-500 hover:text-gray-700"
               >
                 ✕
               </button>
@@ -212,10 +288,10 @@ export default function OffersPage() {
           </div>
         </div>
 
-        {/* 📍 BOUTON GPS sans halo */}
+        {/* 📍 Bouton GPS */}
         <button
           onClick={requestGeolocation}
-          className="absolute top-4 right-4 z-[1000] flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-100 active:scale-95 outline-none focus:ring-0 active:ring-0"
+          className="absolute top-4 right-4 z-[1000] flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-100 active:scale-95"
           title="Me géolocaliser"
         >
           <svg
@@ -235,22 +311,66 @@ export default function OffersPage() {
           </svg>
         </button>
 
-        {/* 🎚️ SLIDER sans halo */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200 outline-none focus:ring-0">
+        {/* 🎚️ Slider */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
           <input
             type="range"
             min={1}
             max={30}
             value={radiusKm}
             onChange={(e) => handleRadiusChange(Number(e.target.value))}
-            className="w-36 cursor-pointer outline-none focus:ring-0 active:ring-0"
+            className="w-36 accent-green-500 cursor-pointer focus:outline-none"
           />
           <span className="text-sm text-gray-700 font-medium">{radiusKm} km</span>
         </div>
       </div>
 
-      {/* 💸 Liste des offres inchangée */}
-      {/* ... */}
+      {/* 💸 Liste des offres */}
+      <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
+        {offers.length === 0 ? (
+          <p className="text-gray-500 text-center mt-10">
+            Aucune offre disponible dans ce rayon.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {offers.map((o) => (
+              <div
+                key={o.offer_id}
+                className="flex bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
+              >
+                {o.image_url && (
+                  <img
+                    src={o.image_url}
+                    alt={o.title}
+                    className="w-24 h-24 object-cover"
+                  />
+                )}
+                <div className="flex-1 p-3">
+                  <h3 className="font-semibold text-gray-800">{o.title}</h3>
+                  <p className="text-sm text-gray-500">{o.merchant_name}</p>
+                  <p className="text-green-600 font-semibold">
+                    {(o.distance_meters / 1000).toFixed(2)} km
+                  </p>
+                  <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-green-600">
+                        {o.price_after.toFixed(2)} €
+                      </span>
+                      <span className="line-through text-gray-400 text-sm">
+                        {o.price_before.toFixed(2)} €
+                      </span>
+                    </div>
+                    <button className="flex items-center gap-1 text-green-700 hover:text-green-900">
+                      <Eye className="w-4 h-4" /> Voir
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
