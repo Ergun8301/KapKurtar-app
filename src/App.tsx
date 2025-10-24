@@ -24,6 +24,9 @@ import ReviewsPage from "./pages/ReviewsPage";
 import DownloadPage from "./pages/DownloadPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
+// ✅ Nouvelle page Mapbox test
+import MapboxTestPage from "./pages/MapboxTestPage";
+
 /* 🔁 Vérifie la session et redirige selon le rôle */
 function SessionRedirect() {
   const nav = useNavigate();
@@ -90,6 +93,9 @@ function App() {
 
               {/* 📱 Téléchargement */}
               <Route path="/download" element={<DownloadPage />} />
+
+              {/* 🧭 Carte Mapbox de test */}
+              <Route path="/mapbox-test" element={<MapboxTestPage />} />
 
               {/* 🚫 Anciennes routes */}
               <Route path="/customer/teaser" element={<Navigate to="/offers" replace />} />
