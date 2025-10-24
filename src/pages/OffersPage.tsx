@@ -1,6 +1,6 @@
 // src/pages/OffersPage.tsx
 import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import { Icon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Eye } from "lucide-react";
@@ -99,6 +99,10 @@ export default function OffersPage() {
   );
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  const [radiusKm, setRadiusKm] = useState<number>(
+    Number(localStorage.getItem("radiusKm")) || 10
+  );
+
   // --- Géolocalisation
   const requestGeolocation = () => {
     if (!navigator.geolocation) {
@@ -131,7 +135,7 @@ export default function OffersPage() {
     requestGeolocation();
   }, []);
 
-  // --- Charger les offres
+  // --- Charger les offres dynamiquement
   useEffect(() => {
     if (loading) return;
     const fetchOffers = async () => {
@@ -141,10 +145,11 @@ export default function OffersPage() {
           .select("id")
           .eq("auth_id", user?.id)
           .maybeSingle();
+
         if (client) {
           const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
             p_client_id: client.id,
-            p_radius_meters: 10000,
+            p_radius_meters: radiusKm * 1000,
           });
           if (error) console.error(error);
           setOffers(data || []);
@@ -154,7 +159,7 @@ export default function OffersPage() {
       }
     };
     fetchOffers();
-  }, [user, userLocation, loading]);
+  }, [user, userLocation, radiusKm, loading]);
 
   // --- Geocoding Mapbox
   useEffect(() => {
@@ -183,7 +188,7 @@ export default function OffersPage() {
     const [lng, lat] = feature.center;
     setMapCenter([lat, lng]);
     setMapZoom(14);
-    setSearchLocation([lat, lng]); // marqueur rouge
+    setSearchLocation([lat, lng]);
     setSuggestions([]);
     setQuery(feature.place_name);
   };
@@ -191,6 +196,11 @@ export default function OffersPage() {
   const handleOfferClick = (offer: Offer) => {
     setMapCenter([offer.offer_lat, offer.offer_lng]);
     setMapZoom(15);
+  };
+
+  const handleRadiusChange = (value: number) => {
+    setRadiusKm(value);
+    localStorage.setItem("radiusKm", String(value));
   };
 
   if (loading && geoStatus === "pending") {
@@ -208,7 +218,7 @@ export default function OffersPage() {
     <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
       {/* 🗺️ Carte à gauche */}
       <div className="relative md:w-1/2 h-[50vh] md:h-auto border-r border-gray-200">
-        {/* 🔍 Barre de recherche intégrée */}
+        {/* 🔍 Barre de recherche */}
         <div className="absolute top-4 left-4 right-4 z-[1000] flex items-center justify-center">
           <div className="relative w-full md:w-3/4 lg:w-2/3">
             <input
@@ -235,6 +245,21 @@ export default function OffersPage() {
           </div>
         </div>
 
+        {/* 🎚️ Slider de rayon */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[1000] bg-white rounded-full shadow-lg px-4 py-2 flex items-center space-x-2 border">
+          <span className="text-sm text-gray-700 font-medium">
+            Rayon : {radiusKm} km
+          </span>
+          <input
+            type="range"
+            min={1}
+            max={30}
+            value={radiusKm}
+            onChange={(e) => handleRadiusChange(Number(e.target.value))}
+            className="w-32 accent-green-500 cursor-pointer"
+          />
+        </div>
+
         {/* 🌍 Carte principale */}
         <MapContainer
           center={mapCenter}
@@ -256,7 +281,18 @@ export default function OffersPage() {
             <Popup>📍 Vous êtes ici</Popup>
           </Marker>
 
-          {/* 📍 Adresse recherchée (rouge) */}
+          {/* 🔘 Cercle de rayon */}
+          <Circle
+            center={[userLocation.lat, userLocation.lng]}
+            radius={radiusKm * 1000}
+            pathOptions={{
+              color: "rgba(34,197,94,0.6)",
+              fillColor: "rgba(34,197,94,0.2)",
+              fillOpacity: 0.2,
+            }}
+          />
+
+          {/* 📍 Adresse recherchée */}
           {searchLocation && (
             <Marker position={searchLocation} icon={searchIcon}>
               <Popup>📍 Adresse recherchée</Popup>
@@ -278,36 +314,26 @@ export default function OffersPage() {
                 <span className="text-green-600 font-semibold">
                   {offer.price_after.toFixed(2)}€
                 </span>
+                <br />
+                <span className="text-sm text-gray-500">
+                  {(offer.distance_meters / 1000).toFixed(2)} km
+                </span>
+                <br />
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline text-sm"
+                >
+                  🗺️ Voir l’itinéraire
+                </a>
               </Popup>
             </Marker>
           ))}
         </MapContainer>
-
-        {/* 📍 Bouton GPS iPhone-style (haut droite) */}
-        <button
-          onClick={requestGeolocation}
-          className="absolute top-4 right-4 z-[1000] flex items-center justify-center w-10 h-10 rounded-full shadow-md bg-white hover:bg-gray-100 transition-all border border-gray-200 active:scale-95"
-          title="Me géolocaliser"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="2"
-            stroke="rgb(59,130,246)"
-            className="w-5 h-5"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 2v2m0 16v2m10-10h-2M4 12H2m16.95 7.05l-1.414-1.414M6.464 6.464 5.05 5.05m13.9 0-1.414 1.414M6.464 17.536 5.05 18.95"
-            />
-          </svg>
-        </button>
       </div>
 
-      {/* 💸 Liste des offres à droite */}
+      {/* 💸 Liste des offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
         <h2 className="text-xl font-bold text-gray-800 mb-4">
           Offres à proximité
@@ -315,7 +341,7 @@ export default function OffersPage() {
 
         {offers.length === 0 ? (
           <p className="text-gray-500 text-center mt-10">
-            Aucune offre disponible autour de vous.
+            Aucune offre disponible dans ce rayon.
           </p>
         ) : (
           <div className="space-y-4">
