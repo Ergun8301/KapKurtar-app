@@ -7,7 +7,6 @@ import { Eye, X, Maximize2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 
-// --- Icônes
 delete (Icon.Default.prototype as any)._getIconUrl;
 Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -74,13 +73,13 @@ export default function OffersPage() {
     Number(localStorage.getItem("radiusKm")) || 10
   );
   const [isFullScreen, setIsFullScreen] = useState(false);
-
-  const mapRef = useRef<L.Map>(null);
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
 
-  // --- Géolocalisation
+  const mapRef = useRef<L.Map>(null);
+
+  // --- GEOLOC
   const requestGeolocation = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
@@ -95,12 +94,11 @@ export default function OffersPage() {
       { enableHighAccuracy: true, timeout: 8000 }
     );
   };
-
   useEffect(() => {
     requestGeolocation();
   }, []);
 
-  // --- Charger les offres
+  // --- OFFERS
   useEffect(() => {
     if (!user) return;
     const fetchOffers = async () => {
@@ -120,7 +118,7 @@ export default function OffersPage() {
     fetchOffers();
   }, [user, center, radiusKm]);
 
-  // --- Barre de recherche Mapbox
+  // --- SEARCH (Mapbox)
   useEffect(() => {
     if (isSelecting) return;
     if (query.length < 3) return setSuggestions([]);
@@ -144,29 +142,25 @@ export default function OffersPage() {
     setSearchLocation([lat, lng]);
     setQuery(feature.place_name);
     setSuggestions([]);
-    setTimeout(() => setIsSelecting(false), 800);
+    setTimeout(() => setIsSelecting(false), 500);
   };
 
-  // --- Recentrage automatique
+  // --- FIT BOUNDS
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const r = radiusKm * 1000;
-    const circle = L.circle(center, { radius: r });
-    setTimeout(() => {
-      map.fitBounds(circle.getBounds(), { padding: [50, 50] });
-    }, 200);
+    const circle = L.circle(center, { radius: radiusKm * 1000 });
+    setTimeout(() => map.fitBounds(circle.getBounds(), { padding: [50, 50] }), 250);
   }, [radiusKm, center]);
 
-  // --- Recalcule taille carte plein écran
+  // --- FULLSCREEN FIX
   useEffect(() => {
     if (isFullScreen && mapRef.current) {
-      setTimeout(() => mapRef.current!.invalidateSize(), 400);
+      setTimeout(() => mapRef.current!.invalidateSize(), 300);
     }
   }, [isFullScreen]);
 
   const activeCenter = searchLocation || [userLocation.lat, userLocation.lng];
-
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
@@ -205,14 +199,14 @@ export default function OffersPage() {
             zoomOffset={-1}
           />
 
-          {/* 🟢 Cercle clair */}
+          {/* 🔘 Cercle discret */}
           <Circle
             center={activeCenter}
             radius={radiusKm * 1000}
             pathOptions={{
-              color: "rgba(0,0,0,0.2)",
-              fillColor: "rgba(255,255,255,0.4)",
-              fillOpacity: 0.6,
+              color: "rgba(0,0,0,0.5)", // fin trait noir
+              weight: 1.5,
+              fillOpacity: 0,
             }}
           />
 
@@ -253,16 +247,28 @@ export default function OffersPage() {
           ))}
         </MapContainer>
 
-        {/* 🔍 Barre de recherche + GPS */}
+        {/* 🔍 Barre + GPS */}
         <div className="absolute top-4 left-4 right-16 z-[1000] flex justify-center">
-          <div className="relative w-full md:w-3/4 lg:w-2/3">
+          <div className="relative w-[95%] md:w-3/4 lg:w-2/3">
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Rechercher une adresse ou un lieu..."
-              className="w-full px-4 py-2 bg-white/90 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-green-400 text-gray-700"
+              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm focus:outline-none text-gray-700"
             />
+            {query && (
+              <button
+                onClick={() => {
+                  setQuery("");
+                  setSuggestions([]);
+                  setSearchLocation(null);
+                }}
+                className="absolute right-3 top-2 text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            )}
             {suggestions.length > 0 && (
               <ul className="absolute mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto w-full">
                 {suggestions.map((f) => (
@@ -279,10 +285,10 @@ export default function OffersPage() {
           </div>
         </div>
 
-        {/* 📍 Bouton GPS */}
+        {/* 📍 GPS */}
         <button
           onClick={requestGeolocation}
-          className="absolute top-4 right-4 z-[1000] flex items-center justify-center w-10 h-10 rounded-full bg-white/90 border border-gray-300 shadow hover:bg-gray-100 active:scale-95"
+          className="absolute top-4 right-4 z-[1000] flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-100 active:scale-95"
           title="Me géolocaliser"
         >
           <svg
@@ -302,8 +308,8 @@ export default function OffersPage() {
           </svg>
         </button>
 
-        {/* 🎚️ Slider simple */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/90 rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
+        {/* 🎚️ Slider */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
           <input
             type="range"
             min={1}
@@ -318,7 +324,7 @@ export default function OffersPage() {
         {/* ⛶ Plein écran */}
         <button
           onClick={() => setIsFullScreen(true)}
-          className="absolute bottom-4 right-4 z-[1000] bg-white/90 border border-gray-300 rounded-full p-2 shadow hover:bg-gray-100"
+          className="absolute bottom-4 right-4 z-[1000] bg-white border border-gray-300 rounded-full p-2 shadow hover:bg-gray-100"
           title="Agrandir la carte"
         >
           <Maximize2 className="w-4 h-4 text-gray-600" />
@@ -334,7 +340,7 @@ export default function OffersPage() {
         )}
       </div>
 
-      {/* 💸 Liste des offres */}
+      {/* 💸 Liste */}
       {!isFullScreen && (
         <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
