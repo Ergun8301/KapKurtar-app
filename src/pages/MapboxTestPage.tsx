@@ -13,18 +13,18 @@ const MapboxTestPage = () => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // 🚀 Carte immédiate centrée sur la Turquie (fallback)
+    // 🇹🇷 Affichage instantané sur la Turquie entière
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
-      center: [35.2433, 38.9637],
-      zoom: 4.2, // déjà rapproché dès l’ouverture
+      center: [35.2433, 39.0], // centre géographique Turquie
+      zoom: 5.1, // cadrage parfait sur la Turquie entière
       projection: "globe",
     });
 
     mapRef.current = map;
 
-    // 🛰️ Tentative de géolocalisation instantanée dès le chargement
+    // 📍 Géolocalisation immédiate (si autorisée)
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -76,7 +76,7 @@ const MapboxTestPage = () => {
 
   return (
     <div className="relative flex flex-col items-center w-full">
-      {/* 🗺️ Carte */}
+      {/* 🗺️ Conteneur carte */}
       <div
         ref={mapContainer}
         className="w-[95%] md:w-[90%] lg:w-[85%] h-[80vh] md:h-[85vh] lg:h-[90vh] rounded-xl shadow-md border border-gray-200"
