@@ -12,27 +12,30 @@ const AuthCallbackPage = () => {
     const handleOAuthCallback = async () => {
       try {
         const role = searchParams.get("role");
+
         if (!role || !["client", "merchant"].includes(role)) {
           setError("Paramètre de rôle invalide");
           setLoading(false);
           return;
         }
 
-        console.log("🔁 OAuth callback avec rôle :", role);
-
-        // 🕒 Attente d'une session valide (jusqu'à 10 secondes)
+        // 🕒 Attente d'une session valide (Google OAuth)
+        let retryCount = 0;
+        const maxRetries = 10;
         let session = null;
-        for (let i = 0; i < 10; i++) {
-          const { data } = await supabase.auth.getSession();
-          if (data.session) {
-            session = data.session;
+
+        while (retryCount < maxRetries && !session) {
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          if (currentSession) {
+            session = currentSession;
             break;
           }
-          await new Promise((r) => setTimeout(r, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          retryCount++;
         }
 
         if (!session) {
-          setError("Impossible de récupérer la session après OAuth.");
+          setError("Impossible de récupérer la session après OAuth");
           setLoading(false);
           return;
         }
@@ -40,19 +43,45 @@ const AuthCallbackPage = () => {
         const user = session.user;
         console.log("✅ Session OAuth récupérée pour:", user.email);
 
-        // ✅ 1. Définir le rôle dans Supabase via RPC (idempotent)
+        // ✅ Mettre à jour le rôle dans Supabase
         await supabase.rpc("set_role_for_me", { p_role: role });
+        await supabase.from("profiles").update({ role }).eq("auth_id", user.id);
 
-        // ✅ 2. Si marchand → création du profil marchand (RPC SQL)
+        // 🧩 Si rôle = marchand → créer profil marchand via Edge Function
         if (role === "merchant") {
-          console.log("🧱 Vérification du profil marchand SQL...");
-          const { error: merchantError } = await supabase.rpc(
-            "get_or_create_merchant_for_profile",
-            { p_auth_id: user.id }
-          );
-          if (merchantError) console.warn("⚠️ Merchant RPC error:", merchantError.message);
+          console.log("🧱 Vérification du profil marchand...");
+
+          try {
+            const token = session.access_token;
+            const response = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-merchant-profile`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  company_name: user.email || "Sans Nom",
+                  email: user.email,
+                }),
+              }
+            );
+
+            const result = await response.json();
+            if (result.success) {
+              console.log("✅ Merchant créé via Edge Function:", result.merchant);
+            } else {
+              console.warn("⚠️ Edge Function n'a pas créé de merchant:", result.error);
+            }
+          } catch (edgeError) {
+            console.error("❌ Erreur lors de la création du merchant:", edgeError);
+          }
+
+          // Redirection finale vers tableau de bord marchand
           navigate("/merchant/dashboard");
         } else {
+          // Redirection finale vers les offres client
           navigate("/offers");
         }
       } catch (err) {
