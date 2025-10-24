@@ -37,6 +37,14 @@ const offerIcon = new Icon({
   iconAnchor: [12, 41],
 });
 
+const searchIcon = new Icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+});
+
 // --- Types
 interface Offer {
   offer_id: string;
@@ -83,8 +91,12 @@ export default function OffersPage() {
     DEFAULT_LOCATION.lng,
   ]);
   const [mapZoom, setMapZoom] = useState(12);
+
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [searchLocation, setSearchLocation] = useState<[number, number] | null>(
+    null
+  );
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // --- Géolocalisation
@@ -171,6 +183,7 @@ export default function OffersPage() {
     const [lng, lat] = feature.center;
     setMapCenter([lat, lng]);
     setMapZoom(14);
+    setSearchLocation([lat, lng]); // marqueur rouge
     setSuggestions([]);
     setQuery(feature.place_name);
   };
@@ -238,10 +251,19 @@ export default function OffersPage() {
             zoomOffset={-1}
           />
 
+          {/* 🔵 Position utilisateur */}
           <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
             <Popup>📍 Vous êtes ici</Popup>
           </Marker>
 
+          {/* 📍 Adresse recherchée (rouge) */}
+          {searchLocation && (
+            <Marker position={searchLocation} icon={searchIcon}>
+              <Popup>📍 Adresse recherchée</Popup>
+            </Marker>
+          )}
+
+          {/* 🏪 Offres */}
           {offers.map((offer) => (
             <Marker
               key={offer.offer_id}
