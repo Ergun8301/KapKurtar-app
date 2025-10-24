@@ -31,25 +31,25 @@ const MapboxTestPage = () => {
       const center = map.getCenter();
       map.easeTo({
         center: [center.lng + 0.2, center.lat],
-        duration: 10000,
+        duration: 8000, // ⏱️ plus rapide qu’avant (10s → 8s)
         easing: (n) => n,
       });
       requestAnimationFrame(rotateGlobe);
     }
     rotateGlobe();
 
-    // 🎬 Cinématique d’intro : zoom vers la Turquie après 3s
+    // 🎬 Cinématique d’intro : zoom vers la Turquie plus vite (1.8 s au lieu de 3 s)
     setTimeout(() => {
       map.flyTo({
         center: [35.2433, 38.9637],
         zoom: 4,
-        speed: 0.8,
+        speed: 1.2, // un peu plus rapide
         curve: 1.2,
         essential: true,
       });
-    }, 3000);
+    }, 1800);
 
-    // 📍 Géolocalisation auto (après 5s pour laisser l’animation)
+    // 📍 Géolocalisation auto (après 3,5 s au lieu de 5 s)
     setTimeout(() => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -73,7 +73,7 @@ const MapboxTestPage = () => {
           { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
         );
       }
-    }, 5000);
+    }, 3500);
 
     return () => map.remove();
   }, []);
