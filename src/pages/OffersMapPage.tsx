@@ -1,182 +1,168 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { MapPin } from "lucide-react";
+import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../hooks/useAuth";
+import { Eye } from "lucide-react";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 interface Offer {
-  id: string;
+  offer_id: string;
   title: string;
-  description: string;
-  image_url?: string;
   price_after: number;
-  price_before: number;
-  discount_percent: number;
-  distance_km?: number;
+  distance_meters: number;
+  longitude: number;
+  latitude: number;
+  image_url?: string;
 }
 
-const fakeOffers: Offer[] = [
-  {
-    id: "1",
-    title: "Panier surprise - Boulangerie Ankara",
-    description: "Viennoiseries et pains frais invendus du jour.",
-    image_url: "https://images.unsplash.com/photo-1509440159596-0249088772ff",
-    price_after: 3.5,
-    price_before: 10,
-    discount_percent: 65,
-    distance_km: 1.2,
-  },
-  {
-    id: "2",
-    title: "Restaurant Istanbul Kebab",
-    description: "Plat chaud à emporter, portions généreuses.",
-    image_url: "https://images.unsplash.com/photo-1600891963931-96053a51b0c9",
-    price_after: 4,
-    price_before: 12,
-    discount_percent: 67,
-    distance_km: 2.8,
-  },
-  {
-    id: "3",
-    title: "Fruits & Légumes - Marché local",
-    description: "Panier de fruits frais invendus du jour.",
-    image_url: "https://images.unsplash.com/photo-1565958011705-44e211de0d25",
-    price_after: 2.5,
-    price_before: 8,
-    discount_percent: 68,
-    distance_km: 4.6,
-  },
-];
-
 const OffersMapPage = () => {
+  const { user } = useAuth();
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  const userMarker = useRef<mapboxgl.Marker | null>(null);
-  const [isLocated, setIsLocated] = useState(false);
 
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [selectedOffer, setSelectedOffer] = useState<string | null>(null);
+  const [userCoords, setUserCoords] = useState<[number, number]>([35.2433, 39.0]); // Turquie par défaut
+  const [loading, setLoading] = useState(true);
+
+  // 🧭 1. Géolocalisation utilisateur
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!navigator.geolocation) {
+      setLoading(false);
+      return;
+    }
 
-    // Carte initiale : centrée Turquie
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { longitude, latitude } = pos.coords;
+        setUserCoords([longitude, latitude]);
+        setLoading(false);
+      },
+      () => {
+        console.warn("Localisation refusée ou indisponible");
+        setLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }, []);
+
+  // 🗺️ 2. Initialisation de la carte Mapbox
+  useEffect(() => {
+    if (!mapContainer.current || mapRef.current) return;
+
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
-      center: [35.2433, 39.0],
-      zoom: 5.2,
+      center: userCoords,
+      zoom: 7,
       projection: "globe",
     });
 
     mapRef.current = map;
 
-    // Ajout des points d'offres factices
-    fakeOffers.forEach((offer) => {
-      const marker = new mapboxgl.Marker({ color: "#16a34a" })
-        .setLngLat([
-          35.2433 + (Math.random() - 0.5) * 3, // un peu aléatoire
-          39.0 + (Math.random() - 0.5) * 3,
-        ])
+    return () => map.remove();
+  }, [userCoords]);
+
+  // 🧮 3. Récupération des offres dynamiques
+  useEffect(() => {
+    const fetchOffers = async () => {
+      if (!user) return;
+
+      const { data: clientData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_id", user.id)
+        .maybeSingle();
+
+      if (!clientData) return;
+
+      const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
+        p_client_id: clientData.id,
+        p_radius_meters: 10000, // 10 km par défaut
+      });
+
+      if (error) {
+        console.error("Erreur lors du chargement des offres :", error);
+        return;
+      }
+
+      setOffers(data || []);
+    };
+
+    fetchOffers();
+  }, [user]);
+
+  // 📍 4. Ajout des marqueurs sur la carte
+  useEffect(() => {
+    if (!mapRef.current || offers.length === 0) return;
+
+    offers.forEach((offer) => {
+      const marker = new mapboxgl.Marker({
+        color: offer.offer_id === selectedOffer ? "#10b981" : "#1d4ed8",
+      })
+        .setLngLat([offer.longitude, offer.latitude])
         .setPopup(
           new mapboxgl.Popup().setHTML(`
-            <div style="font-family: sans-serif; font-size: 13px;">
+            <div style="font-size:14px;">
               <strong>${offer.title}</strong><br/>
-              <span style="color: green; font-weight: bold;">${offer.price_after}€</span>
-              <span style="text-decoration: line-through; color: gray;">${offer.price_before}€</span>
-              <br/><em>${offer.description}</em>
+              💶 ${offer.price_after}€<br/>
+              📏 ${(offer.distance_meters / 1000).toFixed(1)} km
             </div>
           `)
         )
-        .addTo(map);
+        .addTo(mapRef.current!);
     });
+  }, [offers, selectedOffer]);
 
-    return () => map.remove();
-  }, []);
-
-  // 📍 Fonction de géolocalisation
-  const handleLocate = () => {
-    if (!mapRef.current || !navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { longitude, latitude } = pos.coords;
-        setIsLocated(true);
-
-        mapRef.current!.flyTo({
-          center: [longitude, latitude],
-          zoom: 13,
-          speed: 1.3,
-          curve: 1.2,
-        });
-
-        if (userMarker.current) userMarker.current.remove();
-        userMarker.current = new mapboxgl.Marker({ color: "#1d4ed8" })
-          .setLngLat([longitude, latitude])
-          .setPopup(new mapboxgl.Popup().setHTML("<b>📍 Vous êtes ici</b>"))
-          .addTo(mapRef.current!);
-      },
-      () => alert("Impossible de vous localiser."),
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-gray-500">Chargement de la carte...</div>
+      </div>
     );
-  };
+  }
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-80px)] w-full bg-gray-50">
-      {/* 🗺️ Carte */}
-      <div className="relative w-full md:w-1/2 h-[60vh] md:h-full">
-        <div
-          ref={mapContainer}
-          className="absolute inset-0 rounded-none md:rounded-l-xl shadow-md border border-gray-200"
-        />
-        {/* 📍 Bouton géoloc minimaliste */}
-        <button
-          onClick={handleLocate}
-          className="absolute top-4 left-4 bg-white/90 rounded-full p-2 shadow-md hover:bg-white transition"
-          title="Me géolocaliser"
-        >
-          <MapPin className="w-5 h-5 text-blue-600" />
-        </button>
-      </div>
+    <div className="flex flex-col md:flex-row min-h-screen">
+      {/* 🗺️ Carte à gauche */}
+      <div ref={mapContainer} className="flex-1 h-[50vh] md:h-auto" />
 
-      {/* 🛍️ Liste d’offres */}
-      <div className="w-full md:w-1/2 overflow-y-auto border-t md:border-t-0 md:border-l border-gray-200 p-4 bg-white">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Offres disponibles</h2>
+      {/* 🧾 Liste des offres à droite */}
+      <div className="w-full md:w-[420px] overflow-y-auto bg-white border-l border-gray-200">
+        <h2 className="text-xl font-bold p-4 border-b">Offres à proximité</h2>
 
-        <div className="grid grid-cols-1 gap-4">
-          {fakeOffers.map((offer) => (
-            <div
-              key={offer.id}
-              className="bg-gray-50 rounded-xl shadow hover:shadow-md transition p-3 flex space-x-3 cursor-pointer"
-            >
-              {offer.image_url && (
-                <img
-                  src={offer.image_url}
-                  alt={offer.title}
-                  className="w-20 h-20 rounded-lg object-cover"
-                />
-              )}
-              <div className="flex flex-col justify-between flex-1">
-                <div>
-                  <h3 className="text-sm font-bold text-gray-800">{offer.title}</h3>
-                  <p className="text-xs text-gray-500 line-clamp-2">
-                    {offer.description}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-bold text-green-600">
-                      {offer.price_after.toFixed(2)}€
-                    </span>
-                    <span className="text-xs text-gray-400 line-through">
-                      {offer.price_before.toFixed(2)}€
-                    </span>
-                  </div>
-                  <span className="bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold">
-                    -{offer.discount_percent}%
-                  </span>
-                </div>
+        {offers.length === 0 ? (
+          <p className="text-center text-gray-500 p-6">Aucune offre trouvée</p>
+        ) : (
+          <div className="divide-y">
+            {offers.map((offer) => (
+              <div
+                key={offer.offer_id}
+                className={`p-4 cursor-pointer hover:bg-gray-50 ${
+                  selectedOffer === offer.offer_id ? "bg-green-50" : ""
+                }`}
+                onClick={() => setSelectedOffer(offer.offer_id)}
+              >
+                {offer.image_url && (
+                  <img
+                    src={offer.image_url}
+                    alt={offer.title}
+                    className="w-full h-40 object-cover rounded-lg mb-2"
+                  />
+                )}
+                <h3 className="font-semibold text-gray-900">{offer.title}</h3>
+                <p className="text-sm text-gray-600">
+                  💶 {offer.price_after} € — {(offer.distance_meters / 1000).toFixed(1)} km
+                </p>
+                <button className="mt-2 w-full bg-green-600 text-white py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-green-700">
+                  <Eye className="w-4 h-4" /> Voir
+                </button>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
