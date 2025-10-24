@@ -91,6 +91,9 @@ export default function OffersPage() {
         const loc = { lat: latitude, lng: longitude };
         setUserLocation(loc);
         setCenter([latitude, longitude]);
+        setSearchLocation(null); // ✅ efface l’adresse recherchée
+        setQuery("");            // ✅ vide la barre de recherche
+        setSuggestions([]);      // ✅ supprime la liste
         setLoading(false);
       },
       () => setLoading(false),
@@ -125,7 +128,7 @@ export default function OffersPage() {
 
   // ---------- BARRE DE RECHERCHE MAPBOX ----------
   useEffect(() => {
-    if (isSelecting) return; // 🔒 bloque les requêtes après clic
+    if (isSelecting) return; // bloque les requêtes après clic
     if (query.length < 3) return setSuggestions([]);
     const load = async () => {
       const res = await fetch(
@@ -142,14 +145,13 @@ export default function OffersPage() {
 
   const handleSelect = (feature: any) => {
     const [lng, lat] = feature.center;
-    setIsSelecting(true); // bloque la recherche
+    setIsSelecting(true);
     setCenter([lat, lng]);
     setSearchLocation([lat, lng]);
     setQuery(feature.place_name);
     setSuggestions([]);
   };
 
-  // Réactive la recherche uniquement si on retape quelque chose
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
@@ -188,7 +190,6 @@ export default function OffersPage() {
           center={activeCenter}
           zoom={12}
           style={{ height: "100%", width: "100%" }}
-          zoomControl={false} // ❌ supprime les boutons + et –
         >
           <MapController center={activeCenter} />
 
