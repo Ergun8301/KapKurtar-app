@@ -24,8 +24,9 @@ import ReviewsPage from "./pages/ReviewsPage";
 import DownloadPage from "./pages/DownloadPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
-// ✅ Nouvelle page Mapbox test
+// ✅ Page Mapbox test et nouvelle carte pro
 import MapboxTestPage from "./pages/MapboxTestPage";
+import OffersMapPage from "./pages/OffersMapPage";
 
 /* 🔁 Vérifie la session et redirige selon le rôle */
 function SessionRedirect() {
@@ -69,6 +70,7 @@ function App() {
               {/* 🗺️ Offres */}
               <Route path="/offers" element={<OffersPage />} />
               <Route path="/offers/map" element={<CustomerMapPage />} />
+              <Route path="/offers/mapbox" element={<OffersMapPage />} /> {/* ✅ Nouvelle carte Mapbox */}
 
               {/* ❤️ Favoris */}
               <Route path="/favorites" element={<FavoritesPage />} />
