@@ -10,155 +10,188 @@ mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 interface Offer {
   offer_id: string;
   title: string;
+  description: string;
+  price_before: number;
   price_after: number;
+  discount_percent: number;
   distance_meters: number;
+  merchant_name: string;
+  image_url?: string;
   longitude: number;
   latitude: number;
-  image_url?: string;
 }
 
 const OffersMapPage = () => {
   const { user } = useAuth();
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
+  const userMarker = useRef<mapboxgl.Marker | null>(null);
 
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [selectedOffer, setSelectedOffer] = useState<string | null>(null);
-  const [userCoords, setUserCoords] = useState<[number, number]>([35.2433, 39.0]); // Turquie par défaut
+  const [isLocated, setIsLocated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userCoords, setUserCoords] = useState<[number, number]>([35.2433, 39.0]); // Turquie par défaut
 
-  // 🧭 1. Géolocalisation utilisateur
+  // === INIT MAP ===
   useEffect(() => {
+    if (!mapContainer.current) return;
+
+    const map = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/streets-v12",
+      center: [35.2433, 39.0],
+      zoom: 5.1,
+      projection: "globe",
+    });
+
+    mapRef.current = map;
+
+    // 🌍 Bouton de géolocalisation manuelle (petite icône)
+    const geoBtn = document.createElement("button");
+    geoBtn.className =
+      "absolute z-10 top-4 left-4 bg-white rounded-full shadow p-2 hover:bg-gray-100";
+    geoBtn.innerHTML = "📍";
+    geoBtn.onclick = () => handleLocate();
+    map.getContainer().appendChild(geoBtn);
+
+    locateUser(); // auto-locate
+
+    return () => map.remove();
+  }, []);
+
+  // === GEOLOC USER ===
+  const locateUser = () => {
     if (!navigator.geolocation) {
       setLoading(false);
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         const { longitude, latitude } = pos.coords;
         setUserCoords([longitude, latitude]);
+        setIsLocated(true);
+        mapRef.current?.flyTo({ center: [longitude, latitude], zoom: 13 });
+
+        // Marqueur utilisateur
+        if (userMarker.current) userMarker.current.remove();
+        userMarker.current = new mapboxgl.Marker({ color: "#ff3b30" })
+          .setLngLat([longitude, latitude])
+          .setPopup(new mapboxgl.Popup().setHTML("<b>Vous êtes ici 📍</b>"))
+          .addTo(mapRef.current!);
+
+        await fetchOffers([longitude, latitude]);
         setLoading(false);
       },
-      () => {
-        console.warn("Localisation refusée ou indisponible");
+      (err) => {
+        console.warn("Erreur géolocalisation:", err);
         setLoading(false);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000 }
     );
-  }, []);
+  };
 
-  // 🗺️ 2. Initialisation de la carte Mapbox
-  useEffect(() => {
-    if (!mapContainer.current || mapRef.current) return;
+  const handleLocate = () => locateUser();
 
-    const map = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: userCoords,
-      zoom: 7,
-      projection: "globe",
-    });
-
-    mapRef.current = map;
-
-    return () => map.remove();
-  }, [userCoords]);
-
-  // 🧮 3. Récupération des offres dynamiques
-  useEffect(() => {
-    const fetchOffers = async () => {
+  // === FETCH OFFERS ===
+  const fetchOffers = async (coords: [number, number]) => {
+    try {
       if (!user) return;
-
-      const { data: clientData } = await supabase
-        .from("profiles")
+      const { data: client } = await supabase
+        .from("clients")
         .select("id")
         .eq("auth_id", user.id)
         .maybeSingle();
 
-      if (!clientData) return;
-
-      const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
-        p_client_id: clientData.id,
-        p_radius_meters: 10000, // 10 km par défaut
-      });
-
-      if (error) {
-        console.error("Erreur lors du chargement des offres :", error);
-        return;
+      if (client) {
+        const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
+          p_client_id: client.id,
+          p_radius_meters: 10000,
+        });
+        if (error) console.error(error);
+        else setOffers(data || []);
       }
+    } catch (e) {
+      console.error("Erreur fetch offers:", e);
+    }
+  };
 
-      setOffers(data || []);
-    };
-
-    fetchOffers();
-  }, [user]);
-
-  // 📍 4. Ajout des marqueurs sur la carte
+  // === MARKERS ===
   useEffect(() => {
-    if (!mapRef.current || offers.length === 0) return;
+    if (!mapRef.current || !offers.length) return;
 
     offers.forEach((offer) => {
-      const marker = new mapboxgl.Marker({
-        color: offer.offer_id === selectedOffer ? "#10b981" : "#1d4ed8",
-      })
+      const marker = new mapboxgl.Marker({ color: "#10b981" })
         .setLngLat([offer.longitude, offer.latitude])
         .setPopup(
           new mapboxgl.Popup().setHTML(`
-            <div style="font-size:14px;">
+            <div style="max-width:180px">
               <strong>${offer.title}</strong><br/>
-              💶 ${offer.price_after}€<br/>
-              📏 ${(offer.distance_meters / 1000).toFixed(1)} km
+              <small>${offer.merchant_name}</small><br/>
+              <span style="color:green;font-weight:bold">${offer.price_after}€</span>
             </div>
           `)
         )
         .addTo(mapRef.current!);
     });
-  }, [offers, selectedOffer]);
+  }, [offers]);
 
-  if (loading) {
+  // === LOADING ===
+  if (loading)
     return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="text-gray-500">Chargement de la carte...</div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin h-10 w-10 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+          <p className="text-gray-600">Chargement de la carte...</p>
+        </div>
       </div>
     );
-  }
 
+  // === RENDER ===
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
-      {/* 🗺️ Carte à gauche */}
-      <div ref={mapContainer} className="flex-1 h-[50vh] md:h-auto" />
+    <div className="flex flex-col md:flex-row h-[calc(100vh-100px)] bg-gray-50">
+      {/* 🗺️ CARTE */}
+      <div ref={mapContainer} className="flex-1 relative rounded-lg shadow-md m-2" />
 
-      {/* 🧾 Liste des offres à droite */}
-      <div className="w-full md:w-[420px] overflow-y-auto bg-white border-l border-gray-200">
-        <h2 className="text-xl font-bold p-4 border-b">Offres à proximité</h2>
-
+      {/* 💸 OFFRES */}
+      <div className="w-full md:w-1/2 overflow-y-auto bg-white border-l border-gray-200 p-4">
+        <h2 className="text-xl font-bold mb-4 text-gray-800">Offres à proximité</h2>
         {offers.length === 0 ? (
-          <p className="text-center text-gray-500 p-6">Aucune offre trouvée</p>
+          <p className="text-gray-500 text-center mt-10">Aucune offre disponible autour de vous</p>
         ) : (
-          <div className="divide-y">
+          <div className="space-y-4">
             {offers.map((offer) => (
               <div
                 key={offer.offer_id}
-                className={`p-4 cursor-pointer hover:bg-gray-50 ${
-                  selectedOffer === offer.offer_id ? "bg-green-50" : ""
-                }`}
-                onClick={() => setSelectedOffer(offer.offer_id)}
+                className="flex bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer overflow-hidden"
               >
                 {offer.image_url && (
                   <img
                     src={offer.image_url}
                     alt={offer.title}
-                    className="w-full h-40 object-cover rounded-lg mb-2"
+                    className="w-24 h-24 object-cover"
                   />
                 )}
-                <h3 className="font-semibold text-gray-900">{offer.title}</h3>
-                <p className="text-sm text-gray-600">
-                  💶 {offer.price_after} € — {(offer.distance_meters / 1000).toFixed(1)} km
-                </p>
-                <button className="mt-2 w-full bg-green-600 text-white py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-green-700">
-                  <Eye className="w-4 h-4" /> Voir
-                </button>
+                <div className="flex-1 p-3">
+                  <h3 className="font-semibold text-gray-800">{offer.title}</h3>
+                  <p className="text-sm text-gray-500">{offer.merchant_name}</p>
+                  <p className="text-green-600 font-semibold">
+                    {(offer.distance_meters / 1000).toFixed(2)} km
+                  </p>
+                  <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-green-600">
+                        {offer.price_after.toFixed(2)}€
+                      </span>
+                      <span className="line-through text-gray-400 text-sm">
+                        {offer.price_before.toFixed(2)}€
+                      </span>
+                    </div>
+                    <button className="flex items-center gap-1 text-green-700 hover:text-green-900">
+                      <Eye className="w-4 h-4" /> Voir
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
