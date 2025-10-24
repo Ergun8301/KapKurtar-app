@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { LocateFixed } from "lucide-react"; // petite icône GPS moderne
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -8,29 +9,28 @@ const MapboxTestPage = () => {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const userMarker = useRef<mapboxgl.Marker | null>(null);
-  const [isLocated, setIsLocated] = useState(false);
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // 🌍 1. Initialisation : globe entier centré sur la Turquie
+    // 🌍 1. Initialisation : globe Turquie vue équilibrée
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
       center: [35.2433, 38.9637],
-      zoom: 1.3, // légèrement plus éloigné pour voir le globe complet
+      zoom: 1.5, // légèrement plus proche qu’avant
       projection: "globe",
     });
 
     mapRef.current = map;
 
-    // 🌎 2. Rotation fluide du globe
+    // 🌎 2. Effet rotation douce du globe
     let rotate = true;
     function rotateGlobe() {
       if (!rotate) return;
       const center = map.getCenter();
       map.easeTo({
-        center: [center.lng + 0.3, center.lat],
+        center: [center.lng + 0.25, center.lat],
         duration: 12000,
         easing: (n) => n,
       });
@@ -38,14 +38,13 @@ const MapboxTestPage = () => {
     }
     rotateGlobe();
 
-    // 🎬 3. Zoom automatique après 2 secondes (au lieu de 5)
+    // 🎬 3. Zoom automatique vers la Turquie après 2 secondes
     setTimeout(() => {
       map.flyTo({
         center: [35.2433, 38.9637],
-        zoom: 4.5,
-        speed: 1.4,
+        zoom: 4.8,
+        speed: 1.2,
         curve: 1.4,
-        essential: true,
       });
     }, 2000);
 
@@ -56,12 +55,11 @@ const MapboxTestPage = () => {
           (pos) => {
             rotate = false;
             const { longitude, latitude } = pos.coords;
-            setIsLocated(true);
             map.flyTo({
               center: [longitude, latitude],
               zoom: 13,
-              speed: 1.5,
-              curve: 1.5,
+              speed: 1.4,
+              curve: 1.3,
             });
             if (userMarker.current) userMarker.current.remove();
             userMarker.current = new mapboxgl.Marker({ color: "#007bff" })
@@ -78,13 +76,12 @@ const MapboxTestPage = () => {
     return () => map.remove();
   }, []);
 
-  // 🎯 5. Bouton manuel "Centrer sur moi"
+  // 🎯 5. Bouton rond discret “centrer sur moi”
   const handleLocate = () => {
     if (!mapRef.current || !navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { longitude, latitude } = pos.coords;
-        setIsLocated(true);
         mapRef.current!.flyTo({
           center: [longitude, latitude],
           zoom: 13,
@@ -103,19 +100,17 @@ const MapboxTestPage = () => {
   };
 
   return (
-    <div className="relative flex flex-col items-center w-full">
-      {/* 🗺️ Conteneur carte */}
-      <div
-        ref={mapContainer}
-        className="w-[95%] md:w-[90%] lg:w-[85%] h-[80vh] md:h-[85vh] lg:h-[90vh] rounded-xl shadow-md border border-gray-200"
-      />
+    <div className="relative flex flex-col items-center w-screen h-screen overflow-hidden">
+      {/* 🗺️ Carte plein écran */}
+      <div ref={mapContainer} className="absolute inset-0 rounded-none" />
 
-      {/* 📍 Bouton en haut à droite */}
+      {/* 📍 Bouton rond flottant */}
       <button
         onClick={handleLocate}
-        className="absolute top-4 right-4 bg-white/90 text-gray-700 px-3 py-2 rounded-full shadow-md hover:bg-white"
+        className="absolute top-4 right-4 bg-white/90 text-gray-800 p-2 rounded-full shadow-md hover:bg-white hover:scale-105 transition-all"
+        title="Centrer sur moi"
       >
-        📍 {isLocated ? "Recentrer sur moi" : "Centrer sur moi"}
+        <LocateFixed className="w-5 h-5 text-red-500" />
       </button>
     </div>
   );
