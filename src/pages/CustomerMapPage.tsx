@@ -277,9 +277,7 @@ export default function CustomerMapPage() {
               <MapController center={mapCenter} zoom={mapZoom} />
              <TileLayer
   attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-  url="https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}"
-  tileSize={512}
-  zoomOffset={-1}
+  url="https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&tileSize=512&zoomOffset=-1&format=png"
 />
 
               <Circle
