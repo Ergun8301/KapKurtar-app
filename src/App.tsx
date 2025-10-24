@@ -53,9 +53,13 @@ function SessionRedirect() {
         .single();
 
       if (!error && data?.role === "merchant") {
-        nav("/merchant/dashboard");
+        if (window.location.pathname !== "/merchant/dashboard") {
+          nav("/merchant/dashboard");
+        }
       } else if (!error && data?.role === "client") {
-        nav("/offers"); // ✅ redirige vers la nouvelle page Mapbox
+        if (window.location.pathname !== "/offers") {
+          nav("/offers"); // ✅ redirige vers la nouvelle page Mapbox
+        }
       }
 
       setChecked(true);
