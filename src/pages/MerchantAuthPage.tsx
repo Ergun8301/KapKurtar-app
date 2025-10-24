@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft, Store } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuthFlow } from '../hooks/useAuthFlow';
@@ -8,7 +8,6 @@ type AuthMode = 'login' | 'register';
 
 const MerchantAuthPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, role, profile, loading: authLoading, initialized, refetchProfile } = useAuthFlow();
   const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
@@ -30,8 +29,10 @@ const MerchantAuthPage = () => {
         .eq('auth_id', authId);
       if (updateError) console.warn('⚠️ update profile:', updateError.message);
 
-      // 3️⃣ Crée le marchand s’il n’existe pas (RPC idempotente)
-      const { error: merchantError } = await supabase.rpc('get_or_create_merchant_for_profile');
+      // 3️⃣ Crée le marchand s’il n’existe pas encore
+      const { error: merchantError } = await supabase.rpc('get_or_create_merchant_for_profile', {
+        p_auth_id: authId,
+      });
       if (merchantError) console.warn('⚠️ get_or_create_merchant_for_profile:', merchantError.message);
     } catch (err) {
       console.error('Erreur ensureMerchantBootstrap:', err);
@@ -40,11 +41,27 @@ const MerchantAuthPage = () => {
 
   const goToMerchantHome = async () => {
     try {
-      const { data: prof } = await supabase.from('profiles').select('id').eq('auth_id', user!.id).maybeSingle();
+      if (!user) return navigate('/merchant/dashboard');
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
+        .maybeSingle();
+
       if (prof?.id) {
-        const { data: merch } = await supabase.from('merchants').select('id').eq('profile_id', prof.id).maybeSingle();
+        const { data: merch } = await supabase
+          .from('merchants')
+          .select('id')
+          .eq('profile_id', prof.id)
+          .maybeSingle();
+
         if (merch?.id) {
-          const { data: offers } = await supabase.from('offers').select('id').eq('merchant_id', merch.id).limit(1);
+          const { data: offers } = await supabase
+            .from('offers')
+            .select('id')
+            .eq('merchant_id', merch.id)
+            .limit(1);
+
           if (!offers || offers.length === 0) {
             navigate('/merchant/add-product');
             return;
@@ -57,35 +74,20 @@ const MerchantAuthPage = () => {
     navigate('/merchant/dashboard');
   };
 
-  // ---------- 1) Auto bootstrap si session déjà là ----------
+  // ---------- Redirections ----------
   useEffect(() => {
-    (async () => {
-      if (!initialized || !user) return;
-      await ensureMerchantBootstrap(user.id);
-    })();
-  }, [initialized, user]);
+    if (!initialized || !user) return;
+    if (role === 'merchant') goToMerchantHome();
+    else if (role === 'client') navigate('/offers');
+  }, [initialized, user, role, profile, navigate]);
 
-  // ---------- 2) Redirections ----------
-  useEffect(() => {
-    (async () => {
-      if (!initialized || !user) return;
-      if (role === 'merchant') {
-        await goToMerchantHome();
-      } else if (role === 'client') {
-        await ensureMerchantBootstrap(user.id);
-        await refetchProfile();
-        await goToMerchantHome();
-      }
-    })();
-  }, [initialized, user, role, profile]);
-
-  // ---------- 3) Formulaire ----------
+  // ---------- Formulaire ----------
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // ---------- 4) Email / Password ----------
+  // ---------- Auth e-mail / password ----------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -101,10 +103,36 @@ const MerchantAuthPage = () => {
 
         if (data.user) {
           await ensureMerchantBootstrap(data.user.id);
+
+          // ✅ Sauvegarde défensive : si la ligne marchand n’existe pas, on la crée
+          try {
+            const { data: prof } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('auth_id', data.user.id)
+              .maybeSingle();
+
+            if (prof?.id) {
+              await supabase
+                .from('merchants')
+                .upsert(
+                  {
+                    profile_id: prof.id,
+                    company_name: formData.companyName.trim() || 'Mon Commerce',
+                    email: formData.email,
+                  },
+                  { onConflict: 'profile_id' }
+                );
+            }
+          } catch (safeErr) {
+            console.warn('⚠️ merchant upsert safeguard:', (safeErr as Error).message);
+          }
+
           await refetchProfile();
           await goToMerchantHome();
         }
       } else {
+        // ----------- REGISTER -----------
         if (formData.password.length < 6)
           throw new Error('Le mot de passe doit contenir au moins 6 caractères');
         if (!formData.companyName.trim())
@@ -118,6 +146,30 @@ const MerchantAuthPage = () => {
 
         if (signUpData?.user) {
           await ensureMerchantBootstrap(signUpData.user.id);
+
+          // ✅ Même sauvegarde défensive
+          try {
+            const { data: prof } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('auth_id', signUpData.user.id)
+              .maybeSingle();
+
+            if (prof?.id) {
+              await supabase
+                .from('merchants')
+                .upsert(
+                  {
+                    profile_id: prof.id,
+                    company_name: formData.companyName.trim() || 'Mon Commerce',
+                    email: formData.email,
+                  },
+                  { onConflict: 'profile_id' }
+                );
+            }
+          } catch (safeErr) {
+            console.warn('⚠️ merchant upsert safeguard:', (safeErr as Error).message);
+          }
         }
 
         alert('✅ Vérifiez votre e-mail pour confirmer votre compte.');
@@ -129,7 +181,7 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // ---------- 5) Google OAuth ----------
+  // ---------- Google OAuth ----------
   const handleGoogleAuth = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -144,7 +196,7 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // ---------- 6) Loader ----------
+  // ---------- Loader ----------
   if (authLoading && !initialized) {
     return (
       <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
@@ -153,7 +205,7 @@ const MerchantAuthPage = () => {
     );
   }
 
-  // ---------- 7) UI ----------
+  // ---------- UI ----------
   return (
     <div className="min-h-screen bg-[#FAFAF5] flex flex-col">
       <div className="flex-1 flex items-center justify-center py-8 px-4">
