@@ -23,7 +23,7 @@ const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
 // 📍 Position par défaut — Turquie (Istanbul)
 const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
 
-// 🎨 Styles personnalisés Mapbox (centrage + alignement GPS)
+// 🎨 Styles personnalisés Mapbox
 const customMapboxCSS = `
   /* Supprimer halo et outline */
   .mapboxgl-ctrl-geolocate, .mapboxgl-ctrl-geocoder input:focus {
@@ -37,10 +37,10 @@ const customMapboxCSS = `
     right: 10px !important;
   }
 
-  /* Barre de recherche centrée horizontalement */
+  /* 🧭 Barre de recherche centrée à l'axe du slider */
   .mapboxgl-ctrl-geocoder {
     position: absolute !important;
-    top: 10px !important;
+    top: 10px !important; /* espace avec le haut de la carte */
     left: 50% !important;
     transform: translateX(-50%) !important;
     width: 340px !important;
@@ -50,13 +50,13 @@ const customMapboxCSS = `
     z-index: 5 !important;
   }
 
-  /* Adaptation mobile */
+  /* Adaptation mobile : toujours centré */
   @media (max-width: 640px) {
     .mapboxgl-ctrl-geocoder {
       top: 8px !important;
-      width: 90% !important;
       left: 50% !important;
       transform: translateX(-50%) !important;
+      width: 90% !important;
     }
   }
 
@@ -88,7 +88,7 @@ export default function OffersPage() {
     return () => document.head.removeChild(styleTag);
   }, []);
 
-  // 1️⃣ Initialisation Mapbox
+  // Initialisation Mapbox
   useEffect(() => {
     mapboxgl.accessToken =
       "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueXgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g";
@@ -139,7 +139,7 @@ export default function OffersPage() {
     return () => map.remove();
   }, []);
 
-  // 2️⃣ Cercle dynamique et ombrage
+  // Cercle dynamique
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -208,7 +208,7 @@ export default function OffersPage() {
     }
   }
 
-  // 3️⃣ Chargement des offres Supabase
+  // Chargement des offres
   useEffect(() => {
     const fetchOffers = async () => {
       const { data } = await supabase.rpc("get_offers_nearby_dynamic", {
@@ -220,7 +220,7 @@ export default function OffersPage() {
     fetchOffers();
   }, [center, radiusKm]);
 
-  // 4️⃣ Affichage des marqueurs d’offres
+  // Marqueurs d’offres
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -260,7 +260,7 @@ export default function OffersPage() {
     });
   }, [offers]);
 
-  // 5️⃣ Slider de rayon
+  // Slider de rayon (inchangé)
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
@@ -271,6 +271,7 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
+        {/* 🎚️ Slider — ne pas toucher */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
           <input
             type="range"
@@ -284,6 +285,7 @@ export default function OffersPage() {
         </div>
       </div>
 
+      {/* 🛒 Offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
         {offers.length === 0 ? (
