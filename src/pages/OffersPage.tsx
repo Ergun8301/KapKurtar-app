@@ -59,6 +59,13 @@ const customMapboxCSS = `
       transform: translateX(-50%) !important;
     }
   }
+
+  /* 🧹 Masquer les mentions Mapbox/OpenStreetMap */
+  .mapboxgl-ctrl-logo,
+  .mapboxgl-ctrl-attrib,
+  .mapbox-improve-map {
+    display: none !important;
+  }
 `;
 
 export default function OffersPage() {
