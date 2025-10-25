@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl, { Map, Marker } from "mapbox-gl";
-import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
-import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { supabase } from "../lib/supabaseClient";
 
 type Offer = {
@@ -17,18 +15,55 @@ type Offer = {
   image_url?: string;
 };
 
+// 🗺️ Style Tilkapp V2 (Mapbox Studio)
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
+
+// 📍 Position par défaut — Turquie (Istanbul)
 const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
+
+// 🎨 Styles personnalisés Mapbox
+const customMapboxCSS = `
+  /* Supprimer halo et outline */
+  .mapboxgl-ctrl-geolocate:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Bouton GPS */
+  .mapboxgl-ctrl-top-right {
+    top: 10px !important;
+    right: 10px !important;
+  }
+
+  /* 🧹 Masquer les mentions Mapbox/OpenStreetMap */
+  .mapboxgl-ctrl-logo,
+  .mapboxgl-ctrl-attrib,
+  .mapbox-improve-map {
+    display: none !important;
+  }
+`;
 
 export default function OffersPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [userLocation, setUserLocation] = useState<[number, number]>(
+    DEFAULT_LOCATION
+  );
   const [center, setCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   const [radiusKm, setRadiusKm] = useState<number>(
     Number(localStorage.getItem("radiusKm")) || 10
   );
 
+  // Injecter CSS custom
+  useEffect(() => {
+    const styleTag = document.createElement("style");
+    styleTag.innerHTML = customMapboxCSS;
+    document.head.appendChild(styleTag);
+    return () => document.head.removeChild(styleTag);
+  }, []);
+
+  // Initialisation Mapbox
   useEffect(() => {
     mapboxgl.accessToken =
       "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueXgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g";
@@ -39,62 +74,31 @@ export default function OffersPage() {
       container: mapContainerRef.current,
       style: MAP_STYLE,
       center,
-      zoom: 7,
+      zoom: 7, // vue large sur la Turquie
     });
 
     mapRef.current = map;
 
-    // --- Bouton géoloc
+    // 📍 Bouton géoloc
     const geolocate = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: true,
       showUserHeading: true,
     });
-    map.addControl(geolocate, "top-right");
+    map.addControl(geolocate);
 
     geolocate.on("geolocate", (e) => {
       const lng = e.coords.longitude;
       const lat = e.coords.latitude;
+      setUserLocation([lng, lat]);
       setCenter([lng, lat]);
-      map.flyTo({ center: [lng, lat], zoom: 12 });
-    });
-
-    // --- Barre de recherche
-    const geocoder = new MapboxGeocoder({
-      accessToken: mapboxgl.accessToken,
-      mapboxgl,
-      marker: false,
-      placeholder: "Rechercher une adresse ou un lieu...",
-      language: "fr",
-    });
-    map.addControl(geocoder, "top-left");
-
-    // ✅ Après chargement, repositionne la barre à l'axe du slider
-    map.on("load", () => {
-      const moveSearchBar = () => {
-        const search = document.querySelector(
-          ".mapboxgl-ctrl-geocoder"
-        ) as HTMLElement;
-        if (search) {
-          search.style.position = "absolute";
-          search.style.top = "10px";
-          search.style.left = "50%";
-          search.style.transform = "translateX(-50%)";
-          search.style.width = "340px";
-          search.style.zIndex = "5";
-          search.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
-          search.style.borderRadius = "8px";
-        }
-      };
-
-      // On le fait une fois après un petit délai, pour être sûr que Mapbox ait fini de l’injecter
-      setTimeout(moveSearchBar, 300);
+      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
     });
 
     return () => map.remove();
   }, []);
 
-  // --- Cercle de rayon et ombrage
+  // Cercle dynamique
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -107,50 +111,115 @@ export default function OffersPage() {
   }, [center, radiusKm]);
 
   function drawRadius(map: Map, center: [number, number], radiusKm: number) {
-    if (map.getLayer("radius")) map.removeLayer("radius");
-    if (map.getSource("radius")) map.removeSource("radius");
-    if (map.getLayer("outside-mask")) map.removeLayer("outside-mask");
-    if (map.getSource("outside-mask")) map.removeSource("outside-mask");
+    try {
+      if (map.getLayer("radius")) map.removeLayer("radius");
+      if (map.getSource("radius")) map.removeSource("radius");
+      if (map.getLayer("outside-mask")) map.removeLayer("outside-mask");
+      if (map.getSource("outside-mask")) map.removeSource("outside-mask");
 
-    const circle = createGeoJSONCircle(center, radiusKm * 1000);
+      const circle = createGeoJSONCircle(center, radiusKm * 1000);
 
-    map.addSource("radius", { type: "geojson", data: circle });
-    map.addLayer({
-      id: "radius",
-      type: "fill",
-      source: "radius",
-      paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
-    });
+      // Zone de recherche
+      map.addSource("radius", { type: "geojson", data: circle });
+      map.addLayer({
+        id: "radius",
+        type: "fill",
+        source: "radius",
+        paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
+      });
 
-    const outerPolygon = {
-      type: "Feature",
-      geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [-180, -90],
-            [180, -90],
-            [180, 90],
-            [-180, 90],
-            [-180, -90],
+      // Extérieur assombri
+      const outerPolygon = {
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [-180, -90],
+              [180, -90],
+              [180, 90],
+              [-180, 90],
+              [-180, -90],
+            ],
+            circle.geometry.coordinates[0],
           ],
-          circle.geometry.coordinates[0],
-        ],
-      },
-    };
+        },
+      };
 
-    map.addSource("outside-mask", { type: "geojson", data: outerPolygon });
-    map.addLayer({
-      id: "outside-mask",
-      type: "fill",
-      source: "outside-mask",
-      paint: {
-        "fill-color": "rgba(0,0,0,0.35)",
-        "fill-opacity": 0.35,
-      },
-    });
+      map.addSource("outside-mask", { type: "geojson", data: outerPolygon });
+      map.addLayer({
+        id: "outside-mask",
+        type: "fill",
+        source: "outside-mask",
+        paint: {
+          "fill-color": "rgba(0,0,0,0.35)",
+          "fill-opacity": 0.35,
+        },
+      });
+
+      const bounds = new mapboxgl.LngLatBounds();
+      circle.geometry.coordinates[0].forEach(([lng, lat]) =>
+        bounds.extend([lng, lat])
+      );
+      map.fitBounds(bounds, { padding: 50, duration: 800 });
+    } catch (err) {
+      console.warn("Erreur drawRadius :", err);
+    }
   }
 
+  // Chargement des offres
+  useEffect(() => {
+    const fetchOffers = async () => {
+      const { data } = await supabase.rpc("get_offers_nearby_dynamic", {
+        p_client_id: null,
+        p_radius_meters: radiusKm * 1000,
+      });
+      setOffers(data || []);
+    };
+    fetchOffers();
+  }, [center, radiusKm]);
+
+  // Marqueurs d’offres
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    (map as any)._markers?.forEach((m: Marker) => m.remove());
+    (map as any)._markers = [];
+
+    offers.forEach((offer) => {
+      const el = document.createElement("div");
+      el.className = "offer-marker";
+      el.style.background = "#22c55e";
+      el.style.width = "20px";
+      el.style.height = "20px";
+      el.style.borderRadius = "50%";
+      el.style.border = "2px solid #fff";
+
+      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
+        <strong>${offer.title}</strong><br/>
+        ${offer.merchant_name}<br/>
+        <span style="color:green;font-weight:bold;">${offer.price_after.toFixed(
+          2
+        )} €</span>
+        <span style="text-decoration:line-through;color:#999;margin-left:4px;">${offer.price_before.toFixed(
+          2
+        )} €</span><br/>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${
+          offer.offer_lat
+        },${offer.offer_lng}" target="_blank">🗺️ Itinéraire</a>
+      `);
+
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat([offer.offer_lng, offer.offer_lat])
+        .setPopup(popup)
+        .addTo(map);
+
+      (map as any)._markers.push(marker);
+    });
+  }, [offers]);
+
+  // Slider de rayon (inchangé)
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
@@ -161,7 +230,7 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* 🎚️ Slider */}
+        {/* 🎚️ Slider — ne pas toucher */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
           <input
             type="range"
@@ -222,13 +291,16 @@ export default function OffersPage() {
   );
 }
 
-// --- Cercle GeoJSON ---
+// 🔵 Cercle GeoJSON
 function createGeoJSONCircle(
   center: [number, number],
   radiusInMeters: number,
   points = 64
 ) {
-  const coords = { latitude: center[1], longitude: center[0] };
+  const coords = {
+    latitude: center[1],
+    longitude: center[0],
+  };
   const km = radiusInMeters / 1000;
   const ret = [];
   const distanceX = km / (111.32 * Math.cos((coords.latitude * Math.PI) / 180));
@@ -241,5 +313,11 @@ function createGeoJSONCircle(
     ret.push([coords.longitude + x, coords.latitude + y]);
   }
   ret.push(ret[0]);
-  return { type: "Feature", geometry: { type: "Polygon", coordinates: [ret] } };
+  return {
+    type: "Feature",
+    geometry: {
+      type: "Polygon",
+      coordinates: [ret],
+    },
+  };
 }
