@@ -17,11 +17,11 @@ type Offer = {
   image_url?: string;
 };
 
-// 🔧 ton style Mapbox Tilkapp V2
+// 🗺️ Style Tilkapp V2 (Mapbox Studio)
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
 
-// 📍 position par défaut : Bourg-en-Bresse
-const DEFAULT_LOCATION: [number, number] = [5.2258, 46.2044]; // [lng, lat]
+// 📍 Position par défaut (Bourg-en-Bresse)
+const DEFAULT_LOCATION: [number, number] = [5.2258, 46.2044];
 
 export default function OffersPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -51,7 +51,7 @@ export default function OffersPage() {
 
     mapRef.current = map;
 
-    // 📍 Ajout du contrôle de géolocalisation
+    // 📍 Contrôle de géolocalisation
     const geolocate = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: true,
@@ -66,7 +66,7 @@ export default function OffersPage() {
       setCenter([lng, lat]);
     });
 
-    // 🔍 Ajout du champ de recherche Mapbox
+    // 🔍 Barre de recherche Mapbox Geocoding
     const geocoder = new MapboxGeocoder({
       accessToken: mapboxgl.accessToken,
       mapboxgl: mapboxgl,
@@ -91,27 +91,43 @@ export default function OffersPage() {
     const map = mapRef.current;
     if (!map) return;
 
-    if (map.getLayer("radius")) map.removeLayer("radius");
-    if (map.getSource("radius")) map.removeSource("radius");
-
-    const circle = createGeoJSONCircle(center, radiusKm * 1000);
-
-    map.addSource("radius", { type: "geojson", data: circle });
-    map.addLayer({
-      id: "radius",
-      type: "fill",
-      source: "radius",
-      paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
-    });
-
-    const bounds = new mapboxgl.LngLatBounds();
-    circle.geometry.coordinates[0].forEach(([lng, lat]) =>
-      bounds.extend([lng, lat])
-    );
-    map.fitBounds(bounds, { padding: 50, duration: 800 });
+    // Attendre que le style soit bien chargé avant d’ajouter la couche
+    if (!map.isStyleLoaded()) {
+      map.once("load", () => {
+        drawRadius(map, center, radiusKm);
+      });
+    } else {
+      drawRadius(map, center, radiusKm);
+    }
   }, [center, radiusKm]);
 
-  // 3️⃣ Chargement des offres Supabase
+  // --- fonction utilitaire : dessine le cercle ---
+  function drawRadius(map: Map, center: [number, number], radiusKm: number) {
+    try {
+      if (map.getLayer("radius")) map.removeLayer("radius");
+      if (map.getSource("radius")) map.removeSource("radius");
+
+      const circle = createGeoJSONCircle(center, radiusKm * 1000);
+
+      map.addSource("radius", { type: "geojson", data: circle });
+      map.addLayer({
+        id: "radius",
+        type: "fill",
+        source: "radius",
+        paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
+      });
+
+      const bounds = new mapboxgl.LngLatBounds();
+      circle.geometry.coordinates[0].forEach(([lng, lat]) =>
+        bounds.extend([lng, lat])
+      );
+      map.fitBounds(bounds, { padding: 50, duration: 800 });
+    } catch (err) {
+      console.warn("Erreur drawRadius :", err);
+    }
+  }
+
+  // 3️⃣ Chargement des offres depuis Supabase
   useEffect(() => {
     const fetchOffers = async () => {
       const { data } = await supabase.rpc("get_offers_nearby_dynamic", {
@@ -123,10 +139,11 @@ export default function OffersPage() {
     fetchOffers();
   }, [center, radiusKm]);
 
-  // 4️⃣ Affichage des marqueurs
+  // 4️⃣ Affichage des marqueurs d’offres
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+
     (map as any)._markers?.forEach((m: Marker) => m.remove());
     (map as any)._markers = [];
 
@@ -150,7 +167,7 @@ export default function OffersPage() {
         )} €</span><br/>
         <a href="https://www.google.com/maps/dir/?api=1&destination=${
           offer.offer_lat
-        },${offer.offer_lng}" target="_blank">🗺️ Google Maps</a>
+        },${offer.offer_lng}" target="_blank">🗺️ Itinéraire</a>
       `);
 
       const marker = new mapboxgl.Marker(el)
@@ -162,7 +179,7 @@ export default function OffersPage() {
     });
   }, [offers]);
 
-  // 5️⃣ Slider
+  // 5️⃣ Slider de rayon
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
