@@ -23,7 +23,7 @@ const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
 // 📍 Position par défaut — Turquie (Istanbul)
 const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
 
-// 🎨 CSS personnalisé
+// 🎨 CSS personnalisé — version stable et simple
 const customMapboxCSS = `
   /* Désactive halo et outline */
   .mapboxgl-ctrl-geolocate:focus,
@@ -32,37 +32,39 @@ const customMapboxCSS = `
     box-shadow: none !important;
   }
 
-  /* Bouton GPS indépendant */
+  /* Conteneur en haut à droite pour GPS + recherche */
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
     right: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important; /* espace entre le GPS et la barre */
   }
 
-  /* Barre de recherche centrée sur la carte (et non sur toute la page) */
+  /* Barre de recherche */
   .mapboxgl-ctrl-geocoder {
-    position: fixed !important; /* ✅ indépendante du GPS */
-    top: 10px !important;       /* même hauteur que le GPS */
-    left: calc(25% + 50%) !important; /* ✅ ajuste pour moitié gauche (carte) */
-    transform: translateX(-50%) !important; /* garde centrage visuel */
-    width: 340px !important;
-    max-width: 90% !important;
-    z-index: 5 !important;
+    width: 280px !important;
+    max-width: 80% !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   }
 
-  /* Mobile responsive */
+  /* Mobile responsive — en haut centré */
   @media (max-width: 640px) {
-    .mapboxgl-ctrl-geocoder {
-      position: fixed !important;
-      width: 90% !important;
+    .mapboxgl-ctrl-top-right {
       top: 8px !important;
-      left: 50% !important; /* sur mobile, toute la largeur = 100%, donc 50% suffit */
-      transform: translateX(-50%) !important;
+      right: 50% !important;
+      transform: translateX(50%) !important;
+      flex-direction: column !important;
+      gap: 6px !important;
+    }
+
+    .mapboxgl-ctrl-geocoder {
+      width: 90% !important;
     }
   }
 
-  /* Masquer mentions Mapbox/OpenStreetMap */
+  /* Masquer les mentions Mapbox/OpenStreetMap */
   .mapboxgl-ctrl-logo,
   .mapboxgl-ctrl-attrib,
   .mapbox-improve-map {
