@@ -44,7 +44,7 @@ const customMapboxCSS = `
     top: 10px !important;       /* même hauteur que le GPS */
     left: 50% !important;       /* centrée à l’axe de la carte */
     transform: translateX(-50%) !important; /* garde le centrage horizontal */
-    width: 10px !important;
+    width: 340px !important;
     max-width: 90% !important;
     z-index: 5 !important;
     border-radius: 8px !important;
