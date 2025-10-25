@@ -8,7 +8,7 @@ import { supabase } from "./lib/supabaseClient";
 // Pages principales
 import HomePage from "./pages/HomePage";
 import OffersPage from "./pages/OffersPage";
-import OffersMapPage from "./pages/OffersMapPage"; // ✅ Page officielle des offres avec Mapbox
+import OffersMapPage from "./pages/OffersMapPage"; // ancienne page mapbox (désactivée ci-dessous)
 import CustomerAuthPage from "./pages/CustomerAuthPage";
 import MerchantAuthPage from "./pages/MerchantAuthPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
@@ -32,7 +32,10 @@ function SessionRedirect() {
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setChecked(true); return; }
+      if (!user) { 
+        setChecked(true); 
+        return; 
+      }
 
       const { data, error } = await supabase
         .from("profiles")
@@ -41,7 +44,7 @@ function SessionRedirect() {
         .single();
 
       if (!error && data?.role === "merchant") nav("/merchant/dashboard");
-      else if (!error && data?.role === "client") nav("/offers/map"); // ✅ route unique vers la carte Mapbox
+      else if (!error && data?.role === "client") nav("/offers"); // ✅ correction ici
 
       setChecked(true);
     })();
@@ -65,13 +68,14 @@ function App() {
 
               {/* 🗺️ Offres */}
               <Route path="/offers" element={<OffersPage />} />
-              <Route path="/offers/map" element={<OffersMapPage />} /> {/* ✅ Nouvelle carte Mapbox */}
+              {/* 🔸 Ancienne version Mapbox désactivée pour éviter le doublon */}
+              {/* <Route path="/offers/map" element={<OffersMapPage />} /> */}
 
               {/* ❤️ Favoris */}
               <Route path="/favorites" element={<FavoritesPage />} />
 
-              {/* 🕒 Historique */}
-              <Route path="/history" element={<CustomerHistoryPage />} />
+              {/* 🕒 Historique (ancienne, inutilisée) */}
+              {/* <Route path="/history" element={<CustomerHistoryPage />} /> */}
 
               {/* ⭐ Avis */}
               <Route path="/reviews" element={<ReviewsPage />} />
@@ -81,8 +85,10 @@ function App() {
               <Route path="/merchant/auth" element={<MerchantAuthPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-              {/* 👤 Onboarding */}
-              <Route path="/onboarding" element={<ClientOnboardingPage />} />
+              {/* 👤 Onboarding (obsolète) */}
+              {/* <Route path="/onboarding" element={<ClientOnboardingPage />} /> */}
+
+              {/* 👤 Compléter profil */}
               <Route path="/profile/complete" element={<ProfileCompletePage />} />
 
               {/* 🏪 Marchands */}
@@ -91,7 +97,7 @@ function App() {
               {/* 📱 Téléchargement */}
               <Route path="/download" element={<DownloadPage />} />
 
-              {/* 🚫 Anciennes routes */}
+              {/* 🚫 Ancienne route redirigée */}
               <Route path="/customer/teaser" element={<Navigate to="/offers" replace />} />
 
               {/* 404 */}
