@@ -4,6 +4,7 @@ import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../hooks/useAuth";
 
 type Offer = {
   offer_id: string;
@@ -85,6 +86,7 @@ const customMapboxCSS = `
 `;
 
 export default function OffersPage() {
+  const { user } = useAuth();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -95,6 +97,8 @@ export default function OffersPage() {
   const [radiusKm, setRadiusKm] = useState<number>(
     Number(localStorage.getItem("radiusKm")) || 10
   );
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [isGeolocating, setIsGeolocating] = useState(false);
 
   // Injecte le CSS
   useEffect(() => {
@@ -103,6 +107,84 @@ export default function OffersPage() {
     document.head.appendChild(styleTag);
     return () => document.head.removeChild(styleTag);
   }, []);
+
+  // Récupère le client_id depuis la table clients si l'utilisateur est connecté
+  useEffect(() => {
+    const fetchClientId = async () => {
+      if (!user) {
+        setClientId(null);
+        return;
+      }
+
+      try {
+        const { data: client } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (client) {
+          setClientId(client.id);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération du client:', error);
+      }
+    };
+
+    fetchClientId();
+  }, [user]);
+
+  // Géolocalisation automatique pour les clients connectés
+  useEffect(() => {
+    if (!clientId || isGeolocating) return;
+
+    const geolocateClient = async () => {
+      if (!navigator.geolocation) return;
+
+      setIsGeolocating(true);
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+
+          try {
+            await supabase.rpc('update_client_location', {
+              client_id: clientId,
+              longitude: longitude,
+              latitude: latitude,
+              status: 'success'
+            });
+
+            setUserLocation([longitude, latitude]);
+            setCenter([longitude, latitude]);
+
+            if (mapRef.current) {
+              mapRef.current.flyTo({
+                center: [longitude, latitude],
+                zoom: 12,
+                essential: true
+              });
+            }
+          } catch (error) {
+            console.error('Erreur lors de la mise à jour de la position:', error);
+          } finally {
+            setIsGeolocating(false);
+          }
+        },
+        (error) => {
+          console.warn('Géolocalisation refusée ou impossible:', error);
+          setIsGeolocating(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    };
+
+    geolocateClient();
+  }, [clientId]);
 
   // Initialise la carte
   useEffect(() => {
@@ -232,14 +314,31 @@ export default function OffersPage() {
   // Chargement des offres
   useEffect(() => {
     const fetchOffers = async () => {
-      const { data } = await supabase.rpc("get_offers_nearby_dynamic", {
-        p_client_id: null,
-        p_radius_meters: radiusKm * 1000,
-      });
-      setOffers(data || []);
+      if (!clientId) {
+        setOffers([]);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
+          p_client_id: clientId,
+          p_radius_meters: radiusKm * 1000,
+        });
+
+        if (error) {
+          console.error('Erreur lors du chargement des offres:', error);
+          setOffers([]);
+        } else {
+          setOffers(data || []);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des offres:', error);
+        setOffers([]);
+      }
     };
+
     fetchOffers();
-  }, [center, radiusKm]);
+  }, [clientId, center, radiusKm]);
 
   // Marqueurs d’offres
   useEffect(() => {
@@ -309,7 +408,11 @@ export default function OffersPage() {
       {/* 🛒 Offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
-        {offers.length === 0 ? (
+        {!clientId ? (
+          <p className="text-gray-500 text-center mt-10">
+            Connectez-vous pour voir les offres à proximité.
+          </p>
+        ) : offers.length === 0 ? (
           <p className="text-gray-500 text-center mt-10">
             Aucune offre disponible dans ce rayon.
           </p>
