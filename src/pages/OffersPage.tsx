@@ -53,14 +53,22 @@ const customMapboxCSS = `
   }
 
   /* Mobile responsive — en haut centré */
-  @media (max-width: 640px) {
-    .mapboxgl-ctrl-top-right {
-      top: 8px !important;
-      right: 50% !important;
-      transform: translateX(50%) !important;
-      flex-direction: column !important;
-      gap: 6px !important;
-    }
+@media (max-width: 640px) {
+  .mapboxgl-ctrl-top-right {
+    top: 8px !important;
+    right: 50% !important;
+    transform: translateX(50%) !important;
+    flex-direction: row !important;         /* ✅ côte à côte */
+    justify-content: center !important;     /* ✅ centrés */
+    gap: 6px !important;
+  }
+
+  .mapboxgl-ctrl-geocoder {
+    width: 80% !important;                  /* ✅ barre un peu plus courte */
+    height: 36px !important;
+  }
+}
+
 
     .mapboxgl-ctrl-geocoder {
       width: 90% !important;
@@ -121,12 +129,17 @@ export default function OffersPage() {
     map.addControl(geolocate, "top-right");
 
     geolocate.on("geolocate", (e) => {
-      const lng = e.coords.longitude;
-      const lat = e.coords.latitude;
-      setUserLocation([lng, lat]);
-      setCenter([lng, lat]);
-      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
-    });
+  const lng = e.coords.longitude;
+  const lat = e.coords.latitude;
+  setUserLocation([lng, lat]);
+  setCenter([lng, lat]);
+  map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
+
+  // 🧹 Vide le champ de recherche (évite qu’il reste sur "Paris")
+  const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+  if (input) input.value = "";
+});
+
 
     // 🔍 Barre de recherche
     const geocoder = new MapboxGeocoder({
