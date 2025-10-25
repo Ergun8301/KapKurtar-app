@@ -35,7 +35,7 @@ const customMapboxCSS = `
   /* Bouton GPS */
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
-    right: 150px !important;
+    right: 10px !important;
   }
 
   /* Barre de recherche centrée à l’axe de la carte */
