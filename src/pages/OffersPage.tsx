@@ -41,7 +41,7 @@ const customMapboxCSS = `
   /* Barre de recherche centrée à l’axe de la carte */
   .mapboxgl-ctrl-geocoder {
     position: absolute !important;
-    top: 6px !important; /* même hauteur que le GPS */
+    top: 3px !important; /* même hauteur que le GPS */
     left: 50% !important;
     transform: translateX(-50%) !important;
     width: 340px !important;
