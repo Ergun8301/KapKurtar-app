@@ -38,12 +38,12 @@ const customMapboxCSS = `
     right: 10px !important;
   }
 
-  /* Barre de recherche indépendante et centrée */
+  /* Barre de recherche centrée sur la carte (et non sur toute la page) */
   .mapboxgl-ctrl-geocoder {
-    position: fixed !important; /* ✅ rend la barre indépendante du GPS */
+    position: fixed !important; /* ✅ indépendante du GPS */
     top: 10px !important;       /* même hauteur que le GPS */
-    left: 50% !important;       /* centrée à l’axe de la carte */
-    transform: translateX(-50%) !important; /* garde le centrage horizontal */
+    left: calc(25% + 50%) !important; /* ✅ ajuste pour moitié gauche (carte) */
+    transform: translateX(-50%) !important; /* garde centrage visuel */
     width: 340px !important;
     max-width: 90% !important;
     z-index: 5 !important;
@@ -57,7 +57,7 @@ const customMapboxCSS = `
       position: fixed !important;
       width: 90% !important;
       top: 8px !important;
-      left: 50% !important;
+      left: 50% !important; /* sur mobile, toute la largeur = 100%, donc 50% suffit */
       transform: translateX(-50%) !important;
     }
   }
@@ -69,7 +69,6 @@ const customMapboxCSS = `
     display: none !important;
   }
 `;
-
 
 export default function OffersPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
