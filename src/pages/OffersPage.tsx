@@ -362,15 +362,11 @@ export default function OffersPage() {
   );
 }
 
-// 🔵 Cercle GeoJSON — version stable
-function createGeoJSONCircle(
-  center: [number, number],
-  radiusInMeters: number,
-  points: number = 64
-): GeoJSON.Feature<GeoJSON.Polygon> {
+// 🔵 Cercle GeoJSON — compatible Vite/Babel
+function createGeoJSONCircle(center: [number, number], radiusInMeters: number, points = 64) {
   const coords = { latitude: center[1], longitude: center[0] };
   const km = radiusInMeters / 1000;
-  const ret: [number, number][] = [];
+  const ret = [];
 
   const distanceX =
     km / (111.32 * Math.cos((coords.latitude * Math.PI) / 180));
@@ -383,8 +379,7 @@ function createGeoJSONCircle(
     ret.push([coords.longitude + x, coords.latitude + y]);
   }
 
-  // 🔁 boucle fermée
-  ret.push(ret[0]);
+  ret.push(ret[0]); // referme le cercle
 
   return {
     type: "Feature",
@@ -392,6 +387,5 @@ function createGeoJSONCircle(
       type: "Polygon",
       coordinates: [ret],
     },
-    properties: {},
   };
 }
