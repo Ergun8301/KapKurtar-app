@@ -238,25 +238,6 @@ export default function OffersPage() {
       setCenter([lng, lat]);
       map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
     });
-    
-    // 🟢 AJOUT : Afficher les offres sur la carte
-    if (offers && offers.length > 0) {
-      offers.forEach((offer) => {
-        if (!offer.offer_lat || !offer.offer_lng) return;
-
-        const marker = new mapboxgl.Marker({ color: "red" })
-          .setLngLat([offer.offer_lng, offer.offer_lat])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 25 }).setHTML(`
-              <strong>${offer.title}</strong><br/>
-              ${offer.merchant_name}<br/>
-              <span style="color:green;font-weight:bold;">${offer.price_after} €</span>
-              <span style="text-decoration:line-through;color:#999;margin-left:4px;">${offer.price_before} €</span>
-            `)
-          )
-          .addTo(map);
-      });
-    }
 
     return () => map.remove();
   }, []);
