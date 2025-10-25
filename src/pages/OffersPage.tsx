@@ -59,7 +59,7 @@ const customMapboxCSS = `
       right: 50% !important;
       transform: translateX(50%) !important;
       flex-direction: column !important;
-      gap: 0px !important;
+      gap: 6px !important;
     }
 
     .mapboxgl-ctrl-geocoder {
