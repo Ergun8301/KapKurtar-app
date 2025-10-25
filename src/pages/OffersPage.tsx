@@ -23,7 +23,7 @@ const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
 // 📍 Position par défaut — Turquie (Istanbul)
 const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
 
-// 🎨 CSS personnalisé — version stable et simple
+// 🎨 CSS personnalisé — version stable et simple + ajustements
 const customMapboxCSS = `
   /* Désactive halo et outline */
   .mapboxgl-ctrl-geolocate:focus,
@@ -38,7 +38,8 @@ const customMapboxCSS = `
     right: 10px !important;
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important; /* espace entre le GPS et la barre */
+    gap: 16px !important; /* ✅ Espace plus grand entre GPS et barre */
+    transform: translateX(-25%) !important; /* ✅ Tire légèrement vers la gauche pour centrer sur la carte */
   }
 
   /* Barre de recherche */
@@ -47,6 +48,8 @@ const customMapboxCSS = `
     max-width: 80% !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    height: 38px !important; /* ✅ Barre plus fine */
+    font-size: 14px !important; /* ✅ Texte plus petit */
   }
 
   /* Mobile responsive — en haut centré */
@@ -61,6 +64,7 @@ const customMapboxCSS = `
 
     .mapboxgl-ctrl-geocoder {
       width: 90% !important;
+      height: 36px !important; /* un peu plus fine aussi sur mobile */
     }
   }
 
