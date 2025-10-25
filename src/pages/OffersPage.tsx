@@ -91,9 +91,9 @@ export default function OffersPage() {
         const loc = { lat: latitude, lng: longitude };
         setUserLocation(loc);
         setCenter([latitude, longitude]);
-        setSearchLocation(null); // ✅ efface l’adresse recherchée
-        setQuery("");            // ✅ vide la barre de recherche
-        setSuggestions([]);      // ✅ supprime la liste
+        setSearchLocation(null);
+        setQuery("");
+        setSuggestions([]);
         setLoading(false);
       },
       () => setLoading(false),
@@ -128,7 +128,7 @@ export default function OffersPage() {
 
   // ---------- BARRE DE RECHERCHE MAPBOX ----------
   useEffect(() => {
-    if (isSelecting) return; // bloque les requêtes après clic
+    if (isSelecting) return;
     if (query.length < 3) return setSuggestions([]);
     const load = async () => {
       const res = await fetch(
@@ -158,12 +158,17 @@ export default function OffersPage() {
     if (isSelecting) setIsSelecting(false);
   };
 
-  // ---------- RECENTRAGE AUTOMATIQUE ----------
+  // ---------- AJUSTEMENT AUTOMATIQUE DU ZOOM SELON LE RAYON ----------
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const circle = L.circle(center, { radius: radiusKm * 1000 });
-    setTimeout(() => map.fitBounds(circle.getBounds(), { padding: [50, 50] }), 250);
+
+    const bounds = L.circle(center, { radius: radiusKm * 1000 }).getBounds();
+
+    map.flyToBounds(bounds, {
+      padding: [80, 80],
+      duration: 0.8,
+    });
   }, [radiusKm, center]);
 
   const activeCenter = searchLocation || [userLocation.lat, userLocation.lng];
@@ -202,7 +207,6 @@ export default function OffersPage() {
             zoomOffset={-1}
           />
 
-          {/* 🔘 Cercle discret noir */}
           <Circle
             center={activeCenter}
             radius={radiusKm * 1000}
@@ -213,7 +217,6 @@ export default function OffersPage() {
             }}
           />
 
-          {/* Points */}
           <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
             <Popup>📍 Vous êtes ici</Popup>
           </Marker>
