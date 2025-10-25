@@ -42,7 +42,7 @@ const customMapboxCSS = `
   .mapboxgl-ctrl-geocoder {
     position: fixed !important; /* ✅ indépendante du GPS */
     top: 10px !important;       /* même hauteur que le GPS */
-    left: calc(2% + 50%) !important; /* ✅ ajuste pour moitié gauche (carte) */
+    left: calc(25% + 50%) !important; /* ✅ ajuste pour moitié gauche (carte) */
     transform: translateX(-50%) !important; /* garde centrage visuel */
     width: 340px !important;
     max-width: 90% !important;
