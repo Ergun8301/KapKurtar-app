@@ -47,7 +47,7 @@ const customMapboxCSS = `
     width: 340px !important;
     max-width: 90% !important;
     z-index: 5 !important;
-    border-radius: 100px !important;
+    border-radius: 8px !important;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   }
 
