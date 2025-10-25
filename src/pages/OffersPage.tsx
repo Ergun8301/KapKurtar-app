@@ -54,7 +54,7 @@ const customMapboxCSS = `
     .mapboxgl-ctrl-top-right {
       top: 8px !important;
       right: 50% !important;
-      transform: translateX(50%) !important;
+      transform: translateX(10%) !important;
       flex-direction: column !important;
       gap: 6px !important;
     }
