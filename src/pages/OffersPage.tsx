@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl, { Map, Marker } from "mapbox-gl";
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { supabase } from "../lib/supabaseClient";
 
 type Offer = {
@@ -21,10 +23,11 @@ const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
 // 📍 Position par défaut — Turquie (Istanbul)
 const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
 
-// 🎨 Styles personnalisés Mapbox
+// 🎨 CSS personnalisé
 const customMapboxCSS = `
-  /* Supprimer halo et outline */
-  .mapboxgl-ctrl-geolocate:focus {
+  /* Désactive halo et outline */
+  .mapboxgl-ctrl-geolocate:focus,
+  .mapboxgl-ctrl-geocoder input:focus {
     outline: none !important;
     box-shadow: none !important;
   }
@@ -35,7 +38,28 @@ const customMapboxCSS = `
     right: 10px !important;
   }
 
-  /* 🧹 Masquer les mentions Mapbox/OpenStreetMap */
+  /* Barre de recherche centrée à l’axe de la carte */
+  .mapboxgl-ctrl-geocoder {
+    position: absolute !important;
+    top: 10px !important; /* même hauteur que le GPS */
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 340px !important;
+    max-width: 90% !important;
+    z-index: 5 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 640px) {
+    .mapboxgl-ctrl-geocoder {
+      width: 90% !important;
+      top: 8px !important;
+    }
+  }
+
+  /* Masquer mentions Mapbox/OpenStreetMap */
   .mapboxgl-ctrl-logo,
   .mapboxgl-ctrl-attrib,
   .mapbox-improve-map {
@@ -55,7 +79,7 @@ export default function OffersPage() {
     Number(localStorage.getItem("radiusKm")) || 10
   );
 
-  // Injecter CSS custom
+  // Injecte le CSS
   useEffect(() => {
     const styleTag = document.createElement("style");
     styleTag.innerHTML = customMapboxCSS;
@@ -63,7 +87,7 @@ export default function OffersPage() {
     return () => document.head.removeChild(styleTag);
   }, []);
 
-  // Initialisation Mapbox
+  // Initialise la carte
   useEffect(() => {
     mapboxgl.accessToken =
       "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueXgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g";
@@ -74,23 +98,39 @@ export default function OffersPage() {
       container: mapContainerRef.current,
       style: MAP_STYLE,
       center,
-      zoom: 7, // vue large sur la Turquie
+      zoom: 7,
     });
 
     mapRef.current = map;
 
-    // 📍 Bouton géoloc
+    // 📍 Contrôle de géolocalisation
     const geolocate = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: true,
       showUserHeading: true,
     });
-    map.addControl(geolocate);
+    map.addControl(geolocate, "top-right");
 
     geolocate.on("geolocate", (e) => {
       const lng = e.coords.longitude;
       const lat = e.coords.latitude;
       setUserLocation([lng, lat]);
+      setCenter([lng, lat]);
+      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
+    });
+
+    // 🔍 Barre de recherche
+    const geocoder = new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      mapboxgl,
+      marker: false,
+      placeholder: "Rechercher une adresse ou un lieu...",
+      language: "fr",
+    });
+    map.addControl(geocoder);
+
+    geocoder.on("result", (e) => {
+      const [lng, lat] = e.result.center;
       setCenter([lng, lat]);
       map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
     });
@@ -230,7 +270,7 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* 🎚️ Slider — ne pas toucher */}
+        {/* 🎚️ Slider — inchangé */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
           <input
             type="range"
@@ -297,10 +337,7 @@ function createGeoJSONCircle(
   radiusInMeters: number,
   points = 64
 ) {
-  const coords = {
-    latitude: center[1],
-    longitude: center[0],
-  };
+  const coords = { latitude: center[1], longitude: center[0] };
   const km = radiusInMeters / 1000;
   const ret = [];
   const distanceX = km / (111.32 * Math.cos((coords.latitude * Math.PI) / 180));
@@ -313,11 +350,5 @@ function createGeoJSONCircle(
     ret.push([coords.longitude + x, coords.latitude + y]);
   }
   ret.push(ret[0]);
-  return {
-    type: "Feature",
-    geometry: {
-      type: "Polygon",
-      coordinates: [ret],
-    },
-  };
+  return { type: "Feature", geometry: { type: "Polygon", coordinates: [ret] } };
 }
