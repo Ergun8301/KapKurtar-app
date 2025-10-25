@@ -48,7 +48,7 @@ const customMapboxCSS = `
     max-width: 80% !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    height: 8px !important; /* ✅ Barre plus fine */
+    height: 30px !important; /* ✅ Barre plus fine */
     font-size: 14px !important; /* ✅ Texte plus petit */
   }
 
