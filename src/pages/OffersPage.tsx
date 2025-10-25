@@ -292,27 +292,19 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* 🎚️ Slider — inchangé */}
-<div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
-  <input
-    type="range"
-    min={1}
-    max={30}
-    list="radiusSteps"
-    value={radiusKm}
-    onInput={(e) => handleRadiusChange(Number(e.target.value))}
-    className="w-36 accent-green-500 cursor-pointer focus:outline-none"
-  />
-  <datalist id="radiusSteps">
-    <option value="1" />
-    <option value="5" />
-    <option value="10" />
-    <option value="20" />
-    <option value="30" />
-  </datalist>
-  <span className="text-sm text-gray-700 font-medium">{radiusKm} km</span>
-</div>
-</div>
+       {/* 🎚️ Slider — inchangé */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
+          <input
+            type="range"
+            min={1}
+            max={30}
+            value={radiusKm}
+            onInput={(e) => handleRadiusChange(Number(e.target.value))}
+            className="w-36 accent-green-500 cursor-pointer focus:outline-none"
+          />
+          <span className="text-sm text-gray-700 font-medium">{radiusKm} km</span>
+        </div>
+      </div>
 
       {/* 🛒 Offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
