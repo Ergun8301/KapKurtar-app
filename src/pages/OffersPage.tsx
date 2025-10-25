@@ -115,7 +115,7 @@ export default function OffersPage() {
     // 📍 Contrôle de géolocalisation
     const geolocate = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
-      trackUserLocation: true,
+      trackUserLocation: false,
       showUserHeading: true,
     });
     map.addControl(geolocate, "top-right");
