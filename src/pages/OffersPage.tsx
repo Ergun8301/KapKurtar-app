@@ -23,6 +23,32 @@ const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
 // 📍 Position par défaut (Bourg-en-Bresse)
 const DEFAULT_LOCATION: [number, number] = [5.2258, 46.2044];
 
+// 🎨 Styles personnalisés pour Mapbox
+const customMapboxCSS = `
+  /* Enlever les halos et outlines */
+  .mapboxgl-ctrl-geolocate, .mapboxgl-ctrl-geocoder input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Bouton géolocalisation en haut à droite */
+  .mapboxgl-ctrl-top-right {
+    top: 15px !important;
+    right: 15px !important;
+  }
+
+  /* Barre de recherche alignée à gauche */
+  .mapboxgl-ctrl-geocoder {
+    position: absolute !important;
+    top: 15px !important;
+    left: 15px !important;
+    width: 320px !important;
+    max-width: 90% !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    border-radius: 8px !important;
+  }
+`;
+
 export default function OffersPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
@@ -35,6 +61,16 @@ export default function OffersPage() {
     Number(localStorage.getItem("radiusKm")) || 10
   );
   const [loading, setLoading] = useState(false);
+
+  // Injecter le style personnalisé
+  useEffect(() => {
+    const styleTag = document.createElement("style");
+    styleTag.innerHTML = customMapboxCSS;
+    document.head.appendChild(styleTag);
+    return () => {
+      document.head.removeChild(styleTag);
+    };
+  }, []);
 
   // 1️⃣ Initialisation de la carte Mapbox
   useEffect(() => {
@@ -91,7 +127,6 @@ export default function OffersPage() {
     const map = mapRef.current;
     if (!map) return;
 
-    // Attendre que le style soit bien chargé avant d’ajouter la couche
     if (!map.isStyleLoaded()) {
       map.once("load", () => {
         drawRadius(map, center, radiusKm);
@@ -106,9 +141,12 @@ export default function OffersPage() {
     try {
       if (map.getLayer("radius")) map.removeLayer("radius");
       if (map.getSource("radius")) map.removeSource("radius");
+      if (map.getLayer("outside-mask")) map.removeLayer("outside-mask");
+      if (map.getSource("outside-mask")) map.removeSource("outside-mask");
 
       const circle = createGeoJSONCircle(center, radiusKm * 1000);
 
+      // --- Zone principale (verte claire) ---
       map.addSource("radius", { type: "geojson", data: circle });
       map.addLayer({
         id: "radius",
@@ -117,6 +155,36 @@ export default function OffersPage() {
         paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
       });
 
+      // --- Masque extérieur assombri ---
+      const outerPolygon = {
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [-180, -90],
+              [180, -90],
+              [180, 90],
+              [-180, 90],
+              [-180, -90],
+            ],
+            circle.geometry.coordinates[0],
+          ],
+        },
+      };
+
+      map.addSource("outside-mask", { type: "geojson", data: outerPolygon });
+      map.addLayer({
+        id: "outside-mask",
+        type: "fill",
+        source: "outside-mask",
+        paint: {
+          "fill-color": "rgba(0,0,0,0.35)",
+          "fill-opacity": 0.35,
+        },
+      });
+
+      // --- Zoom automatique pour garder le rayon visible ---
       const bounds = new mapboxgl.LngLatBounds();
       circle.geometry.coordinates[0].forEach(([lng, lat]) =>
         bounds.extend([lng, lat])
@@ -252,7 +320,7 @@ export default function OffersPage() {
   );
 }
 
-// 🧮 fonction pour créer un cercle autour du point
+// 🧮 Création du cercle GeoJSON
 function createGeoJSONCircle(
   center: [number, number],
   radiusInMeters: number,
