@@ -20,7 +20,7 @@ type Offer = {
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
 const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
 
-// 🎨 CSS personnalisé — version finale
+// 🎨 CSS personnalisé (inchangé sauf design stable)
 const customMapboxCSS = `
   .mapboxgl-ctrl-geolocate:focus,
   .mapboxgl-ctrl-geocoder input:focus {
@@ -80,6 +80,7 @@ export default function OffersPage() {
     Number(localStorage.getItem("radiusKm")) || 10
   );
 
+  // Injecte CSS
   useEffect(() => {
     const styleTag = document.createElement("style");
     styleTag.innerHTML = customMapboxCSS;
@@ -87,6 +88,7 @@ export default function OffersPage() {
     return () => document.head.removeChild(styleTag);
   }, []);
 
+  // Initialise la carte
   useEffect(() => {
     mapboxgl.accessToken =
       "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueXgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g";
@@ -102,25 +104,22 @@ export default function OffersPage() {
 
     mapRef.current = map;
 
-    // ✅ Contrôle de géolocalisation
+    // 📍 Bouton géoloc
     const geolocate = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: true,
       showUserHeading: true,
     });
-
     map.addControl(geolocate, "top-right");
 
-    // 👉 Si l'utilisateur refuse la géoloc, on affiche une alerte au clic
-    map.on("error", (e) => {
-      if (e?.error?.code === 1) {
-        alert(
-          "⛔ La géolocalisation est désactivée.\nVeuillez l’activer dans votre navigateur pour vous localiser."
-        );
-      }
-    });
+    // ✅ Gestion du refus de géoloc
+    const handleGeolocError = () => {
+      alert(
+        "⛔ La géolocalisation est désactivée. Activez-la dans votre navigateur pour utiliser cette fonction."
+      );
+    };
 
-    // 🧭 Quand on clique sur le bouton de géoloc
+    // ✅ Quand on se géolocalise, on ajoute un marqueur rouge
     geolocate.on("geolocate", (e) => {
       const lng = e.coords.longitude;
       const lat = e.coords.latitude;
@@ -128,7 +127,6 @@ export default function OffersPage() {
       setCenter([lng, lat]);
       map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
 
-      // Ajoute un joli marqueur rouge moderne
       if (userMarker) userMarker.remove();
       const el = document.createElement("div");
       el.style.width = "18px";
@@ -137,9 +135,12 @@ export default function OffersPage() {
       el.style.border = "2px solid white";
       el.style.borderRadius = "50%";
       el.style.boxShadow = "0 0 8px rgba(0,0,0,0.4)";
-      const newMarker = new mapboxgl.Marker(el).setLngLat([lng, lat]).addTo(map);
-      setUserMarker(newMarker);
+      const marker = new mapboxgl.Marker(el).setLngLat([lng, lat]).addTo(map);
+      setUserMarker(marker);
     });
+
+    // ✅ Gestion du clic sur GPS si refusé
+    geolocate.on("error", handleGeolocError);
 
     // 🔍 Barre de recherche
     const geocoder = new MapboxGeocoder({
@@ -151,7 +152,7 @@ export default function OffersPage() {
     });
     map.addControl(geocoder);
 
-    // 👉 Quand une adresse est trouvée, place un marqueur rouge
+    // ✅ Marqueur rouge quand on cherche une adresse
     geocoder.on("result", (e) => {
       const [lng, lat] = e.result.center;
       setCenter([lng, lat]);
@@ -165,17 +166,18 @@ export default function OffersPage() {
       el.style.border = "2px solid white";
       el.style.borderRadius = "50%";
       el.style.boxShadow = "0 0 8px rgba(0,0,0,0.4)";
-      const newMarker = new mapboxgl.Marker(el).setLngLat([lng, lat]).addTo(map);
-      setUserMarker(newMarker);
+      const marker = new mapboxgl.Marker(el).setLngLat([lng, lat]).addTo(map);
+      setUserMarker(marker);
     });
 
     return () => map.remove();
   }, []);
 
-  // 🟢 Cercle dynamique
+  // Cercle dynamique avec zoom (inchangé)
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+
     if (!map.isStyleLoaded()) {
       map.once("load", () => drawRadius(map, center, radiusKm));
     } else {
@@ -199,12 +201,18 @@ export default function OffersPage() {
         source: "radius",
         paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
       });
+
+      const bounds = new mapboxgl.LngLatBounds();
+      circle.geometry.coordinates[0].forEach(([lng, lat]) =>
+        bounds.extend([lng, lat])
+      );
+      map.fitBounds(bounds, { padding: 50, duration: 800 });
     } catch (err) {
       console.warn("Erreur drawRadius :", err);
     }
   }
 
-  // Chargement des offres (inchangé)
+  // Chargement des offres Supabase
   useEffect(() => {
     const fetchOffers = async () => {
       const { data } = await supabase.rpc("get_offers_nearby_dynamic", {
