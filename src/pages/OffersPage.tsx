@@ -39,7 +39,7 @@ const customMapboxCSS = `
     display: flex !important;
     align-items: center !important;
     gap: 16px !important; /* ✅ Espace plus grand entre GPS et barre */
-    transform: translateX(-20%) !important; /* ✅ Tire légèrement vers la gauche pour centrer sur la carte */
+    transform: translateX(-25%) !important; /* ✅ Tire légèrement vers la gauche pour centrer sur la carte */
   }
 
   /* Barre de recherche */
