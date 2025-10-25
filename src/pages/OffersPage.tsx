@@ -299,7 +299,7 @@ export default function OffersPage() {
             min={1}
             max={30}
             value={radiusKm}
-            onChange={(e) => handleRadiusChange(Number(e.target.value))}
+            onInput={(e) => handleRadiusChange(Number(e.target.value))}
             className="w-36 accent-green-500 cursor-pointer focus:outline-none"
           />
           <span className="text-sm text-gray-700 font-medium">{radiusKm} km</span>
