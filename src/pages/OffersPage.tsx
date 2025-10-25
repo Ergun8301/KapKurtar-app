@@ -17,13 +17,9 @@ type Offer = {
   image_url?: string;
 };
 
-// 🗺️ Style Tilkapp V2 (Mapbox Studio)
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
+const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082];
 
-// 📍 Position par défaut — Turquie (Istanbul)
-const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
-
-// 🎨 CSS personnalisé — version stable et simple + ajustements
 const customMapboxCSS = `
   .mapboxgl-ctrl-geolocate:focus,
   .mapboxgl-ctrl-geocoder input:focus {
@@ -57,7 +53,6 @@ const customMapboxCSS = `
       flex-direction: column !important;
       gap: 6px !important;
     }
-
     .mapboxgl-ctrl-geocoder {
       width: 90% !important;
       height: 36px !important;
@@ -75,13 +70,12 @@ export default function OffersPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [userLocation, setUserLocation] = useState<[number, number]>(DEFAULT_LOCATION);
   const [center, setCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   const [radiusKm, setRadiusKm] = useState<number>(
     Number(localStorage.getItem("radiusKm")) || 10
   );
-  const [isUserLocationActive, setIsUserLocationActive] = useState(false);
-  const searchMarkerRef = useRef<Marker | null>(null);
+  const [lastSearch, setLastSearch] = useState<[number, number] | null>(null);
+  const searchMarker = useRef<Marker | null>(null);
 
   // Injecte le CSS
   useEffect(() => {
@@ -103,41 +97,38 @@ export default function OffersPage() {
       center,
       zoom: 7,
     });
-
     mapRef.current = map;
 
-    // 📍 Contrôle de géolocalisation
+    // ✅ Contrôle de géolocalisation
     const geolocate = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: true,
       showUserHeading: true,
+      showAccuracyCircle: true,
     });
     map.addControl(geolocate, "top-right");
 
-    // 🔹 Activation manuelle de la géolocalisation
-    geolocate.on("geolocate", (e) => {
-      const lng = e.coords.longitude;
-      const lat = e.coords.latitude;
-      setUserLocation([lng, lat]);
-      setCenter([lng, lat]);
-      setIsUserLocationActive(true);
-      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
-    });
-
-    // 🔹 Tente automatiquement la géolocalisation au chargement
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const { latitude, longitude } = pos.coords;
-          setUserLocation([longitude, latitude]);
-          setCenter([longitude, latitude]);
-          setIsUserLocationActive(true);
-          map.flyTo({ center: [longitude, latitude], zoom: 12 });
-        },
-        () => {
-          console.warn("Géolocalisation refusée ou inactive");
-        }
-      );
+    // 🔹 Forcer le bouton à réagir même sans autorisation préalable
+    const button = geolocate._container.querySelector(
+      ".mapboxgl-ctrl-geolocate"
+    ) as HTMLButtonElement;
+    if (button) {
+      button.onclick = () => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lng = pos.coords.longitude;
+            const lat = pos.coords.latitude;
+            setCenter([lng, lat]);
+            map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
+            geolocate.trigger();
+          },
+          () => {
+            alert(
+              "Activez la géolocalisation dans votre navigateur pour utiliser cette fonction."
+            );
+          }
+        );
+      };
     }
 
     // 🔍 Barre de recherche
@@ -150,20 +141,30 @@ export default function OffersPage() {
     });
     map.addControl(geocoder);
 
-    // 🔹 Résultat de recherche → place un marqueur et fige la vue
+    // ✅ Quand on recherche une adresse
     geocoder.on("result", (e) => {
       const [lng, lat] = e.result.center;
       setCenter([lng, lat]);
-      setIsUserLocationActive(false);
-
-      if (searchMarkerRef.current) searchMarkerRef.current.remove();
-      const marker = new mapboxgl.Marker({ color: "#555" })
+      setLastSearch([lng, lat]);
+      if (searchMarker.current) searchMarker.current.remove();
+      searchMarker.current = new mapboxgl.Marker({ color: "#555" })
         .setLngLat([lng, lat])
         .addTo(map);
-      searchMarkerRef.current = marker;
-
       map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
     });
+
+    // ✅ Géolocalisation automatique au chargement (pour déclencher le popup navigateur)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lng = pos.coords.longitude;
+        const lat = pos.coords.latitude;
+        setCenter([lng, lat]);
+        map.flyTo({ center: [lng, lat], zoom: 12 });
+      },
+      () => {
+        console.log("Permission de géolocalisation refusée ou non donnée.");
+      }
+    );
 
     return () => map.remove();
   }, []);
@@ -189,7 +190,6 @@ export default function OffersPage() {
 
       const circle = createGeoJSONCircle(center, radiusKm * 1000);
 
-      // Zone de recherche claire
       map.addSource("radius", { type: "geojson", data: circle });
       map.addLayer({
         id: "radius",
@@ -198,7 +198,6 @@ export default function OffersPage() {
         paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
       });
 
-      // Extérieur assombri
       const outerPolygon = {
         type: "Feature",
         geometry: {
@@ -221,10 +220,7 @@ export default function OffersPage() {
         id: "outside-mask",
         type: "fill",
         source: "outside-mask",
-        paint: {
-          "fill-color": "rgba(0,0,0,0.35)",
-          "fill-opacity": 0.35,
-        },
+        paint: { "fill-color": "rgba(0,0,0,0.35)", "fill-opacity": 0.35 },
       });
     } catch (err) {
       console.warn("Erreur drawRadius :", err);
@@ -247,19 +243,16 @@ export default function OffersPage() {
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-
     (map as any)._markers?.forEach((m: Marker) => m.remove());
     (map as any)._markers = [];
 
     offers.forEach((offer) => {
       const el = document.createElement("div");
-      el.className = "offer-marker";
       el.style.background = "#22c55e";
       el.style.width = "20px";
       el.style.height = "20px";
       el.style.borderRadius = "50%";
       el.style.border = "2px solid #fff";
-
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
         <strong>${offer.title}</strong><br/>
         ${offer.merchant_name}<br/>
@@ -267,17 +260,14 @@ export default function OffersPage() {
         <span style="text-decoration:line-through;color:#999;margin-left:4px;">${offer.price_before.toFixed(2)} €</span><br/>
         <a href="https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}" target="_blank">🗺️ Itinéraire</a>
       `);
-
       const marker = new mapboxgl.Marker(el)
         .setLngLat([offer.offer_lng, offer.offer_lat])
         .setPopup(popup)
         .addTo(map);
-
       (map as any)._markers.push(marker);
     });
   }, [offers]);
 
-  // Slider de rayon (inchangé)
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
@@ -287,8 +277,6 @@ export default function OffersPage() {
     <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
       <div className="relative flex-1 border-r border-gray-200">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
-
-        {/* 🎚️ Slider */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
           <input
             type="range"
@@ -298,13 +286,16 @@ export default function OffersPage() {
             onChange={(e) => handleRadiusChange(Number(e.target.value))}
             className="w-36 accent-green-500 cursor-pointer focus:outline-none"
           />
-          <span className="text-sm text-gray-700 font-medium">{radiusKm} km</span>
+          <span className="text-sm text-gray-700 font-medium">
+            {radiusKm} km
+          </span>
         </div>
       </div>
 
-      {/* 🛒 Offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">
+          Offres à proximité
+        </h2>
         {offers.length === 0 ? (
           <p className="text-gray-500 text-center mt-10">
             Aucune offre disponible dans ce rayon.
@@ -317,7 +308,11 @@ export default function OffersPage() {
                 className="flex bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
               >
                 {o.image_url && (
-                  <img src={o.image_url} alt={o.title} className="w-24 h-24 object-cover" />
+                  <img
+                    src={o.image_url}
+                    alt={o.title}
+                    className="w-24 h-24 object-cover"
+                  />
                 )}
                 <div className="flex-1 p-3">
                   <h3 className="font-semibold text-gray-800">{o.title}</h3>
@@ -325,13 +320,13 @@ export default function OffersPage() {
                   <p className="text-green-600 font-semibold">
                     {(o.distance_meters / 1000).toFixed(2)} km
                   </p>
-                  <div className="flex items-center justify-between mt-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-bold text-green-600">{o.price_after.toFixed(2)} €</span>
-                      <span className="line-through text-gray-400 text-sm">
-                        {o.price_before.toFixed(2)} €
-                      </span>
-                    </div>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className="font-bold text-green-600">
+                      {o.price_after.toFixed(2)} €
+                    </span>
+                    <span className="line-through text-gray-400 text-sm">
+                      {o.price_before.toFixed(2)} €
+                    </span>
                   </div>
                 </div>
               </div>
@@ -343,14 +338,17 @@ export default function OffersPage() {
   );
 }
 
-// 🔵 Cercle GeoJSON
-function createGeoJSONCircle(center: [number, number], radiusInMeters: number, points = 64) {
+function createGeoJSONCircle(
+  center: [number, number],
+  radiusInMeters: number,
+  points = 64
+) {
   const coords = { latitude: center[1], longitude: center[0] };
   const km = radiusInMeters / 1000;
   const ret = [];
-  const distanceX = km / (111.32 * Math.cos((coords.latitude * Math.PI) / 180));
+  const distanceX =
+    km / (111.32 * Math.cos((coords.latitude * Math.PI) / 180));
   const distanceY = km / 110.574;
-
   for (let i = 0; i < points; i++) {
     const theta = (i / points) * (2 * Math.PI);
     const x = distanceX * Math.cos(theta);
