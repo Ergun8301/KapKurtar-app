@@ -1,44 +1,11 @@
-import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
-import L, { Icon } from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { Eye } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import mapboxgl, { Map, Marker } from "mapbox-gl";
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
+import "mapbox-gl/dist/mapbox-gl.css";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { supabase } from "../lib/supabaseClient";
-import { useAuth } from "../hooks/useAuth";
 
-// ---------- ICONES ----------
-delete (Icon.Default.prototype as any)._getIconUrl;
-Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
-
-const userIcon = new Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
-
-const offerIcon = new Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
-
-const searchIcon = new Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-});
-
-// ---------- INTERFACE ----------
-interface Offer {
+type Offer = {
   offer_id: string;
   title: string;
   merchant_name: string;
@@ -48,131 +15,144 @@ interface Offer {
   offer_lat: number;
   offer_lng: number;
   image_url?: string;
-}
-
-const DEFAULT_LOCATION = { lat: 46.2044, lng: 5.2258 };
-
-// ---------- CONTROLEUR DE LA CARTE ----------
-const MapController = ({ center }: { center: [number, number] }) => {
-  const map = useMap();
-  useEffect(() => {
-    map.setView(center);
-  }, [center, map]);
-  return null;
 };
 
-// ---------- PAGE PRINCIPALE ----------
-export default function OffersPage() {
-  const { user } = useAuth();
+// 🟢 Ton style Mapbox Tilkapp V2
+const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
+
+// 📍 Position par défaut (Bourg-en-Bresse)
+const DEFAULT_LOCATION: [number, number] = [5.2258, 46.2044]; // [lng, lat]
+
+export default function OffersMapPage() {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<Map | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userLocation, setUserLocation] = useState(DEFAULT_LOCATION);
-  const [center, setCenter] = useState<[number, number]>([
-    DEFAULT_LOCATION.lat,
-    DEFAULT_LOCATION.lng,
-  ]);
-  const [searchLocation, setSearchLocation] = useState<[number, number] | null>(null);
+  const [userLocation, setUserLocation] = useState<[number, number]>(DEFAULT_LOCATION);
+  const [center, setCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   const [radiusKm, setRadiusKm] = useState<number>(
     Number(localStorage.getItem("radiusKm")) || 10
   );
+  const [loading, setLoading] = useState(true);
 
-  const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [isSelecting, setIsSelecting] = useState(false);
-
-  const mapRef = useRef<L.Map>(null);
-
-  // ---------- GÉOLOCALISATION ----------
-  const requestGeolocation = () => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        const loc = { lat: latitude, lng: longitude };
-        setUserLocation(loc);
-        setCenter([latitude, longitude]);
-        setSearchLocation(null);
-        setQuery("");
-        setSuggestions([]);
-        setLoading(false);
-      },
-      () => setLoading(false),
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
-  };
-
+  // 1️⃣ Initialisation de la carte
   useEffect(() => {
-    requestGeolocation();
+    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+    if (!mapContainerRef.current) return;
+
+    mapRef.current = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: MAP_STYLE,
+      center,
+      zoom: 12,
+    });
+
+    // Boutons + / - / 3D / GPS
+    mapRef.current.addControl(new mapboxgl.NavigationControl(), "top-left");
+
+    const geolocate = new mapboxgl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+      showUserHeading: true,
+    });
+    mapRef.current.addControl(geolocate, "top-right");
+
+    geolocate.on("geolocate", (e) => {
+      const lng = e.coords.longitude;
+      const lat = e.coords.latitude;
+      setUserLocation([lng, lat]);
+      setCenter([lng, lat]);
+      setLoading(false);
+    });
+
+    // Barre de recherche Mapbox Geocoder
+    const geocoder = new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      mapboxgl: mapboxgl,
+      marker: false,
+      placeholder: "Rechercher une adresse ou un lieu...",
+      language: "fr",
+    });
+    mapRef.current.addControl(geocoder, "top-left");
+
+    geocoder.on("result", (e) => {
+      const [lng, lat] = e.result.center;
+      setCenter([lng, lat]);
+    });
+
+    return () => mapRef.current?.remove();
   }, []);
 
-  // ---------- CHARGEMENT DES OFFRES ----------
+  // 2️⃣ Cercle dynamique et zoom automatique
   useEffect(() => {
-    if (!user) return;
-    const fetchOffers = async () => {
-      const { data: client } = await supabase
-        .from("clients")
-        .select("id")
-        .eq("auth_id", user.id)
-        .maybeSingle();
+    if (!mapRef.current) return;
 
-      if (client) {
-        const { data } = await supabase.rpc("get_offers_nearby_dynamic", {
-          p_client_id: client.id,
-          p_radius_meters: radiusKm * 1000,
-        });
-        setOffers(data || []);
-      }
+    // Supprime l'ancien cercle s'il existe
+    if (mapRef.current.getLayer("user-radius")) mapRef.current.removeLayer("user-radius");
+    if (mapRef.current.getSource("user-radius")) mapRef.current.removeSource("user-radius");
+
+    // Nouveau cercle
+    const circle = createGeoJSONCircle(center, radiusKm * 1000);
+    mapRef.current.addSource("user-radius", { type: "geojson", data: circle });
+    mapRef.current.addLayer({
+      id: "user-radius",
+      type: "fill",
+      source: "user-radius",
+      paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
+    });
+
+    // Ajuste le zoom pour que le cercle soit toujours visible
+    const bounds = new mapboxgl.LngLatBounds();
+    circle.geometry.coordinates[0].forEach(([lng, lat]) => bounds.extend([lng, lat]));
+    mapRef.current.fitBounds(bounds, { padding: 60, duration: 800 });
+  }, [center, radiusKm]);
+
+  // 3️⃣ Chargement des offres depuis Supabase
+  useEffect(() => {
+    const fetchOffers = async () => {
+      const { data } = await supabase.rpc("get_offers_nearby_dynamic", {
+        p_client_id: null,
+        p_radius_meters: radiusKm * 1000,
+      });
+      setOffers(data || []);
     };
     fetchOffers();
-  }, [user, center, radiusKm]);
+  }, [center, radiusKm]);
 
-  // ---------- BARRE DE RECHERCHE MAPBOX ----------
+  // 4️⃣ Marqueurs d’offres
   useEffect(() => {
-    if (isSelecting) return;
-    if (query.length < 3) return setSuggestions([]);
-    const load = async () => {
-      const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-          query
-        )}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&language=fr`
-      );
-      const data = await res.json();
-      setSuggestions(data.features || []);
-    };
-    const t = setTimeout(load, 400);
-    return () => clearTimeout(t);
-  }, [query, isSelecting]);
+    if (!mapRef.current) return;
 
-  const handleSelect = (feature: any) => {
-    const [lng, lat] = feature.center;
-    setIsSelecting(true);
-    setCenter([lat, lng]);
-    setSearchLocation([lat, lng]);
-    setQuery(feature.place_name);
-    setSuggestions([]);
-  };
+    // Nettoyer les anciens marqueurs
+    (mapRef.current as any)._offerMarkers?.forEach((m: Marker) => m.remove());
+    (mapRef.current as any)._offerMarkers = [];
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setQuery(value);
-    if (isSelecting) setIsSelecting(false);
-  };
+    offers.forEach((o) => {
+      const el = document.createElement("div");
+      el.className = "offer-marker";
+      el.style.background = "#22c55e";
+      el.style.width = "22px";
+      el.style.height = "22px";
+      el.style.borderRadius = "50%";
+      el.style.border = "2px solid #fff";
 
-  // ---------- AJUSTEMENT AUTOMATIQUE DU ZOOM SELON LE RAYON ----------
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat([o.offer_lng, o.offer_lat])
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(
+            `<strong>${o.title}</strong><br/>
+             ${o.merchant_name}<br/>
+             <span style="color:green;font-weight:bold;">${o.price_after.toFixed(2)} €</span>
+             <span style="text-decoration:line-through;color:#888;margin-left:4px;">${o.price_before.toFixed(2)} €</span><br/>
+             <a href="https://www.google.com/maps/dir/?api=1&destination=${o.offer_lat},${o.offer_lng}" target="_blank">🗺️ Google Maps</a>`
+          )
+        )
+        .addTo(mapRef.current!);
 
-    const bounds = L.circle(center, { radius: radiusKm * 1000 }).getBounds();
-
-    map.flyToBounds(bounds, {
-      padding: [80, 80],
-      duration: 0.8,
+      (mapRef.current as any)._offerMarkers.push(marker);
     });
-  }, [radiusKm, center]);
+  }, [offers]);
 
-  const activeCenter = searchLocation || [userLocation.lat, userLocation.lng];
-
+  // 5️⃣ Slider du rayon
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
@@ -185,136 +165,12 @@ export default function OffersPage() {
       </div>
     );
 
-  // ---------- RENDU ----------
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
-      {/* 🗺️ Carte */}
       <div className="relative flex-1 border-r border-gray-200">
-        <MapContainer
-          whenCreated={(map) => (mapRef.current = map)}
-          center={activeCenter}
-          zoom={12}
-          style={{ height: "100%", width: "100%" }}
-        >
-          <MapController center={activeCenter} />
+        <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-          <TileLayer
-            attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-            url={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${
-              import.meta.env.VITE_MAPBOX_TOKEN
-            }`}
-            tileSize={512}
-            zoomOffset={-1}
-          />
-
-          <Circle
-            center={activeCenter}
-            radius={radiusKm * 1000}
-            pathOptions={{
-              color: "rgba(0,0,0,0.7)",
-              weight: 1.5,
-              fillOpacity: 0,
-            }}
-          />
-
-          <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
-            <Popup>📍 Vous êtes ici</Popup>
-          </Marker>
-
-          {searchLocation && (
-            <Marker position={searchLocation} icon={searchIcon}>
-              <Popup>📍 Adresse recherchée</Popup>
-            </Marker>
-          )}
-
-          {offers.map((o) => (
-            <Marker
-              key={o.offer_id}
-              position={[o.offer_lat, o.offer_lng]}
-              icon={offerIcon}
-            >
-              <Popup>
-                <strong>{o.title}</strong>
-                <br />
-                {o.merchant_name}
-                <br />
-                {(o.distance_meters / 1000).toFixed(2)} km
-                <br />
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${o.offer_lat},${o.offer_lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline text-sm"
-                >
-                  🗺️ Voir dans Google Maps
-                </a>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-
-        {/* 🔍 Barre de recherche + GPS */}
-        <div className="absolute top-4 left-4 right-16 z-[1000] flex justify-center">
-          <div className="relative w-[95%] md:w-3/4 lg:w-2/3">
-            <input
-              type="text"
-              value={query}
-              onChange={handleChange}
-              placeholder="Rechercher une adresse ou un lieu..."
-              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm focus:outline-none text-gray-700"
-            />
-            {query && (
-              <button
-                onClick={() => {
-                  setQuery("");
-                  setSuggestions([]);
-                  setSearchLocation(null);
-                }}
-                className="absolute right-3 top-2 text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            )}
-            {suggestions.length > 0 && (
-              <ul className="absolute mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto w-full">
-                {suggestions.map((f) => (
-                  <li
-                    key={f.id}
-                    onClick={() => handleSelect(f)}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                  >
-                    {f.place_name}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-
-        {/* 📍 Bouton GPS */}
-        <button
-          onClick={requestGeolocation}
-          className="absolute top-4 right-4 z-[1000] flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-100 active:scale-95"
-          title="Me géolocaliser"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="2"
-            stroke="rgb(59,130,246)"
-            className="w-5 h-5"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 2v2m0 16v2m10-10h-2M4 12H2m16.95 7.05l-1.414-1.414M6.464 6.464 5.05 5.05m13.9 0-1.414 1.414M6.464 17.536 5.05 18.95"
-            />
-          </svg>
-        </button>
-
-        {/* 🎚️ Slider */}
+        {/* 🎚️ Slider du rayon */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
           <input
             type="range"
@@ -328,7 +184,7 @@ export default function OffersPage() {
         </div>
       </div>
 
-      {/* 💸 Liste des offres */}
+      {/* Liste des offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
         {offers.length === 0 ? (
@@ -364,9 +220,6 @@ export default function OffersPage() {
                         {o.price_before.toFixed(2)} €
                       </span>
                     </div>
-                    <button className="flex items-center gap-1 text-green-700 hover:text-green-900">
-                      <Eye className="w-4 h-4" /> Voir
-                    </button>
                   </div>
                 </div>
               </div>
@@ -376,4 +229,28 @@ export default function OffersPage() {
       </div>
     </div>
   );
+}
+
+// 🔧 Fonction pour créer un cercle GeoJSON
+function createGeoJSONCircle(center: [number, number], radiusInMeters: number, points = 64) {
+  const coords = {
+    latitude: center[1],
+    longitude: center[0],
+  };
+  const km = radiusInMeters / 1000;
+  const ret = [];
+  const distanceX = km / (111.320 * Math.cos((coords.latitude * Math.PI) / 180));
+  const distanceY = km / 110.574;
+
+  for (let i = 0; i < points; i++) {
+    const theta = (i / points) * (2 * Math.PI);
+    const x = distanceX * Math.cos(theta);
+    const y = distanceY * Math.sin(theta);
+    ret.push([coords.longitude + x, coords.latitude + y]);
+  }
+  ret.push(ret[0]);
+  return {
+    type: "Feature",
+    geometry: { type: "Polygon", coordinates: [ret] },
+  };
 }
