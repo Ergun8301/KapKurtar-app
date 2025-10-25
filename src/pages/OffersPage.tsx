@@ -292,7 +292,7 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* 🎚️ Slider — version mobile stable + paliers fixes */}
+        {/* 🎚️ Slider — inchangé */}
 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
   <input
     type="range"
@@ -300,10 +300,9 @@ export default function OffersPage() {
     max={30}
     list="radiusSteps"
     value={radiusKm}
-    onInput={(e) => handleRadiusChange(Number(e.target.value))} // ✅ plus fiable que onChange sur mobile
+    onInput={(e) => handleRadiusChange(Number(e.target.value))}
     className="w-36 accent-green-500 cursor-pointer focus:outline-none"
   />
-  {/* ✅ paliers fixes pour 1 / 5 / 10 / 20 / 30 km */}
   <datalist id="radiusSteps">
     <option value="1" />
     <option value="5" />
@@ -313,7 +312,7 @@ export default function OffersPage() {
   </datalist>
   <span className="text-sm text-gray-700 font-medium">{radiusKm} km</span>
 </div>
-
+</div>
 
       {/* 🛒 Offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
