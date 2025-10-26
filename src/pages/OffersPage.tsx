@@ -26,58 +26,46 @@ const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
 
 // 🎨 CSS personnalisé — version stable et simple + ajustements
 const customMapboxCSS = `
-  /* Désactive halo et outline */
   .mapboxgl-ctrl-geolocate:focus,
   .mapboxgl-ctrl-geocoder input:focus {
     outline: none !important;
     box-shadow: none !important;
   }
 
-  /* Conteneur en haut à droite pour GPS + recherche */
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
     right: 10px !important;
     display: flex !important;
     align-items: center !important;
-    gap: 0px !important; /* ✅ Espace plus grand entre GPS et barre */
-    transform: translateX(-55%) !important; /* ✅ Tire légèrement vers la gauche pour centrer sur la carte */
+    gap: 0px !important;
+    transform: translateX(-55%) !important;
   }
 
-  /* Barre de recherche */
   .mapboxgl-ctrl-geocoder {
     width: 280px !important;
     max-width: 80% !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    height: 32px !important; /* ✅ Barre plus fine */
-    font-size: 14px !important; /* ✅ Texte plus petit */
+    height: 32px !important;
+    font-size: 14px !important;
   }
 
-  /* Mobile responsive — en haut centré */
-@media (max-width: 640px) {
-  .mapboxgl-ctrl-top-right {
-    top: 8px !important;
-    right: 50% !important;
-    transform: translateX(50%) !important;
-    flex-direction: row !important;         /* ✅ côte à côte */
-    justify-content: center !important;     /* ✅ centrés */
-    gap: 6px !important;
-  }
-
-  .mapboxgl-ctrl-geocoder {
-    width: 80% !important;                  /* ✅ barre un peu plus courte */
-    height: 36px !important;
-  }
-}
-
+  @media (max-width: 640px) {
+    .mapboxgl-ctrl-top-right {
+      top: 8px !important;
+      right: 50% !important;
+      transform: translateX(50%) !important;
+      flex-direction: row !important;
+      justify-content: center !important;
+      gap: 6px !important;
+    }
 
     .mapboxgl-ctrl-geocoder {
-      width: 90% !important;
-      height: 36px !important; /* un peu plus fine aussi sur mobile */
+      width: 80% !important;
+      height: 36px !important;
     }
   }
 
-  /* Masquer les mentions Mapbox/OpenStreetMap */
   .mapboxgl-ctrl-logo,
   .mapboxgl-ctrl-attrib,
   .mapbox-improve-map {
@@ -90,9 +78,7 @@ export default function OffersPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [userLocation, setUserLocation] = useState<[number, number]>(
-    DEFAULT_LOCATION
-  );
+  const [userLocation, setUserLocation] = useState<[number, number]>(DEFAULT_LOCATION);
   const [center, setCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   const [radiusKm, setRadiusKm] = useState<number>(
     Number(localStorage.getItem("radiusKm")) || 10
@@ -108,7 +94,7 @@ export default function OffersPage() {
     return () => document.head.removeChild(styleTag);
   }, []);
 
-  // Récupère le client_id depuis la table clients si l'utilisateur est connecté
+  // 🧩 Récupère le profil client connecté
   useEffect(() => {
     const fetchClientId = async () => {
       if (!user) {
@@ -117,24 +103,29 @@ export default function OffersPage() {
       }
 
       try {
-        const { data: client } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('id', user.id)
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("auth_id", user.id)
+          .eq("role", "client")
           .maybeSingle();
 
-        if (client) {
-          setClientId(client.id);
+        if (error) {
+          console.error("Erreur lors de la récupération du profil client :", error);
+        } else if (profile) {
+          setClientId(profile.id);
+        } else {
+          console.warn("Aucun profil client trouvé pour cet utilisateur.");
         }
       } catch (error) {
-        console.error('Erreur lors de la récupération du client:', error);
+        console.error("Erreur lors de la récupération du profil client :", error);
       }
     };
 
     fetchClientId();
   }, [user]);
 
-  // Géolocalisation automatique pour les clients connectés
+  // 🌍 Géolocalisation automatique pour les clients connectés
   useEffect(() => {
     if (!clientId || isGeolocating) return;
 
@@ -148,11 +139,11 @@ export default function OffersPage() {
           const { latitude, longitude } = position.coords;
 
           try {
-            await supabase.rpc('update_client_location', {
+            await supabase.rpc("update_client_location", {
               client_id: clientId,
-              longitude: longitude,
-              latitude: latitude,
-              status: 'success'
+              longitude,
+              latitude,
+              status: "success",
             });
 
             setUserLocation([longitude, latitude]);
@@ -162,24 +153,20 @@ export default function OffersPage() {
               mapRef.current.flyTo({
                 center: [longitude, latitude],
                 zoom: 12,
-                essential: true
+                essential: true,
               });
             }
           } catch (error) {
-            console.error('Erreur lors de la mise à jour de la position:', error);
+            console.error("Erreur lors de la mise à jour de la position:", error);
           } finally {
             setIsGeolocating(false);
           }
         },
         (error) => {
-          console.warn('Géolocalisation refusée ou impossible:', error);
+          console.warn("Géolocalisation refusée ou impossible:", error);
           setIsGeolocating(false);
         },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     };
 
@@ -211,17 +198,15 @@ export default function OffersPage() {
     map.addControl(geolocate, "top-right");
 
     geolocate.on("geolocate", (e) => {
-  const lng = e.coords.longitude;
-  const lat = e.coords.latitude;
-  setUserLocation([lng, lat]);
-  setCenter([lng, lat]);
-  map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
+      const lng = e.coords.longitude;
+      const lat = e.coords.latitude;
+      setUserLocation([lng, lat]);
+      setCenter([lng, lat]);
+      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
 
-  // 🧹 Vide le champ de recherche (évite qu’il reste sur "Paris")
-  const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
-  if (input) input.value = "";
-});
-
+      const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+      if (input) input.value = "";
+    });
 
     // 🔍 Barre de recherche
     const geocoder = new MapboxGeocoder({
@@ -242,7 +227,7 @@ export default function OffersPage() {
     return () => map.remove();
   }, []);
 
-  // Cercle dynamique
+  // 🎯 Cercle dynamique
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -263,7 +248,6 @@ export default function OffersPage() {
 
       const circle = createGeoJSONCircle(center, radiusKm * 1000);
 
-      // Zone de recherche
       map.addSource("radius", { type: "geojson", data: circle });
       map.addLayer({
         id: "radius",
@@ -272,7 +256,6 @@ export default function OffersPage() {
         paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
       });
 
-      // Extérieur assombri
       const outerPolygon = {
         type: "Feature",
         geometry: {
@@ -295,23 +278,18 @@ export default function OffersPage() {
         id: "outside-mask",
         type: "fill",
         source: "outside-mask",
-        paint: {
-          "fill-color": "rgba(0,0,0,0.35)",
-          "fill-opacity": 0.35,
-        },
+        paint: { "fill-color": "rgba(0,0,0,0.35)", "fill-opacity": 0.35 },
       });
 
       const bounds = new mapboxgl.LngLatBounds();
-      circle.geometry.coordinates[0].forEach(([lng, lat]) =>
-        bounds.extend([lng, lat])
-      );
+      circle.geometry.coordinates[0].forEach(([lng, lat]) => bounds.extend([lng, lat]));
       map.fitBounds(bounds, { padding: 50, duration: 800 });
     } catch (err) {
       console.warn("Erreur drawRadius :", err);
     }
   }
 
-  // Chargement des offres
+  // 🔁 Chargement des offres
   useEffect(() => {
     const fetchOffers = async () => {
       if (!clientId) {
@@ -326,13 +304,13 @@ export default function OffersPage() {
         });
 
         if (error) {
-          console.error('Erreur lors du chargement des offres:', error);
+          console.error("Erreur lors du chargement des offres:", error);
           setOffers([]);
         } else {
           setOffers(data || []);
         }
       } catch (error) {
-        console.error('Erreur lors de la récupération des offres:', error);
+        console.error("Erreur lors de la récupération des offres:", error);
         setOffers([]);
       }
     };
@@ -340,7 +318,7 @@ export default function OffersPage() {
     fetchOffers();
   }, [clientId, center, radiusKm]);
 
-  // Marqueurs d’offres
+  // 📍 Marqueurs d’offres
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -360,15 +338,9 @@ export default function OffersPage() {
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
         <strong>${offer.title}</strong><br/>
         ${offer.merchant_name}<br/>
-        <span style="color:green;font-weight:bold;">${offer.price_after.toFixed(
-          2
-        )} €</span>
-        <span style="text-decoration:line-through;color:#999;margin-left:4px;">${offer.price_before.toFixed(
-          2
-        )} €</span><br/>
-        <a href="https://www.google.com/maps/dir/?api=1&destination=${
-          offer.offer_lat
-        },${offer.offer_lng}" target="_blank">🗺️ Itinéraire</a>
+        <span style="color:green;font-weight:bold;">${offer.price_after.toFixed(2)} €</span>
+        <span style="text-decoration:line-through;color:#999;margin-left:4px;">${offer.price_before.toFixed(2)} €</span><br/>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}" target="_blank">🗺️ Itinéraire</a>
       `);
 
       const marker = new mapboxgl.Marker(el)
@@ -380,7 +352,7 @@ export default function OffersPage() {
     });
   }, [offers]);
 
-  // Slider de rayon (inchangé)
+  // 🎚️ Slider de rayon
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
@@ -391,7 +363,7 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-       {/* 🎚️ Slider — inchangé */}
+        {/* 🎚️ Slider */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
           <input
             type="range"
@@ -405,7 +377,7 @@ export default function OffersPage() {
         </div>
       </div>
 
-      {/* 🛒 Offres */}
+      {/* 🛒 Liste des offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
         {!clientId ? (
@@ -456,18 +428,13 @@ export default function OffersPage() {
   );
 }
 
-// 🔵 Cercle GeoJSON — version finale et stable
-export function createGeoJSONCircle(
-  center: [number, number],
-  radiusInMeters: number,
-  points = 64
-) {
+// 🔵 Cercle GeoJSON
+export function createGeoJSONCircle(center: [number, number], radiusInMeters: number, points = 64) {
   const coords = { latitude: center[1], longitude: center[0] };
   const km = radiusInMeters / 1000;
   const ret: [number, number][] = [];
 
-  const distanceX =
-    km / (111.32 * Math.cos((coords.latitude * Math.PI) / 180));
+  const distanceX = km / (111.32 * Math.cos((coords.latitude * Math.PI) / 180));
   const distanceY = km / 110.574;
 
   for (let i = 0; i < points; i++) {
@@ -477,7 +444,6 @@ export function createGeoJSONCircle(
     ret.push([coords.longitude + x, coords.latitude + y]);
   }
 
-  // referme le cercle
   ret.push(ret[0]);
 
   return {
