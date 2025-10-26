@@ -18,13 +18,9 @@ type Offer = {
   image_url?: string;
 };
 
-// 🗺️ Style Tilkapp V2 (Mapbox Studio)
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
-
-// 📍 Position par défaut — Turquie (Istanbul)
 const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
 
-// 🎨 CSS personnalisé — version stable et simple + ajustements
 const customMapboxCSS = `
   .mapboxgl-ctrl-geolocate:focus,
   .mapboxgl-ctrl-geocoder input:focus {
@@ -85,8 +81,9 @@ export default function OffersPage() {
   );
   const [clientId, setClientId] = useState<string | null>(null);
   const [isGeolocating, setIsGeolocating] = useState(false);
+  const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
 
-  // Injecte le CSS
+  // Injecte le CSS Mapbox
   useEffect(() => {
     const styleTag = document.createElement("style");
     styleTag.innerHTML = customMapboxCSS;
@@ -94,7 +91,7 @@ export default function OffersPage() {
     return () => document.head.removeChild(styleTag);
   }, []);
 
-  // 🧩 Récupère le profil client connecté
+  // Récupère le profil client connecté
   useEffect(() => {
     const fetchClientId = async () => {
       if (!user) {
@@ -125,7 +122,7 @@ export default function OffersPage() {
     fetchClientId();
   }, [user]);
 
-  // 🌍 Géolocalisation automatique pour les clients connectés
+  // Géolocalisation automatique pour clients connectés
   useEffect(() => {
     if (!clientId || isGeolocating) return;
 
@@ -189,7 +186,7 @@ export default function OffersPage() {
 
     mapRef.current = map;
 
-    // 📍 Contrôle de géolocalisation
+    // Contrôle de géolocalisation
     const geolocate = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: false,
@@ -203,12 +200,10 @@ export default function OffersPage() {
       setUserLocation([lng, lat]);
       setCenter([lng, lat]);
       map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
-
       const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
       if (input) input.value = "";
     });
 
-    // 🔍 Barre de recherche
     const geocoder = new MapboxGeocoder({
       accessToken: mapboxgl.accessToken,
       mapboxgl,
@@ -227,11 +222,10 @@ export default function OffersPage() {
     return () => map.remove();
   }, []);
 
-  // 🎯 Cercle dynamique
+  // Cercle dynamique
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-
     if (!map.isStyleLoaded()) {
       map.once("load", () => drawRadius(map, center, radiusKm));
     } else {
@@ -247,7 +241,6 @@ export default function OffersPage() {
       if (map.getSource("outside-mask")) map.removeSource("outside-mask");
 
       const circle = createGeoJSONCircle(center, radiusKm * 1000);
-
       map.addSource("radius", { type: "geojson", data: circle });
       map.addLayer({
         id: "radius",
@@ -255,47 +248,37 @@ export default function OffersPage() {
         source: "radius",
         paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
       });
-
-      const outerPolygon = {
-        type: "Feature",
-        geometry: {
-          type: "Polygon",
-          coordinates: [
-            [
-              [-180, -90],
-              [180, -90],
-              [180, 90],
-              [-180, 90],
-              [-180, -90],
-            ],
-            circle.geometry.coordinates[0],
-          ],
-        },
-      };
-
-      map.addSource("outside-mask", { type: "geojson", data: outerPolygon });
-      map.addLayer({
-        id: "outside-mask",
-        type: "fill",
-        source: "outside-mask",
-        paint: { "fill-color": "rgba(0,0,0,0.35)", "fill-opacity": 0.35 },
-      });
-
-      const bounds = new mapboxgl.LngLatBounds();
-      circle.geometry.coordinates[0].forEach(([lng, lat]) => bounds.extend([lng, lat]));
-      map.fitBounds(bounds, { padding: 50, duration: 800 });
     } catch (err) {
       console.warn("Erreur drawRadius :", err);
     }
   }
 
-  // 🔁 Chargement des offres
+  // Chargement des offres
   useEffect(() => {
     const fetchOffers = async () => {
       try {
         let data, error;
-
-        if (clientId) {
+        if (viewMode === "all") {
+          const result = await supabase.from("offers").select(`
+            id as offer_id,
+            title,
+            price_before,
+            price_after,
+            merchant_id,
+            location
+          `).eq("is_active", true);
+          data = result.data?.map((o) => ({
+            offer_id: o.offer_id,
+            title: o.title,
+            merchant_name: "",
+            price_before: o.price_before,
+            price_after: o.price_after,
+            distance_meters: 0,
+            offer_lat: o.location.coordinates[1],
+            offer_lng: o.location.coordinates[0],
+          })) || [];
+          error = result.error;
+        } else if (clientId) {
           const result = await supabase.rpc("get_offers_nearby_dynamic", {
             p_client_id: clientId,
             p_radius_meters: radiusKm * 1000,
@@ -326,35 +309,12 @@ export default function OffersPage() {
     };
 
     fetchOffers();
-  }, [clientId, center, radiusKm]);
+  }, [clientId, center, radiusKm, viewMode]);
 
-  // 🧭 Fonction bouton “Voir toutes les offres”
-  const handleShowAllOffers = async () => {
-    try {
-      const { data, error } = await supabase.rpc("get_offers_nearby_public", {
-        p_longitude: 29, // centre Turquie
-        p_latitude: 39,
-        p_radius_meters: 1000000, // 1000 km
-      });
-
-      if (error) throw error;
-      setOffers(data || []);
-
-      if (data?.length > 0 && mapRef.current) {
-        const bounds = new mapboxgl.LngLatBounds();
-        data.forEach((o) => bounds.extend([o.offer_lng, o.offer_lat]));
-        mapRef.current.fitBounds(bounds, { padding: 50 });
-      }
-    } catch (err) {
-      console.error("Erreur lors du chargement de toutes les offres :", err);
-    }
-  };
-
-  // 📍 Marqueurs d’offres
+  // Marqueurs d’offres
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-
     (map as any)._markers?.forEach((m: Marker) => m.remove());
     (map as any)._markers = [];
 
@@ -384,7 +344,7 @@ export default function OffersPage() {
     });
   }, [offers]);
 
-  // 🎚️ Slider de rayon
+  // Slider de rayon
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
@@ -395,7 +355,7 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* 🎚️ Slider */}
+        {/* Slider */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
           <input
             type="range"
@@ -409,18 +369,32 @@ export default function OffersPage() {
         </div>
       </div>
 
-      {/* 🛒 Liste des offres */}
+      {/* Liste des offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-2">Offres à proximité</h2>
-
-        {/* 🔘 Bouton "Voir toutes les offres" */}
-        <div className="flex justify-center mb-4">
-          <button
-            onClick={handleShowAllOffers}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-sm text-sm transition"
-          >
-            🌍 Voir toutes les offres
-          </button>
+        {/* 🔘 Barre d’onglets */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
+            <button
+              className={`px-4 py-2 text-sm font-semibold transition-all ${
+                viewMode === "nearby"
+                  ? "bg-white text-green-700 shadow"
+                  : "text-gray-500 hover:text-green-600"
+              }`}
+              onClick={() => setViewMode("nearby")}
+            >
+              Offres à proximité
+            </button>
+            <button
+              className={`px-4 py-2 text-sm font-semibold transition-all ${
+                viewMode === "all"
+                  ? "bg-white text-green-700 shadow"
+                  : "text-gray-500 hover:text-green-600"
+              }`}
+              onClick={() => setViewMode("all")}
+            >
+              Toutes les offres
+            </button>
+          </div>
         </div>
 
         {offers.length === 0 ? (
@@ -467,7 +441,7 @@ export default function OffersPage() {
   );
 }
 
-// 🔵 Cercle GeoJSON
+// Cercle GeoJSON
 export function createGeoJSONCircle(center: [number, number], radiusInMeters: number, points = 64) {
   const coords = { latitude: center[1], longitude: center[0] };
   const km = radiusInMeters / 1000;
