@@ -18,50 +18,66 @@ type Offer = {
   image_url?: string;
 };
 
+// 🗺️ Style Tilkapp V2 (Mapbox Studio)
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
-const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082];
 
+// 📍 Position par défaut — Turquie (Istanbul)
+const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
+
+// 🎨 CSS personnalisé — version stable et simple + ajustements
 const customMapboxCSS = `
+  /* Désactive halo et outline */
   .mapboxgl-ctrl-geolocate:focus,
   .mapboxgl-ctrl-geocoder input:focus {
     outline: none !important;
     box-shadow: none !important;
   }
 
+  /* Conteneur en haut à droite pour GPS + recherche */
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
     right: 10px !important;
     display: flex !important;
     align-items: center !important;
-    gap: 0px !important;
-    transform: translateX(-55%) !important;
+    gap: 0px !important; /* ✅ Espace plus grand entre GPS et barre */
+    transform: translateX(-55%) !important; /* ✅ Tire légèrement vers la gauche pour centrer sur la carte */
   }
 
+  /* Barre de recherche */
   .mapboxgl-ctrl-geocoder {
     width: 280px !important;
     max-width: 80% !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    height: 32px !important;
-    font-size: 14px !important;
+    height: 32px !important; /* ✅ Barre plus fine */
+    font-size: 14px !important; /* ✅ Texte plus petit */
   }
 
-  @media (max-width: 640px) {
-    .mapboxgl-ctrl-top-right {
-      top: 8px !important;
-      right: 50% !important;
-      transform: translateX(50%) !important;
-      flex-direction: row !important;
-      justify-content: center !important;
-      gap: 6px !important;
-    }
+  /* Mobile responsive — en haut centré */
+@media (max-width: 640px) {
+  .mapboxgl-ctrl-top-right {
+    top: 8px !important;
+    right: 50% !important;
+    transform: translateX(50%) !important;
+    flex-direction: row !important;         /* ✅ côte à côte */
+    justify-content: center !important;     /* ✅ centrés */
+    gap: 6px !important;
+  }
+
+  .mapboxgl-ctrl-geocoder {
+    width: 80% !important;                  /* ✅ barre un peu plus courte */
+    height: 36px !important;
+  }
+}
+
 
     .mapboxgl-ctrl-geocoder {
-      width: 80% !important;
-      height: 36px !important;
+      width: 90% !important;
+      height: 36px !important; /* un peu plus fine aussi sur mobile */
     }
   }
 
+  /* Masquer les mentions Mapbox/OpenStreetMap */
   .mapboxgl-ctrl-logo,
   .mapboxgl-ctrl-attrib,
   .mapbox-improve-map {
@@ -74,15 +90,17 @@ export default function OffersPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [userLocation, setUserLocation] = useState<[number, number]>(DEFAULT_LOCATION);
+  const [userLocation, setUserLocation] = useState<[number, number]>(
+    DEFAULT_LOCATION
+  );
   const [center, setCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   const [radiusKm, setRadiusKm] = useState<number>(
     Number(localStorage.getItem("radiusKm")) || 10
   );
-  const [profileId, setProfileId] = useState<string | null>(null);
+  const [clientId, setClientId] = useState<string | null>(null);
   const [isGeolocating, setIsGeolocating] = useState(false);
-  const [hasLocation, setHasLocation] = useState(false);
 
+  // Injecte le CSS
   useEffect(() => {
     const styleTag = document.createElement("style");
     styleTag.innerHTML = customMapboxCSS;
@@ -90,118 +108,71 @@ export default function OffersPage() {
     return () => document.head.removeChild(styleTag);
   }, []);
 
+  // Récupère le client_id depuis la table clients si l'utilisateur est connecté
   useEffect(() => {
-    const initProfile = async () => {
+    const fetchClientId = async () => {
       if (!user) {
-        setProfileId(null);
-        setHasLocation(false);
+        setClientId(null);
         return;
       }
 
       try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('id, location')
+        const { data: client } = await supabase
+          .from('clients')
+          .select('id')
           .eq('id', user.id)
           .maybeSingle();
 
-        if (error) {
-          console.error('Error fetching profile:', error);
-          return;
-        }
-
-        if (profile) {
-          setProfileId(profile.id);
-          setHasLocation(!!profile.location);
-          console.log('Profile found:', profile.id, 'has location:', !!profile.location);
-        } else {
-          const { data: newProfile, error: insertError } = await supabase
-            .from('profiles')
-            .insert({
-              id: user.id,
-              location: null
-            })
-            .select('id')
-            .maybeSingle();
-
-          if (insertError) {
-            if (insertError.code === '23505') {
-              const { data: existingProfile } = await supabase
-                .from('profiles')
-                .select('id, location')
-                .eq('id', user.id)
-                .single();
-
-              if (existingProfile) {
-                setProfileId(existingProfile.id);
-                setHasLocation(!!existingProfile.location);
-              }
-            } else {
-              console.error('Error creating profile:', insertError);
-            }
-          } else if (newProfile) {
-            setProfileId(newProfile.id);
-            setHasLocation(false);
-            console.log('Profile created:', newProfile.id);
-          }
+        if (client) {
+          setClientId(client.id);
         }
       } catch (error) {
-        console.error('Error in initProfile:', error);
+        console.error('Erreur lors de la récupération du client:', error);
       }
     };
 
-    initProfile();
+    fetchClientId();
   }, [user]);
 
+  // Géolocalisation automatique pour les clients connectés
   useEffect(() => {
-    if (!profileId || isGeolocating || hasLocation) return;
+    if (!clientId || isGeolocating) return;
 
-    const geolocateUser = async () => {
-      if (!navigator.geolocation) {
-        console.log('Geolocation not supported');
-        return;
-      }
+    const geolocateClient = async () => {
+      if (!navigator.geolocation) return;
 
       setIsGeolocating(true);
-      console.log('Requesting geolocation...');
 
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          console.log('Geolocation success:', latitude, longitude);
 
           try {
-            const { error } = await supabase
-              .from('profiles')
-              .update({
-                location: `POINT(${longitude} ${latitude})`
-              })
-              .eq('id', profileId);
+            await supabase.rpc('update_client_location', {
+              client_id: clientId,
+              longitude: longitude,
+              latitude: latitude,
+              status: 'success'
+            });
 
-            if (error) {
-              console.error('Error updating location:', error);
-            } else {
-              console.log('Location updated successfully');
-              setUserLocation([longitude, latitude]);
-              setCenter([longitude, latitude]);
-              setHasLocation(true);
+            setUserLocation([longitude, latitude]);
+            setCenter([longitude, latitude]);
 
-              if (mapRef.current) {
-                mapRef.current.flyTo({
-                  center: [longitude, latitude],
-                  zoom: 12,
-                  essential: true
-                });
-              }
+            if (mapRef.current) {
+              mapRef.current.flyTo({
+                center: [longitude, latitude],
+                zoom: 12,
+                essential: true
+              });
             }
           } catch (error) {
-            console.error('Error saving location:', error);
+            console.error('Erreur lors de la mise à jour de la position:', error);
           } finally {
             setIsGeolocating(false);
           }
         },
         (error) => {
-          console.warn('Geolocation error:', error.message);
+          console.warn('Géolocalisation refusée ou impossible:', error);
           setIsGeolocating(false);
         },
         {
@@ -212,9 +183,10 @@ export default function OffersPage() {
       );
     };
 
-    geolocateUser();
-  }, [profileId, hasLocation, isGeolocating]);
+    geolocateClient();
+  }, [clientId]);
 
+  // Initialise la carte
   useEffect(() => {
     mapboxgl.accessToken =
       "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueXgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g";
@@ -230,6 +202,7 @@ export default function OffersPage() {
 
     mapRef.current = map;
 
+    // 📍 Contrôle de géolocalisation
     const geolocate = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: false,
@@ -237,31 +210,20 @@ export default function OffersPage() {
     });
     map.addControl(geolocate, "top-right");
 
-    geolocate.on("geolocate", async (e) => {
-      const lng = e.coords.longitude;
-      const lat = e.coords.latitude;
-      setUserLocation([lng, lat]);
-      setCenter([lng, lat]);
-      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
+    geolocate.on("geolocate", (e) => {
+  const lng = e.coords.longitude;
+  const lat = e.coords.latitude;
+  setUserLocation([lng, lat]);
+  setCenter([lng, lat]);
+  map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
 
-      const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
-      if (input) input.value = "";
+  // 🧹 Vide le champ de recherche (évite qu’il reste sur "Paris")
+  const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+  if (input) input.value = "";
+});
 
-      if (profileId) {
-        try {
-          await supabase
-            .from('profiles')
-            .update({
-              location: `POINT(${lng} ${lat})`
-            })
-            .eq('id', profileId);
-          setHasLocation(true);
-        } catch (error) {
-          console.error('Error updating location via geolocate button:', error);
-        }
-      }
-    });
 
+    // 🔍 Barre de recherche
     const geocoder = new MapboxGeocoder({
       accessToken: mapboxgl.accessToken,
       mapboxgl,
@@ -280,6 +242,7 @@ export default function OffersPage() {
     return () => map.remove();
   }, []);
 
+  // Cercle dynamique
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -300,6 +263,7 @@ export default function OffersPage() {
 
       const circle = createGeoJSONCircle(center, radiusKm * 1000);
 
+      // Zone de recherche
       map.addSource("radius", { type: "geojson", data: circle });
       map.addLayer({
         id: "radius",
@@ -308,6 +272,7 @@ export default function OffersPage() {
         paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
       });
 
+      // Extérieur assombri
       const outerPolygon = {
         type: "Feature",
         geometry: {
@@ -342,49 +307,46 @@ export default function OffersPage() {
       );
       map.fitBounds(bounds, { padding: 50, duration: 800 });
     } catch (err) {
-      console.warn("Error drawing radius:", err);
+      console.warn("Erreur drawRadius :", err);
     }
   }
 
+  // Chargement des offres
   useEffect(() => {
     const fetchOffers = async () => {
-      if (!profileId || !hasLocation) {
-        console.log('Cannot fetch offers - profileId:', profileId, 'hasLocation:', hasLocation);
+      if (!clientId) {
+        setOffers([]);
         return;
       }
 
-      console.log('Fetching offers for profile:', profileId, 'radius:', radiusKm * 1000);
-
       try {
         const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
-          p_client_id: profileId,
+          p_client_id: clientId,
           p_radius_meters: radiusKm * 1000,
         });
 
         if (error) {
-          console.error('RPC error:', error);
+          console.error('Erreur lors du chargement des offres:', error);
           setOffers([]);
         } else {
-          console.log('Offers fetched:', data?.length || 0, data);
           setOffers(data || []);
         }
       } catch (error) {
-        console.error('Error fetching offers:', error);
+        console.error('Erreur lors de la récupération des offres:', error);
         setOffers([]);
       }
     };
 
     fetchOffers();
-  }, [profileId, hasLocation, radiusKm]);
+  }, [clientId, center, radiusKm]);
 
+  // Marqueurs d’offres
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
     (map as any)._markers?.forEach((m: Marker) => m.remove());
     (map as any)._markers = [];
-
-    console.log('Adding', offers.length, 'markers to map');
 
     offers.forEach((offer) => {
       const el = document.createElement("div");
@@ -394,14 +356,19 @@ export default function OffersPage() {
       el.style.height = "20px";
       el.style.borderRadius = "50%";
       el.style.border = "2px solid #fff";
-      el.style.cursor = "pointer";
 
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
         <strong>${offer.title}</strong><br/>
         ${offer.merchant_name}<br/>
-        <span style="color:green;font-weight:bold;">${offer.price_after.toFixed(2)} €</span>
-        <span style="text-decoration:line-through;color:#999;margin-left:4px;">${offer.price_before.toFixed(2)} €</span><br/>
-        <a href="https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}" target="_blank" style="color:#22c55e;">🗺️ Itinéraire</a>
+        <span style="color:green;font-weight:bold;">${offer.price_after.toFixed(
+          2
+        )} €</span>
+        <span style="text-decoration:line-through;color:#999;margin-left:4px;">${offer.price_before.toFixed(
+          2
+        )} €</span><br/>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${
+          offer.offer_lat
+        },${offer.offer_lng}" target="_blank">🗺️ Itinéraire</a>
       `);
 
       const marker = new mapboxgl.Marker(el)
@@ -409,11 +376,11 @@ export default function OffersPage() {
         .setPopup(popup)
         .addTo(map);
 
-      (map as any)._markers = (map as any)._markers || [];
       (map as any)._markers.push(marker);
     });
   }, [offers]);
 
+  // Slider de rayon (inchangé)
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
@@ -424,55 +391,31 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
+       {/* 🎚️ Slider — inchangé */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
           <input
             type="range"
             min={1}
             max={30}
             value={radiusKm}
-            onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
+            onInput={(e) => handleRadiusChange(Number(e.target.value))}
             className="w-36 accent-green-500 cursor-pointer focus:outline-none"
           />
           <span className="text-sm text-gray-700 font-medium">{radiusKm} km</span>
         </div>
       </div>
 
+      {/* 🛒 Offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">
-          Offres à proximité
-          {offers.length > 0 && (
-            <span className="ml-2 text-sm font-normal text-gray-600">
-              ({offers.length} {offers.length === 1 ? 'offre' : 'offres'})
-            </span>
-          )}
-        </h2>
-        {!profileId ? (
-          <div className="text-center mt-10 p-6 bg-white rounded-lg shadow">
-            <p className="text-gray-700 font-medium mb-2">
-              Connectez-vous pour voir les offres à proximité
-            </p>
-            <p className="text-sm text-gray-500">
-              Votre position sera automatiquement détectée
-            </p>
-          </div>
-        ) : !hasLocation ? (
-          <div className="text-center mt-10 p-6 bg-white rounded-lg shadow">
-            <p className="text-gray-700 font-medium mb-2">
-              {isGeolocating ? 'Détection de votre position...' : 'Autorisation de géolocalisation requise'}
-            </p>
-            <p className="text-sm text-gray-500">
-              {isGeolocating ? 'Veuillez autoriser l\'accès à votre localisation' : 'Cliquez sur le bouton GPS pour partager votre position'}
-            </p>
-          </div>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
+        {!clientId ? (
+          <p className="text-gray-500 text-center mt-10">
+            Connectez-vous pour voir les offres à proximité.
+          </p>
         ) : offers.length === 0 ? (
-          <div className="text-center mt-10 p-6 bg-white rounded-lg shadow">
-            <p className="text-gray-700 font-medium mb-2">
-              Aucune offre disponible dans ce rayon
-            </p>
-            <p className="text-sm text-gray-500">
-              Essayez d'augmenter le rayon de recherche
-            </p>
-          </div>
+          <p className="text-gray-500 text-center mt-10">
+            Aucune offre disponible dans ce rayon.
+          </p>
         ) : (
           <div className="space-y-4">
             {offers.map((o) => (
@@ -513,6 +456,7 @@ export default function OffersPage() {
   );
 }
 
+// 🔵 Cercle GeoJSON — version finale et stable
 export function createGeoJSONCircle(
   center: [number, number],
   radiusInMeters: number,
@@ -533,6 +477,7 @@ export function createGeoJSONCircle(
     ret.push([coords.longitude + x, coords.latitude + y]);
   }
 
+  // referme le cercle
   ret.push(ret[0]);
 
   return {
