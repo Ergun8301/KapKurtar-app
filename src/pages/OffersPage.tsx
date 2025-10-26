@@ -334,6 +334,48 @@ useEffect(() => {
   fetchOffers();
 }, [clientId, center, radiusKm]);
 
+  // Marqueurs d’offres
+useEffect(() => {
+  const map = mapRef.current;
+  if (!map) return;
+
+  // 🧹 Supprimer les anciens marqueurs
+  (map as any)._markers?.forEach((m: Marker) => m.remove());
+  (map as any)._markers = [];
+
+  offers.forEach((offer) => {
+    // ✅ Ignore les offres sans coordonnées valides
+    if (!offer.offer_lat || !offer.offer_lng) return;
+
+    const el = document.createElement("div");
+    el.className = "offer-marker";
+    el.style.background = "#22c55e";
+    el.style.width = "20px";
+    el.style.height = "20px";
+    el.style.borderRadius = "50%";
+    el.style.border = "2px solid #fff";
+    el.style.cursor = "pointer";
+
+    const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
+      <div style="font-size:14px; line-height:1.4">
+        <strong>${offer.title}</strong><br/>
+        <em>${offer.merchant_name}</em><br/>
+        <span style="color:#16a34a;font-weight:bold;">${offer.price_after.toFixed(2)} €</span>
+        <span style="text-decoration:line-through;color:#999;margin-left:4px;">${offer.price_before.toFixed(2)} €</span><br/>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}" 
+           target="_blank" style="color:#2563eb;text-decoration:underline;">🗺️ Itinéraire</a>
+      </div>
+    `);
+
+    const marker = new mapboxgl.Marker(el)
+      .setLngLat([offer.offer_lng, offer.offer_lat])
+      .setPopup(popup)
+      .addTo(map);
+
+    (map as any)._markers.push(marker);
+  });
+}, [offers]);
+
 
   // Slider de rayon (inchangé)
   const handleRadiusChange = (val: number) => {
