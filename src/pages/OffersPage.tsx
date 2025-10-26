@@ -134,6 +134,7 @@ export default function OffersPage() {
 } catch (error) {
   console.error('Erreur lors de la récupération du profil client :', error);
 }
+      
     fetchClientId();
   }, [user]);
 
