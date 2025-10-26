@@ -122,12 +122,15 @@ export default function OffersPage() {
     fetchClientId();
   }, [user]);
 
-  // Géolocalisation automatique pour clients connectés
+  // Géolocalisation automatique au démarrage (pour tous les utilisateurs)
   useEffect(() => {
-    if (!clientId || isGeolocating) return;
+    if (isGeolocating) return;
 
-    const geolocateClient = async () => {
-      if (!navigator.geolocation) return;
+    const geolocateOnStart = async () => {
+      if (!navigator.geolocation) {
+        console.warn("Géolocalisation non disponible");
+        return;
+      }
 
       setIsGeolocating(true);
 
@@ -136,12 +139,15 @@ export default function OffersPage() {
           const { latitude, longitude } = position.coords;
 
           try {
-            await supabase.rpc("update_client_location", {
-              client_id: clientId,
-              longitude,
-              latitude,
-              status: "success",
-            });
+            // Si client connecté, met à jour sa position dans Supabase
+            if (clientId) {
+              await supabase.rpc("update_client_location", {
+                client_id: clientId,
+                longitude,
+                latitude,
+                status: "success",
+              });
+            }
 
             setUserLocation([longitude, latitude]);
             setCenter([longitude, latitude]);
@@ -153,6 +159,8 @@ export default function OffersPage() {
                 essential: true,
               });
             }
+
+            console.log("✅ Géolocalisation réussie:", latitude, longitude);
           } catch (error) {
             console.error("Erreur lors de la mise à jour de la position:", error);
           } finally {
@@ -160,15 +168,17 @@ export default function OffersPage() {
           }
         },
         (error) => {
-          console.warn("Géolocalisation refusée ou impossible:", error);
+          console.warn("⚠️ Géolocalisation refusée ou impossible:", error.message);
           setIsGeolocating(false);
+          // Reste sur Istanbul si géolocalisation refusée
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     };
 
-    geolocateClient();
-  }, [clientId]);
+    // Lance la géolocalisation au démarrage
+    geolocateOnStart();
+  }, []); // Lance une seule fois au montage du composant
 
   // Initialisation de la carte
   useEffect(() => {
@@ -311,15 +321,33 @@ export default function OffersPage() {
         let data, error;
 
         if (viewMode === "all") {
-          // Mode "Toutes les offres" : utilise un rayon très large depuis un point central
-          // Ou bien récupère directement via la RPC avec un rayon énorme
-          const result = await supabase.rpc("get_offers_nearby_public", {
-            p_longitude: 29, // Centre approximatif de la Turquie
-            p_latitude: 39,
-            p_radius_meters: 2000000, // 2000 km = toute la Turquie et plus
-          });
-          data = result.data;
+          // Mode "Toutes les offres" : récupère TOUTES les offres sans filtre géographique
+          const result = await supabase
+            .from("offers")
+            .select(`
+              id,
+              title,
+              price_before,
+              price_after,
+              location,
+              merchant:merchants(name)
+            `)
+            .eq("is_active", true);
+
+          // Transforme les données au bon format
+          data = result.data?.map((o: any) => ({
+            offer_id: o.id,
+            title: o.title,
+            merchant_name: o.merchant?.name || "Marchand",
+            price_before: o.price_before,
+            price_after: o.price_after,
+            distance_meters: 0, // Pas de distance en mode "toutes les offres"
+            offer_lat: o.location?.coordinates?.[1] || 0,
+            offer_lng: o.location?.coordinates?.[0] || 0,
+          })).filter((o: any) => o.offer_lat !== 0 && o.offer_lng !== 0) || []; // Filtre les offres sans coordonnées
+          
           error = result.error;
+          console.log(`✅ Mode "Toutes les offres": ${data.length} offres chargées`);
         } else {
           // Mode "Proximité" : utilise les RPC existantes
           if (clientId) {
@@ -339,17 +367,17 @@ export default function OffersPage() {
             data = result.data;
             error = result.error;
           }
+          console.log(`✅ Mode "Proximité": ${data?.length || 0} offres chargées`);
         }
 
         if (error) {
-          console.error("Erreur lors du chargement des offres:", error);
+          console.error("❌ Erreur lors du chargement des offres:", error);
           setOffers([]);
         } else {
-          console.log(`Mode ${viewMode}: ${data?.length || 0} offres chargées`);
           setOffers(data || []);
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération des offres:", error);
+        console.error("❌ Erreur lors de la récupération des offres:", error);
         setOffers([]);
       }
     };
@@ -405,13 +433,14 @@ export default function OffersPage() {
     setViewMode(mode);
     
     if (mode === "nearby" && mapRef.current) {
-      // Retour à la position de l'utilisateur avec le cercle
+      // Retour à la dernière position connue (GPS ou recherche)
       mapRef.current.flyTo({
-        center: userLocation,
+        center: center, // Utilise la dernière position (userLocation ou recherche)
         zoom: 12,
         essential: true,
       });
     }
+    // En mode "all", le fitBounds se fait automatiquement dans useEffect des marqueurs
   };
 
   // Gestion du changement de rayon
