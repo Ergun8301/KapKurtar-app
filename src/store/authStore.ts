@@ -58,18 +58,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
 
-      // 🔍 Sinon vérifie si client
-      const { data: client } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle();
+      // 🔍 Vérifie si client dans profiles
+const { data: profile, error } = await supabase
+  .from('profiles')
+  .select('role')
+  .eq('auth_id', user.id)
+  .maybeSingle();
 
-      if (client) {
-        set({ userType: 'customer' });
-      } else {
-        set({ userType: 'customer' }); // par défaut
-      }
+if (error) {
+  console.error('Erreur lors de la détection du rôle utilisateur :', error);
+  set({ userType: 'customer' }); // fallback
+} else if (profile?.role === 'merchant') {
+  set({ userType: 'merchant' });
+} else if (profile?.role === 'client') {
+  set({ userType: 'customer' });
+} else {
+  set({ userType: 'customer' }); // fallback
+}
+
     } catch (error) {
       console.error('Erreur lors de la détection du type utilisateur :', error);
       set({ userType: 'customer' }); // fallback
