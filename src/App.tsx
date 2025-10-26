@@ -1,29 +1,26 @@
 import React, { useEffect, useState } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-  useNavigate,
-} from "react-router-dom";
-
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { AddProductProvider } from "./contexts/AddProductContext";
 import { supabase } from "./lib/supabaseClient";
 
-// ✅ Pages principales
+// Pages principales
 import HomePage from "./pages/HomePage";
 import OffersPage from "./pages/OffersPage";
+import OffersMapPage from "./pages/OffersMapPage"; // ancienne page mapbox (désactivée ci-dessous)
 import CustomerAuthPage from "./pages/CustomerAuthPage";
 import MerchantAuthPage from "./pages/MerchantAuthPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
+import ClientOnboardingPage from "./pages/ClientOnboardingPage";
 import ProfileCompletePage from "./pages/ProfileCompletePage";
 import MerchantDashboardPage from "./pages/MerchantDashboardPage";
 
-// ✅ Pages utilisateurs
+// Pages utilisateurs
 import FavoritesPage from "./pages/FavoritesPage";
+import CustomerHistoryPage from "./pages/CustomerHistoryPage";
 import ReviewsPage from "./pages/ReviewsPage";
+
 import DownloadPage from "./pages/DownloadPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -34,13 +31,10 @@ function SessionRedirect() {
 
   useEffect(() => {
     (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        setChecked(true);
-        return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { 
+        setChecked(true); 
+        return; 
       }
 
       const { data, error } = await supabase
@@ -49,11 +43,8 @@ function SessionRedirect() {
         .eq("auth_id", user.id)
         .single();
 
-      if (!error && data?.role === "merchant") {
-        nav("/merchant/dashboard");
-      } else if (!error && data?.role === "client") {
-        nav("/offers");
-      }
+      if (!error && data?.role === "merchant") nav("/merchant/dashboard");
+      else if (!error && data?.role === "client") nav("/offers"); // ✅ correction ici
 
       setChecked(true);
     })();
@@ -77,32 +68,37 @@ function App() {
 
               {/* 🗺️ Offres */}
               <Route path="/offers" element={<OffersPage />} />
+              {/* 🔸 Ancienne version Mapbox désactivée pour éviter le doublon */}
+              {/* <Route path="/offers/map" element={<OffersMapPage />} /> */}
 
               {/* ❤️ Favoris */}
               <Route path="/favorites" element={<FavoritesPage />} />
 
+              {/* 🕒 Historique (ancienne, inutilisée) */}
+              {/* <Route path="/history" element={<CustomerHistoryPage />} /> */}
+
               {/* ⭐ Avis */}
               <Route path="/reviews" element={<ReviewsPage />} />
 
-              {/* 🔐 Authentification */}
+              {/* 🔐 Auth */}
               <Route path="/customer/auth" element={<CustomerAuthPage />} />
               <Route path="/merchant/auth" element={<MerchantAuthPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
+              {/* 👤 Onboarding (obsolète) */}
+              {/* <Route path="/onboarding" element={<ClientOnboardingPage />} /> */}
+
               {/* 👤 Compléter profil */}
               <Route path="/profile/complete" element={<ProfileCompletePage />} />
 
-              {/* 🏪 Tableau de bord marchand */}
+              {/* 🏪 Marchands */}
               <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
 
               {/* 📱 Téléchargement */}
               <Route path="/download" element={<DownloadPage />} />
 
-              {/* 🚫 Redirections anciennes */}
-              <Route
-                path="/customer/teaser"
-                element={<Navigate to="/offers" replace />}
-              />
+              {/* 🚫 Ancienne route redirigée */}
+              <Route path="/customer/teaser" element={<Navigate to="/offers" replace />} />
 
               {/* 404 */}
               <Route path="*" element={<NotFoundPage />} />
