@@ -5,6 +5,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
+import { callGetOffersNearby } from "../utils/callGetOffersNearby";
 
 type Offer = {
   offer_id: string;
@@ -312,73 +313,27 @@ export default function OffersPage() {
   }
 
   // Chargement des offres
-  useEffect(() => {
-    const fetchOffers = async () => {
-      if (!clientId) {
-        setOffers([]);
-        return;
-      }
+useEffect(() => {
+  const fetchOffers = async () => {
+    if (!clientId) {
+      setOffers([]);
+      return;
+    }
 
-      try {
-        const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
-          p_client_id: clientId,
-          p_radius_meters: radiusKm * 1000,
-        });
+    try {
+      // ✅ Appel via le helper centralisé
+      const data = await callGetOffersNearby(clientId, radiusKm);
+      console.log("✅ Offres reçues depuis Supabase :", data);
+      setOffers(data);
+    } catch (error) {
+      console.error("❌ Erreur lors de la récupération des offres :", error);
+      setOffers([]);
+    }
+  };
 
-        if (error) {
-          console.error('Erreur lors du chargement des offres:', error);
-          setOffers([]);
-        } else {
-          setOffers(data || []);
-        }
-      } catch (error) {
-        console.error('Erreur lors de la récupération des offres:', error);
-        setOffers([]);
-      }
-    };
+  fetchOffers();
+}, [clientId, center, radiusKm]);
 
-    fetchOffers();
-  }, [clientId, center, radiusKm]);
-
-  // Marqueurs d’offres
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    (map as any)._markers?.forEach((m: Marker) => m.remove());
-    (map as any)._markers = [];
-
-    offers.forEach((offer) => {
-      const el = document.createElement("div");
-      el.className = "offer-marker";
-      el.style.background = "#22c55e";
-      el.style.width = "20px";
-      el.style.height = "20px";
-      el.style.borderRadius = "50%";
-      el.style.border = "2px solid #fff";
-
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
-        <strong>${offer.title}</strong><br/>
-        ${offer.merchant_name}<br/>
-        <span style="color:green;font-weight:bold;">${offer.price_after.toFixed(
-          2
-        )} €</span>
-        <span style="text-decoration:line-through;color:#999;margin-left:4px;">${offer.price_before.toFixed(
-          2
-        )} €</span><br/>
-        <a href="https://www.google.com/maps/dir/?api=1&destination=${
-          offer.offer_lat
-        },${offer.offer_lng}" target="_blank">🗺️ Itinéraire</a>
-      `);
-
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([offer.offer_lng, offer.offer_lat])
-        .setPopup(popup)
-        .addTo(map);
-
-      (map as any)._markers.push(marker);
-    });
-  }, [offers]);
 
   // Slider de rayon (inchangé)
   const handleRadiusChange = (val: number) => {
