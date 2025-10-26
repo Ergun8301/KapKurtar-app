@@ -81,9 +81,8 @@ export default function OffersPage() {
   );
   const [clientId, setClientId] = useState<string | null>(null);
   const [isGeolocating, setIsGeolocating] = useState(false);
-  const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
 
-  // Injecte le CSS Mapbox
+  // Injecte le CSS
   useEffect(() => {
     const styleTag = document.createElement("style");
     styleTag.innerHTML = customMapboxCSS;
@@ -186,7 +185,6 @@ export default function OffersPage() {
 
     mapRef.current = map;
 
-    // Contrôle de géolocalisation
     const geolocate = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: false,
@@ -226,6 +224,7 @@ export default function OffersPage() {
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+
     if (!map.isStyleLoaded()) {
       map.once("load", () => drawRadius(map, center, radiusKm));
     } else {
@@ -237,10 +236,9 @@ export default function OffersPage() {
     try {
       if (map.getLayer("radius")) map.removeLayer("radius");
       if (map.getSource("radius")) map.removeSource("radius");
-      if (map.getLayer("outside-mask")) map.removeLayer("outside-mask");
-      if (map.getSource("outside-mask")) map.removeSource("outside-mask");
 
       const circle = createGeoJSONCircle(center, radiusKm * 1000);
+
       map.addSource("radius", { type: "geojson", data: circle });
       map.addLayer({
         id: "radius",
@@ -258,27 +256,8 @@ export default function OffersPage() {
     const fetchOffers = async () => {
       try {
         let data, error;
-        if (viewMode === "all") {
-          const result = await supabase.from("offers").select(`
-            id as offer_id,
-            title,
-            price_before,
-            price_after,
-            merchant_id,
-            location
-          `).eq("is_active", true);
-          data = result.data?.map((o) => ({
-            offer_id: o.offer_id,
-            title: o.title,
-            merchant_name: "",
-            price_before: o.price_before,
-            price_after: o.price_after,
-            distance_meters: 0,
-            offer_lat: o.location.coordinates[1],
-            offer_lng: o.location.coordinates[0],
-          })) || [];
-          error = result.error;
-        } else if (clientId) {
+
+        if (clientId) {
           const result = await supabase.rpc("get_offers_nearby_dynamic", {
             p_client_id: clientId,
             p_radius_meters: radiusKm * 1000,
@@ -309,12 +288,13 @@ export default function OffersPage() {
     };
 
     fetchOffers();
-  }, [clientId, center, radiusKm, viewMode]);
+  }, [clientId, center, radiusKm]);
 
   // Marqueurs d’offres
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+
     (map as any)._markers?.forEach((m: Marker) => m.remove());
     (map as any)._markers = [];
 
@@ -344,7 +324,6 @@ export default function OffersPage() {
     });
   }, [offers]);
 
-  // Slider de rayon
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
@@ -371,30 +350,55 @@ export default function OffersPage() {
 
       {/* Liste des offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-        {/* 🔘 Barre d’onglets */}
+        {/* 🔘 Titre + bouton aligné à droite */}
         <div className="flex justify-between items-center mb-4">
-          <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
-            <button
-              className={`px-4 py-2 text-sm font-semibold transition-all ${
-                viewMode === "nearby"
-                  ? "bg-white text-green-700 shadow"
-                  : "text-gray-500 hover:text-green-600"
-              }`}
-              onClick={() => setViewMode("nearby")}
-            >
-              Offres à proximité
-            </button>
-            <button
-              className={`px-4 py-2 text-sm font-semibold transition-all ${
-                viewMode === "all"
-                  ? "bg-white text-green-700 shadow"
-                  : "text-gray-500 hover:text-green-600"
-              }`}
-              onClick={() => setViewMode("all")}
-            >
-              Toutes les offres
-            </button>
-          </div>
+          <h2 className="text-xl font-bold text-gray-800">Offres à proximité</h2>
+          <button
+            onClick={async () => {
+              try {
+                const { data, error } = await supabase
+                  .from("offers")
+                  .select(
+                    "id as offer_id, title, price_before, price_after, merchant_id, location, is_active"
+                  )
+                  .eq("is_active", true);
+
+                if (error) {
+                  console.error("Erreur lors du chargement des offres globales :", error);
+                  return;
+                }
+
+                if (data && data.length > 0) {
+                  const offersData = data.map((o) => ({
+                    offer_id: o.offer_id,
+                    title: o.title,
+                    merchant_name: "",
+                    price_before: o.price_before,
+                    price_after: o.price_after,
+                    distance_meters: 0,
+                    offer_lat: o.location.coordinates[1],
+                    offer_lng: o.location.coordinates[0],
+                  }));
+
+                  setOffers(offersData);
+
+                  const map = mapRef.current;
+                  if (map && offersData.length > 0) {
+                    const bounds = new mapboxgl.LngLatBounds();
+                    offersData.forEach((o) =>
+                      bounds.extend([o.offer_lng, o.offer_lat])
+                    );
+                    map.fitBounds(bounds, { padding: 60, duration: 1000 });
+                  }
+                }
+              } catch (error) {
+                console.error("Erreur lors de l’affichage de toutes les offres :", error);
+              }
+            }}
+            className="flex items-center gap-2 bg-green-600 text-white text-sm font-medium px-4 py-2 rounded-full shadow hover:bg-green-700 transition"
+          >
+            🌍 Voir toutes les offres
+          </button>
         </div>
 
         {offers.length === 0 ? (
@@ -441,7 +445,7 @@ export default function OffersPage() {
   );
 }
 
-// Cercle GeoJSON
+// 🔵 Cercle GeoJSON
 export function createGeoJSONCircle(center: [number, number], radiusInMeters: number, points = 64) {
   const coords = { latitude: center[1], longitude: center[0] };
   const km = radiusInMeters / 1000;
