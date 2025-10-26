@@ -117,19 +117,23 @@ export default function OffersPage() {
       }
 
       try {
-        const { data: client } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('auth_id', user.id)
+    .eq('role', 'client')
+    .maybeSingle();
 
-        if (client) {
-          setClientId(client.id);
-        }
-      } catch (error) {
-        console.error('Erreur lors de la récupération du client:', error);
-      }
-    };
+  if (error) {
+    console.error('Erreur lors de la récupération du profil client:', error);
+  } else if (profile) {
+    setClientId(profile.id);
+  } else {
+    console.warn('Aucun profil client trouvé pour cet utilisateur.');
+  }
+} catch (error) {
+  console.error('Erreur lors de la récupération du profil client:', error);
+}
 
     fetchClientId();
   }, [user]);
