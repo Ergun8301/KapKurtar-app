@@ -28,37 +28,59 @@ const customMapboxCSS = `
     box-shadow: none !important;
   }
 
+  /* Desktop : contrôles en haut à droite */
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
     right: 10px !important;
     display: flex !important;
-    align-items: center !important;
-    gap: 0px !important;
-    transform: translateX(-55%) !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 8px !important;
   }
 
   .mapboxgl-ctrl-geocoder {
     width: 280px !important;
-    max-width: 80% !important;
+    max-width: none !important;
     border-radius: 8px !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    height: 32px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+    height: 36px !important;
     font-size: 14px !important;
   }
 
-  @media (max-width: 640px) {
+  .mapboxgl-ctrl-geolocate {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+  }
+
+  /* Mobile : adaptation complète */
+  @media (max-width: 768px) {
     .mapboxgl-ctrl-top-right {
-      top: 8px !important;
-      right: 50% !important;
-      transform: translateX(50%) !important;
-      flex-direction: row !important;
-      justify-content: center !important;
-      gap: 6px !important;
+      top: 10px !important;
+      left: 10px !important;
+      right: 10px !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 8px !important;
     }
 
     .mapboxgl-ctrl-geocoder {
-      width: 80% !important;
-      height: 36px !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: 40px !important;
+      font-size: 15px !important;
+    }
+
+    .mapboxgl-ctrl-geolocate {
+      width: 40px !important;
+      height: 40px !important;
+      align-self: flex-end !important;
+    }
+
+    /* Cache le bouton géolocalisation sur mobile (on a déjà la géoloc auto) */
+    .mapboxgl-ctrl-geolocate {
+      display: none !important;
     }
   }
 
@@ -450,62 +472,68 @@ export default function OffersPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
-      <div className="relative flex-1 border-r border-gray-200">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] md:h-[calc(100vh-100px)]">
+      {/* Carte */}
+      <div className="relative h-[50vh] md:h-full md:flex-1 border-b md:border-b-0 md:border-r border-gray-200">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
+
+        {/* Toggle modes - Position adaptative */}
+        <div className="absolute top-[70px] md:top-4 left-1/2 -translate-x-1/2 z-[900]">
+          <div className="flex bg-white/95 backdrop-blur-sm rounded-full overflow-hidden shadow-lg border border-gray-200">
+            <button
+              className={`px-3 py-2 md:px-5 md:py-2.5 text-xs md:text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
+                viewMode === "nearby"
+                  ? "bg-green-600 text-white shadow-sm"
+                  : "text-gray-600 hover:text-green-600"
+              }`}
+              onClick={() => handleViewModeChange("nearby")}
+            >
+              📍 Proximité
+            </button>
+            <button
+              className={`px-3 py-2 md:px-5 md:py-2.5 text-xs md:text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
+                viewMode === "all"
+                  ? "bg-green-600 text-white shadow-sm"
+                  : "text-gray-600 hover:text-green-600"
+              }`}
+              onClick={() => handleViewModeChange("all")}
+            >
+              🌍 Toutes
+            </button>
+          </div>
+        </div>
 
         {/* Slider de rayon (visible uniquement en mode proximité) */}
         {viewMode === "nearby" && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur-sm rounded-full shadow-lg px-3 py-2 md:px-4 md:py-2.5 flex items-center space-x-2 border border-gray-200">
             <input
               type="range"
               min={1}
               max={30}
               value={radiusKm}
               onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
-              className="w-36 accent-green-500 cursor-pointer focus:outline-none"
+              className="w-24 md:w-36 accent-green-500 cursor-pointer focus:outline-none"
             />
-            <span className="text-sm text-gray-700 font-medium">{radiusKm} km</span>
+            <span className="text-xs md:text-sm text-gray-700 font-semibold min-w-[45px] md:min-w-[50px]">
+              {radiusKm} km
+            </span>
           </div>
         )}
       </div>
 
       {/* Liste des offres */}
-      <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-        {/* 🔘 Toggle élégant entre les modes de vue */}
-        <div className="flex justify-center mb-6">
-          <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
-            <button
-              className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
-                viewMode === "nearby"
-                  ? "bg-white text-green-700 shadow"
-                  : "text-gray-500 hover:text-green-600"
-              }`}
-              onClick={() => handleViewModeChange("nearby")}
-            >
-              📍 Offres à proximité
-            </button>
-            <button
-              className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
-                viewMode === "all"
-                  ? "bg-white text-green-700 shadow"
-                  : "text-gray-500 hover:text-green-600"
-              }`}
-              onClick={() => handleViewModeChange("all")}
-            >
-              🌍 Toutes les offres
-            </button>
-          </div>
-        </div>
-
+      <div className="flex-1 md:w-1/2 overflow-y-auto bg-gray-50 p-3 md:p-4">
         {offers.length === 0 ? (
-          <p className="text-gray-500 text-center mt-10">
-            {viewMode === "nearby"
-              ? "Aucune offre disponible dans ce rayon. Essayez d'augmenter la distance !"
-              : "Aucune offre disponible pour le moment."}
-          </p>
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <div className="text-4xl mb-3">🔍</div>
+            <p className="text-gray-500 text-sm md:text-base">
+              {viewMode === "nearby"
+                ? "Aucune offre disponible dans ce rayon. Essayez d'augmenter la distance !"
+                : "Aucune offre disponible pour le moment."}
+            </p>
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {offers.map((o) => (
               <div
                 key={o.offer_id}
@@ -515,23 +543,27 @@ export default function OffersPage() {
                   <img
                     src={o.image_url}
                     alt={o.title}
-                    className="w-24 h-24 object-cover"
+                    className="w-20 h-20 md:w-24 md:h-24 object-cover flex-shrink-0"
                   />
                 )}
-                <div className="flex-1 p-3">
-                  <h3 className="font-semibold text-gray-800">{o.title}</h3>
-                  <p className="text-sm text-gray-500">{o.merchant_name}</p>
+                <div className="flex-1 p-2.5 md:p-3 min-w-0">
+                  <h3 className="font-semibold text-gray-800 text-sm md:text-base truncate">
+                    {o.title}
+                  </h3>
+                  <p className="text-xs md:text-sm text-gray-500 truncate">
+                    {o.merchant_name}
+                  </p>
                   {viewMode === "nearby" && o.distance_meters > 0 && (
-                    <p className="text-green-600 font-semibold">
+                    <p className="text-green-600 font-semibold text-xs md:text-sm">
                       📍 {(o.distance_meters / 1000).toFixed(2)} km
                     </p>
                   )}
                   <div className="flex items-center justify-between mt-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-bold text-green-600">
+                    <div className="flex items-center space-x-1.5 md:space-x-2">
+                      <span className="font-bold text-green-600 text-sm md:text-base">
                         {o.price_after.toFixed(2)} €
                       </span>
-                      <span className="line-through text-gray-400 text-sm">
+                      <span className="line-through text-gray-400 text-xs md:text-sm">
                         {o.price_before.toFixed(2)} €
                       </span>
                     </div>
