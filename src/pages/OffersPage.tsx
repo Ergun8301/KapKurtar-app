@@ -99,6 +99,7 @@ export default function OffersPage() {
   );
   const [clientId, setClientId] = useState<string | null>(null);
   const [isGeolocating, setIsGeolocating] = useState(false);
+  const [locationUpdated, setLocationUpdated] = useState(0);
 
   // Injecte le CSS
   useEffect(() => {
@@ -108,30 +109,44 @@ export default function OffersPage() {
     return () => document.head.removeChild(styleTag);
   }, []);
 
-  // Récupère le client_id depuis la table clients si l'utilisateur est connecté
+  // Récupère ou crée le profile_id si l'utilisateur est connecté
   useEffect(() => {
-    const fetchClientId = async () => {
+    const fetchOrCreateProfile = async () => {
       if (!user) {
         setClientId(null);
         return;
       }
 
       try {
-        const { data: client } = await supabase
-          .from('clients')
+        const { data: profile } = await supabase
+          .from('profiles')
           .select('id')
           .eq('id', user.id)
           .maybeSingle();
 
-        if (client) {
-          setClientId(client.id);
+        if (profile) {
+          setClientId(profile.id);
+        } else {
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              email: user.email,
+              location: null
+            })
+            .select('id')
+            .single();
+
+          if (!insertError && newProfile) {
+            setClientId(newProfile.id);
+          }
         }
       } catch (error) {
-        console.error('Erreur lors de la récupération du client:', error);
+        console.error('Erreur lors de la récupération du profil:', error);
       }
     };
 
-    fetchClientId();
+    fetchOrCreateProfile();
   }, [user]);
 
   // Géolocalisation automatique pour les clients connectés
@@ -148,15 +163,15 @@ export default function OffersPage() {
           const { latitude, longitude } = position.coords;
 
           try {
-            await supabase.rpc('update_client_location', {
-              client_id: clientId,
-              longitude: longitude,
-              latitude: latitude,
-              status: 'success'
+            await supabase.rpc('profiles_update_location', {
+              p_auth_id: clientId,
+              p_lon: longitude,
+              p_lat: latitude
             });
 
             setUserLocation([longitude, latitude]);
             setCenter([longitude, latitude]);
+            setLocationUpdated(prev => prev + 1);
 
             if (mapRef.current) {
               mapRef.current.flyTo({
@@ -315,11 +330,21 @@ export default function OffersPage() {
   useEffect(() => {
     const fetchOffers = async () => {
       if (!clientId) {
-        setOffers([]);
         return;
       }
 
       try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('location')
+          .eq('id', clientId)
+          .maybeSingle();
+
+        if (!profileData?.location) {
+          console.log('Profile location not set yet, waiting for geolocation...');
+          return;
+        }
+
         const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
           p_client_id: clientId,
           p_radius_meters: radiusKm * 1000,
@@ -329,6 +354,7 @@ export default function OffersPage() {
           console.error('Erreur lors du chargement des offres:', error);
           setOffers([]);
         } else {
+          console.log('Offres récupérées:', data);
           setOffers(data || []);
         }
       } catch (error) {
@@ -338,7 +364,7 @@ export default function OffersPage() {
     };
 
     fetchOffers();
-  }, [clientId, center, radiusKm]);
+  }, [clientId, locationUpdated, radiusKm]);
 
   // Marqueurs d’offres
   useEffect(() => {
@@ -407,15 +433,41 @@ export default function OffersPage() {
 
       {/* 🛒 Offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">
+          Offres à proximité
+          {offers.length > 0 && (
+            <span className="ml-2 text-sm font-normal text-gray-600">
+              ({offers.length} {offers.length === 1 ? 'offre' : 'offres'})
+            </span>
+          )}
+        </h2>
         {!clientId ? (
-          <p className="text-gray-500 text-center mt-10">
-            Connectez-vous pour voir les offres à proximité.
-          </p>
+          <div className="text-center mt-10 p-6 bg-white rounded-lg shadow">
+            <p className="text-gray-700 font-medium mb-2">
+              Connectez-vous pour voir les offres à proximité
+            </p>
+            <p className="text-sm text-gray-500">
+              Votre position sera automatiquement détectée
+            </p>
+          </div>
+        ) : isGeolocating ? (
+          <div className="text-center mt-10 p-6 bg-white rounded-lg shadow">
+            <p className="text-gray-700 font-medium mb-2">
+              Détection de votre position...
+            </p>
+            <p className="text-sm text-gray-500">
+              Veuillez autoriser l'accès à votre localisation
+            </p>
+          </div>
         ) : offers.length === 0 ? (
-          <p className="text-gray-500 text-center mt-10">
-            Aucune offre disponible dans ce rayon.
-          </p>
+          <div className="text-center mt-10 p-6 bg-white rounded-lg shadow">
+            <p className="text-gray-700 font-medium mb-2">
+              Aucune offre disponible dans ce rayon
+            </p>
+            <p className="text-sm text-gray-500">
+              Essayez d'augmenter le rayon de recherche
+            </p>
+          </div>
         ) : (
           <div className="space-y-4">
             {offers.map((o) => (
