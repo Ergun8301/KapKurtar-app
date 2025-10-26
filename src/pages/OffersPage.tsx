@@ -292,16 +292,28 @@ export default function OffersPage() {
   // 🔁 Chargement des offres
   useEffect(() => {
     const fetchOffers = async () => {
-      if (!clientId) {
-        setOffers([]);
-        return;
-      }
-
       try {
-        const { data, error } = await supabase.rpc("get_offers_nearby_dynamic", {
-          p_client_id: clientId,
-          p_radius_meters: radiusKm * 1000,
-        });
+        let data, error;
+
+        if (clientId) {
+          // ✅ Client connecté : utilise sa position enregistrée
+          const result = await supabase.rpc("get_offers_nearby_dynamic", {
+            p_client_id: clientId,
+            p_radius_meters: radiusKm * 1000,
+          });
+          data = result.data;
+          error = result.error;
+        } else {
+          // ✅ Visiteur non connecté : utilise la position actuelle de la carte
+          const [lng, lat] = center;
+          const result = await supabase.rpc("get_offers_nearby_public", {
+            p_longitude: lng,
+            p_latitude: lat,
+            p_radius_meters: radiusKm * 1000,
+          });
+          data = result.data;
+          error = result.error;
+        }
 
         if (error) {
           console.error("Erreur lors du chargement des offres:", error);
@@ -380,11 +392,7 @@ export default function OffersPage() {
       {/* 🛒 Liste des offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
-        {!clientId ? (
-          <p className="text-gray-500 text-center mt-10">
-            Connectez-vous pour voir les offres à proximité.
-          </p>
-        ) : offers.length === 0 ? (
+        {offers.length === 0 ? (
           <p className="text-gray-500 text-center mt-10">
             Aucune offre disponible dans ce rayon.
           </p>
