@@ -311,29 +311,14 @@ export default function OffersPage() {
         let data, error;
 
         if (viewMode === "all") {
-          // Mode "Toutes les offres" : récupère TOUTES les offres actives
-          const result = await supabase
-            .from("offers")
-            .select(`
-              id,
-              title,
-              price_before,
-              price_after,
-              merchant_id,
-              location
-            `)
-            .eq("is_active", true);
-
-          data = result.data?.map((o: any) => ({
-            offer_id: o.id,
-            title: o.title,
-            merchant_name: "",
-            price_before: o.price_before,
-            price_after: o.price_after,
-            distance_meters: 0,
-            offer_lat: o.location?.coordinates?.[1] || 0,
-            offer_lng: o.location?.coordinates?.[0] || 0,
-          })) || [];
+          // Mode "Toutes les offres" : utilise un rayon très large depuis un point central
+          // Ou bien récupère directement via la RPC avec un rayon énorme
+          const result = await supabase.rpc("get_offers_nearby_public", {
+            p_longitude: 29, // Centre approximatif de la Turquie
+            p_latitude: 39,
+            p_radius_meters: 2000000, // 2000 km = toute la Turquie et plus
+          });
+          data = result.data;
           error = result.error;
         } else {
           // Mode "Proximité" : utilise les RPC existantes
@@ -360,6 +345,7 @@ export default function OffersPage() {
           console.error("Erreur lors du chargement des offres:", error);
           setOffers([]);
         } else {
+          console.log(`Mode ${viewMode}: ${data?.length || 0} offres chargées`);
           setOffers(data || []);
         }
       } catch (error) {
