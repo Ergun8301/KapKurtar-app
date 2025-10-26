@@ -18,15 +18,20 @@ type Offer = {
   image_url?: string;
 };
 
+// 🗺️ Style Tilkapp V2 (Mapbox Studio)
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
+
+// 📍 Position par défaut — Turquie (Istanbul)
 const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
 
+// 🎨 CSS personnalisé — version stable et simple + ajustements
 const customMapboxCSS = `
   .mapboxgl-ctrl-geolocate:focus,
   .mapboxgl-ctrl-geocoder input:focus {
     outline: none !important;
     box-shadow: none !important;
   }
+
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
     right: 10px !important;
@@ -35,6 +40,7 @@ const customMapboxCSS = `
     gap: 0px !important;
     transform: translateX(-55%) !important;
   }
+
   .mapboxgl-ctrl-geocoder {
     width: 280px !important;
     max-width: 80% !important;
@@ -43,6 +49,7 @@ const customMapboxCSS = `
     height: 32px !important;
     font-size: 14px !important;
   }
+
   @media (max-width: 640px) {
     .mapboxgl-ctrl-top-right {
       top: 8px !important;
@@ -52,11 +59,13 @@ const customMapboxCSS = `
       justify-content: center !important;
       gap: 6px !important;
     }
+
     .mapboxgl-ctrl-geocoder {
       width: 80% !important;
       height: 36px !important;
     }
   }
+
   .mapboxgl-ctrl-logo,
   .mapboxgl-ctrl-attrib,
   .mapbox-improve-map {
@@ -71,10 +80,11 @@ export default function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [userLocation, setUserLocation] = useState<[number, number]>(DEFAULT_LOCATION);
   const [center, setCenter] = useState<[number, number]>(DEFAULT_LOCATION);
-  const [radiusKm, setRadiusKm] = useState<number>(Number(localStorage.getItem("radiusKm")) || 10);
+  const [radiusKm, setRadiusKm] = useState<number>(
+    Number(localStorage.getItem("radiusKm")) || 10
+  );
   const [clientId, setClientId] = useState<string | null>(null);
   const [isGeolocating, setIsGeolocating] = useState(false);
-  const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
 
   // Injecte le CSS
   useEffect(() => {
@@ -84,60 +94,102 @@ export default function OffersPage() {
     return () => document.head.removeChild(styleTag);
   }, []);
 
-  // Profil client connecté
+  // 🧩 Récupère le profil client connecté
   useEffect(() => {
     const fetchClientId = async () => {
-      if (!user) return setClientId(null);
+      if (!user) {
+        setClientId(null);
+        return;
+      }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("auth_id", user.id)
-        .eq("role", "client")
-        .maybeSingle();
+      try {
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("auth_id", user.id)
+          .eq("role", "client")
+          .maybeSingle();
 
-      setClientId(profile?.id || null);
+        if (error) {
+          console.error("Erreur lors de la récupération du profil client :", error);
+        } else if (profile) {
+          setClientId(profile.id);
+        } else {
+          console.warn("Aucun profil client trouvé pour cet utilisateur.");
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération du profil client :", error);
+      }
     };
+
     fetchClientId();
   }, [user]);
 
-  // Géolocalisation auto
+  // 🌍 Géolocalisation automatique pour les clients connectés
   useEffect(() => {
     if (!clientId || isGeolocating) return;
 
-    setIsGeolocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords;
-        await supabase.rpc("update_client_location", {
-          client_id: clientId,
-          longitude,
-          latitude,
-          status: "success",
-        });
-        setUserLocation([longitude, latitude]);
-        setCenter([longitude, latitude]);
-        mapRef.current?.flyTo({ center: [longitude, latitude], zoom: 12 });
-        setIsGeolocating(false);
-      },
-      () => setIsGeolocating(false),
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+    const geolocateClient = async () => {
+      if (!navigator.geolocation) return;
+
+      setIsGeolocating(true);
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+
+          try {
+            await supabase.rpc("update_client_location", {
+              client_id: clientId,
+              longitude,
+              latitude,
+              status: "success",
+            });
+
+            setUserLocation([longitude, latitude]);
+            setCenter([longitude, latitude]);
+
+            if (mapRef.current) {
+              mapRef.current.flyTo({
+                center: [longitude, latitude],
+                zoom: 12,
+                essential: true,
+              });
+            }
+          } catch (error) {
+            console.error("Erreur lors de la mise à jour de la position:", error);
+          } finally {
+            setIsGeolocating(false);
+          }
+        },
+        (error) => {
+          console.warn("Géolocalisation refusée ou impossible:", error);
+          setIsGeolocating(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    };
+
+    geolocateClient();
   }, [clientId]);
 
-  // Initialisation carte
+  // Initialise la carte
   useEffect(() => {
     mapboxgl.accessToken =
       "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueXgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g";
+
     if (!mapContainerRef.current) return;
+
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: MAP_STYLE,
       center,
       zoom: 7,
     });
+
     mapRef.current = map;
 
+    // 📍 Contrôle de géolocalisation
     const geolocate = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: false,
@@ -145,11 +197,23 @@ export default function OffersPage() {
     });
     map.addControl(geolocate, "top-right");
 
+    geolocate.on("geolocate", (e) => {
+      const lng = e.coords.longitude;
+      const lat = e.coords.latitude;
+      setUserLocation([lng, lat]);
+      setCenter([lng, lat]);
+      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
+
+      const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+      if (input) input.value = "";
+    });
+
+    // 🔍 Barre de recherche
     const geocoder = new MapboxGeocoder({
       accessToken: mapboxgl.accessToken,
       mapboxgl,
       marker: false,
-      placeholder: "Rechercher une adresse...",
+      placeholder: "Rechercher une adresse ou un lieu...",
       language: "fr",
     });
     map.addControl(geocoder);
@@ -157,16 +221,17 @@ export default function OffersPage() {
     geocoder.on("result", (e) => {
       const [lng, lat] = e.result.center;
       setCenter([lng, lat]);
-      map.flyTo({ center: [lng, lat], zoom: 12 });
+      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
     });
 
     return () => map.remove();
   }, []);
 
-  // Cercle dynamique
+  // 🎯 Cercle dynamique
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+
     if (!map.isStyleLoaded()) {
       map.once("load", () => drawRadius(map, center, radiusKm));
     } else {
@@ -178,7 +243,11 @@ export default function OffersPage() {
     try {
       if (map.getLayer("radius")) map.removeLayer("radius");
       if (map.getSource("radius")) map.removeSource("radius");
+      if (map.getLayer("outside-mask")) map.removeLayer("outside-mask");
+      if (map.getSource("outside-mask")) map.removeSource("outside-mask");
+
       const circle = createGeoJSONCircle(center, radiusKm * 1000);
+
       map.addSource("radius", { type: "geojson", data: circle });
       map.addLayer({
         id: "radius",
@@ -186,30 +255,47 @@ export default function OffersPage() {
         source: "radius",
         paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
       });
-    } catch {}
+
+      const outerPolygon = {
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [-180, -90],
+              [180, -90],
+              [180, 90],
+              [-180, 90],
+              [-180, -90],
+            ],
+            circle.geometry.coordinates[0],
+          ],
+        },
+      };
+
+      map.addSource("outside-mask", { type: "geojson", data: outerPolygon });
+      map.addLayer({
+        id: "outside-mask",
+        type: "fill",
+        source: "outside-mask",
+        paint: { "fill-color": "rgba(0,0,0,0.35)", "fill-opacity": 0.35 },
+      });
+
+      const bounds = new mapboxgl.LngLatBounds();
+      circle.geometry.coordinates[0].forEach(([lng, lat]) => bounds.extend([lng, lat]));
+      map.fitBounds(bounds, { padding: 50, duration: 800 });
+    } catch (err) {
+      console.warn("Erreur drawRadius :", err);
+    }
   }
 
-  // Chargement des offres
+  // 🔁 Chargement des offres
   useEffect(() => {
     const fetchOffers = async () => {
       try {
         let data, error;
-        if (viewMode === "all") {
-          const result = await supabase.from("offers").select(`
-            id as offer_id, title, price_before, price_after, merchant_id, location
-          `).eq("is_active", true);
-          data = result.data?.map((o) => ({
-            offer_id: o.offer_id,
-            title: o.title,
-            merchant_name: "",
-            price_before: o.price_before,
-            price_after: o.price_after,
-            distance_meters: 0,
-            offer_lat: o.location.coordinates[1],
-            offer_lng: o.location.coordinates[0],
-          })) || [];
-          error = result.error;
-        } else if (clientId) {
+
+        if (clientId) {
           const result = await supabase.rpc("get_offers_nearby_dynamic", {
             p_client_id: clientId,
             p_radius_meters: radiusKm * 1000,
@@ -227,19 +313,48 @@ export default function OffersPage() {
           error = result.error;
         }
 
-        if (error) setOffers([]);
-        else setOffers(data || []);
-      } catch {
+        if (error) {
+          console.error("Erreur lors du chargement des offres:", error);
+          setOffers([]);
+        } else {
+          setOffers(data || []);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des offres:", error);
         setOffers([]);
       }
     };
-    fetchOffers();
-  }, [clientId, center, radiusKm, viewMode]);
 
-  // Marqueurs
+    fetchOffers();
+  }, [clientId, center, radiusKm]);
+
+  // 🧭 Fonction bouton “Voir toutes les offres”
+  const handleShowAllOffers = async () => {
+    try {
+      const { data, error } = await supabase.rpc("get_offers_nearby_public", {
+        p_longitude: 29, // centre Turquie
+        p_latitude: 39,
+        p_radius_meters: 1000000, // 1000 km
+      });
+
+      if (error) throw error;
+      setOffers(data || []);
+
+      if (data?.length > 0 && mapRef.current) {
+        const bounds = new mapboxgl.LngLatBounds();
+        data.forEach((o) => bounds.extend([o.offer_lng, o.offer_lat]));
+        mapRef.current.fitBounds(bounds, { padding: 50 });
+      }
+    } catch (err) {
+      console.error("Erreur lors du chargement de toutes les offres :", err);
+    }
+  };
+
+  // 📍 Marqueurs d’offres
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+
     (map as any)._markers?.forEach((m: Marker) => m.remove());
     (map as any)._markers = [];
 
@@ -260,11 +375,16 @@ export default function OffersPage() {
         <a href="https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}" target="_blank">🗺️ Itinéraire</a>
       `);
 
-      new mapboxgl.Marker(el).setLngLat([offer.offer_lng, offer.offer_lat]).setPopup(popup).addTo(map);
-      (map as any)._markers.push(el);
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat([offer.offer_lng, offer.offer_lat])
+        .setPopup(popup)
+        .addTo(map);
+
+      (map as any)._markers.push(marker);
     });
   }, [offers]);
 
+  // 🎚️ Slider de rayon
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
@@ -275,7 +395,7 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* Slider */}
+        {/* 🎚️ Slider */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
           <input
             type="range"
@@ -289,32 +409,18 @@ export default function OffersPage() {
         </div>
       </div>
 
-      {/* Liste des offres */}
+      {/* 🛒 Liste des offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-        {/* Barre double onglet moderne */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
-            <button
-              className={`px-4 py-2 text-sm font-semibold transition-all ${
-                viewMode === "nearby"
-                  ? "bg-white text-green-700 shadow"
-                  : "text-gray-500 hover:text-green-600"
-              }`}
-              onClick={() => setViewMode("nearby")}
-            >
-              Offres à proximité
-            </button>
-            <button
-              className={`px-4 py-2 text-sm font-semibold transition-all ${
-                viewMode === "all"
-                  ? "bg-white text-green-700 shadow"
-                  : "text-gray-500 hover:text-green-600"
-              }`}
-              onClick={() => setViewMode("all")}
-            >
-              Toutes les offres
-            </button>
-          </div>
+        <h2 className="text-xl font-bold text-gray-800 mb-2">Offres à proximité</h2>
+
+        {/* 🔘 Bouton "Voir toutes les offres" */}
+        <div className="flex justify-center mb-4">
+          <button
+            onClick={handleShowAllOffers}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-sm text-sm transition"
+          >
+            🌍 Voir toutes les offres
+          </button>
         </div>
 
         {offers.length === 0 ? (
@@ -361,19 +467,29 @@ export default function OffersPage() {
   );
 }
 
-// Cercle GeoJSON
+// 🔵 Cercle GeoJSON
 export function createGeoJSONCircle(center: [number, number], radiusInMeters: number, points = 64) {
   const coords = { latitude: center[1], longitude: center[0] };
   const km = radiusInMeters / 1000;
   const ret: [number, number][] = [];
+
   const distanceX = km / (111.32 * Math.cos((coords.latitude * Math.PI) / 180));
   const distanceY = km / 110.574;
+
   for (let i = 0; i < points; i++) {
     const theta = (i / points) * (2 * Math.PI);
     const x = distanceX * Math.cos(theta);
     const y = distanceY * Math.sin(theta);
     ret.push([coords.longitude + x, coords.latitude + y]);
   }
+
   ret.push(ret[0]);
-  return { type: "Feature", geometry: { type: "Polygon", coordinates: [ret] } };
+
+  return {
+    type: "Feature",
+    geometry: {
+      type: "Polygon",
+      coordinates: [ret],
+    },
+  };
 }
