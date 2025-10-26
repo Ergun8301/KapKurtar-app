@@ -116,7 +116,7 @@ export default function OffersPage() {
         return;
       }
 
-      try {
+    try {
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('id')
@@ -125,16 +125,15 @@ export default function OffersPage() {
     .maybeSingle();
 
   if (error) {
-    console.error('Erreur lors de la récupération du profil client:', error);
+    console.error('Erreur lors de la récupération du profil client :', error);
   } else if (profile) {
     setClientId(profile.id);
   } else {
     console.warn('Aucun profil client trouvé pour cet utilisateur.');
   }
 } catch (error) {
-  console.error('Erreur lors de la récupération du profil client:', error);
+  console.error('Erreur lors de la récupération du profil client :', error);
 }
-
     fetchClientId();
   }, [user]);
 
