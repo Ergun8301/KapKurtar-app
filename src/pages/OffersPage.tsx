@@ -296,7 +296,6 @@ export default function OffersPage() {
         let data, error;
 
         if (clientId) {
-          // ✅ Client connecté : utilise sa position enregistrée
           const result = await supabase.rpc("get_offers_nearby_dynamic", {
             p_client_id: clientId,
             p_radius_meters: radiusKm * 1000,
@@ -304,7 +303,6 @@ export default function OffersPage() {
           data = result.data;
           error = result.error;
         } else {
-          // ✅ Visiteur non connecté : utilise la position actuelle de la carte
           const [lng, lat] = center;
           const result = await supabase.rpc("get_offers_nearby_public", {
             p_longitude: lng,
@@ -329,6 +327,28 @@ export default function OffersPage() {
 
     fetchOffers();
   }, [clientId, center, radiusKm]);
+
+  // 🧭 Fonction bouton “Voir toutes les offres”
+  const handleShowAllOffers = async () => {
+    try {
+      const { data, error } = await supabase.rpc("get_offers_nearby_public", {
+        p_longitude: 29, // centre Turquie
+        p_latitude: 39,
+        p_radius_meters: 1000000, // 1000 km
+      });
+
+      if (error) throw error;
+      setOffers(data || []);
+
+      if (data?.length > 0 && mapRef.current) {
+        const bounds = new mapboxgl.LngLatBounds();
+        data.forEach((o) => bounds.extend([o.offer_lng, o.offer_lat]));
+        mapRef.current.fitBounds(bounds, { padding: 50 });
+      }
+    } catch (err) {
+      console.error("Erreur lors du chargement de toutes les offres :", err);
+    }
+  };
 
   // 📍 Marqueurs d’offres
   useEffect(() => {
@@ -391,7 +411,18 @@ export default function OffersPage() {
 
       {/* 🛒 Liste des offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Offres à proximité</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-2">Offres à proximité</h2>
+
+        {/* 🔘 Bouton "Voir toutes les offres" */}
+        <div className="flex justify-center mb-4">
+          <button
+            onClick={handleShowAllOffers}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-sm text-sm transition"
+          >
+            🌍 Voir toutes les offres
+          </button>
+        </div>
+
         {offers.length === 0 ? (
           <p className="text-gray-500 text-center mt-10">
             Aucune offre disponible dans ce rayon.
