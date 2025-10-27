@@ -1024,7 +1024,13 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
                     <label className="cursor-pointer">
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                       <p className="text-sm text-gray-600">Prendre une photo ou choisir une image</p>
-                      <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                      <input
+  type="file"
+  accept="image/*"
+  capture
+  onChange={handleImageUpload}
+  className="hidden"
+/>
                     </label>
                   )}
                 </div>
