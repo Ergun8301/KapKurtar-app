@@ -1008,46 +1008,33 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
               </div>
 
               <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">📸 Photo du produit</label>
-  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-    {formData.imagePreview ? (
-      <div className="relative">
-        <img src={formData.imagePreview} alt="Preview" className="max-h-48 mx-auto rounded" />
-        <button
-          onClick={() => setFormData({ ...formData, image: null, imagePreview: '' })}
-          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-    ) : (
-      <div className="flex flex-col items-center space-y-3">
-        <label className="cursor-pointer flex flex-col items-center">
-          <Upload className="w-10 h-10 text-gray-400" />
-          <p className="text-sm text-gray-600">📁 Choisir une image</p>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="hidden"
-          />
-        </label>
-
-        <label className="cursor-pointer flex flex-col items-center">
-          <Camera className="w-10 h-10 text-gray-400" />
-          <p className="text-sm text-gray-600">📸 Prendre une photo</p>
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handleImageUpload}
-            className="hidden"
-          />
-        </label>
-      </div>
-    )}
-  </div>
-</div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">📸 Photo du produit</label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  {formData.imagePreview ? (
+                    <div className="relative">
+                      <img src={formData.imagePreview} alt="Preview" className="max-h-48 mx-auto rounded" />
+                      <button
+                        onClick={() => setFormData({ ...formData, image: null, imagePreview: '' })}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer">
+                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600">Prendre une photo ou choisir une image</p>
+                      <input
+  type="file"
+  accept="image/*"
+  capture
+  onChange={handleImageUpload}
+  className="hidden"
+/>
+                    </label>
+                  )}
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
