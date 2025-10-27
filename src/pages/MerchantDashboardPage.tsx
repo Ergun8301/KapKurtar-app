@@ -295,6 +295,20 @@ const MerchantDashboardPage = () => {
 
     setIsPublishing(true);
     try {
+      // Récupère l'ID du marchand correspondant à l'utilisateur connecté
+      const { data: merchantData, error: merchantError } = await supabase
+        .from('merchants')
+        .select('id')
+        .eq('profile_id', user.id)
+        .maybeSingle();
+
+      if (merchantError || !merchantData) {
+        console.error('Impossible de trouver le marchand lié à ce profil', merchantError);
+        setToast({ message: "Erreur : marchand introuvable", type: "error" });
+        setIsPublishing(false);
+        return;
+      }
+
       let imageUrl = null;
       if (formData.image) {
         console.log('Uploading image to Supabase storage...');
@@ -308,7 +322,7 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
       console.log('Calculated discount:', discountPercent + '%');
 
       const offerData = {
-        merchant_id: user.id,
+        merchant_id: merchantData.id,
         title: formData.title,
         description: formData.description,
         image_url: imageUrl,
@@ -566,6 +580,20 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
 
     setIsPublishing(true);
     try {
+      // Récupère l'ID du marchand correspondant à l'utilisateur connecté
+      const { data: merchantData, error: merchantError } = await supabase
+        .from('merchants')
+        .select('id')
+        .eq('profile_id', user.id)
+        .maybeSingle();
+
+      if (merchantError || !merchantData) {
+        console.error('Impossible de trouver le marchand lié à ce profil', merchantError);
+        setToast({ message: "Erreur : marchand introuvable", type: "error" });
+        setIsPublishing(false);
+        return;
+      }
+
       let imageUrl = editingOffer.image_url;
       if (formData.image) {
         console.log('Uploading new image to Supabase storage...');
@@ -598,7 +626,7 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
         .from('offers')
         .update(updatedData)
         .eq('id', editingOffer.id)
-        .eq('merchant_id', user.id)
+        .eq('merchant_id', merchantData.id)
         .select()
         .single();
 
