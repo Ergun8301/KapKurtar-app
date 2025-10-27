@@ -296,6 +296,7 @@ const MerchantDashboardPage = () => {
     setIsPublishing(true);
     try {
       // Trouver le profil lié à l'utilisateur connecté
+      console.log('🔍 Recherche du profil pour auth_id:', user.id);
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -303,13 +304,16 @@ const MerchantDashboardPage = () => {
         .maybeSingle();
 
       if (profileError || !profileData) {
-        console.error('Impossible de trouver le profil lié à cet utilisateur', profileError);
+        console.error('❌ Impossible de trouver le profil lié à cet utilisateur', profileError);
         setToast({ message: 'Erreur : profil introuvable', type: 'error' });
         setIsPublishing(false);
         return;
       }
 
+      console.log('✅ Profil trouvé, profile.id:', profileData.id);
+
       // Trouver le marchand correspondant à ce profil
+      console.log('🔍 Recherche du marchand pour profile_id:', profileData.id);
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
         .select('id')
@@ -317,11 +321,17 @@ const MerchantDashboardPage = () => {
         .maybeSingle();
 
       if (merchantError || !merchantData) {
-        console.error('Impossible de trouver le marchand lié à ce profil', merchantError);
+        console.error('❌ Impossible de trouver le marchand lié à ce profil', {
+          profile_id: profileData.id,
+          error: merchantError,
+          merchantData
+        });
         setToast({ message: 'Erreur : marchand introuvable', type: 'error' });
         setIsPublishing(false);
         return;
       }
+
+      console.log('✅ Marchand trouvé, merchant.id:', merchantData.id);
 
       let imageUrl = null;
       if (formData.image) {
@@ -595,6 +605,7 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
     setIsPublishing(true);
     try {
       // Trouver le profil lié à l'utilisateur connecté
+      console.log('🔍 Recherche du profil pour auth_id:', user.id);
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -602,13 +613,16 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
         .maybeSingle();
 
       if (profileError || !profileData) {
-        console.error('Impossible de trouver le profil lié à cet utilisateur', profileError);
+        console.error('❌ Impossible de trouver le profil lié à cet utilisateur', profileError);
         setToast({ message: 'Erreur : profil introuvable', type: 'error' });
         setIsPublishing(false);
         return;
       }
 
+      console.log('✅ Profil trouvé, profile.id:', profileData.id);
+
       // Trouver le marchand correspondant à ce profil
+      console.log('🔍 Recherche du marchand pour profile_id:', profileData.id);
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
         .select('id')
@@ -616,11 +630,17 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
         .maybeSingle();
 
       if (merchantError || !merchantData) {
-        console.error('Impossible de trouver le marchand lié à ce profil', merchantError);
+        console.error('❌ Impossible de trouver le marchand lié à ce profil', {
+          profile_id: profileData.id,
+          error: merchantError,
+          merchantData
+        });
         setToast({ message: 'Erreur : marchand introuvable', type: 'error' });
         setIsPublishing(false);
         return;
       }
+
+      console.log('✅ Marchand trouvé, merchant.id:', merchantData.id);
 
       let imageUrl = editingOffer.image_url;
       if (formData.image) {
