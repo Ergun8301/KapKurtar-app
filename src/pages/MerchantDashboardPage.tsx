@@ -295,16 +295,30 @@ const MerchantDashboardPage = () => {
 
     setIsPublishing(true);
     try {
-      // Récupère le marchand directement via auth.uid (merchants.id = auth.users.id)
+      // Trouver le profil lié à l'utilisateur connecté
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
+        .maybeSingle();
+
+      if (profileError || !profileData) {
+        console.error('Impossible de trouver le profil lié à cet utilisateur', profileError);
+        setToast({ message: 'Erreur : profil introuvable', type: 'error' });
+        setIsPublishing(false);
+        return;
+      }
+
+      // Trouver le marchand correspondant à ce profil
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
         .select('id')
-        .eq('id', user.id)
+        .eq('profile_id', profileData.id)
         .maybeSingle();
 
       if (merchantError || !merchantData) {
-        console.error('Impossible de trouver le marchand', merchantError);
-        setToast({ message: "Erreur : marchand introuvable", type: "error" });
+        console.error('Impossible de trouver le marchand lié à ce profil', merchantError);
+        setToast({ message: 'Erreur : marchand introuvable', type: 'error' });
         setIsPublishing(false);
         return;
       }
@@ -580,16 +594,30 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
 
     setIsPublishing(true);
     try {
-      // Récupère le marchand directement via auth.uid (merchants.id = auth.users.id)
+      // Trouver le profil lié à l'utilisateur connecté
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
+        .maybeSingle();
+
+      if (profileError || !profileData) {
+        console.error('Impossible de trouver le profil lié à cet utilisateur', profileError);
+        setToast({ message: 'Erreur : profil introuvable', type: 'error' });
+        setIsPublishing(false);
+        return;
+      }
+
+      // Trouver le marchand correspondant à ce profil
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
         .select('id')
-        .eq('id', user.id)
+        .eq('profile_id', profileData.id)
         .maybeSingle();
 
       if (merchantError || !merchantData) {
-        console.error('Impossible de trouver le marchand', merchantError);
-        setToast({ message: "Erreur : marchand introuvable", type: "error" });
+        console.error('Impossible de trouver le marchand lié à ce profil', merchantError);
+        setToast({ message: 'Erreur : marchand introuvable', type: 'error' });
         setIsPublishing(false);
         return;
       }

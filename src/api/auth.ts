@@ -81,48 +81,50 @@ export const updatePassword = async (newPassword: string) => {
 export const getCurrentUser = () => supabase.auth.getUser();
 
 // ---------- Client helpers ----------
+// NOTE: Table 'clients' n'existe pas dans le schéma actuel
+// Utiliser 'profiles' à la place
 
-export const getClientProfile = async (userId: string) => {
-  try {
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.warn('Error fetching client profile:', error);
-    return null;
-  }
-};
+// export const getClientProfile = async (userId: string) => {
+//   try {
+//     const { data, error } = await supabase
+//       .from('clients')
+//       .select('*')
+//       .eq('id', userId)
+//       .maybeSingle();
+//     if (error) throw error;
+//     return data;
+//   } catch (error) {
+//     console.warn('Error fetching client profile:', error);
+//     return null;
+//   }
+// };
 
-export const updateClientProfile = async (userId: string, profileData: any) => {
-  try {
-    const { data, error } = await supabase
-      .from('clients')
-      .upsert(
-        {
-          id: userId,
-          ...profileData,
-          created_at: profileData?.created_at || new Date().toISOString(),
-        },
-        { onConflict: 'id' }
-      )
-      .select()
-      .single();
+// export const updateClientProfile = async (userId: string, profileData: any) => {
+//   try {
+//     const { data, error } = await supabase
+//       .from('clients')
+//       .upsert(
+//         {
+//           id: userId,
+//           ...profileData,
+//           created_at: profileData?.created_at || new Date().toISOString(),
+//         },
+//         { onConflict: 'id' }
+//       )
+//       .select()
+//       .single();
 
-    if (error) {
-      console.error('Update error:', error);
-      return { success: false, error: error.message };
-    }
+//     if (error) {
+//       console.error('Update error:', error);
+//       return { success: false, error: error.message };
+//     }
 
-    return { success: true, data };
-  } catch (err: any) {
-    console.error('Update exception:', err);
-    return { success: false, error: err.message };
-  }
-};
+//     return { success: true, data };
+//   } catch (err: any) {
+//     console.error('Update exception:', err);
+//     return { success: false, error: err.message };
+//   }
+// };
 
 // ---------- Avatar ----------
 

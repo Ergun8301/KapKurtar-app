@@ -47,12 +47,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     try {
-      // 🔍 Vérifie si l'utilisateur est un marchand via la table merchants
-      // merchants.id = auth.users.id (pas de profile_id)
+      // Récupère le profil de l'utilisateur
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_id", user.id)
+        .maybeSingle();
+
+      if (!profile) {
+        set({ userType: "customer" });
+        return;
+      }
+
+      // Vérifie si l'utilisateur est un marchand via merchants.profile_id
       const { data: merchant } = await supabase
         .from("merchants")
         .select("id")
-        .eq("id", user.id)
+        .eq("profile_id", profile.id)
         .maybeSingle();
 
       if (merchant) {
@@ -60,19 +71,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
 
-      // 🔍 Sinon, c'est un client
-      const { data: client } = await supabase
-        .from("clients")
-        .select("id")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (client) {
-        set({ userType: "customer" });
-        return;
-      }
-
-      // Fallback : considérer comme client par défaut
+      // Sinon, c'est un client
       set({ userType: "customer" });
     } catch (error) {
       console.error("Erreur lors de la détection du type utilisateur :", error);
