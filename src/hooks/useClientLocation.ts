@@ -33,7 +33,7 @@ export function useClientLocation(clientId: string | null): UseClientLocationRet
       const { data, error: fetchError } = await supabase
         .from('client_locations_view')
         .select('location_text')
-        .eq('id', clientId)
+        .eq('client_id', clientId)
         .maybeSingle();
 
       if (fetchError) {

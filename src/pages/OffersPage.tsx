@@ -160,7 +160,6 @@ useEffect(() => {
       },
       (error) => {
         console.warn("Géolocalisation refusée ou impossible:", error);
-        const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082];
         setUserLocation(DEFAULT_LOCATION);
         setCenter(DEFAULT_LOCATION);
 
