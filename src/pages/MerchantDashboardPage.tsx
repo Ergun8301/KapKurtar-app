@@ -295,11 +295,25 @@ const MerchantDashboardPage = () => {
 
     setIsPublishing(true);
     try {
-      // Récupère l'ID du marchand correspondant à l'utilisateur connecté
+      // Récupère le profile.id correspondant à l'utilisateur connecté
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
+        .maybeSingle();
+
+      if (profileError || !profileData) {
+        console.error('Impossible de trouver le profil lié à cet utilisateur', profileError);
+        setToast({ message: "Erreur : profil introuvable", type: "error" });
+        setIsPublishing(false);
+        return;
+      }
+
+      // Récupère l'ID du marchand correspondant au profil
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
         .select('id')
-        .eq('profile_id', user.id)
+        .eq('profile_id', profileData.id)
         .maybeSingle();
 
       if (merchantError || !merchantData) {
@@ -580,11 +594,25 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
 
     setIsPublishing(true);
     try {
-      // Récupère l'ID du marchand correspondant à l'utilisateur connecté
+      // Récupère le profile.id correspondant à l'utilisateur connecté
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
+        .maybeSingle();
+
+      if (profileError || !profileData) {
+        console.error('Impossible de trouver le profil lié à cet utilisateur', profileError);
+        setToast({ message: "Erreur : profil introuvable", type: "error" });
+        setIsPublishing(false);
+        return;
+      }
+
+      // Récupère l'ID du marchand correspondant au profil
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
         .select('id')
-        .eq('profile_id', user.id)
+        .eq('profile_id', profileData.id)
         .maybeSingle();
 
       if (merchantError || !merchantData) {
