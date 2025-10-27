@@ -1008,7 +1008,7 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">📸 Photo du produit</label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                   {formData.imagePreview ? (
                     <div className="relative">
@@ -1023,8 +1023,8 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
                   ) : (
                     <label className="cursor-pointer">
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">Click to upload image</p>
-                      <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                      <p className="text-sm text-gray-600">Prendre une photo ou choisir une image</p>
+                      <input type="file" accept="image/*" capture="environment" onChange={handleImageUpload} className="hidden" />
                     </label>
                   )}
                 </div>
@@ -1199,16 +1199,17 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">📸 Photo du produit</label>
                 <div className="flex items-center space-x-4">
                   <label className="flex-1 flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 transition-colors">
                     <Upload className="w-5 h-5 text-gray-400 mr-2" />
                     <span className="text-sm text-gray-600">
-                      {formData.image ? formData.image.name : 'Upload new image (optional)'}
+                      {formData.image ? formData.image.name : 'Prendre une photo ou choisir une image (optionnel)'}
                     </span>
                     <input
                       type="file"
                       accept="image/*"
+                      capture="environment"
                       onChange={handleImageUpload}
                       className="hidden"
                     />
