@@ -299,8 +299,8 @@ const MerchantDashboardPage = () => {
       if (formData.image) {
         console.log('Uploading image to Supabase storage...');
         const randomId = crypto.randomUUID();
-        const path = `offers/${user.id}/${randomId}.jpg`;
-        imageUrl = await uploadImageToSupabase(formData.image, path);
+const path = `${user.id}/${randomId}.jpg`;
+imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
         console.log('Image uploaded successfully:', imageUrl);
       }
 
@@ -570,8 +570,8 @@ const MerchantDashboardPage = () => {
       if (formData.image) {
         console.log('Uploading new image to Supabase storage...');
         const randomId = crypto.randomUUID();
-        const path = `offers/${user.id}/${randomId}.jpg`;
-        imageUrl = await uploadImageToSupabase(formData.image, path);
+const path = `${user.id}/${randomId}.jpg`;
+imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
         console.log('New image uploaded successfully:', imageUrl);
       }
 
