@@ -18,23 +18,18 @@ const MerchantAuthPage = () => {
  // ---------- helpers ----------
 const ensureMerchantBootstrap = async (authId: string) => {
   try {
-    // 1️⃣ Forcer le rôle merchant dans le profil
+    // Appeler set_role_for_me qui crée le profil ET le merchant avec ON CONFLICT
     const { error: roleError } = await supabase.rpc("set_role_for_me", {
       p_role: "merchant",
     });
-    if (roleError) console.warn("⚠️ set_role_for_me:", roleError.message);
 
-    // 2️⃣ Met à jour le profil si le trigger tarde
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ role: "merchant" })
-      .eq("auth_id", authId);
-    if (updateError) console.warn("⚠️ update profile:", updateError.message);
-
-    // ⚠️ On ne crée plus de merchant ici.
-    // Le trigger SQL s’en charge automatiquement.
+    if (roleError) {
+      console.warn("⚠️ set_role_for_me:", roleError.message);
+      throw roleError;
+    }
   } catch (err) {
     console.error("Erreur ensureMerchantBootstrap:", err);
+    throw err;
   }
 };
 
@@ -123,9 +118,9 @@ const handleSubmit = async (e: React.FormEvent) => {
         });
       if (signUpError) throw signUpError;
 
-      if (signUpData?.user) {
-        await ensureMerchantBootstrap(signUpData.user.id);
-      }
+      // ⚠️ Ne pas appeler ensureMerchantBootstrap ici durant l'inscription
+      // La fonction set_role_for_me sera appelée lors de la première connexion après confirmation e-mail
+      // ou bien le trigger handle_new_user créera automatiquement le profil et merchant
 
       alert("✅ Vérifiez votre e-mail pour confirmer votre compte.");
     }
