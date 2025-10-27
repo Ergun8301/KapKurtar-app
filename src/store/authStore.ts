@@ -47,11 +47,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     try {
-      // 🔍 1. On vérifie si l'utilisateur est un marchand via la table merchants (cas legacy)
+      // 🔍 Vérifie si l'utilisateur est un marchand via la table merchants
+      // merchants.id = auth.users.id (pas de profile_id)
       const { data: merchant } = await supabase
         .from("merchants")
         .select("id")
-        .eq("profile_id", user.id) // ✅ vérifie via profile_id (pas id direct)
+        .eq("id", user.id)
         .maybeSingle();
 
       if (merchant) {
@@ -59,23 +60,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
 
-      // 🔍 2. Sinon on regarde le rôle dans la table profiles
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("auth_id", user.id)
+      // 🔍 Sinon, c'est un client
+      const { data: client } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("id", user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Erreur lors de la détection du rôle utilisateur :", error);
-        set({ userType: "customer" }); // fallback par défaut
-      } else if (profile?.role === "merchant") {
-        set({ userType: "merchant" });
-      } else if (profile?.role === "client") {
+      if (client) {
         set({ userType: "customer" });
-      } else {
-        set({ userType: "customer" }); // fallback
+        return;
       }
+
+      // Fallback : considérer comme client par défaut
+      set({ userType: "customer" });
     } catch (error) {
       console.error("Erreur lors de la détection du type utilisateur :", error);
       set({ userType: "customer" }); // fallback
