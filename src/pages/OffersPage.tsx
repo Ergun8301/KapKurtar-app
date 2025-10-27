@@ -180,19 +180,6 @@ useEffect(() => {
 
 }, [clientId]);
 
-    // 🧱 Sécurité anti-NaN : garantit une position valide avant rendu
-  useEffect(() => {
-    if (
-      !userLocation ||
-      isNaN(userLocation[0]) ||
-      isNaN(userLocation[1])
-    ) {
-      const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
-      setUserLocation(DEFAULT_LOCATION);
-      setCenter(DEFAULT_LOCATION);
-    }
-  }, [userLocation]);
-
   // Initialisation de la carte
   useEffect(() => {
     mapboxgl.accessToken =

@@ -15,121 +15,171 @@ const MerchantAuthPage = () => {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ email: '', password: '', companyName: '' });
 
- // ---------- helpers ----------
-const ensureMerchantBootstrap = async (authId: string) => {
-  try {
-    // Appeler set_role_for_me qui crée le profil ET le merchant avec ON CONFLICT
-    const { error: roleError } = await supabase.rpc("set_role_for_me", {
-      p_role: "merchant",
-    });
+  // ---------- helpers ----------
+  const ensureMerchantBootstrap = async (authId: string) => {
+    try {
+      // 1️⃣ Forcer le rôle merchant dans le profil
+      const { error: roleError } = await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
+      if (roleError) console.warn('⚠️ set_role_for_me:', roleError.message);
 
-    if (roleError) {
-      console.warn("⚠️ set_role_for_me:", roleError.message);
-      throw roleError;
+      // 2️⃣ Update direct du profil si le trigger tarde
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ role: 'merchant' })
+        .eq('auth_id', authId);
+      if (updateError) console.warn('⚠️ update profile:', updateError.message);
+
+      // 3️⃣ Crée le marchand s’il n’existe pas encore
+      const { error: merchantError } = await supabase.rpc('get_or_create_merchant_for_profile', {
+        p_auth_id: authId,
+      });
+      if (merchantError) console.warn('⚠️ get_or_create_merchant_for_profile:', merchantError.message);
+    } catch (err) {
+      console.error('Erreur ensureMerchantBootstrap:', err);
     }
-  } catch (err) {
-    console.error("Erreur ensureMerchantBootstrap:", err);
-    throw err;
-  }
-};
+  };
 
-const goToMerchantHome = async () => {
-  try {
-    if (!user) return navigate("/merchant/dashboard");
-
-    const { data: prof } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("auth_id", user.id)
-      .maybeSingle();
-
-    if (prof?.id) {
-      const { data: merch } = await supabase
-        .from("merchants")
-        .select("id")
-        .eq("profile_id", prof.id)
+  const goToMerchantHome = async () => {
+    try {
+      if (!user) return navigate('/merchant/dashboard');
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
         .maybeSingle();
 
-      if (merch?.id) {
-        const { data: offers } = await supabase
-          .from("offers")
-          .select("id")
-          .eq("merchant_id", merch.id)
-          .limit(1);
+      if (prof?.id) {
+        const { data: merch } = await supabase
+          .from('merchants')
+          .select('id')
+          .eq('profile_id', prof.id)
+          .maybeSingle();
 
-        if (!offers || offers.length === 0) {
-          navigate("/merchant/add-product");
-          return;
+        if (merch?.id) {
+          const { data: offers } = await supabase
+            .from('offers')
+            .select('id')
+            .eq('merchant_id', merch.id)
+            .limit(1);
+
+          if (!offers || offers.length === 0) {
+            navigate('/merchant/add-product');
+            return;
+          }
         }
       }
+    } catch (err) {
+      console.warn('Erreur redirection merchant:', err);
     }
-  } catch (err) {
-    console.warn("Erreur redirection merchant:", err);
-  }
+    navigate('/merchant/dashboard');
+  };
 
-  navigate("/merchant/dashboard");
-};
+  // ---------- Redirections ----------
+  useEffect(() => {
+    if (!initialized || !user) return;
+    if (role === 'merchant') goToMerchantHome();
+    else if (role === 'client') navigate('/offers');
+  }, [initialized, user, role, profile, navigate]);
 
-// ---------- Redirections ----------
-useEffect(() => {
-  if (!initialized || !user) return;
-  if (role === "merchant") goToMerchantHome();
-  else if (role === "client") navigate("/offers");
-}, [initialized, user, role, profile, navigate]);
+  // ---------- Formulaire ----------
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-// ---------- Formulaire ----------
-const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const { name, value } = e.target;
-  setFormData((prev) => ({ ...prev, [name]: value }));
-};
+  // ---------- Auth e-mail / password ----------
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
 
-// ---------- Auth e-mail / password ----------
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
-  setError("");
-
-  try {
-    if (mode === "login") {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-      if (error) throw error;
-
-      if (data.user) {
-        await ensureMerchantBootstrap(data.user.id);
-        await refetchProfile();
-        await goToMerchantHome();
-      }
-    } else {
-      // ----------- REGISTER -----------
-      if (formData.password.length < 6)
-        throw new Error("Le mot de passe doit contenir au moins 6 caractères");
-
-      // ✅ Données suffisantes pour le trigger SQL
-      const { data: signUpData, error: signUpError } =
-        await supabase.auth.signUp({
+    try {
+      if (mode === 'login') {
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
-          options: {
-            data: { role: "merchant", source: "merchant" },
-          },
         });
-      if (signUpError) throw signUpError;
+        if (error) throw error;
 
-      // ⚠️ Ne pas appeler ensureMerchantBootstrap ici durant l'inscription
-      // La fonction set_role_for_me sera appelée lors de la première connexion après confirmation e-mail
-      // ou bien le trigger handle_new_user créera automatiquement le profil et merchant
+        if (data.user) {
+          await ensureMerchantBootstrap(data.user.id);
 
-      alert("✅ Vérifiez votre e-mail pour confirmer votre compte.");
+          // ✅ Sauvegarde défensive : si la ligne marchand n’existe pas, on la crée
+          try {
+            const { data: prof } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('auth_id', data.user.id)
+              .maybeSingle();
+
+            if (prof?.id) {
+              await supabase
+                .from('merchants')
+                .upsert(
+                  {
+                    profile_id: prof.id,
+                    company_name: formData.companyName.trim() || 'Mon Commerce',
+                    email: formData.email,
+                  },
+                  { onConflict: 'profile_id' }
+                );
+            }
+          } catch (safeErr) {
+            console.warn('⚠️ merchant upsert safeguard:', (safeErr as Error).message);
+          }
+
+          await refetchProfile();
+          await goToMerchantHome();
+        }
+      } else {
+        // ----------- REGISTER -----------
+        if (formData.password.length < 6)
+          throw new Error('Le mot de passe doit contenir au moins 6 caractères');
+        if (!formData.companyName.trim())
+          throw new Error("Le nom de l'entreprise est requis");
+
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+        });
+        if (signUpError) throw signUpError;
+
+        if (signUpData?.user) {
+          await ensureMerchantBootstrap(signUpData.user.id);
+
+          // ✅ Même sauvegarde défensive
+          try {
+            const { data: prof } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('auth_id', signUpData.user.id)
+              .maybeSingle();
+
+            if (prof?.id) {
+              await supabase
+                .from('merchants')
+                .upsert(
+                  {
+                    profile_id: prof.id,
+                    company_name: formData.companyName.trim() || 'Mon Commerce',
+                    email: formData.email,
+                  },
+                  { onConflict: 'profile_id' }
+                );
+            }
+          } catch (safeErr) {
+            console.warn('⚠️ merchant upsert safeguard:', (safeErr as Error).message);
+          }
+        }
+
+        alert('✅ Vérifiez votre e-mail pour confirmer votre compte.');
+      }
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setIsLoading(false);
     }
-  } catch (err) {
-    setError((err as Error).message);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   // ---------- Google OAuth ----------
   const handleGoogleAuth = async () => {
