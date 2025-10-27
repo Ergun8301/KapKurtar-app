@@ -15,83 +15,87 @@ const MerchantAuthPage = () => {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ email: '', password: '', companyName: '' });
 
-  // ---------- helpers ----------
+ // ---------- helpers ----------
 const ensureMerchantBootstrap = async (authId: string) => {
   try {
     // 1️⃣ Forcer le rôle merchant dans le profil
-    const { error: roleError } = await supabase.rpc('set_role_for_me', { p_role: 'merchant' });
-    if (roleError) console.warn('⚠️ set_role_for_me:', roleError.message);
+    const { error: roleError } = await supabase.rpc("set_role_for_me", {
+      p_role: "merchant",
+    });
+    if (roleError) console.warn("⚠️ set_role_for_me:", roleError.message);
 
-    // 2️⃣ Update direct du profil si le trigger tarde
+    // 2️⃣ Met à jour le profil si le trigger tarde
     const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ role: 'merchant' })
-      .eq('auth_id', authId);
-    if (updateError) console.warn('⚠️ update profile:', updateError.message);
+      .from("profiles")
+      .update({ role: "merchant" })
+      .eq("auth_id", authId);
+    if (updateError) console.warn("⚠️ update profile:", updateError.message);
 
-    // ❌ On retire complètement l'appel RPC qui crée un merchant
-    // car le trigger SQL s'en charge déjà.
+    // ⚠️ On ne crée plus de merchant ici.
+    // Le trigger SQL s’en charge automatiquement.
   } catch (err) {
-    console.error('Erreur ensureMerchantBootstrap:', err);
+    console.error("Erreur ensureMerchantBootstrap:", err);
   }
 };
 
 const goToMerchantHome = async () => {
   try {
-    if (!user) return navigate('/merchant/dashboard');
+    if (!user) return navigate("/merchant/dashboard");
+
     const { data: prof } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('auth_id', user.id)
+      .from("profiles")
+      .select("id")
+      .eq("auth_id", user.id)
       .maybeSingle();
 
     if (prof?.id) {
       const { data: merch } = await supabase
-        .from('merchants')
-        .select('id')
-        .eq('profile_id', prof.id)
+        .from("merchants")
+        .select("id")
+        .eq("profile_id", prof.id)
         .maybeSingle();
 
       if (merch?.id) {
         const { data: offers } = await supabase
-          .from('offers')
-          .select('id')
-          .eq('merchant_id', merch.id)
+          .from("offers")
+          .select("id")
+          .eq("merchant_id", merch.id)
           .limit(1);
 
         if (!offers || offers.length === 0) {
-          navigate('/merchant/add-product');
+          navigate("/merchant/add-product");
           return;
         }
       }
     }
   } catch (err) {
-    console.warn('Erreur redirection merchant:', err);
+    console.warn("Erreur redirection merchant:", err);
   }
-  navigate('/merchant/dashboard');
+
+  navigate("/merchant/dashboard");
 };
 
 // ---------- Redirections ----------
 useEffect(() => {
   if (!initialized || !user) return;
-  if (role === 'merchant') goToMerchantHome();
-  else if (role === 'client') navigate('/offers');
+  if (role === "merchant") goToMerchantHome();
+  else if (role === "client") navigate("/offers");
 }, [initialized, user, role, profile, navigate]);
 
 // ---------- Formulaire ----------
 const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const { name, value } = e.target;
-  setFormData(prev => ({ ...prev, [name]: value }));
+  setFormData((prev) => ({ ...prev, [name]: value }));
 };
 
 // ---------- Auth e-mail / password ----------
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setIsLoading(true);
-  setError('');
+  setError("");
 
   try {
-    if (mode === 'login') {
+    if (mode === "login") {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
@@ -103,27 +107,27 @@ const handleSubmit = async (e: React.FormEvent) => {
         await refetchProfile();
         await goToMerchantHome();
       }
-    } 
-    // ----------- REGISTER -----------
-    else {
+    } else {
+      // ----------- REGISTER -----------
       if (formData.password.length < 6)
-        throw new Error('Le mot de passe doit contenir au moins 6 caractères');
+        throw new Error("Le mot de passe doit contenir au moins 6 caractères");
 
-      // ✅ Envoi explicite des métadonnées nécessaires au trigger SQL
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: { role: 'merchant', source: 'merchant' },
-        },
-      });
+      // ✅ Données suffisantes pour le trigger SQL
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: { role: "merchant", source: "merchant" },
+          },
+        });
       if (signUpError) throw signUpError;
 
       if (signUpData?.user) {
         await ensureMerchantBootstrap(signUpData.user.id);
       }
 
-      alert('✅ Vérifiez votre e-mail pour confirmer votre compte.');
+      alert("✅ Vérifiez votre e-mail pour confirmer votre compte.");
     }
   } catch (err) {
     setError((err as Error).message);
