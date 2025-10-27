@@ -29,11 +29,8 @@ const ensureMerchantBootstrap = async (authId: string) => {
       .eq('auth_id', authId);
     if (updateError) console.warn('⚠️ update profile:', updateError.message);
 
-    // 3️⃣ Crée le marchand s’il n’existe pas encore (via RPC sécurisée)
-    const { error: merchantError } = await supabase.rpc('get_or_create_merchant_for_profile', {
-      p_auth_id: authId,
-    });
-    if (merchantError) console.warn('⚠️ get_or_create_merchant_for_profile:', merchantError.message);
+    // ❌ On retire complètement l'appel RPC qui crée un merchant
+    // car le trigger SQL s'en charge déjà.
   } catch (err) {
     console.error('Erreur ensureMerchantBootstrap:', err);
   }
