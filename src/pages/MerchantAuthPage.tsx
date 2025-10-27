@@ -29,7 +29,7 @@ const ensureMerchantBootstrap = async (authId: string) => {
       .eq('auth_id', authId);
     if (updateError) console.warn('⚠️ update profile:', updateError.message);
 
-    // 3️⃣ Crée le marchand s’il n’existe pas encore
+    // 3️⃣ Crée le marchand s’il n’existe pas encore (via RPC sécurisée)
     const { error: merchantError } = await supabase.rpc('get_or_create_merchant_for_profile', {
       p_auth_id: authId,
     });
@@ -103,31 +103,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       if (data.user) {
         await ensureMerchantBootstrap(data.user.id);
-
-        // ✅ Sauvegarde défensive : si la ligne marchand n’existe pas, on la crée
-        try {
-          const { data: prof } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('auth_id', data.user.id)
-            .maybeSingle();
-
-          if (prof?.id) {
-            await supabase
-              .from('merchants')
-              .upsert(
-                {
-                  profile_id: prof.id,
-                  company_name: formData.companyName.trim() || 'Mon Commerce',
-                  email: formData.email,
-                },
-                { onConflict: 'profile_id' }
-              );
-          }
-        } catch (safeErr) {
-          console.warn('⚠️ merchant upsert safeguard:', (safeErr as Error).message);
-        }
-
         await refetchProfile();
         await goToMerchantHome();
       }
@@ -136,10 +111,8 @@ const handleSubmit = async (e: React.FormEvent) => {
     else {
       if (formData.password.length < 6)
         throw new Error('Le mot de passe doit contenir au moins 6 caractères');
-      if (!formData.companyName.trim())
-        throw new Error("Le nom de l'entreprise est requis");
 
-      // ✅ Correction ici : rôle + source explicites pour trigger Supabase
+      // ✅ Envoi explicite des métadonnées nécessaires au trigger SQL
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -151,30 +124,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       if (signUpData?.user) {
         await ensureMerchantBootstrap(signUpData.user.id);
-
-        // ✅ Même sauvegarde défensive
-        try {
-          const { data: prof } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('auth_id', signUpData.user.id)
-            .maybeSingle();
-
-          if (prof?.id) {
-            await supabase
-              .from('merchants')
-              .upsert(
-                {
-                  profile_id: prof.id,
-                  company_name: formData.companyName.trim() || 'Mon Commerce',
-                  email: formData.email,
-                },
-                { onConflict: 'profile_id' }
-              );
-          }
-        } catch (safeErr) {
-          console.warn('⚠️ merchant upsert safeguard:', (safeErr as Error).message);
-        }
       }
 
       alert('✅ Vérifiez votre e-mail pour confirmer votre compte.');
