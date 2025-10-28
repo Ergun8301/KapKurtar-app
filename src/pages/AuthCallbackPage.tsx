@@ -41,22 +41,22 @@ const AuthCallbackPage = () => {
         console.log("✅ Session OAuth récupérée pour:", user.email);
 
         // ✅ Upsert du profil avec le rôle approprié
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            auth_id: user.id,
+        const { error: profileError } = await supabase.from("profiles").upsert(
+          {
+            id: user.id,          // correspond à auth.users.id
             email: user.email,
             role: role,
-          }, {
-            onConflict: 'auth_id'
-          });
+          },
+          { onConflict: "id" }
+        );
 
         if (profileError) {
-          console.warn("⚠️ Profile upsert error:", profileError.message);
+          console.warn("⚠️ Erreur lors de l'upsert du profil :", profileError.message);
+        } else {
+          console.log("✅ Profil mis à jour ou créé avec succès :", user.email);
         }
 
         // Le trigger Supabase créera automatiquement la ligne merchants si role='merchant'
-
         if (role === "merchant") {
           navigate("/merchant/dashboard");
         } else {
