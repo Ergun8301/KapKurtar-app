@@ -1,77 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, ArrowLeft, Store } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
-import { useAuthFlow } from '../hooks/useAuthFlow';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Mail, Lock, ArrowLeft, Store } from "lucide-react";
+import { supabase } from "../lib/supabaseClient";
+import { useAuthFlow } from "../hooks/useAuthFlow";
 
-type AuthMode = 'login' | 'register';
+type AuthMode = "login" | "register";
 
 const MerchantAuthPage = () => {
   const navigate = useNavigate();
-  const { user, role, profile, loading: authLoading, initialized, refetchProfile } = useAuthFlow();
-  const [mode, setMode] = useState<AuthMode>('login');
+  const { user, role, loading: authLoading, initialized, refetchProfile } = useAuthFlow();
+  const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [formData, setFormData] = useState({ email: '', password: '', companyName: '' });
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({ email: "", password: "", companyName: "" });
 
-  // ---------- helpers ----------
-  const goToMerchantHome = async () => {
-    try {
-      if (!user) return navigate('/merchant/dashboard');
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('auth_id', user.id)
-        .maybeSingle();
-
-      if (prof?.id) {
-        const { data: merch } = await supabase
-          .from('merchants')
-          .select('id')
-          .eq('profile_id', prof.id)
-          .maybeSingle();
-
-        if (merch?.id) {
-          const { data: offers } = await supabase
-            .from('offers')
-            .select('id')
-            .eq('merchant_id', merch.id)
-            .limit(1);
-
-          if (!offers || offers.length === 0) {
-            navigate('/merchant/add-product');
-            return;
-          }
-        }
-      }
-    } catch (err) {
-      console.warn('Erreur redirection merchant:', err);
-    }
-    navigate('/merchant/dashboard');
-  };
-
-  // ---------- Redirections ----------
+  // ✅ Redirection automatique après connexion
   useEffect(() => {
     if (!initialized || !user) return;
-    if (role === 'merchant') goToMerchantHome();
-    else if (role === 'client') navigate('/offers');
-  }, [initialized, user, role, profile, navigate]);
+    if (role === "merchant") navigate("/merchant/dashboard");
+    else if (role === "client") navigate("/offers");
+  }, [initialized, user, role, navigate]);
 
-  // ---------- Formulaire ----------
+  // ✅ Gestion du formulaire
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ---------- Auth e-mail / password ----------
+  // ✅ Connexion / Inscription e-mail
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
-      if (mode === 'login') {
+      if (mode === "login") {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
@@ -80,12 +44,11 @@ const MerchantAuthPage = () => {
 
         if (data.user) {
           await refetchProfile();
-          await goToMerchantHome();
+          navigate("/merchant/dashboard");
         }
       } else {
-        // ----------- REGISTER -----------
         if (formData.password.length < 6)
-          throw new Error('Le mot de passe doit contenir au moins 6 caractères');
+          throw new Error("Le mot de passe doit contenir au moins 6 caractères");
         if (!formData.companyName.trim())
           throw new Error("Le nom de l'entreprise est requis");
 
@@ -93,15 +56,20 @@ const MerchantAuthPage = () => {
           email: formData.email,
           password: formData.password,
           options: {
-            data: {
-              role: 'merchant',
-              company_name: formData.companyName.trim(),
-            },
+            data: { role: "merchant", company_name: formData.companyName.trim() },
           },
         });
         if (signUpError) throw signUpError;
 
-        alert('✅ Vérifiez votre e-mail pour confirmer votre compte.');
+        if (signUpData?.user) {
+          // ✅ Appel sécurisé côté base
+          await supabase.rpc("create_merchant_safely", {
+            p_email: signUpData.user.email,
+            p_id: signUpData.user.id,
+          });
+        }
+
+        alert("✅ Vérifiez votre e-mail pour confirmer votre compte.");
       }
     } catch (err) {
       setError((err as Error).message);
@@ -110,11 +78,11 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // ---------- Google OAuth ----------
+  // ✅ Google OAuth (marchand)
   const handleGoogleAuth = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback?role=merchant`,
         },
@@ -125,7 +93,7 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // ---------- Loader ----------
+  // ✅ Loader
   if (authLoading && !initialized) {
     return (
       <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
@@ -134,13 +102,13 @@ const MerchantAuthPage = () => {
     );
   }
 
-  // ---------- UI ----------
+  // ✅ Interface
   return (
     <div className="min-h-screen bg-[#FAFAF5] flex flex-col">
       <div className="flex-1 flex items-center justify-center py-8 px-4">
         <div className="w-full max-w-md space-y-6">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="inline-flex items-center text-[#FF6B35] hover:text-[#e55a28] font-medium mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -154,33 +122,33 @@ const MerchantAuthPage = () => {
               </div>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {mode === 'login' ? 'Espace Commerçant' : 'Devenez Partenaire'}
+              {mode === "login" ? "Espace Commerçant" : "Devenez Partenaire"}
             </h1>
             <p className="text-gray-600">
-              {mode === 'login'
-                ? 'Gérez vos offres et réduisez le gaspillage'
-                : 'Rejoignez SEPET et valorisez vos invendus'}
+              {mode === "login"
+                ? "Gérez vos offres et réduisez le gaspillage"
+                : "Rejoignez SEPET et valorisez vos invendus"}
             </p>
           </div>
 
           <div className="bg-white rounded-3xl shadow-xl p-6 space-y-6">
             <div className="flex bg-gray-100 rounded-2xl p-1">
               <button
-                onClick={() => setMode('login')}
+                onClick={() => setMode("login")}
                 className={`flex-1 py-3 font-semibold rounded-xl ${
-                  mode === 'login'
-                    ? 'bg-white text-[#FF6B35] shadow-md'
-                    : 'text-gray-500'
+                  mode === "login"
+                    ? "bg-white text-[#FF6B35] shadow-md"
+                    : "text-gray-500"
                 }`}
               >
                 Connexion
               </button>
               <button
-                onClick={() => setMode('register')}
+                onClick={() => setMode("register")}
                 className={`flex-1 py-3 font-semibold rounded-xl ${
-                  mode === 'register'
-                    ? 'bg-white text-[#FF6B35] shadow-md'
-                    : 'text-gray-500'
+                  mode === "register"
+                    ? "bg-white text-[#FF6B35] shadow-md"
+                    : "text-gray-500"
                 }`}
               >
                 Inscription
@@ -194,7 +162,7 @@ const MerchantAuthPage = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {mode === 'register' && (
+              {mode === "register" && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Nom de l'entreprise
@@ -208,7 +176,7 @@ const MerchantAuthPage = () => {
                       onChange={handleInputChange}
                       className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent text-base"
                       placeholder="Votre commerce"
-                      required={mode === 'register'}
+                      required={mode === "register"}
                     />
                   </div>
                 </div>
@@ -239,7 +207,7 @@ const MerchantAuthPage = () => {
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
@@ -268,10 +236,10 @@ const MerchantAuthPage = () => {
                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                     Chargement...
                   </div>
-                ) : mode === 'login' ? (
-                  'Se connecter'
+                ) : mode === "login" ? (
+                  "Se connecter"
                 ) : (
-                  'Créer mon espace'
+                  "Créer mon espace"
                 )}
               </button>
             </form>
@@ -281,9 +249,7 @@ const MerchantAuthPage = () => {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500 font-medium">
-                  Ou continuer avec
-                </span>
+                <span className="px-4 bg-white text-gray-500 font-medium">Ou continuer avec</span>
               </div>
             </div>
 
@@ -293,10 +259,22 @@ const MerchantAuthPage = () => {
               className="w-full flex items-center justify-center px-4 py-4 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-semibold"
             >
               <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
               </svg>
               Google
             </button>
