@@ -7,6 +7,7 @@ const AuthCallbackPage = () => {
   const [searchParams] = useSearchParams();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     const handleOAuthCallback = async () => {
@@ -61,6 +62,7 @@ const AuthCallbackPage = () => {
         }
 
         // 3️⃣ Redirection selon rôle
+        setIsRedirecting(true);
         if (role === "merchant") {
           navigate("/merchant/dashboard");
         } else {
@@ -77,12 +79,14 @@ const AuthCallbackPage = () => {
     handleOAuthCallback();
   }, [navigate, searchParams]);
 
-  if (loading) {
+  if (loading || isRedirecting) {
     return (
       <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3A6932] mx-auto mb-4"></div>
-          <p className="text-gray-600">Finalisation de la connexion...</p>
+          <p className="text-gray-600">
+            {isRedirecting ? "Redirection en cours..." : "Finalisation de la connexion..."}
+          </p>
         </div>
       </div>
     );

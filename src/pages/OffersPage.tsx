@@ -152,7 +152,7 @@ useEffect(() => {
           setUserLocation([longitude, latitude]);
           setCenter([longitude, latitude]);
 
-          if (mapRef.current) {
+          if (mapRef.current && Number.isFinite(longitude) && Number.isFinite(latitude)) {
             mapRef.current.flyTo({
               center: [longitude, latitude],
               zoom: 12,
@@ -171,7 +171,7 @@ useEffect(() => {
         setUserLocation(DEFAULT_LOCATION);
         setCenter(DEFAULT_LOCATION);
 
-        if (mapRef.current) {
+        if (mapRef.current && Number.isFinite(DEFAULT_LOCATION[0]) && Number.isFinite(DEFAULT_LOCATION[1])) {
           mapRef.current.flyTo({
             center: DEFAULT_LOCATION,
             zoom: 6,
@@ -216,6 +216,7 @@ useEffect(() => {
     geolocate.on("geolocate", (e) => {
       const lng = e.coords.longitude;
       const lat = e.coords.latitude;
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
       setUserLocation([lng, lat]);
       setCenter([lng, lat]);
       setViewMode("nearby"); // Retour au mode proximité lors de la géolocalisation
@@ -237,6 +238,7 @@ useEffect(() => {
 
     geocoder.on("result", (e) => {
       const [lng, lat] = e.result.center;
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
       setCenter([lng, lat]);
       setViewMode("nearby"); // Retour au mode proximité lors d'une recherche
       map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
@@ -403,6 +405,8 @@ useEffect(() => {
         <a href="https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}" target="_blank">🗺️ Itinéraire</a>
       `);
 
+      if (!Number.isFinite(offer.offer_lng) || !Number.isFinite(offer.offer_lat)) return;
+
       const marker = new mapboxgl.Marker(el)
         .setLngLat([offer.offer_lng, offer.offer_lat])
         .setPopup(popup)
@@ -423,7 +427,7 @@ useEffect(() => {
   const handleViewModeChange = (mode: "nearby" | "all") => {
     setViewMode(mode);
     
-    if (mode === "nearby" && mapRef.current) {
+    if (mode === "nearby" && mapRef.current && Number.isFinite(userLocation[0]) && Number.isFinite(userLocation[1])) {
       // Retour à la position de l'utilisateur avec le cercle
       mapRef.current.flyTo({
         center: userLocation,
@@ -438,6 +442,18 @@ useEffect(() => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
   };
+
+  // Protection contre les coordonnées invalides
+  if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-100px)] bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement de la carte...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
