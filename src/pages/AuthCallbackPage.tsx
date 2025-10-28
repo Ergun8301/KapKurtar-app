@@ -40,17 +40,24 @@ const AuthCallbackPage = () => {
         const user = session.user;
         console.log("✅ Session OAuth récupérée pour:", user.email);
 
-        // ✅ 1. Définir le rôle dans Supabase via RPC (idempotent)
-        await supabase.rpc("set_role_for_me", { p_role: role });
+        // ✅ Upsert du profil avec le rôle approprié
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            auth_id: user.id,
+            email: user.email,
+            role: role,
+          }, {
+            onConflict: 'auth_id'
+          });
 
-        // ✅ 2. Si marchand → création du profil marchand (RPC SQL)
+        if (profileError) {
+          console.warn("⚠️ Profile upsert error:", profileError.message);
+        }
+
+        // Le trigger Supabase créera automatiquement la ligne merchants si role='merchant'
+
         if (role === "merchant") {
-          console.log("🧱 Vérification du profil marchand SQL...");
-          const { error: merchantError } = await supabase.rpc(
-            "get_or_create_merchant_for_profile",
-            { p_auth_id: user.id }
-          );
-          if (merchantError) console.warn("⚠️ Merchant RPC error:", merchantError.message);
           navigate("/merchant/dashboard");
         } else {
           navigate("/offers");

@@ -44,8 +44,6 @@ const CustomerAuthPage = () => {
         if (error) throw error;
 
         if (data.user) {
-          // 🧠 rôle client garanti
-          await supabase.rpc('set_role_for_me', { p_role: 'client' });
           await refetchProfile();
           navigate('/offers');
         }
@@ -56,12 +54,13 @@ const CustomerAuthPage = () => {
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
+          options: {
+            data: {
+              role: 'client',
+            },
+          },
         });
         if (error) throw error;
-
-        if (data?.user) {
-          await supabase.rpc('set_role_for_me', { p_role: 'client' });
-        }
 
         alert(
           '✅ Un e-mail de confirmation vous a été envoyé. Veuillez cliquer sur le lien pour activer votre compte.'
