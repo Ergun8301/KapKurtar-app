@@ -11,16 +11,12 @@ const AuthCallbackPage = () => {
   useEffect(() => {
     const handleOAuthCallback = async () => {
       try {
-        const role = searchParams.get("role");
-        if (!role || !["client", "merchant"].includes(role)) {
-          setError("Paramètre de rôle invalide");
-          setLoading(false);
-          return;
-        }
+        const role = searchParams.get("role") || "client";
+        const flowToken = searchParams.get("flow_token");
 
-        console.log("🔁 OAuth callback avec rôle :", role);
+        console.log("🔁 OAuth callback → rôle:", role, "| flow_token:", flowToken);
 
-        // 🕒 Attente d'une session valide (jusqu'à 10 secondes)
+        // 🔹 attendre session valide
         let session = null;
         for (let i = 0; i < 10; i++) {
           const { data } = await supabase.auth.getSession();
@@ -32,31 +28,39 @@ const AuthCallbackPage = () => {
         }
 
         if (!session) {
-          setError("Impossible de récupérer la session après OAuth.");
+          setError("Impossible de récupérer la session après OAuth");
           setLoading(false);
           return;
         }
 
         const user = session.user;
-        console.log("✅ Session OAuth récupérée pour:", user.email);
+        console.log("✅ Session récupérée pour:", user.email);
 
-        // ✅ Upsert du profil avec le rôle approprié
+        // 1️⃣ Si un flow_token est présent → associer à l'utilisateur
+        if (flowToken) {
+          await supabase
+            .from("flow_states")
+            .update({ auth_user_id: user.id, used: true })
+            .eq("token", flowToken);
+        }
+
+        // 2️⃣ Mise à jour / création du profil
         const { error: profileError } = await supabase.from("profiles").upsert(
           {
-            id: user.id,          // correspond à auth.users.id
+            auth_id: user.id,
             email: user.email,
-            role: role,
+            role,
           },
-          { onConflict: "id" }
+          { onConflict: "auth_id" }
         );
 
         if (profileError) {
-          console.warn("⚠️ Erreur lors de l'upsert du profil :", profileError.message);
+          console.warn("⚠️ Erreur profil:", profileError.message);
         } else {
-          console.log("✅ Profil mis à jour ou créé avec succès :", user.email);
+          console.log("✅ Profil OK:", user.email);
         }
 
-        // Le trigger Supabase créera automatiquement la ligne merchants si role='merchant'
+        // 3️⃣ Redirection selon rôle
         if (role === "merchant") {
           navigate("/merchant/dashboard");
         } else {
