@@ -50,6 +50,7 @@ const MerchantAuthPage = () => {
             .select("id")
             .eq("merchant_id", merch.id)
             .limit(1);
+
           if (!offers || offers.length === 0) {
             navigate("/merchant/add-product");
             return;
@@ -131,7 +132,7 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // ---------- Google OAuth ----------
+  // ---------- Google OAuth marchand ----------
   const handleGoogleAuth = async () => {
     try {
       // 🔹 Crée un flow_state avec rôle marchand avant OAuth
@@ -144,16 +145,21 @@ const MerchantAuthPage = () => {
       if (flowError || !flow)
         throw flowError || new Error("Échec création flow_state");
 
-      // 🔹 Redirection Google avec flow_token dans l’URL
-      const redirectUrl = `${window.location.origin}/auth/callback?flow_token=${flow.token}`;
+      console.log("🎟️ Flow token créé :", flow.token);
+
+      // 🔹 Redirection Google avec rôle et token dans l’URL
+      const redirectUrl = `${window.location.origin}/auth/callback?role=merchant&flow_token=${flow.token}`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: redirectUrl },
+        options: {
+          redirectTo: redirectUrl,
+        },
       });
 
       if (error) throw error;
     } catch (err) {
+      console.error("Erreur OAuth marchand :", err);
       setError((err as Error).message);
     }
   };
