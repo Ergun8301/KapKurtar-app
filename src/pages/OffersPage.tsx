@@ -196,10 +196,16 @@ useEffect(() => {
 
     if (!mapContainerRef.current) return;
 
+    // Utiliser DEFAULT_LOCATION si center est invalide
+    const safeCenter: [number, number] =
+      center && Number.isFinite(center[0]) && Number.isFinite(center[1])
+        ? center
+        : DEFAULT_LOCATION;
+
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: MAP_STYLE,
-      center,
+      center: safeCenter,
       zoom: 7,
     });
 
@@ -328,6 +334,12 @@ useEffect(() => {
   // Chargement des offres
   useEffect(() => {
     const fetchOffers = async () => {
+      // Protection contre les coordonnées invalides
+      if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
+        console.warn("🧭 fetchOffers skipped: invalid center", center);
+        return;
+      }
+
       try {
         let data, error;
 
@@ -352,6 +364,11 @@ useEffect(() => {
             error = result.error;
           } else {
             const [lng, lat] = center;
+            // Vérification supplémentaire avant d'utiliser les coordonnées
+            if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+              console.warn("🧭 Invalid coordinates from center:", lng, lat);
+              return;
+            }
             const result = await supabase.rpc("get_offers_nearby_public", {
               p_longitude: lng,
               p_latitude: lat,
@@ -445,6 +462,7 @@ useEffect(() => {
 
   // Protection contre les coordonnées invalides
   if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
+    console.warn("🧭 Map skipped render: invalid center", center);
     return (
       <div className="flex items-center justify-center h-[calc(100vh-100px)] bg-gray-50">
         <div className="text-center">
