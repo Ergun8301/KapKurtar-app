@@ -15,20 +15,20 @@ const MerchantAuthPage = () => {
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({ email: "", password: "", companyName: "" });
 
-  // ✅ Redirection automatique après connexion
+  // 🔁 Redirection automatique après connexion
   useEffect(() => {
     if (!initialized || !user) return;
     if (role === "merchant") navigate("/merchant/dashboard");
     else if (role === "client") navigate("/offers");
   }, [initialized, user, role, navigate]);
 
-  // ✅ Gestion du formulaire
+  // 🧩 Gestion champs formulaire
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Connexion / Inscription e-mail
+  // 🟠 Auth e-mail / mot de passe
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -52,20 +52,27 @@ const MerchantAuthPage = () => {
         if (!formData.companyName.trim())
           throw new Error("Le nom de l'entreprise est requis");
 
+        // 1️⃣ Créer un flow_state pour le rôle merchant
+        const { data: flowData, error: flowError } = await supabase
+          .from("flow_states")
+          .insert([{ desired_role: "merchant" }])
+          .select("token")
+          .single();
+
+        if (flowError) throw flowError;
+        const flowToken = flowData.token;
+
+        // 2️⃣ Inscription Supabase Auth classique
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
-          options: {
-            data: { role: "merchant", company_name: formData.companyName.trim() },
-          },
         });
         if (signUpError) throw signUpError;
 
+        // 3️⃣ Si succès, enregistrer le rôle merchant via RPC (après la création auth)
         if (signUpData?.user) {
-          // ✅ Appel sécurisé côté base
-          await supabase.rpc("create_merchant_safely", {
-            p_email: signUpData.user.email,
-            p_id: signUpData.user.id,
+          await supabase.rpc("finalize_signup_from_flow", {
+            flow_token: flowToken,
           });
         }
 
@@ -78,13 +85,24 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // ✅ Google OAuth (marchand)
+  // 🟢 Authentification Google (marchand)
   const handleGoogleAuth = async () => {
     try {
+      // 1️⃣ Créer un flow_state avant OAuth
+      const { data: flowData, error: flowError } = await supabase
+        .from("flow_states")
+        .insert([{ desired_role: "merchant" }])
+        .select("token")
+        .single();
+      if (flowError) throw flowError;
+
+      const flowToken = flowData.token;
+
+      // 2️⃣ Démarrer OAuth avec le paramètre flow
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?role=merchant`,
+          redirectTo: `${window.location.origin}/auth/callback?flow=${flowToken}`,
         },
       });
       if (error) throw error;
@@ -93,7 +111,7 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // ✅ Loader
+  // ⏳ Loader
   if (authLoading && !initialized) {
     return (
       <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
@@ -102,7 +120,7 @@ const MerchantAuthPage = () => {
     );
   }
 
-  // ✅ Interface
+  // 🧱 Interface
   return (
     <div className="min-h-screen bg-[#FAFAF5] flex flex-col">
       <div className="flex-1 flex items-center justify-center py-8 px-4">
