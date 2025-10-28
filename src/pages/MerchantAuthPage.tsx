@@ -15,20 +15,20 @@ const MerchantAuthPage = () => {
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({ email: "", password: "", companyName: "" });
 
-  // 🔁 Redirection automatique après connexion
+  // ----------- Redirections automatiques -----------
   useEffect(() => {
     if (!initialized || !user) return;
     if (role === "merchant") navigate("/merchant/dashboard");
     else if (role === "client") navigate("/offers");
   }, [initialized, user, role, navigate]);
 
-  // 🧩 Gestion champs formulaire
+  // ----------- Gestion des champs -----------
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 🟠 Auth e-mail / mot de passe
+  // ----------- Authentification e-mail + mot de passe -----------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -41,42 +41,38 @@ const MerchantAuthPage = () => {
           password: formData.password,
         });
         if (error) throw error;
-
         if (data.user) {
           await refetchProfile();
           navigate("/merchant/dashboard");
         }
       } else {
+        // ---------- INSCRIPTION ----------
         if (formData.password.length < 6)
           throw new Error("Le mot de passe doit contenir au moins 6 caractères");
         if (!formData.companyName.trim())
           throw new Error("Le nom de l'entreprise est requis");
 
-        // 1️⃣ Créer un flow_state pour le rôle merchant
-        const { data: flowData, error: flowError } = await supabase
+        // 🔹 1. Créer un flow_state (rôle = merchant)
+        const { data: flow, error: flowError } = await supabase
           .from("flow_states")
-          .insert([{ desired_role: "merchant" }])
+          .insert({ desired_role: "merchant" })
           .select("token")
           .single();
 
         if (flowError) throw flowError;
-        const flowToken = flowData.token;
 
-        // 2️⃣ Inscription Supabase Auth classique
+        // 🔹 2. Créer l’utilisateur Supabase Auth
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
+          options: {
+            data: { flow_token: flow.token },
+          },
         });
+
         if (signUpError) throw signUpError;
 
-        // 3️⃣ Si succès, enregistrer le rôle merchant via RPC (après la création auth)
-        if (signUpData?.user) {
-          await supabase.rpc("finalize_signup_from_flow", {
-            flow_token: flowToken,
-          });
-        }
-
-        alert("✅ Vérifiez votre e-mail pour confirmer votre compte.");
+        alert("✅ Vérifiez votre e-mail pour confirmer votre compte marchand.");
       }
     } catch (err) {
       setError((err as Error).message);
@@ -85,24 +81,23 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // 🟢 Authentification Google (marchand)
+  // ----------- Auth Google -----------
   const handleGoogleAuth = async () => {
     try {
-      // 1️⃣ Créer un flow_state avant OAuth
-      const { data: flowData, error: flowError } = await supabase
+      // 🔹 1. Créer un flow_state pour ce marchand
+      const { data: flow, error: flowError } = await supabase
         .from("flow_states")
-        .insert([{ desired_role: "merchant" }])
+        .insert({ desired_role: "merchant" })
         .select("token")
         .single();
       if (flowError) throw flowError;
 
-      const flowToken = flowData.token;
-
-      // 2️⃣ Démarrer OAuth avec le paramètre flow
+      // 🔹 2. Lancer la connexion OAuth avec le token
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?flow=${flowToken}`,
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: { flow_token: flow.token },
         },
       });
       if (error) throw error;
@@ -111,7 +106,7 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // ⏳ Loader
+  // ----------- Loader global -----------
   if (authLoading && !initialized) {
     return (
       <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
@@ -120,7 +115,7 @@ const MerchantAuthPage = () => {
     );
   }
 
-  // 🧱 Interface
+  // ----------- Interface utilisateur -----------
   return (
     <div className="min-h-screen bg-[#FAFAF5] flex flex-col">
       <div className="flex-1 flex items-center justify-center py-8 px-4">
@@ -154,9 +149,7 @@ const MerchantAuthPage = () => {
               <button
                 onClick={() => setMode("login")}
                 className={`flex-1 py-3 font-semibold rounded-xl ${
-                  mode === "login"
-                    ? "bg-white text-[#FF6B35] shadow-md"
-                    : "text-gray-500"
+                  mode === "login" ? "bg-white text-[#FF6B35] shadow-md" : "text-gray-500"
                 }`}
               >
                 Connexion
@@ -164,9 +157,7 @@ const MerchantAuthPage = () => {
               <button
                 onClick={() => setMode("register")}
                 className={`flex-1 py-3 font-semibold rounded-xl ${
-                  mode === "register"
-                    ? "bg-white text-[#FF6B35] shadow-md"
-                    : "text-gray-500"
+                  mode === "register" ? "bg-white text-[#FF6B35] shadow-md" : "text-gray-500"
                 }`}
               >
                 Inscription
@@ -201,9 +192,7 @@ const MerchantAuthPage = () => {
               )}
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
@@ -219,9 +208,7 @@ const MerchantAuthPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Mot de passe
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Mot de passe</label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
