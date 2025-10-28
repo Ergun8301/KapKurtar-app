@@ -8,27 +8,73 @@ type AuthMode = "login" | "register";
 
 const MerchantAuthPage = () => {
   const navigate = useNavigate();
-  const { user, role, loading: authLoading, initialized, refetchProfile } = useAuthFlow();
+  const {
+    user,
+    role,
+    profile,
+    loading: authLoading,
+    initialized,
+    refetchProfile,
+  } = useAuthFlow();
+
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [formData, setFormData] = useState({ email: "", password: "", companyName: "" });
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    companyName: "",
+  });
 
-  // ----------- Redirections automatiques -----------
+  // ---------- Redirection ----------
+  const goToMerchantHome = async () => {
+    try {
+      if (!user) return navigate("/merchant/dashboard");
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_id", user.id)
+        .maybeSingle();
+
+      if (prof?.id) {
+        const { data: merch } = await supabase
+          .from("merchants")
+          .select("id")
+          .eq("profile_id", prof.id)
+          .maybeSingle();
+
+        if (merch?.id) {
+          const { data: offers } = await supabase
+            .from("offers")
+            .select("id")
+            .eq("merchant_id", merch.id)
+            .limit(1);
+          if (!offers || offers.length === 0) {
+            navigate("/merchant/add-product");
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Erreur redirection merchant:", err);
+    }
+    navigate("/merchant/dashboard");
+  };
+
   useEffect(() => {
     if (!initialized || !user) return;
-    if (role === "merchant") navigate("/merchant/dashboard");
+    if (role === "merchant") goToMerchantHome();
     else if (role === "client") navigate("/offers");
-  }, [initialized, user, role, navigate]);
+  }, [initialized, user, role, profile, navigate]);
 
-  // ----------- Gestion des champs -----------
+  // ---------- Formulaire ----------
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ----------- Authentification e-mail + mot de passe -----------
+  // ---------- Auth e-mail / password ----------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -43,36 +89,40 @@ const MerchantAuthPage = () => {
         if (error) throw error;
         if (data.user) {
           await refetchProfile();
-          navigate("/merchant/dashboard");
+          await goToMerchantHome();
         }
       } else {
-        // ---------- INSCRIPTION ----------
+        // ----------- REGISTER -----------
         if (formData.password.length < 6)
           throw new Error("Le mot de passe doit contenir au moins 6 caractères");
         if (!formData.companyName.trim())
           throw new Error("Le nom de l'entreprise est requis");
 
-        // 🔹 1. Créer un flow_state (rôle = merchant)
+        // 🔹 Crée un flow_state avant signup
         const { data: flow, error: flowError } = await supabase
           .from("flow_states")
           .insert({ desired_role: "merchant" })
           .select("token")
           .single();
 
-        if (flowError) throw flowError;
+        if (flowError || !flow)
+          throw flowError || new Error("Échec création flow_state");
 
-        // 🔹 2. Créer l’utilisateur Supabase Auth
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: { flow_token: flow.token },
-          },
-        });
-
+        const { data: signUpData, error: signUpError } =
+          await supabase.auth.signUp({
+            email: formData.email,
+            password: formData.password,
+            options: {
+              data: {
+                role: "merchant",
+                flow_token: flow.token,
+                company_name: formData.companyName.trim(),
+              },
+            },
+          });
         if (signUpError) throw signUpError;
 
-        alert("✅ Vérifiez votre e-mail pour confirmer votre compte marchand.");
+        alert("✅ Vérifiez votre e-mail pour confirmer votre compte.");
       }
     } catch (err) {
       setError((err as Error).message);
@@ -81,32 +131,34 @@ const MerchantAuthPage = () => {
     }
   };
 
-  // ----------- Auth Google -----------
+  // ---------- Google OAuth ----------
   const handleGoogleAuth = async () => {
     try {
-      // 🔹 1. Créer un flow_state pour ce marchand
+      // 🔹 Crée un flow_state avec rôle marchand avant OAuth
       const { data: flow, error: flowError } = await supabase
         .from("flow_states")
         .insert({ desired_role: "merchant" })
         .select("token")
         .single();
-      if (flowError) throw flowError;
 
-      // 🔹 2. Lancer la connexion OAuth avec le token
+      if (flowError || !flow)
+        throw flowError || new Error("Échec création flow_state");
+
+      // 🔹 Redirection Google avec flow_token dans l’URL
+      const redirectUrl = `${window.location.origin}/auth/callback?flow_token=${flow.token}`;
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: { flow_token: flow.token },
-        },
+        options: { redirectTo: redirectUrl },
       });
+
       if (error) throw error;
     } catch (err) {
       setError((err as Error).message);
     }
   };
 
-  // ----------- Loader global -----------
+  // ---------- Loader ----------
   if (authLoading && !initialized) {
     return (
       <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
@@ -115,7 +167,7 @@ const MerchantAuthPage = () => {
     );
   }
 
-  // ----------- Interface utilisateur -----------
+  // ---------- UI ----------
   return (
     <div className="min-h-screen bg-[#FAFAF5] flex flex-col">
       <div className="flex-1 flex items-center justify-center py-8 px-4">
@@ -135,7 +187,9 @@ const MerchantAuthPage = () => {
               </div>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {mode === "login" ? "Espace Commerçant" : "Devenez Partenaire"}
+              {mode === "login"
+                ? "Espace Commerçant"
+                : "Devenez Partenaire"}
             </h1>
             <p className="text-gray-600">
               {mode === "login"
@@ -149,7 +203,9 @@ const MerchantAuthPage = () => {
               <button
                 onClick={() => setMode("login")}
                 className={`flex-1 py-3 font-semibold rounded-xl ${
-                  mode === "login" ? "bg-white text-[#FF6B35] shadow-md" : "text-gray-500"
+                  mode === "login"
+                    ? "bg-white text-[#FF6B35] shadow-md"
+                    : "text-gray-500"
                 }`}
               >
                 Connexion
@@ -157,7 +213,9 @@ const MerchantAuthPage = () => {
               <button
                 onClick={() => setMode("register")}
                 className={`flex-1 py-3 font-semibold rounded-xl ${
-                  mode === "register" ? "bg-white text-[#FF6B35] shadow-md" : "text-gray-500"
+                  mode === "register"
+                    ? "bg-white text-[#FF6B35] shadow-md"
+                    : "text-gray-500"
                 }`}
               >
                 Inscription
@@ -192,7 +250,9 @@ const MerchantAuthPage = () => {
               )}
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email
+                </label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
@@ -208,7 +268,9 @@ const MerchantAuthPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Mot de passe</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Mot de passe
+                </label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
@@ -226,7 +288,11 @@ const MerchantAuthPage = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -254,7 +320,9 @@ const MerchantAuthPage = () => {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500 font-medium">Ou continuer avec</span>
+                <span className="px-4 bg-white text-gray-500 font-medium">
+                  Ou continuer avec
+                </span>
               </div>
             </div>
 
