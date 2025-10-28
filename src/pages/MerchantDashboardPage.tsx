@@ -32,6 +32,7 @@ const MerchantDashboardPage = () => {
 
   const { user } = useAuth();
   const { showAddProductModal, openAddProductModal, closeAddProductModal } = useAddProduct();
+  const [merchantId, setMerchantId] = useState<string | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -57,6 +58,45 @@ const MerchantDashboardPage = () => {
     customDuration: ''
   });
 
+  // Fetch merchant ID from user
+  useEffect(() => {
+    const fetchMerchantId = async () => {
+      if (!user) {
+        setMerchantId(null);
+        return;
+      }
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('auth_id', user.id)
+          .maybeSingle();
+
+        if (!profile) {
+          console.warn('No profile found for user');
+          return;
+        }
+
+        const { data: merchant } = await supabase
+          .from('merchants')
+          .select('id')
+          .eq('profile_id', profile.id)
+          .maybeSingle();
+
+        if (merchant) {
+          setMerchantId(merchant.id);
+        } else {
+          console.warn('No merchant found for profile');
+        }
+      } catch (error) {
+        console.error('Error fetching merchant ID:', error);
+      }
+    };
+
+    fetchMerchantId();
+  }, [user]);
+
   useEffect(() => {
     const checkExpiredOffers = async () => {
       try {
@@ -71,7 +111,7 @@ const MerchantDashboardPage = () => {
     loadOffers();
 
     // Subscribe to realtime updates for merchant's offers
-    if (!user) return;
+    if (!merchantId) return;
 
     console.log('Subscribing to realtime updates for merchant offers...');
     const channel = supabase
@@ -82,7 +122,7 @@ const MerchantDashboardPage = () => {
           event: '*',
           schema: 'public',
           table: 'offers',
-          filter: `merchant_id=eq.${user.id}`
+          filter: `merchant_id=eq.${merchantId}`
         },
         (payload) => {
           console.log('Merchant offers table changed:', payload);
@@ -95,7 +135,7 @@ const MerchantDashboardPage = () => {
       console.log('Unsubscribing from merchant offers realtime...');
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [merchantId]);
 
   useEffect(() => {
     if (toast) {
@@ -105,13 +145,13 @@ const MerchantDashboardPage = () => {
   }, [toast]);
 
   const loadOffers = async () => {
-    if (!user) return;
+    if (!merchantId) return;
 
     try {
       const { data, error } = await supabase
         .from('offers')
         .select('*')
-        .eq('merchant_id', user.id)
+        .eq('merchant_id', merchantId)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
@@ -447,7 +487,7 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
         .from('offers')
         .update({ is_active: newStatus })
         .eq('id', offerId)
-        .eq('merchant_id', user.id)
+        .eq('merchant_id', merchantId)
         .select()
         .single();
 
@@ -507,7 +547,7 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
         .from('offers')
         .delete()
         .eq('id', offerId)
-        .eq('merchant_id', user.id);
+        .eq('merchant_id', merchantId);
 
       if (error) throw error;
 

@@ -80,7 +80,9 @@ export default function OffersPage() {
     Number(localStorage.getItem("radiusKm")) || 10
   );
   const [clientId, setClientId] = useState<string | null>(null);
+  const [clientIdFetched, setClientIdFetched] = useState(false);
   const [isGeolocating, setIsGeolocating] = useState(false);
+  const [hasGeolocated, setHasGeolocated] = useState(false);
   const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
 
   // Injection CSS
@@ -93,9 +95,12 @@ export default function OffersPage() {
 
   // Récupère le profil client connecté
   useEffect(() => {
+    if (clientIdFetched) return;
+
     const fetchClientId = async () => {
       if (!user) {
         setClientId(null);
+        setClientIdFetched(true);
         return;
       }
 
@@ -116,15 +121,17 @@ export default function OffersPage() {
         }
       } catch (error) {
         console.error("Erreur lors de la récupération du profil client :", error);
+      } finally {
+        setClientIdFetched(true);
       }
     };
 
     fetchClientId();
-  }, [user]);
+  }, [user, clientIdFetched]);
 
   // Géolocalisation automatique pour clients connectés
 useEffect(() => {
-  if (!clientId || isGeolocating) return;
+  if (!clientId || isGeolocating || hasGeolocated) return;
 
   const geolocateClient = async () => {
     if (!navigator.geolocation) return;
@@ -156,6 +163,7 @@ useEffect(() => {
           console.error("Erreur lors de la mise à jour de la position:", error);
         } finally {
           setIsGeolocating(false);
+          setHasGeolocated(true);
         }
       },
       (error) => {
@@ -171,6 +179,7 @@ useEffect(() => {
           });
         }
         setIsGeolocating(false);
+        setHasGeolocated(true);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
