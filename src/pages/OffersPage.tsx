@@ -130,64 +130,63 @@ export default function OffersPage() {
   }, [user, clientIdFetched]);
 
   // Géolocalisation automatique pour clients connectés
-useEffect(() => {
-  if (!clientId || isGeolocating || hasGeolocated) return;
+  useEffect(() => {
+    if (!clientId || isGeolocating || hasGeolocated) return;
 
-  const geolocateClient = async () => {
-    if (!navigator.geolocation) return;
+    const geolocateClient = async () => {
+      if (!navigator.geolocation) return;
 
-    setIsGeolocating(true);
+      setIsGeolocating(true);
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
 
-        try {
-          await supabase.rpc("update_client_location", {
-            p_client_id: clientId,
-            p_lat: latitude,
-            p_lng: longitude,
-          });
+          try {
+            await supabase.rpc("update_client_location", {
+              p_client_id: clientId,
+              p_lat: latitude,
+              p_lng: longitude,
+            });
 
-          setUserLocation([longitude, latitude]);
-          setCenter([longitude, latitude]);
+            setUserLocation([longitude, latitude]);
+            setCenter([longitude, latitude]);
 
-          if (mapRef.current && Number.isFinite(longitude) && Number.isFinite(latitude)) {
+            if (mapRef.current && Number.isFinite(longitude) && Number.isFinite(latitude)) {
+              mapRef.current.flyTo({
+                center: [longitude, latitude],
+                zoom: 12,
+                essential: true,
+              });
+            }
+          } catch (error) {
+            console.error("Erreur lors de la mise à jour de la position:", error);
+          } finally {
+            setIsGeolocating(false);
+            setHasGeolocated(true);
+          }
+        },
+        (error) => {
+          console.warn("Géolocalisation refusée ou impossible:", error);
+          setUserLocation(DEFAULT_LOCATION);
+          setCenter(DEFAULT_LOCATION);
+
+          if (mapRef.current && Number.isFinite(DEFAULT_LOCATION[0]) && Number.isFinite(DEFAULT_LOCATION[1])) {
             mapRef.current.flyTo({
-              center: [longitude, latitude],
-              zoom: 12,
+              center: DEFAULT_LOCATION,
+              zoom: 6,
               essential: true,
             });
           }
-        } catch (error) {
-          console.error("Erreur lors de la mise à jour de la position:", error);
-        } finally {
           setIsGeolocating(false);
           setHasGeolocated(true);
-        }
-      },
-      (error) => {
-        console.warn("Géolocalisation refusée ou impossible:", error);
-        setUserLocation(DEFAULT_LOCATION);
-        setCenter(DEFAULT_LOCATION);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    };
 
-        if (mapRef.current && Number.isFinite(DEFAULT_LOCATION[0]) && Number.isFinite(DEFAULT_LOCATION[1])) {
-          mapRef.current.flyTo({
-            center: DEFAULT_LOCATION,
-            zoom: 6,
-            essential: true,
-          });
-        }
-        setIsGeolocating(false);
-        setHasGeolocated(true);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-  }; // ← ICI : fermeture correcte de la fonction geolocateClient
-
-  geolocateClient(); // ← et maintenant on l'appelle
-
-}, [clientId]);
+    geolocateClient();
+  }, [clientId]);
 
   // Initialisation de la carte
   useEffect(() => {
@@ -344,17 +343,16 @@ useEffect(() => {
         let data, error;
 
         if (viewMode === "all") {
-          // Mode "Toutes les offres" : utilise un rayon très large depuis un point central
-          // Ou bien récupère directement via la RPC avec un rayon énorme
+          // Mode "Toutes les offres"
           const result = await supabase.rpc("get_offers_nearby_public", {
-            p_longitude: 29, // Centre approximatif de la Turquie
+            p_longitude: 29,
             p_latitude: 39,
-            p_radius_meters: 2000000, // 2000 km = toute la Turquie et plus
+            p_radius_meters: 2000000,
           });
           data = result.data;
           error = result.error;
         } else {
-          // Mode "Proximité" : utilise les RPC existantes
+          // Mode "Proximité"
           if (clientId) {
             const result = await supabase.rpc("get_offers_nearby_dynamic", {
               p_client_id: clientId,
@@ -364,7 +362,6 @@ useEffect(() => {
             error = result.error;
           } else {
             const [lng, lat] = center;
-            // Vérification supplémentaire avant d'utiliser les coordonnées
             if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
               console.warn("🧭 Invalid coordinates from center:", lng, lat);
               return;
@@ -432,11 +429,16 @@ useEffect(() => {
       (map as any)._markers.push(marker);
     });
 
-    // Ajuster la vue en mode "all" pour voir toutes les offres
+    // ✅ FIX A: fitBounds uniquement avec coordonnées valides en mode "all"
     if (viewMode === "all" && offers.length > 0) {
-      const bounds = new mapboxgl.LngLatBounds();
-      offers.forEach((o) => bounds.extend([o.offer_lng, o.offer_lat]));
-      map.fitBounds(bounds, { padding: 80, duration: 800 });
+      const valid = offers.filter(
+        (o) => Number.isFinite(o.offer_lng) && Number.isFinite(o.offer_lat)
+      );
+      if (valid.length > 0) {
+        const bounds = new mapboxgl.LngLatBounds();
+        valid.forEach((o) => bounds.extend([o.offer_lng, o.offer_lat]));
+        map.fitBounds(bounds, { padding: 80, duration: 800 });
+      }
     }
   }, [offers, viewMode]);
 
@@ -451,6 +453,10 @@ useEffect(() => {
         zoom: 12,
         essential: true,
       });
+    }
+
+    if (mode === "all") {
+      setCenter(DEFAULT_LOCATION); // ✅ FIX B: évite (NaN, NaN) au switch
     }
   };
 
