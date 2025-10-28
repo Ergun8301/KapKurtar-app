@@ -15,7 +15,7 @@ type Offer = {
   distance_meters: number;
   offer_lat: number;
   offer_lng: number;
-  image_url?: string;
+  image_url: string;
 };
 
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
