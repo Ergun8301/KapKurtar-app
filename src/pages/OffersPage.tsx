@@ -5,7 +5,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
-import { ImageDiagnostic } from "../components/ImageDiagnostic";
+import { getPublicImageUrl } from "../lib/supabasePublic";
 
 type Offer = {
   offer_id: string;
@@ -542,19 +542,17 @@ useEffect(() => {
                 key={o.offer_id}
                 className="flex bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
               >
-                {o.image_url && (
-                  <img
-                    src={o.image_url}
-                    alt={o.title}
-                    className="w-24 h-24 object-cover"
-                    referrerPolicy="no-referrer"
-                    crossOrigin="anonymous"
-                    onError={(e) => {
-                      console.error('Image load failed:', o.image_url);
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                )}
+                <img
+                  src={getPublicImageUrl(o.image_url)}
+                  alt={o.title}
+                  className="w-24 h-24 object-cover"
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    console.error('Image load failed:', o.image_url);
+                    (e.currentTarget as HTMLImageElement).style.opacity = '0';
+                  }}
+                />
                 <div className="flex-1 p-3">
                   <h3 className="font-semibold text-gray-800">{o.title}</h3>
                   <p className="text-sm text-gray-500">{o.merchant_name}</p>
@@ -579,11 +577,6 @@ useEffect(() => {
           </div>
         )}
       </div>
-
-      {/* Diagnostic temporaire - à retirer après test */}
-      {offers.length > 0 && offers[0].image_url && (
-        <ImageDiagnostic imageUrl={offers[0].image_url} />
-      )}
     </div>
   );
 }
