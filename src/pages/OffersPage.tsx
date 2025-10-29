@@ -543,7 +543,7 @@ useEffect(() => {
               >
                 {o.image_url && (
                   <img
-                    src={`https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/product-images/${o.image_url.split('/product-images/')[1]}`}
+                    src={o.image_url}
                     alt={o.title}
                     className="w-24 h-24 object-cover"
                     referrerPolicy="no-referrer"
