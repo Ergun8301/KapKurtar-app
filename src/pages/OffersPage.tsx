@@ -546,6 +546,7 @@ useEffect(() => {
                     src={o.image_url}
                     alt={o.title}
                     className="w-24 h-24 object-cover"
+                    referrerPolicy="no-referrer"
                   />
                 )}
                 <div className="flex-1 p-3">

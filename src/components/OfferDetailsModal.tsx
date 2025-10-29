@@ -90,6 +90,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
               src={offer.image_url}
               alt={offer.title}
               className="w-full h-80 object-cover rounded-t-2xl"
+              referrerPolicy="no-referrer"
             />
           ) : (
             <div className="w-full h-80 bg-gradient-to-br from-green-400 to-green-600 rounded-t-2xl flex items-center justify-center">
