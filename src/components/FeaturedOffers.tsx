@@ -226,6 +226,11 @@ const FeaturedOffers = () => {
                   alt={offer.title}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    console.error('Featured offer image load failed:', offer.image_url);
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
                 />
                 <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-md text-sm font-bold">
                   -{offer.discount_percentage}%

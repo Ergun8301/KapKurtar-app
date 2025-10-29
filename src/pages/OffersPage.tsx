@@ -5,6 +5,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
+import { ImageDiagnostic } from "../components/ImageDiagnostic";
 
 type Offer = {
   offer_id: string;
@@ -547,6 +548,11 @@ useEffect(() => {
                     alt={o.title}
                     className="w-24 h-24 object-cover"
                     referrerPolicy="no-referrer"
+                    crossOrigin="anonymous"
+                    onError={(e) => {
+                      console.error('Image load failed:', o.image_url);
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
                   />
                 )}
                 <div className="flex-1 p-3">
@@ -573,6 +579,11 @@ useEffect(() => {
           </div>
         )}
       </div>
+
+      {/* Diagnostic temporaire - à retirer après test */}
+      {offers.length > 0 && offers[0].image_url && (
+        <ImageDiagnostic imageUrl={offers[0].image_url} />
+      )}
     </div>
   );
 }
