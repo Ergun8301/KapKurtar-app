@@ -152,11 +152,7 @@ useEffect(() => {
           setUserLocation([longitude, latitude]);
           setCenter([longitude, latitude]);
 
-          if (
-            mapRef.current &&
-            Number.isFinite(longitude) &&
-            Number.isFinite(latitude)
-          ) {
+          if (mapRef.current && Number.isFinite(longitude) && Number.isFinite(latitude)) {
             mapRef.current.flyTo({
               center: [longitude, latitude],
               zoom: 12,
@@ -172,19 +168,13 @@ useEffect(() => {
       },
       (error) => {
         console.warn("Géolocalisation refusée ou impossible:", error);
-        // Ne pas écraser la position existante si déjà définie
-        const [lng, lat] = userLocation || DEFAULT_LOCATION;
-        setUserLocation([lng, lat]);
-        setCenter([lng, lat]);
+        setUserLocation(DEFAULT_LOCATION);
+        setCenter(DEFAULT_LOCATION);
 
-        if (
-          mapRef.current &&
-          Number.isFinite(lng) &&
-          Number.isFinite(lat)
-        ) {
+        if (mapRef.current && Number.isFinite(DEFAULT_LOCATION[0]) && Number.isFinite(DEFAULT_LOCATION[1])) {
           mapRef.current.flyTo({
-            center: [lng, lat],
-            zoom: 7,
+            center: DEFAULT_LOCATION,
+            zoom: 6,
             essential: true,
           });
         }
