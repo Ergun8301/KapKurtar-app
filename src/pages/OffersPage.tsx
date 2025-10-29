@@ -130,63 +130,73 @@ export default function OffersPage() {
   }, [user, clientIdFetched]);
 
   // Géolocalisation automatique pour clients connectés
-  useEffect(() => {
-    if (!clientId || isGeolocating || hasGeolocated) return;
+useEffect(() => {
+  if (!clientId || isGeolocating || hasGeolocated) return;
 
-    const geolocateClient = async () => {
-      if (!navigator.geolocation) return;
+  const geolocateClient = async () => {
+    if (!navigator.geolocation) return;
 
-      setIsGeolocating(true);
+    setIsGeolocating(true);
 
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
 
-          try {
-            await supabase.rpc("update_client_location", {
-              p_client_id: clientId,
-              p_lat: latitude,
-              p_lng: longitude,
-            });
+        try {
+          await supabase.rpc("update_client_location", {
+            p_client_id: clientId,
+            p_lat: latitude,
+            p_lng: longitude,
+          });
 
-            setUserLocation([longitude, latitude]);
-            setCenter([longitude, latitude]);
+          setUserLocation([longitude, latitude]);
+          setCenter([longitude, latitude]);
 
-            if (mapRef.current && Number.isFinite(longitude) && Number.isFinite(latitude)) {
-              mapRef.current.flyTo({
-                center: [longitude, latitude],
-                zoom: 12,
-                essential: true,
-              });
-            }
-          } catch (error) {
-            console.error("Erreur lors de la mise à jour de la position:", error);
-          } finally {
-            setIsGeolocating(false);
-            setHasGeolocated(true);
-          }
-        },
-        (error) => {
-          console.warn("Géolocalisation refusée ou impossible:", error);
-          setUserLocation(DEFAULT_LOCATION);
-          setCenter(DEFAULT_LOCATION);
-
-          if (mapRef.current && Number.isFinite(DEFAULT_LOCATION[0]) && Number.isFinite(DEFAULT_LOCATION[1])) {
+          if (
+            mapRef.current &&
+            Number.isFinite(longitude) &&
+            Number.isFinite(latitude)
+          ) {
             mapRef.current.flyTo({
-              center: DEFAULT_LOCATION,
-              zoom: 6,
+              center: [longitude, latitude],
+              zoom: 12,
               essential: true,
             });
           }
+        } catch (error) {
+          console.error("Erreur lors de la mise à jour de la position:", error);
+        } finally {
           setIsGeolocating(false);
           setHasGeolocated(true);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    };
+        }
+      },
+      (error) => {
+        console.warn("Géolocalisation refusée ou impossible:", error);
+        // Ne pas écraser la position existante si déjà définie
+        const [lng, lat] = userLocation || DEFAULT_LOCATION;
+        setUserLocation([lng, lat]);
+        setCenter([lng, lat]);
 
-    geolocateClient();
-  }, [clientId]);
+        if (
+          mapRef.current &&
+          Number.isFinite(lng) &&
+          Number.isFinite(lat)
+        ) {
+          mapRef.current.flyTo({
+            center: [lng, lat],
+            zoom: 7,
+            essential: true,
+          });
+        }
+        setIsGeolocating(false);
+        setHasGeolocated(true);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  geolocateClient();
+}, [clientId]);
 
   // Initialisation de la carte
   useEffect(() => {
