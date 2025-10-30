@@ -545,12 +545,12 @@ useEffect(() => {
                 <img
                   src={getPublicImageUrl(o.image_url)}
                   alt={o.title}
-                  className="w-24 h-24 object-cover bg-gray-100"
+                  className="w-24 h-24 object-cover"
                   referrerPolicy="no-referrer"
                   crossOrigin="anonymous"
                   onError={(e) => {
-                    console.error('❌ Image load failed for offer:', o.title, '| URL:', o.image_url);
-                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                    console.error('Image load failed:', o.image_url);
+                    (e.currentTarget as HTMLImageElement).style.opacity = '0';
                   }}
                 />
                 <div className="flex-1 p-3">

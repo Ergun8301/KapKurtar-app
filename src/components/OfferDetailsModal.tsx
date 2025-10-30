@@ -90,12 +90,12 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             <img
               src={getPublicImageUrl(offer.image_url)}
               alt={offer.title}
-              className="w-full h-80 object-cover rounded-t-2xl bg-gray-100"
+              className="w-full h-80 object-cover rounded-t-2xl"
               referrerPolicy="no-referrer"
               crossOrigin="anonymous"
               onError={(e) => {
-                console.error('❌ Modal image load failed for:', offer.title, '| URL:', offer.image_url);
-                (e.currentTarget as HTMLImageElement).classList.add('hidden');
+                console.error('Modal image load failed:', offer.image_url);
+                (e.currentTarget as HTMLImageElement).style.opacity = '0.3';
               }}
             />
           ) : (
