@@ -58,10 +58,10 @@ export function useNearbyOffers({
 
       const radiusMeters = Math.round(radiusKm * 1000);
 
-      // ✅ Correction : nouvelle fonction RPC
-      const { data, error: rpcError } = await supabase.rpc('get_offers_nearby_dynamic_v2', {
-        p_client_id: clientId,
-        p_radius_meters: radiusMeters
+      // ✅ On passe à la fonction sécurisée
+      const { data, error: rpcError } = await supabase.rpc('get_offers_nearby_dynamic_secure', {
+        client_id: clientId,
+        radius_meters: radiusMeters
       });
 
       if (rpcError) {
@@ -76,9 +76,21 @@ export function useNearbyOffers({
         return;
       }
 
-      // ✅ Correction : adaptation aux nouveaux champs (id, distance_meters, etc.)
-      const mappedOffers: NearbyOffer[] = (data as GetOffersNearbyDynamicResponse[]).map((offer) => ({
-        id: offer.id, // anciennement offer.offer_id
+      // 🖼️ On génère l’URL publique des images (pour éviter les blocages RLS)
+      const offersWithImages = data.map((offer: any) => {
+        if (!offer.image_url) return offer;
+        const { data: publicUrlData } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(offer.image_url);
+        return {
+          ...offer,
+          image_url: publicUrlData?.publicUrl || null,
+        };
+      });
+
+      // ✅ Conversion typée propre
+      const mappedOffers: NearbyOffer[] = offersWithImages.map((offer: any) => ({
+        id: offer.offer_id || offer.id,
         merchant_id: offer.merchant_id,
         merchant_name: offer.merchant_name || '',
         title: offer.title,
@@ -86,11 +98,11 @@ export function useNearbyOffers({
         image_url: offer.image_url || null,
         price_before: parseFloat(offer.price_before),
         price_after: parseFloat(offer.price_after),
-        discount_percent: offer.discount_percent,
+        discount_percent: offer.discount_percent ?? 0,
         available_from: offer.available_from || '',
         available_until: offer.available_until || '',
-        quantity: offer.quantity,
-        distance_m: Math.round(offer.distance_meters),
+        quantity: offer.quantity ?? 0,
+        distance_m: Math.round(offer.distance_meters ?? 0),
         created_at: offer.created_at || ''
       }));
 
