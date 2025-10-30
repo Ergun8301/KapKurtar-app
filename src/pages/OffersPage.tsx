@@ -501,92 +501,85 @@ useEffect(() => {
         )}
       </div>
 
-{/* Liste des offres */}
-<div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-  {/* 🔘 Toggle élégant entre les modes de vue */}
-  <div className="flex justify-center mb-6">
-    <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
-      <button
-        className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
-          viewMode === "nearby"
-            ? "bg-white text-green-700 shadow"
-            : "text-gray-500 hover:text-green-600"
-        }`}
-        onClick={() => handleViewModeChange("nearby")}
-      >
-        📍 Offres à proximité
-      </button>
-      <button
-        className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
-          viewMode === "all"
-            ? "bg-white text-green-700 shadow"
-            : "text-gray-500 hover:text-green-600"
-        }`}
-        onClick={() => handleViewModeChange("all")}
-      >
-        🌍 Toutes les offres
-      </button>
-    </div>
-  </div>
-
-  {offers.length === 0 ? (
-    <p className="text-gray-500 text-center mt-10">
-      {viewMode === "nearby"
-        ? "Aucune offre disponible dans ce rayon. Essayez d'augmenter la distance !"
-        : "Aucune offre disponible pour le moment."}
-    </p>
-  ) : (
-    <div className="space-y-4">
-      {offers.map((o) => (
-        <div
-          key={o.offer_id}
-          className="flex bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
-        >
-          {/* 🖼️ Image de l'offre (affichée seulement s'il y en a une) */}
-          {o.image_url ? (
-            <img
-              src={
-                o.image_url.startsWith("http")
-                  ? o.image_url
-                  : supabasePublic.storage
-                      .from("product-images")
-                      .getPublicUrl(o.image_url).data.publicUrl
-              }
-              alt={o.title}
-              className="w-24 h-24 object-cover rounded-l-lg"
-              referrerPolicy="no-referrer"
-              crossOrigin="anonymous"
-              onError={(e) => {
-                console.warn("❌ Image non chargée :", o.title);
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
-          ) : null}
-
-          <div className="flex-1 p-3">
-            <h3 className="font-semibold text-gray-800">{o.title}</h3>
-            <p className="text-sm text-gray-500">{o.merchant_name}</p>
-            {viewMode === "nearby" && o.distance_meters > 0 && (
-              <p className="text-green-600 font-semibold">
-                📍 {(o.distance_meters / 1000).toFixed(2)} km
-              </p>
-            )}
-            <div className="flex items-center justify-between mt-1">
-              <div className="flex items-center space-x-2">
-                <span className="font-bold text-green-600">
-                  {o.price_after.toFixed(2)} €
-                </span>
-                <span className="line-through text-gray-400 text-sm">
-                  {o.price_before.toFixed(2)} €
-                </span>
-              </div>
-            </div>
+      {/* Liste des offres */}
+      <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
+        {/* 🔘 Toggle élégant entre les modes de vue */}
+        <div className="flex justify-center mb-6">
+          <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
+            <button
+              className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                viewMode === "nearby"
+                  ? "bg-white text-green-700 shadow"
+                  : "text-gray-500 hover:text-green-600"
+              }`}
+              onClick={() => handleViewModeChange("nearby")}
+            >
+              📍 Offres à proximité
+            </button>
+            <button
+              className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                viewMode === "all"
+                  ? "bg-white text-green-700 shadow"
+                  : "text-gray-500 hover:text-green-600"
+              }`}
+              onClick={() => handleViewModeChange("all")}
+            >
+              🌍 Toutes les offres
+            </button>
           </div>
         </div>
-      ))}
+
+        {offers.length === 0 ? (
+          <p className="text-gray-500 text-center mt-10">
+            {viewMode === "nearby"
+              ? "Aucune offre disponible dans ce rayon. Essayez d'augmenter la distance !"
+              : "Aucune offre disponible pour le moment."}
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {offers.map((o) => (
+              <div
+                key={o.offer_id}
+                className="flex bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
+              >
+                <img
+                  src={getPublicImageUrl(o.image_url)}
+                  alt={o.title}
+                  className="w-24 h-24 object-cover bg-gray-100"
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    console.error('❌ Image load failed for offer:', o.title, '| URL:', o.image_url);
+                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+                <div className="flex-1 p-3">
+                  <h3 className="font-semibold text-gray-800">{o.title}</h3>
+                  <p className="text-sm text-gray-500">{o.merchant_name}</p>
+                  {viewMode === "nearby" && o.distance_meters > 0 && (
+                    <p className="text-green-600 font-semibold">
+                      📍 {(o.distance_meters / 1000).toFixed(2)} km
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-green-600">
+                        {o.price_after.toFixed(2)} €
+                      </span>
+                      <span className="line-through text-gray-400 text-sm">
+                        {o.price_before.toFixed(2)} €
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
-  )}
-</div>
+  );
+}
 
 // Fonction utilitaire : créer un cercle GeoJSON
 export function createGeoJSONCircle(
