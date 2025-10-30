@@ -7,7 +7,6 @@ import { createReservation } from '../api/reservations';
 import { supabase } from '../lib/supabaseClient';
 import { useNearbyOffers } from '../hooks/useNearbyOffers';
 import { useClientLocation } from '../hooks/useClientLocation';
-import { getPublicImageUrl } from '../lib/supabasePublic';
 
 const FeaturedOffers = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -223,14 +222,14 @@ const FeaturedOffers = () => {
             <div key={offer.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group">
               <div className="relative">
                 <img
-                  src={getPublicImageUrl(offer.image_url)}
+                  src={offer.image_url}
                   alt={offer.title}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   referrerPolicy="no-referrer"
                   crossOrigin="anonymous"
                   onError={(e) => {
                     console.error('Featured offer image load failed:', offer.image_url);
-                    (e.currentTarget as HTMLImageElement).style.opacity = '0.3';
+                    (e.target as HTMLImageElement).style.display = 'none';
                   }}
                 />
                 <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-md text-sm font-bold">
