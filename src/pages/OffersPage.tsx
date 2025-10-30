@@ -400,6 +400,13 @@ useEffect(() => {
     (map as any)._markers?.forEach((m: Marker) => m.remove());
     (map as any)._markers = [];
 
+    // 🔍 DIAGNOSTIC : Afficher toutes les URLs d'images
+    console.log('🖼️ Images des offres:', offers.map(o => ({
+      title: o.title,
+      image_url: o.image_url,
+      has_image: !!o.image_url
+    })));
+
     offers.forEach((offer) => {
       const el = document.createElement("div");
       el.className = "offer-marker";
