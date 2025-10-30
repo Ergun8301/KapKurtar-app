@@ -343,10 +343,11 @@ useEffect(() => {
         let data, error;
 
         if (viewMode === "all") {
-          // Mode "Toutes les offres"
+          // Mode "Toutes les offres" - utilise un grand rayon (2000 km)
+          const [lng, lat] = center;
           const result = await supabase.rpc("get_offers_nearby_public", {
-            p_longitude: 29,
-            p_latitude: 39,
+            p_longitude: lng,
+            p_latitude: lat,
             p_radius_meters: 2000000,
           });
           data = result.data;
@@ -354,6 +355,7 @@ useEffect(() => {
         } else {
           // Mode "Proximité"
           if (clientId) {
+            // Utilisateur connecté avec profil client
             const result = await supabase.rpc("get_offers_nearby_dynamic", {
               p_client_id: clientId,
               p_radius_meters: radiusKm * 1000,
@@ -361,11 +363,8 @@ useEffect(() => {
             data = result.data;
             error = result.error;
           } else {
+            // Utilisateur non connecté - utilise les coordonnées directes
             const [lng, lat] = center;
-            if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
-              console.warn("🧭 Invalid coordinates from center:", lng, lat);
-              return;
-            }
             const result = await supabase.rpc("get_offers_nearby_public", {
               p_longitude: lng,
               p_latitude: lat,
@@ -377,14 +376,19 @@ useEffect(() => {
         }
 
         if (error) {
-          console.error("Erreur lors du chargement des offres:", error);
+          console.error("❌ Erreur lors du chargement des offres:", error);
           setOffers([]);
         } else {
-          console.log(`Mode ${viewMode}: ${data?.length || 0} offres chargées`);
+          console.log(`✅ Mode ${viewMode}: ${data?.length || 0} offres chargées`);
+          console.log("🖼️ Images des offres:", data?.map((o: Offer) => ({
+            title: o.title,
+            image_url: o.image_url,
+            has_image: !!o.image_url
+          })));
           setOffers(data || []);
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération des offres:", error);
+        console.error("❌ Erreur lors de la récupération des offres:", error);
         setOffers([]);
       }
     };
@@ -399,13 +403,6 @@ useEffect(() => {
 
     (map as any)._markers?.forEach((m: Marker) => m.remove());
     (map as any)._markers = [];
-
-    // 🔍 DIAGNOSTIC : Afficher toutes les URLs d'images
-    console.log('🖼️ Images des offres:', offers.map(o => ({
-      title: o.title,
-      image_url: o.image_url,
-      has_image: !!o.image_url
-    })));
 
     offers.forEach((offer) => {
       const el = document.createElement("div");
