@@ -27,6 +27,7 @@ const customMapboxCSS = `
     outline: none !important;
     box-shadow: none !important;
   }
+
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
     right: 10px !important;
@@ -35,6 +36,7 @@ const customMapboxCSS = `
     gap: 0px !important;
     transform: translateX(-55%) !important;
   }
+
   .mapboxgl-ctrl-geocoder {
     width: 280px !important;
     max-width: 80% !important;
@@ -43,6 +45,7 @@ const customMapboxCSS = `
     height: 32px !important;
     font-size: 14px !important;
   }
+
   @media (max-width: 640px) {
     .mapboxgl-ctrl-top-right {
       top: 8px !important;
@@ -52,11 +55,13 @@ const customMapboxCSS = `
       justify-content: center !important;
       gap: 6px !important;
     }
+
     .mapboxgl-ctrl-geocoder {
       width: 80% !important;
       height: 36px !important;
     }
   }
+
   .mapboxgl-ctrl-logo,
   .mapboxgl-ctrl-attrib,
   .mapbox-improve-map {
@@ -71,14 +76,16 @@ export default function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [userLocation, setUserLocation] = useState<[number, number]>(DEFAULT_LOCATION);
   const [center, setCenter] = useState<[number, number]>(DEFAULT_LOCATION);
-  const [radiusKm, setRadiusKm] = useState<number>(Number(localStorage.getItem("radiusKm")) || 10);
+  const [radiusKm, setRadiusKm] = useState<number>(
+    Number(localStorage.getItem("radiusKm")) || 10
+  );
   const [clientId, setClientId] = useState<string | null>(null);
   const [clientIdFetched, setClientIdFetched] = useState(false);
   const [isGeolocating, setIsGeolocating] = useState(false);
   const [hasGeolocated, setHasGeolocated] = useState(false);
   const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
 
-  // Injecter CSS personnalisé Mapbox
+  // Injection CSS
   useEffect(() => {
     const styleTag = document.createElement("style");
     styleTag.innerHTML = customMapboxCSS;
@@ -86,15 +93,17 @@ export default function OffersPage() {
     return () => document.head.removeChild(styleTag);
   }, []);
 
-  // Récupération profil client
+  // Récupère le profil client connecté
   useEffect(() => {
     if (clientIdFetched) return;
+
     const fetchClientId = async () => {
       if (!user) {
         setClientId(null);
         setClientIdFetched(true);
         return;
       }
+
       try {
         const { data: profile, error } = await supabase
           .from("profiles")
@@ -102,68 +111,106 @@ export default function OffersPage() {
           .eq("auth_id", user.id)
           .eq("role", "client")
           .maybeSingle();
-        if (error) console.error("Erreur profil client:", error);
-        else if (profile) setClientId(profile.id);
-        else console.warn("Aucun profil client trouvé.");
-      } catch (err) {
-        console.error("Erreur fetchClientId:", err);
+
+        if (error) {
+          console.error("Erreur lors de la récupération du profil client :", error);
+        } else if (profile) {
+          setClientId(profile.id);
+        } else {
+          console.warn("Aucun profil client trouvé pour cet utilisateur.");
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération du profil client :", error);
       } finally {
         setClientIdFetched(true);
       }
     };
+
     fetchClientId();
   }, [user, clientIdFetched]);
 
-  // Géolocalisation automatique
-  useEffect(() => {
-    if (!clientId || isGeolocating || hasGeolocated) return;
+  // Géolocalisation automatique pour clients connectés
+useEffect(() => {
+  if (!clientId || isGeolocating || hasGeolocated) return;
+
+  const geolocateClient = async () => {
     if (!navigator.geolocation) return;
 
     setIsGeolocating(true);
+
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords;
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
         try {
           await supabase.rpc("update_client_location", {
             p_client_id: clientId,
             p_lat: latitude,
             p_lng: longitude,
           });
+
           setUserLocation([longitude, latitude]);
           setCenter([longitude, latitude]);
-          mapRef.current?.flyTo({ center: [longitude, latitude], zoom: 12 });
-        } catch (err) {
-          console.error("Erreur MAJ position:", err);
+
+          if (mapRef.current && Number.isFinite(longitude) && Number.isFinite(latitude)) {
+            mapRef.current.flyTo({
+              center: [longitude, latitude],
+              zoom: 12,
+              essential: true,
+            });
+          }
+        } catch (error) {
+          console.error("Erreur lors de la mise à jour de la position:", error);
         } finally {
           setIsGeolocating(false);
           setHasGeolocated(true);
         }
       },
-      (err) => {
-        console.warn("Géoloc refusée:", err);
+      (error) => {
+        console.warn("Géolocalisation refusée ou impossible:", error);
         setUserLocation(DEFAULT_LOCATION);
         setCenter(DEFAULT_LOCATION);
-        mapRef.current?.flyTo({ center: DEFAULT_LOCATION, zoom: 6 });
+
+        if (mapRef.current && Number.isFinite(DEFAULT_LOCATION[0]) && Number.isFinite(DEFAULT_LOCATION[1])) {
+          mapRef.current.flyTo({
+            center: DEFAULT_LOCATION,
+            zoom: 6,
+            essential: true,
+          });
+        }
         setIsGeolocating(false);
         setHasGeolocated(true);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
-  }, [clientId]);
+  };
 
-  // Initialisation carte Mapbox
+  geolocateClient();
+}, [clientId]);
+
+  // Initialisation de la carte
   useEffect(() => {
     mapboxgl.accessToken =
       "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueXgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g";
+
     if (!mapContainerRef.current) return;
+
+    // Utiliser DEFAULT_LOCATION si center est invalide
+    const safeCenter: [number, number] =
+      center && Number.isFinite(center[0]) && Number.isFinite(center[1])
+        ? center
+        : DEFAULT_LOCATION;
+
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: MAP_STYLE,
-      center,
+      center: safeCenter,
       zoom: 7,
     });
+
     mapRef.current = map;
 
+    // Contrôle de géolocalisation
     const geolocate = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: false,
@@ -171,120 +218,264 @@ export default function OffersPage() {
     });
     map.addControl(geolocate, "top-right");
 
+    geolocate.on("geolocate", (e) => {
+      const lng = e.coords.longitude;
+      const lat = e.coords.latitude;
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+      setUserLocation([lng, lat]);
+      setCenter([lng, lat]);
+      setViewMode("nearby"); // Retour au mode proximité lors de la géolocalisation
+      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
+      
+      const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+      if (input) input.value = "";
+    });
+
+    // Barre de recherche
     const geocoder = new MapboxGeocoder({
       accessToken: mapboxgl.accessToken,
       mapboxgl,
       marker: false,
-      placeholder: "Rechercher une adresse...",
+      placeholder: "Rechercher une adresse ou un lieu...",
       language: "fr",
     });
     map.addControl(geocoder);
+
+    geocoder.on("result", (e) => {
+      const [lng, lat] = e.result.center;
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+      setCenter([lng, lat]);
+      setViewMode("nearby"); // Retour au mode proximité lors d'une recherche
+      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
+    });
+
     return () => map.remove();
   }, []);
 
-  // Cercle de rayon
+  // Gestion du cercle de rayon (seulement en mode "nearby")
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    if (viewMode === "nearby") drawRadius(map, center, radiusKm);
-    else removeRadius(map);
+
+    const updateRadius = () => {
+      if (viewMode === "nearby") {
+        drawRadius(map, center, radiusKm);
+      } else {
+        removeRadius(map);
+      }
+    };
+
+    if (!map.isStyleLoaded()) {
+      map.once("load", updateRadius);
+    } else {
+      updateRadius();
+    }
   }, [center, radiusKm, viewMode]);
 
   function drawRadius(map: Map, center: [number, number], radiusKm: number) {
-    removeRadius(map);
-    const circle = createGeoJSONCircle(center, radiusKm * 1000);
-    map.addSource("radius", { type: "geojson", data: circle });
-    map.addLayer({
-      id: "radius",
-      type: "fill",
-      source: "radius",
-      paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
-    });
+    try {
+      removeRadius(map);
+
+      const circle = createGeoJSONCircle(center, radiusKm * 1000);
+      
+      map.addSource("radius", { type: "geojson", data: circle });
+      map.addLayer({
+        id: "radius",
+        type: "fill",
+        source: "radius",
+        paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
+      });
+
+      const outerPolygon = {
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [-180, -90],
+              [180, -90],
+              [180, 90],
+              [-180, 90],
+              [-180, -90],
+            ],
+            circle.geometry.coordinates[0],
+          ],
+        },
+      };
+
+      map.addSource("outside-mask", { type: "geojson", data: outerPolygon });
+      map.addLayer({
+        id: "outside-mask",
+        type: "fill",
+        source: "outside-mask",
+        paint: { "fill-color": "rgba(0,0,0,0.35)", "fill-opacity": 0.35 },
+      });
+
+      const bounds = new mapboxgl.LngLatBounds();
+      circle.geometry.coordinates[0].forEach(([lng, lat]) => bounds.extend([lng, lat]));
+      map.fitBounds(bounds, { padding: 50, duration: 800 });
+    } catch (err) {
+      console.warn("Erreur drawRadius :", err);
+    }
   }
 
   function removeRadius(map: Map) {
-    ["radius", "outside-mask"].forEach((id) => {
-      if (map.getLayer(id)) map.removeLayer(id);
-      if (map.getSource(id)) map.removeSource(id);
-    });
+    try {
+      if (map.getLayer("radius")) map.removeLayer("radius");
+      if (map.getSource("radius")) map.removeSource("radius");
+      if (map.getLayer("outside-mask")) map.removeLayer("outside-mask");
+      if (map.getSource("outside-mask")) map.removeSource("outside-mask");
+    } catch (err) {
+      console.warn("Erreur removeRadius :", err);
+    }
   }
 
   // Chargement des offres
   useEffect(() => {
     const fetchOffers = async () => {
-      if (!center) return;
+      // Protection contre les coordonnées invalides
+      if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
+        console.warn("🧭 fetchOffers skipped: invalid center", center);
+        return;
+      }
+
       try {
-        let result;
+        let data, error;
+
         if (viewMode === "all") {
-          result = await supabase.rpc("get_offers_nearby_public", {
+          // Mode "Toutes les offres"
+          const result = await supabase.rpc("get_offers_nearby_public", {
             p_longitude: 29,
             p_latitude: 39,
             p_radius_meters: 2000000,
           });
-        } else if (clientId) {
-          result = await supabase.rpc("get_offers_nearby_dynamic_secure", {
-            client_id: clientId,
-            radius_meters: radiusKm * 1000,
-          });
+          data = result.data;
+          error = result.error;
         } else {
-          const [lng, lat] = center;
-          result = await supabase.rpc("get_offers_nearby_public", {
-            p_longitude: lng,
-            p_latitude: lat,
-            p_radius_meters: radiusKm * 1000,
-          });
+          // Mode "Proximité"
+          if (clientId) {
+            const result = await supabase.rpc("get_offers_nearby_dynamic", {
+              p_client_id: clientId,
+              p_radius_meters: radiusKm * 1000,
+            });
+            data = result.data;
+            error = result.error;
+          } else {
+            const [lng, lat] = center;
+            if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+              console.warn("🧭 Invalid coordinates from center:", lng, lat);
+              return;
+            }
+            const result = await supabase.rpc("get_offers_nearby_public", {
+              p_longitude: lng,
+              p_latitude: lat,
+              p_radius_meters: radiusKm * 1000,
+            });
+            data = result.data;
+            error = result.error;
+          }
         }
 
-        if (result.error) {
-          console.error("Erreur offres:", result.error);
+        if (error) {
+          console.error("Erreur lors du chargement des offres:", error);
           setOffers([]);
         } else {
-          console.log(`Mode ${viewMode}: ${result.data?.length || 0} offres`);
-          setOffers(result.data || []);
+          console.log(`Mode ${viewMode}: ${data?.length || 0} offres chargées`);
+          setOffers(data || []);
         }
-      } catch (err) {
-        console.error("Erreur fetchOffers:", err);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des offres:", error);
         setOffers([]);
       }
     };
+
     fetchOffers();
   }, [clientId, center, radiusKm, viewMode]);
 
-  // Marqueurs carte
+  // Marqueurs d'offres
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+
     (map as any)._markers?.forEach((m: Marker) => m.remove());
     (map as any)._markers = [];
-    offers.forEach((o) => {
-      if (!Number.isFinite(o.offer_lng) || !Number.isFinite(o.offer_lat)) return;
+
+    // 🔍 DIAGNOSTIC : Afficher toutes les URLs d'images
+    console.log('🖼️ Images des offres:', offers.map(o => ({
+      title: o.title,
+      image_url: o.image_url,
+      has_image: !!o.image_url
+    })));
+
+    offers.forEach((offer) => {
       const el = document.createElement("div");
       el.className = "offer-marker";
-      el.style.cssText =
-        "background:#22c55e;width:20px;height:20px;border-radius:50%;border:2px solid #fff;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);";
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
-        <strong>${o.title}</strong><br/>
-        ${o.merchant_name}<br/>
-        <span style="color:green;font-weight:bold;">${o.price_after.toFixed(2)} €</span>
-        <span style="text-decoration:line-through;color:#999;margin-left:4px;">${o.price_before.toFixed(2)} €</span><br/>
-        <a href="https://www.google.com/maps/dir/?api=1&destination=${o.offer_lat},${o.offer_lng}" target="_blank">🗺️ Itinéraire</a>
-      `);
-      new mapboxgl.Marker(el).setLngLat([o.offer_lng, o.offer_lat]).setPopup(popup).addTo(map);
-    });
-  }, [offers]);
+      el.style.background = "#22c55e";
+      el.style.width = "20px";
+      el.style.height = "20px";
+      el.style.borderRadius = "50%";
+      el.style.border = "2px solid #fff";
+      el.style.cursor = "pointer";
+      el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
 
+      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
+        <strong>${offer.title}</strong><br/>
+        ${offer.merchant_name}<br/>
+        <span style="color:green;font-weight:bold;">${offer.price_after.toFixed(2)} €</span>
+        <span style="text-decoration:line-through;color:#999;margin-left:4px;">${offer.price_before.toFixed(2)} €</span><br/>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}" target="_blank">🗺️ Itinéraire</a>
+      `);
+
+      if (!Number.isFinite(offer.offer_lng) || !Number.isFinite(offer.offer_lat)) return;
+
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat([offer.offer_lng, offer.offer_lat])
+        .setPopup(popup)
+        .addTo(map);
+
+      (map as any)._markers.push(marker);
+    });
+
+    // ✅ FIX A: fitBounds uniquement avec coordonnées valides en mode "all"
+    if (viewMode === "all" && offers.length > 0) {
+      const valid = offers.filter(
+        (o) => Number.isFinite(o.offer_lng) && Number.isFinite(o.offer_lat)
+      );
+      if (valid.length > 0) {
+        const bounds = new mapboxgl.LngLatBounds();
+        valid.forEach((o) => bounds.extend([o.offer_lng, o.offer_lat]));
+        map.fitBounds(bounds, { padding: 80, duration: 800 });
+      }
+    }
+  }, [offers, viewMode]);
+
+  // Gestion du changement de mode de vue
   const handleViewModeChange = (mode: "nearby" | "all") => {
     setViewMode(mode);
-    if (mode === "nearby" && mapRef.current) mapRef.current.flyTo({ center: userLocation, zoom: 12 });
-    if (mode === "all") setCenter(DEFAULT_LOCATION);
+    
+    if (mode === "nearby" && mapRef.current && Number.isFinite(userLocation[0]) && Number.isFinite(userLocation[1])) {
+      // Retour à la position de l'utilisateur avec le cercle
+      mapRef.current.flyTo({
+        center: userLocation,
+        zoom: 12,
+        essential: true,
+      });
+    }
+
+    if (mode === "all") {
+      setCenter(DEFAULT_LOCATION); // ✅ FIX B: évite (NaN, NaN) au switch
+    }
   };
 
+  // Gestion du changement de rayon
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
   };
 
+  // Protection contre les coordonnées invalides
   if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
+    console.warn("🧭 Map skipped render: invalid center", center);
     return (
       <div className="flex items-center justify-center h-[calc(100vh-100px)] bg-gray-50">
         <div className="text-center">
@@ -297,9 +488,10 @@ export default function OffersPage() {
 
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
-      {/* Carte */}
       <div className="relative flex-1 border-r border-gray-200">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
+
+        {/* Slider de rayon (visible uniquement en mode proximité) */}
         {viewMode === "nearby" && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
             <input
@@ -315,21 +507,26 @@ export default function OffersPage() {
         )}
       </div>
 
-      {/* Liste d’offres */}
+      {/* Liste des offres */}
       <div className="md:w-1/2 overflow-y-auto bg-gray-50 p-4">
+        {/* 🔘 Toggle élégant entre les modes de vue */}
         <div className="flex justify-center mb-6">
           <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
             <button
-              className={`px-5 py-2.5 text-sm font-semibold transition-all ${
-                viewMode === "nearby" ? "bg-white text-green-700 shadow" : "text-gray-500 hover:text-green-600"
+              className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                viewMode === "nearby"
+                  ? "bg-white text-green-700 shadow"
+                  : "text-gray-500 hover:text-green-600"
               }`}
               onClick={() => handleViewModeChange("nearby")}
             >
               📍 Offres à proximité
             </button>
             <button
-              className={`px-5 py-2.5 text-sm font-semibold transition-all ${
-                viewMode === "all" ? "bg-white text-green-700 shadow" : "text-gray-500 hover:text-green-600"
+              className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                viewMode === "all"
+                  ? "bg-white text-green-700 shadow"
+                  : "text-gray-500 hover:text-green-600"
               }`}
               onClick={() => handleViewModeChange("all")}
             >
@@ -341,7 +538,7 @@ export default function OffersPage() {
         {offers.length === 0 ? (
           <p className="text-gray-500 text-center mt-10">
             {viewMode === "nearby"
-              ? "Aucune offre dans ce rayon. Essayez d’augmenter la distance !"
+              ? "Aucune offre disponible dans ce rayon. Essayez d'augmenter la distance !"
               : "Aucune offre disponible pour le moment."}
           </p>
         ) : (
@@ -351,25 +548,18 @@ export default function OffersPage() {
                 key={o.offer_id}
                 className="flex bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
               >
-                <div className="w-24 h-24 bg-gray-100 flex items-center justify-center rounded-lg overflow-hidden">
-                  {o.image_url ? (
-                    <img
-                      src={o.image_url}
-                      alt={o.title}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        console.warn("❌ Image introuvable :", o.image_url);
-                        (e.currentTarget as HTMLImageElement).src =
-                          "https://via.placeholder.com/150x150.png?text=Aucune+image";
-                      }}
-                    />
-                  ) : (
-                    <span className="text-gray-400 text-xs text-center px-2">Pas d’image</span>
-                  )}
-                </div>
-
+                {o.image_url && (
+                  <img
+                    src={o.image_url}
+                    alt={o.title}
+                    className="w-24 h-24 object-cover"
+                    crossOrigin="anonymous"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                )}
                 <div className="flex-1 p-3">
                   <h3 className="font-semibold text-gray-800">{o.title}</h3>
                   <p className="text-sm text-gray-500">{o.merchant_name}</p>
@@ -380,7 +570,9 @@ export default function OffersPage() {
                   )}
                   <div className="flex items-center justify-between mt-1">
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-green-600">{o.price_after.toFixed(2)} €</span>
+                      <span className="font-bold text-green-600">
+                        {o.price_after.toFixed(2)} €
+                      </span>
                       <span className="line-through text-gray-400 text-sm">
                         {o.price_before.toFixed(2)} €
                       </span>
@@ -396,17 +588,33 @@ export default function OffersPage() {
   );
 }
 
-// Fonction utilitaire : cercle GeoJSON
-export function createGeoJSONCircle(center: [number, number], radiusInMeters: number, points = 64) {
+// Fonction utilitaire : créer un cercle GeoJSON
+export function createGeoJSONCircle(
+  center: [number, number],
+  radiusInMeters: number,
+  points = 64
+) {
   const coords = { latitude: center[1], longitude: center[0] };
   const km = radiusInMeters / 1000;
   const ret: [number, number][] = [];
+
   const distanceX = km / (111.32 * Math.cos((coords.latitude * Math.PI) / 180));
   const distanceY = km / 110.574;
+
   for (let i = 0; i < points; i++) {
     const theta = (i / points) * (2 * Math.PI);
-    ret.push([coords.longitude + distanceX * Math.cos(theta), coords.latitude + distanceY * Math.sin(theta)]);
+    const x = distanceX * Math.cos(theta);
+    const y = distanceY * Math.sin(theta);
+    ret.push([coords.longitude + x, coords.latitude + y]);
   }
+
   ret.push(ret[0]);
-  return { type: "Feature", geometry: { type: "Polygon", coordinates: [ret] } };
+
+  return {
+    type: "Feature",
+    geometry: {
+      type: "Polygon",
+      coordinates: [ret],
+    },
+  };
 }
