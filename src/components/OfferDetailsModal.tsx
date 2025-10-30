@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, MapPin, Navigation, Clock, Tag } from 'lucide-react';
+import { getPublicImageUrl } from '../lib/supabasePublic';
 
 interface OfferDetailsModalProps {
   isOpen: boolean;
@@ -87,10 +88,15 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
         <div className="relative">
           {offer.image_url ? (
             <img
-              src={offer.image_url}
+              src={getPublicImageUrl(offer.image_url)}
               alt={offer.title}
-              className="w-full h-80 object-cover rounded-t-2xl"
+              className="w-full h-80 object-cover rounded-t-2xl bg-gray-100"
               referrerPolicy="no-referrer"
+              crossOrigin="anonymous"
+              onError={(e) => {
+                console.error('❌ Modal image load failed for:', offer.title, '| URL:', offer.image_url);
+                (e.currentTarget as HTMLImageElement).classList.add('hidden');
+              }}
             />
           ) : (
             <div className="w-full h-80 bg-gradient-to-br from-green-400 to-green-600 rounded-t-2xl flex items-center justify-center">

@@ -7,6 +7,7 @@ import { createReservation } from '../api/reservations';
 import { supabase } from '../lib/supabaseClient';
 import { useNearbyOffers } from '../hooks/useNearbyOffers';
 import { useClientLocation } from '../hooks/useClientLocation';
+import { getPublicImageUrl } from '../lib/supabasePublic';
 
 const FeaturedOffers = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -222,10 +223,15 @@ const FeaturedOffers = () => {
             <div key={offer.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group">
               <div className="relative">
                 <img
-                  src={offer.image_url}
+                  src={getPublicImageUrl(offer.image_url)}
                   alt={offer.title}
-                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 bg-gray-100"
                   referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    console.error('❌ Featured offer image load failed for:', offer.title, '| URL:', offer.image_url);
+                    (e.currentTarget as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="%239ca3af"%3EImage unavailable%3C/text%3E%3C/svg%3E';
+                  }}
                 />
                 <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-md text-sm font-bold">
                   -{offer.discount_percentage}%
