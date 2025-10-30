@@ -46,7 +46,7 @@ export function useNearbyOffers({
 
       const radiusMeters = Math.round(radiusKm * 1000);
 
-      // ✅ On utilise maintenant la fonction sécurisée
+      // ✅ Appel de la fonction sécurisée (celle qui marche en SQL)
       const { data, error: rpcError } = await supabase.rpc(
         'get_offers_nearby_dynamic_secure',
         {
@@ -56,31 +56,36 @@ export function useNearbyOffers({
       );
 
       if (rpcError) {
-        console.error('Erreur RPC Supabase:', rpcError);
+        console.error('❌ Erreur RPC Supabase:', rpcError);
         setError('Impossible de charger les offres à proximité');
         setOffers([]);
         return;
       }
 
+      console.log("📦 Données brutes reçues depuis Supabase:", data);
+
       if (!data || data.length === 0) {
+        console.warn("⚠️ Aucune offre trouvée pour ce client.");
         setOffers([]);
         return;
       }
 
-      setOffers(
-        data.map((offer: any) => ({
-          offer_id: offer.offer_id,
-          title: offer.title,
-          merchant_name: offer.merchant_name,
-          price_before: parseFloat(offer.price_before),
-          price_after: parseFloat(offer.price_after),
-          discount_percent: offer.discount_percent,
-          distance_meters: offer.distance_meters,
-          image_url: offer.image_url || null,
-        }))
-      );
+      const mappedOffers: NearbyOffer[] = data.map((offer: any) => ({
+        offer_id: offer.offer_id,
+        title: offer.title,
+        merchant_name: offer.merchant_name,
+        price_before: parseFloat(offer.price_before),
+        price_after: parseFloat(offer.price_after),
+        discount_percent: offer.discount_percent,
+        distance_meters: offer.distance_meters,
+        image_url: offer.image_url || null,
+      }));
+
+      console.log("🖼️ Images des offres:", mappedOffers.map(o => o.image_url));
+
+      setOffers(mappedOffers);
     } catch (err) {
-      console.error('Erreur JS côté client:', err);
+      console.error('💥 Erreur JS côté client:', err);
       setError('Impossible de charger les offres à proximité');
     } finally {
       setLoading(false);
