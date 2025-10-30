@@ -91,11 +91,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
               alt={offer.title}
               className="w-full h-80 object-cover rounded-t-2xl"
               referrerPolicy="no-referrer"
-              crossOrigin="anonymous"
-              onError={(e) => {
-                console.error('Modal image load failed:', offer.image_url);
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
             />
           ) : (
             <div className="w-full h-80 bg-gradient-to-br from-green-400 to-green-600 rounded-t-2xl flex items-center justify-center">
