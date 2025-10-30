@@ -549,43 +549,46 @@ useEffect(() => {
                 className="flex bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
               >
                 {o.image_url && (
-                  <img
-                    src={o.image_url}
-                    alt={o.title}
-                    className="w-24 h-24 object-cover"
-                    crossOrigin="anonymous"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                )}
-                <div className="flex-1 p-3">
-                  <h3 className="font-semibold text-gray-800">{o.title}</h3>
-                  <p className="text-sm text-gray-500">{o.merchant_name}</p>
-                  {viewMode === "nearby" && o.distance_meters > 0 && (
-                    <p className="text-green-600 font-semibold">
-                      📍 {(o.distance_meters / 1000).toFixed(2)} km
-                    </p>
-                  )}
-                  <div className="flex items-center justify-between mt-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-bold text-green-600">
-                        {o.price_after.toFixed(2)} €
-                      </span>
-                      <span className="line-through text-gray-400 text-sm">
-                        {o.price_before.toFixed(2)} €
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+  <img
+    src={`${o.image_url}?noAuth=${Date.now()}`}
+    alt={o.title}
+    className="w-24 h-24 object-cover"
+    crossOrigin="anonymous"
+    referrerPolicy="no-referrer"
+    onError={(e) => {
+      console.warn('❌ Image bloquée ou introuvable:', o.image_url);
+      (e.currentTarget as HTMLImageElement).style.display = 'none';
+    }}
+  />
+)}
+<div className="flex-1 p-3">
+  <h3 className="font-semibold text-gray-800">{o.title}</h3>
+  <p className="text-sm text-gray-500">{o.merchant_name}</p>
+
+  {viewMode === "nearby" && o.distance_meters > 0 && (
+    <p className="text-green-600 font-semibold">
+      📍 {(o.distance_meters / 1000).toFixed(2)} km
+    </p>
+  )}
+
+  <div className="flex items-center justify-between mt-1">
+    <div className="flex items-center space-x-2">
+      <span className="font-bold text-green-600">
+        {o.price_after.toFixed(2)} €
+      </span>
+      <span className="line-through text-gray-400 text-sm">
+        {o.price_before.toFixed(2)} €
+      </span>
     </div>
-  );
+  </div>
+</div>
+</div>
+))}
+</div>
+)}
+</div>
+</div>
+);
 }
 
 // Fonction utilitaire : créer un cercle GeoJSON
