@@ -401,37 +401,16 @@ useEffect(() => {
       }
       // 🧩 --- Fin bloc diagnostic ---
 
-      if (data) {
-        setOffers(data);
-      }
-    } catch (err) {
-      console.error("🚨 Erreur inattendue dans fetchOffers:", err);
+      setOffers(data || []);
+    } catch (error) {
+      console.error("❌ Erreur lors de la récupération des offres:", error);
+      setOffers([]);
     }
   };
 
   fetchOffers();
 }, [center, clientId, viewMode, radiusKm]);
 
-        if (error) {
-          console.error("❌ Erreur lors du chargement des offres:", error);
-          setOffers([]);
-        } else {
-          console.log(`✅ Mode ${viewMode}: ${data?.length || 0} offres chargées`);
-          console.log("🖼️ Images des offres:", data?.map((o: Offer) => ({
-            title: o.title,
-            image_url: o.image_url,
-            has_image: !!o.image_url
-          })));
-          setOffers(data || []);
-        }
-      } catch (error) {
-        console.error("❌ Erreur lors de la récupération des offres:", error);
-        setOffers([]);
-      }
-    };
-
-    fetchOffers();
-  }, [clientId, center, radiusKm, viewMode]);
 
   // Marqueurs d'offres
   useEffect(() => {
