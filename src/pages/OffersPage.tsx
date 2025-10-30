@@ -331,49 +331,86 @@ useEffect(() => {
   }
 
   // Chargement des offres
-  useEffect(() => {
-    const fetchOffers = async () => {
-      // Protection contre les coordonnées invalides
-      if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
-        console.warn("🧭 fetchOffers skipped: invalid center", center);
-        return;
-      }
+useEffect(() => {
+  const fetchOffers = async () => {
+    // 🧭 Protection contre les coordonnées invalides
+    if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
+      console.warn("🧭 fetchOffers skipped: invalid center", center);
+      return;
+    }
 
-      try {
-        let data, error;
+    try {
+      let data, error;
 
-        if (viewMode === "all") {
-          // Mode "Toutes les offres" - utilise un grand rayon (2000 km)
-          const [lng, lat] = center;
-          const result = await supabase.rpc("get_offers_nearby_public", {
-            p_longitude: lng,
-            p_latitude: lat,
-            p_radius_meters: 2000000,
+      if (viewMode === "all") {
+        // 🌍 Mode "Toutes les offres" - utilise un grand rayon (2000 km)
+        const [lng, lat] = center;
+        const result = await supabase.rpc("get_offers_nearby_public", {
+          user_lng: lng,
+          user_lat: lat,
+          radius_meters: 2000000,
+        });
+        data = result.data;
+        error = result.error;
+      } else {
+        // 📍 Mode "Proximité"
+        if (clientId) {
+          // 👤 Utilisateur connecté avec profil client
+          const result = await supabase.rpc("get_offers_nearby_dynamic_secure", {
+            client_id: clientId,
+            radius_meters: radiusKm * 1000,
           });
           data = result.data;
           error = result.error;
         } else {
-          // Mode "Proximité"
-          if (clientId) {
-            // Utilisateur connecté avec profil client
-            const result = await supabase.rpc("get_offers_nearby_dynamic", {
-              p_client_id: clientId,
-              p_radius_meters: radiusKm * 1000,
-            });
-            data = result.data;
-            error = result.error;
-          } else {
-            // Utilisateur non connecté - utilise les coordonnées directes
-            const [lng, lat] = center;
-            const result = await supabase.rpc("get_offers_nearby_public", {
-              p_longitude: lng,
-              p_latitude: lat,
-              p_radius_meters: radiusKm * 1000,
-            });
-            data = result.data;
-            error = result.error;
-          }
+          // 🧭 Utilisateur non connecté - utilise les coordonnées directes
+          const [lng, lat] = center;
+          const result = await supabase.rpc("get_offers_nearby_public", {
+            user_lng: lng,
+            user_lat: lat,
+            radius_meters: radiusKm * 1000,
+          });
+          data = result.data;
+          error = result.error;
         }
+      }
+
+      // 🧩 --- Bloc de diagnostic complet ---
+      if (error) {
+        console.error("❌ Erreur Supabase:", error.message);
+      } else {
+        console.log("✅ Données reçues depuis Supabase:", data);
+
+        const debugData = data?.map((o: any) => ({
+          title: o.title,
+          image_url: o.image_url,
+          from: o.available_from,
+          until: o.available_until,
+          expired: o.expired_at,
+          is_active: o.is_active,
+        }));
+
+        console.log("🧩 Diagnostic des offres :", debugData);
+
+        const offersWithoutImage = debugData?.filter((o) => !o.image_url);
+        if (offersWithoutImage?.length) {
+          console.warn("⚠️ Offres sans image détectées:", offersWithoutImage);
+        } else {
+          console.log("🖼️ Toutes les offres ont une image ✅");
+        }
+      }
+      // 🧩 --- Fin bloc diagnostic ---
+
+      if (data) {
+        setOffers(data);
+      }
+    } catch (err) {
+      console.error("🚨 Erreur inattendue dans fetchOffers:", err);
+    }
+  };
+
+  fetchOffers();
+}, [center, clientId, viewMode, radiusKm]);
 
         if (error) {
           console.error("❌ Erreur lors du chargement des offres:", error);
