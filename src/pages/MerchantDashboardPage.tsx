@@ -20,6 +20,7 @@ interface Offer {
   available_from: string;
   available_until: string;
   is_active: boolean;
+  is_deleted: boolean;
   created_at: string;
   updated_at: string;
   quantity: number;
@@ -910,44 +911,66 @@ setToast({ message: '✅ Offer updated successfully', type: 'success' });
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => toggleOfferStatus(offer.id, offer.is_active)}
-                      className={'flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ' +
-                        (togglingOfferId === offer.id
-                          ? 'bg-gray-200 text-gray-500 cursor-wait opacity-60'
-                          : status === 'active'
-                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            : status === 'paused'
-                              ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                              : 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                        )}
-                      disabled={status === 'expired' || togglingOfferId === offer.id}
-                    >
-                      {togglingOfferId === offer.id ? (
-                        <>
-                          <div className="w-4 h-4 mr-1 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                          {status === 'active' ? 'Pausing...' : 'Activating...'}
-                        </>
-                      ) : status === 'active' ? (
-                        <><Pause className="w-4 h-4 mr-1" /> Pause Offer</>
-                      ) : (
-                        <><Play className="w-4 h-4 mr-1" /> Activate Offer</>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => openEditModal(offer)}
-                      className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                      title="Edit"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => deleteOffer(offer.id)}
-                      className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {offer.is_deleted ? (
+                      <button
+                        onClick={async () => {
+                          const { error } = await supabase.rpc('reactivate_offer', { p_offer_id: offer.id });
+                          if (!error) {
+                            await loadOffers();
+                            setToast({ message: '♻️ Offer reactivated successfully', type: 'success' });
+                          } else {
+                            setToast({ message: 'Failed to reactivate offer', type: 'error' });
+                          }
+                        }}
+                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200"
+                      >
+                        <Play className="w-4 h-4 mr-1" /> Reactivate
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => toggleOfferStatus(offer.id, offer.is_active)}
+                          className={'flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ' +
+                            (togglingOfferId === offer.id
+                              ? 'bg-gray-200 text-gray-500 cursor-wait opacity-60'
+                              : offer.is_active
+                                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                : 'bg-green-100 text-green-700 hover:bg-green-200')}
+                          disabled={togglingOfferId === offer.id}
+                        >
+                          {togglingOfferId === offer.id ? (
+                            <>
+                              <div className="w-4 h-4 mr-1 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                              {offer.is_active ? 'Pausing...' : 'Activating...'}
+                            </>
+                          ) : offer.is_active ? (
+                            <>
+                              <Pause className="w-4 h-4 mr-1" /> Pause
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-4 h-4 mr-1" /> Activate
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          onClick={() => openEditModal(offer)}
+                          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                          title="Edit"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          onClick={() => deleteOffer(offer.id)}
+                          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
