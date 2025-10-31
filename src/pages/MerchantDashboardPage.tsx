@@ -458,106 +458,62 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
   };
 
   const toggleOfferStatus = async (offerId: string, currentStatus: boolean) => {
-    if (!user) {
-      console.error('User not authenticated');
-      setToast({ message: 'Please log in to update offer status', type: 'error' });
-      return;
-    }
+  if (!user) {
+    console.error('User not authenticated');
+    setToast({ message: 'Please log in to update offer status', type: 'error' });
+    return;
+  }
 
-    // Prevent double-clicks
-    if (togglingOfferId === offerId) {
-      console.log('Already toggling this offer, ignoring...');
-      return;
-    }
+  if (togglingOfferId === offerId) return;
 
-    const newStatus = !currentStatus;
-    const actionText = newStatus ? 'Activating' : 'Pausing';
+  const newStatus = !currentStatus;
+  const actionText = newStatus ? 'Activating' : 'Pausing';
+  console.log(`${actionText} offer via RPC...`);
 
-    console.log(`${actionText} offer...`, {
-      offer_id: offerId,
-      old_status: currentStatus,
-      new_status: newStatus
-    });
+  setTogglingOfferId(offerId);
 
-    setTogglingOfferId(offerId);
+  try {
+    // 🟢 Appel RPC sécurisé Supabase
+    const { error } = await supabase.rpc('toggle_offer_status', { p_offer_id: offerId });
 
-    try {
-      console.log('Updating is_active in Supabase...');
-      const { data, error } = await supabase
-        .from('offers')
-        .update({ is_active: newStatus })
-        .eq('id', offerId)
-        .eq('merchant_id', merchantId)
-        .select()
-        .single();
+    if (error) throw error;
 
-      if (error) {
-        console.error('Supabase update error:', error);
-        throw error;
-      }
+    console.log('✅ RPC toggle_offer_status executed successfully.');
+    await loadOffers();
 
-      console.log('✅ Offer status updated successfully:', data);
-      console.log('New is_active value:', data.is_active);
-
-      // Verify audit log entry was created
-      const { data: auditLog, error: auditError } = await supabase
-        .from('audit_log')
-        .select('*')
-        .eq('table_name', 'offers')
-        .eq('record_id', offerId)
-        .eq('action', 'UPDATE')
-        .order('changed_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (auditLog) {
-        console.log('✅ Audit log entry created:', auditLog);
-        console.log('Audit log old_data.is_active:', auditLog.old_data?.is_active);
-        console.log('Audit log new_data.is_active:', auditLog.new_data?.is_active);
-      } else if (auditError) {
-        console.warn('Could not verify audit log:', auditError);
-      } else {
-        console.warn('No audit log entry found for this update');
-      }
-
-      // Update local state immediately
-      setOffers(offers.map(o => o.id === offerId ? data : o));
-
-      const successMessage = newStatus ? '✅ Offer activated' : '✅ Offer paused';
-      setToast({ message: successMessage, type: 'success' });
-    } catch (error: any) {
-      console.error('❌ Error updating offer status:', error);
-      console.error('Error details:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint
-      });
-      setToast({ message: '❌ Failed to update offer status', type: 'error' });
-    } finally {
-      setTogglingOfferId(null);
-    }
-  };
+    const successMessage = newStatus ? '✅ Offer activated' : '✅ Offer paused';
+    setToast({ message: successMessage, type: 'success' });
+  } catch (error: any) {
+    console.error('❌ Error toggling offer status:', error);
+    setToast({ message: error.message || 'Failed to toggle offer status', type: 'error' });
+  } finally {
+    setTogglingOfferId(null);
+  }
+};
 
   const deleteOffer = async (offerId: string) => {
-    if (!user || !confirm('Are you sure you want to delete this product?')) return;
+  if (!user) {
+    setToast({ message: 'Please log in to delete offers', type: 'error' });
+    return;
+  }
 
-    try {
-      const { error } = await supabase
-        .from('offers')
-        .delete()
-        .eq('id', offerId)
-        .eq('merchant_id', merchantId);
+  const confirmed = confirm('Are you sure you want to hide (soft delete) this offer?');
+  if (!confirmed) return;
 
-      if (error) throw error;
+  try {
+    console.log('🗑️ Calling delete_offer_soft RPC...');
+    const { error } = await supabase.rpc('delete_offer_soft', { p_offer_id: offerId });
 
-      setOffers(offers.filter(o => o.id !== offerId));
-      setToast({ message: 'Product deleted', type: 'success' });
-    } catch (error: any) {
-      console.error('Error deleting offer:', error);
-      setToast({ message: error.message || 'Failed to delete product', type: 'error' });
-    }
-  };
+    if (error) throw error;
+
+    console.log('✅ RPC delete_offer_soft executed successfully.');
+    await loadOffers();
+    setToast({ message: '🗑️ Offer hidden (soft deleted)', type: 'success' });
+  } catch (error: any) {
+    console.error('❌ Error soft deleting offer:', error);
+    setToast({ message: error.message || 'Failed to delete offer', type: 'error' });
+  }
+};
 
   const openEditModal = (offer: Offer) => {
     console.log('Opening edit modal for offer:', offer);
@@ -709,22 +665,25 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
       console.log('=== AFTER UPDATE (new data) ===');
       console.log('Updated offer data:', updatedData);
 
-      console.log('Updating offer in Supabase...');
-      const { data, error } = await supabase
-        .from('offers')
-        .update(updatedData)
-        .eq('id', editingOffer.id)
-        .eq('merchant_id', merchantData.id)
-        .select()
-        .single();
+      console.log('🛠️ Updating offer via RPC update_offer_details...');
 
-      if (error) {
-        console.error('Supabase update error:', error);
-        throw error;
-      }
+const { error } = await supabase.rpc('update_offer_details', {
+  p_offer_id: editingOffer.id,
+  p_title: formData.title,
+  p_description: formData.description,
+  p_price_after: parseFloat(formData.price_after),
+  p_stock: parseInt(formData.quantity)
+});
 
-      console.log('✅ Offer updated successfully:', data);
-      console.log('Updated offer ID:', data.id);
+if (error) {
+  console.error('❌ RPC update_offer_details error:', error);
+  throw error;
+}
+
+console.log('✅ RPC update_offer_details executed successfully.');
+await loadOffers();
+closeEditModal();
+setToast({ message: '✅ Offer updated successfully', type: 'success' });
 
       // Verify audit log entry was created
       const { data: auditLog, error: auditError } = await supabase
