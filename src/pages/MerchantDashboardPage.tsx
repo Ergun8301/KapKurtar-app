@@ -150,10 +150,7 @@ const MerchantDashboardPage = () => {
 
     try {
       const { data, error } = await supabase
-        .from('offers')
-        .select('*')
-        .eq('merchant_id', merchantId)
-        .order('updated_at', { ascending: false });
+  .rpc('get_offers_for_merchant_dashboard', { p_merchant_id: merchantId });
 
       if (error) throw error;
       setOffers(data || []);
