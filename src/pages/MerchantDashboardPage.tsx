@@ -10,13 +10,13 @@ import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
 import { type Notification } from '../api/notifications';
 
 interface Offer {
-  offer_id: string; // ← SEUL CHANGEMENT: id → offer_id
+  id: string;
   title: string;
   description: string;
   image_url: string | null;
   price_before: number;
   price_after: number;
-  discount_percent: number | null;
+  discount_percent: number | null; // GENERATED column in DB (read-only, computed from price_before/price_after)
   available_from: string;
   available_until: string;
   is_active: boolean;
@@ -24,7 +24,6 @@ interface Offer {
   created_at: string;
   updated_at: string;
   quantity: number;
-  expired_at?: string | null; // Ajout pour gérer les offres expirées
 }
 
 const MerchantDashboardPage = () => {
@@ -60,6 +59,7 @@ const MerchantDashboardPage = () => {
     customDuration: ''
   });
 
+  // Fetch merchant ID from user
   useEffect(() => {
     const fetchMerchantId = async () => {
       if (!user) {
@@ -111,6 +111,7 @@ const MerchantDashboardPage = () => {
     checkExpiredOffers();
     loadOffers();
 
+    // Subscribe to realtime updates for merchant's offers
     if (!merchantId) return;
 
     console.log('Subscribing to realtime updates for merchant offers...');
@@ -149,7 +150,10 @@ const MerchantDashboardPage = () => {
 
     try {
       const { data, error } = await supabase
-  .rpc('get_offers_for_merchant_dashboard', { p_merchant_id: merchantId });
+        .from('offers')
+        .select('*')
+        .eq('merchant_id', merchantId)
+        .order('updated_at', { ascending: false });
 
       if (error) throw error;
       setOffers(data || []);
@@ -296,6 +300,7 @@ const MerchantDashboardPage = () => {
       return;
     }
 
+    // Validate required fields
     if (!formData.title.trim()) {
       setToast({ message: 'Title is required', type: 'error' });
       return;
@@ -331,6 +336,7 @@ const MerchantDashboardPage = () => {
 
     setIsPublishing(true);
     try {
+      // Trouver le profil lié à l'utilisateur connecté
       console.log('🔍 Recherche du profil pour auth_id:', user.id);
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -347,6 +353,7 @@ const MerchantDashboardPage = () => {
 
       console.log('✅ Profil trouvé, profile.id:', profileData.id);
 
+      // Trouver le marchand correspondant à ce profil
       console.log('🔍 Recherche du marchand pour profile_id:', profileData.id);
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
@@ -371,8 +378,8 @@ const MerchantDashboardPage = () => {
       if (formData.image) {
         console.log('Uploading image to Supabase storage...');
         const randomId = crypto.randomUUID();
-        const path = `${user.id}/${randomId}.jpg`;
-        imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
+const path = `${user.id}/${randomId}.jpg`;
+imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
         console.log('Image uploaded successfully:', imageUrl);
       }
 
@@ -390,6 +397,7 @@ const MerchantDashboardPage = () => {
         available_from: formData.available_from,
         available_until: formData.available_until,
         is_active: true
+        // NOTE: discount_percent is a GENERATED column in DB - do NOT send it
       };
 
       console.log('Inserting offer into Supabase:', offerData);
@@ -409,6 +417,7 @@ const MerchantDashboardPage = () => {
       console.log('Offer ID:', data.id);
       console.log('Created at:', data.created_at);
 
+      // Verify audit log entry was created
       const { data: auditLog, error: auditError } = await supabase
         .from('audit_log')
         .select('*')
@@ -450,61 +459,62 @@ const MerchantDashboardPage = () => {
   };
 
   const toggleOfferStatus = async (offerId: string, currentStatus: boolean) => {
-    if (!user) {
-      console.error('User not authenticated');
-      setToast({ message: 'Please log in to update offer status', type: 'error' });
-      return;
-    }
+  if (!user) {
+    console.error('User not authenticated');
+    setToast({ message: 'Please log in to update offer status', type: 'error' });
+    return;
+  }
 
-    if (togglingOfferId === offerId) return;
+  if (togglingOfferId === offerId) return;
 
-    const newStatus = !currentStatus;
-    const actionText = newStatus ? 'Activating' : 'Pausing';
-    console.log(`${actionText} offer via RPC...`);
+  const newStatus = !currentStatus;
+  const actionText = newStatus ? 'Activating' : 'Pausing';
+  console.log(`${actionText} offer via RPC...`);
 
-    setTogglingOfferId(offerId);
+  setTogglingOfferId(offerId);
 
-    try {
-      const { error } = await supabase.rpc('toggle_offer_status', { p_offer_id: offerId });
+  try {
+    // 🟢 Appel RPC sécurisé Supabase
+    const { error } = await supabase.rpc('toggle_offer_status', { p_offer_id: offerId });
 
-      if (error) throw error;
+    if (error) throw error;
 
-      console.log('✅ RPC toggle_offer_status executed successfully.');
-      await loadOffers();
+    console.log('✅ RPC toggle_offer_status executed successfully.');
+    await loadOffers();
 
-      const successMessage = newStatus ? '✅ Offer activated' : '✅ Offer paused';
-      setToast({ message: successMessage, type: 'success' });
-    } catch (error: any) {
-      console.error('❌ Error toggling offer status:', error);
-      setToast({ message: error.message || 'Failed to toggle offer status', type: 'error' });
-    } finally {
-      setTogglingOfferId(null);
-    }
-  };
+    const successMessage = newStatus ? '✅ Offer activated' : '✅ Offer paused';
+    setToast({ message: successMessage, type: 'success' });
+  } catch (error: any) {
+    console.error('❌ Error toggling offer status:', error);
+    setToast({ message: error.message || 'Failed to toggle offer status', type: 'error' });
+  } finally {
+    setTogglingOfferId(null);
+  }
+};
 
   const deleteOffer = async (offerId: string) => {
-    if (!user) {
-      setToast({ message: 'Please log in to delete offers', type: 'error' });
-      return;
-    }
+  if (!user) {
+    setToast({ message: 'Please log in to delete offers', type: 'error' });
+    return;
+  }
 
-    const confirmed = confirm('Are you sure you want to hide (soft delete) this offer?');
-    if (!confirmed) return;
+  const confirmed = confirm('Are you sure you want to hide (soft delete) this offer?');
+  if (!confirmed) return;
 
-    try {
-      console.log('🗑️ Calling delete_offer_soft RPC...');
-      const { error } = await supabase.rpc('delete_offer_soft', { p_offer_id: offerId });
+  try {
+    console.log('🗑️ Calling delete_offer_soft RPC...');
+    const { error } = await supabase.rpc('delete_offer_soft', { p_offer_id: offerId });
 
-      if (error) throw error;
+    if (error) throw error;
 
-      console.log('✅ RPC delete_offer_soft executed successfully.');
-      await loadOffers();
-      setToast({ message: '🗑️ Offer hidden (soft deleted)', type: 'success' });
-    } catch (error: any) {
-      console.error('❌ Error soft deleting offer:', error);
-      setToast({ message: error.message || 'Failed to delete offer', type: 'error' });
-    }
-  };
+    console.log('✅ RPC delete_offer_soft executed successfully.');
+    await loadOffers();
+    setToast({ message: '🗑️ Offer hidden (soft deleted)', type: 'success' });
+  } catch (error: any) {
+    console.error('❌ Error soft deleting offer:', error);
+    setToast({ message: error.message || 'Failed to delete offer', type: 'error' });
+  }
+};
 
   const openEditModal = (offer: Offer) => {
     console.log('Opening edit modal for offer:', offer);
@@ -552,6 +562,7 @@ const MerchantDashboardPage = () => {
       return;
     }
 
+    // Validate required fields
     if (!formData.title.trim()) {
       setToast({ message: 'Title is required', type: 'error' });
       return;
@@ -579,7 +590,7 @@ const MerchantDashboardPage = () => {
 
     console.log('=== BEFORE UPDATE ===');
     console.log('Old offer data:', {
-      id: editingOffer.offer_id,
+      id: editingOffer.id,
       title: editingOffer.title,
       description: editingOffer.description,
       price_before: editingOffer.price_before,
@@ -590,6 +601,7 @@ const MerchantDashboardPage = () => {
 
     setIsPublishing(true);
     try {
+      // Trouver le profil lié à l'utilisateur connecté
       console.log('🔍 Recherche du profil pour auth_id:', user.id);
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -606,6 +618,7 @@ const MerchantDashboardPage = () => {
 
       console.log('✅ Profil trouvé, profile.id:', profileData.id);
 
+      // Trouver le marchand correspondant à ce profil
       console.log('🔍 Recherche du marchand pour profile_id:', profileData.id);
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
@@ -630,8 +643,8 @@ const MerchantDashboardPage = () => {
       if (formData.image) {
         console.log('Uploading new image to Supabase storage...');
         const randomId = crypto.randomUUID();
-        const path = `${user.id}/${randomId}.jpg`;
-        imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
+const path = `${user.id}/${randomId}.jpg`;
+imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
         console.log('New image uploaded successfully:', imageUrl);
       }
 
@@ -647,6 +660,7 @@ const MerchantDashboardPage = () => {
         quantity: parseInt(formData.quantity),
         available_from: formData.available_from,
         available_until: formData.available_until
+        // NOTE: discount_percent is a GENERATED column in DB - do NOT send it
       };
 
       console.log('=== AFTER UPDATE (new data) ===');
@@ -654,21 +668,44 @@ const MerchantDashboardPage = () => {
 
       console.log('🛠️ Updating offer via RPC update_offer_details...');
 
-      const { error } = await supabase.rpc('update_offer_details', {
-        p_offer_id: editingOffer.offer_id, // ← CHANGÉ: id → offer_id
-        p_title: formData.title,
-        p_description: formData.description,
-        p_price_after: parseFloat(formData.price_after),
-        p_stock: parseInt(formData.quantity)
-      });
+const { error } = await supabase.rpc('update_offer_details', {
+  p_offer_id: editingOffer.id,
+  p_title: formData.title,
+  p_description: formData.description,
+  p_price_after: parseFloat(formData.price_after),
+  p_stock: parseInt(formData.quantity)
+});
 
-      if (error) {
-        console.error('❌ RPC update_offer_details error:', error);
-        throw error;
+if (error) {
+  console.error('❌ RPC update_offer_details error:', error);
+  throw error;
+}
+
+console.log('✅ RPC update_offer_details executed successfully.');
+await loadOffers();
+closeEditModal();
+setToast({ message: '✅ Offer updated successfully', type: 'success' });
+
+      // Verify audit log entry was created
+      const { data: auditLog, error: auditError } = await supabase
+        .from('audit_log')
+        .select('*')
+        .eq('table_name', 'offers')
+        .eq('record_id', data.id)
+        .eq('action', 'UPDATE')
+        .order('changed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (auditLog) {
+        console.log('✅ Audit log entry created:', auditLog);
+        console.log('Audit log old_data:', auditLog.old_data);
+        console.log('Audit log new_data:', auditLog.new_data);
+      } else if (auditError) {
+        console.warn('Could not verify audit log:', auditError);
       }
 
-      console.log('✅ RPC update_offer_details executed successfully.');
-      await loadOffers();
+      setOffers(offers.map(o => o.id === editingOffer.id ? data : o));
       closeEditModal();
       setToast({ message: '✅ Offer updated successfully', type: 'success' });
     } catch (error: any) {
@@ -732,6 +769,7 @@ const MerchantDashboardPage = () => {
           </div>
         </div>
 
+        {/* Notifications Section */}
         <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
@@ -832,7 +870,7 @@ const MerchantDashboardPage = () => {
           {offers.map(offer => {
             const status = getOfferStatus(offer);
             return (
-              <div key={offer.offer_id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+              <div key={offer.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
                 <div className="relative h-48">
                   <img
                     src={offer.image_url || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400'}
@@ -876,7 +914,7 @@ const MerchantDashboardPage = () => {
                     {offer.is_deleted ? (
                       <button
                         onClick={async () => {
-                          const { error } = await supabase.rpc('reactivate_offer', { p_offer_id: offer.offer_id });
+                          const { error } = await supabase.rpc('reactivate_offer', { p_offer_id: offer.id });
                           if (!error) {
                             await loadOffers();
                             setToast({ message: '♻️ Offer reactivated successfully', type: 'success' });
@@ -891,16 +929,16 @@ const MerchantDashboardPage = () => {
                     ) : (
                       <>
                         <button
-                          onClick={() => toggleOfferStatus(offer.offer_id, offer.is_active)}
+                          onClick={() => toggleOfferStatus(offer.id, offer.is_active)}
                           className={'flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ' +
-                            (togglingOfferId === offer.offer_id
+                            (togglingOfferId === offer.id
                               ? 'bg-gray-200 text-gray-500 cursor-wait opacity-60'
                               : offer.is_active
                                 ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 : 'bg-green-100 text-green-700 hover:bg-green-200')}
-                          disabled={togglingOfferId === offer.offer_id}
+                          disabled={togglingOfferId === offer.id}
                         >
-                          {togglingOfferId === offer.offer_id ? (
+                          {togglingOfferId === offer.id ? (
                             <>
                               <div className="w-4 h-4 mr-1 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
                               {offer.is_active ? 'Pausing...' : 'Activating...'}
@@ -925,7 +963,7 @@ const MerchantDashboardPage = () => {
                         </button>
 
                         <button
-                          onClick={() => deleteOffer(offer.offer_id)}
+                          onClick={() => deleteOffer(offer.id)}
                           className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                           title="Delete"
                         >
@@ -1009,12 +1047,12 @@ const MerchantDashboardPage = () => {
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                       <p className="text-sm text-gray-600">Prendre une photo ou choisir une image</p>
                       <input
-                        type="file"
-                        accept="image/*"
-                        capture
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
+  type="file"
+  accept="image/*"
+  capture
+  onChange={handleImageUpload}
+  className="hidden"
+/>
                     </label>
                   )}
                 </div>
