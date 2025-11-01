@@ -165,7 +165,9 @@ const MerchantDashboardPage = () => {
     }
   };
 
-  const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' => {
+  const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' | 'deleted' => {
+    if (offer.is_deleted) return 'deleted';
+
     const now = new Date();
     const availableUntil = new Date(offer.available_until);
 
@@ -729,6 +731,7 @@ setToast({ message: '✅ Offer updated successfully', type: 'success' });
       case 'active': return 'bg-green-100 text-green-800';
       case 'paused': return 'bg-yellow-100 text-yellow-800';
       case 'expired': return 'bg-gray-100 text-gray-800';
+      case 'deleted': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -878,7 +881,7 @@ setToast({ message: '✅ Offer updated successfully', type: 'success' });
                     className="w-full h-full object-cover"
                   />
                   <div className={'absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium ' + getStatusColor(status)}>
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                    {status === 'deleted' ? 'Supprimée' : status === 'paused' ? 'En pause' : status === 'active' ? 'Active' : 'Expirée'}
                   </div>
                 </div>
 
