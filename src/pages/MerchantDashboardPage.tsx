@@ -10,7 +10,7 @@ import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
 import { type Notification } from '../api/notifications';
 
 interface Offer {
-  offer_id: string;
+  offer_id: string; // ← SEUL CHANGEMENT: id → offer_id
   title: string;
   description: string;
   image_url: string | null;
@@ -20,12 +20,15 @@ interface Offer {
   available_from: string;
   available_until: string;
   is_active: boolean;
-  expired_at: string | null;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
   quantity: number;
+  expired_at?: string | null; // Ajout pour gérer les offres expirées
 }
 
 const MerchantDashboardPage = () => {
-  useEffect(() => {
+    useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
@@ -146,13 +149,9 @@ const MerchantDashboardPage = () => {
 
     try {
       const { data, error } = await supabase
-        .rpc('get_offers_for_merchant_dashboard', { p_merchant_id: merchantId });
+  .rpc('get_offers_for_merchant_dashboard', { p_merchant_id: merchantId });
 
       if (error) throw error;
-      
-      console.log('📦 Loaded offers:', data);
-      console.log('📦 First offer ID:', data?.[0]?.offer_id, 'Type:', typeof data?.[0]?.offer_id);
-      
       setOffers(data || []);
     } catch (error: any) {
       console.error('Error loading offers:', error);
@@ -166,7 +165,7 @@ const MerchantDashboardPage = () => {
     const now = new Date();
     const availableUntil = new Date(offer.available_until);
 
-    if (offer.expired_at || now > availableUntil) return 'expired';
+    if (now > availableUntil) return 'expired';
     if (!offer.is_active) return 'paused';
     return 'active';
   };
@@ -407,6 +406,8 @@ const MerchantDashboardPage = () => {
       }
 
       console.log('✅ Offer created successfully:', data);
+      console.log('Offer ID:', data.id);
+      console.log('Created at:', data.created_at);
 
       const { data: auditLog, error: auditError } = await supabase
         .from('audit_log')
@@ -418,6 +419,7 @@ const MerchantDashboardPage = () => {
 
       if (auditLog) {
         console.log('✅ Audit log entry created:', auditLog);
+        console.log('Audit log new_data:', auditLog.new_data);
       } else if (auditError) {
         console.warn('Could not verify audit log:', auditError);
       }
@@ -448,14 +450,6 @@ const MerchantDashboardPage = () => {
   };
 
   const toggleOfferStatus = async (offerId: string, currentStatus: boolean) => {
-    console.log('🔍 toggleOfferStatus called with:', { offerId, currentStatus, type: typeof offerId });
-    
-    if (!offerId) {
-      console.error('❌ offerId is undefined or null!');
-      setToast({ message: 'Error: Invalid offer ID', type: 'error' });
-      return;
-    }
-
     if (!user) {
       console.error('User not authenticated');
       setToast({ message: 'Please log in to update offer status', type: 'error' });
@@ -467,25 +461,15 @@ const MerchantDashboardPage = () => {
     const newStatus = !currentStatus;
     const actionText = newStatus ? 'Activating' : 'Pausing';
     console.log(`${actionText} offer via RPC...`);
-    console.log('Toggle params:', { offerId, type: typeof offerId });
 
     setTogglingOfferId(offerId);
 
     try {
-      const { data, error } = await supabase
-        .rpc('toggle_offer_status', { p_offer_id: offerId });
+      const { error } = await supabase.rpc('toggle_offer_status', { p_offer_id: offerId });
 
-      if (error) {
-        console.error('RPC Error Details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ RPC toggle_offer_status executed successfully');
+      console.log('✅ RPC toggle_offer_status executed successfully.');
       await loadOffers();
 
       const successMessage = newStatus ? '✅ Offer activated' : '✅ Offer paused';
@@ -499,14 +483,6 @@ const MerchantDashboardPage = () => {
   };
 
   const deleteOffer = async (offerId: string) => {
-    console.log('🔍 deleteOffer called with:', { offerId, type: typeof offerId });
-    
-    if (!offerId) {
-      console.error('❌ offerId is undefined or null!');
-      setToast({ message: 'Error: Invalid offer ID', type: 'error' });
-      return;
-    }
-
     if (!user) {
       setToast({ message: 'Please log in to delete offers', type: 'error' });
       return;
@@ -517,22 +493,11 @@ const MerchantDashboardPage = () => {
 
     try {
       console.log('🗑️ Calling delete_offer_soft RPC...');
-      console.log('Delete params:', { offerId, type: typeof offerId });
+      const { error } = await supabase.rpc('delete_offer_soft', { p_offer_id: offerId });
 
-      const { data, error } = await supabase
-        .rpc('delete_offer_soft', { p_offer_id: offerId });
+      if (error) throw error;
 
-      if (error) {
-        console.error('RPC Error Details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        throw error;
-      }
-
-      console.log('✅ RPC delete_offer_soft executed successfully');
+      console.log('✅ RPC delete_offer_soft executed successfully.');
       await loadOffers();
       setToast({ message: '🗑️ Offer hidden (soft deleted)', type: 'success' });
     } catch (error: any) {
@@ -614,12 +579,13 @@ const MerchantDashboardPage = () => {
 
     console.log('=== BEFORE UPDATE ===');
     console.log('Old offer data:', {
-      id: editingOffer.id,
+      id: editingOffer.offer_id,
       title: editingOffer.title,
       description: editingOffer.description,
       price_before: editingOffer.price_before,
       price_after: editingOffer.price_after,
-      quantity: editingOffer.quantity
+      quantity: editingOffer.quantity,
+      discount_percent: editingOffer.discount_percent
     });
 
     setIsPublishing(true);
@@ -672,18 +638,24 @@ const MerchantDashboardPage = () => {
       const discountPercent = calculateDiscount(formData.price_before, formData.price_after);
       console.log('Calculated new discount:', discountPercent + '%');
 
-      console.log('=== AFTER UPDATE (new data) ===');
-      console.log('Updated offer data:', {
+      const updatedData = {
         title: formData.title,
         description: formData.description,
-        price_after: formData.price_after,
-        quantity: formData.quantity
-      });
+        image_url: imageUrl,
+        price_before: parseFloat(formData.price_before),
+        price_after: parseFloat(formData.price_after),
+        quantity: parseInt(formData.quantity),
+        available_from: formData.available_from,
+        available_until: formData.available_until
+      };
+
+      console.log('=== AFTER UPDATE (new data) ===');
+      console.log('Updated offer data:', updatedData);
 
       console.log('🛠️ Updating offer via RPC update_offer_details...');
 
       const { error } = await supabase.rpc('update_offer_details', {
-        p_offer_id: editingOffer.id,
+        p_offer_id: editingOffer.offer_id, // ← CHANGÉ: id → offer_id
         p_title: formData.title,
         p_description: formData.description,
         p_price_after: parseFloat(formData.price_after),
@@ -695,7 +667,7 @@ const MerchantDashboardPage = () => {
         throw error;
       }
 
-      console.log('✅ RPC update_offer_details executed successfully');
+      console.log('✅ RPC update_offer_details executed successfully.');
       await loadOffers();
       closeEditModal();
       setToast({ message: '✅ Offer updated successfully', type: 'success' });
@@ -858,7 +830,6 @@ const MerchantDashboardPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {offers.map(offer => {
-            console.log('🎨 Rendering offer:', { offer_id: offer.offer_id, title: offer.title });
             const status = getOfferStatus(offer);
             return (
               <div key={offer.offer_id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
@@ -902,7 +873,7 @@ const MerchantDashboardPage = () => {
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    {status === 'expired' ? (
+                    {offer.is_deleted ? (
                       <button
                         onClick={async () => {
                           const { error } = await supabase.rpc('reactivate_offer', { p_offer_id: offer.offer_id });
