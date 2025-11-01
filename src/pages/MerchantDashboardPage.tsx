@@ -10,7 +10,7 @@ import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
 import { type Notification } from '../api/notifications';
 
 interface Offer {
-  id: string;
+  offer_id: string;
   title: string;
   description: string;
   image_url: string | null;
@@ -20,9 +20,7 @@ interface Offer {
   available_from: string;
   available_until: string;
   is_active: boolean;
-  is_deleted: boolean;
-  created_at: string;
-  updated_at: string;
+  expired_at: string | null;
   quantity: number;
 }
 
@@ -151,6 +149,10 @@ const MerchantDashboardPage = () => {
         .rpc('get_offers_for_merchant_dashboard', { p_merchant_id: merchantId });
 
       if (error) throw error;
+      
+      console.log('📦 Loaded offers:', data);
+      console.log('📦 First offer ID:', data?.[0]?.offer_id, 'Type:', typeof data?.[0]?.offer_id);
+      
       setOffers(data || []);
     } catch (error: any) {
       console.error('Error loading offers:', error);
@@ -164,7 +166,7 @@ const MerchantDashboardPage = () => {
     const now = new Date();
     const availableUntil = new Date(offer.available_until);
 
-    if (now > availableUntil) return 'expired';
+    if (offer.expired_at || now > availableUntil) return 'expired';
     if (!offer.is_active) return 'paused';
     return 'active';
   };
@@ -446,6 +448,14 @@ const MerchantDashboardPage = () => {
   };
 
   const toggleOfferStatus = async (offerId: string, currentStatus: boolean) => {
+    console.log('🔍 toggleOfferStatus called with:', { offerId, currentStatus, type: typeof offerId });
+    
+    if (!offerId) {
+      console.error('❌ offerId is undefined or null!');
+      setToast({ message: 'Error: Invalid offer ID', type: 'error' });
+      return;
+    }
+
     if (!user) {
       console.error('User not authenticated');
       setToast({ message: 'Please log in to update offer status', type: 'error' });
@@ -489,6 +499,14 @@ const MerchantDashboardPage = () => {
   };
 
   const deleteOffer = async (offerId: string) => {
+    console.log('🔍 deleteOffer called with:', { offerId, type: typeof offerId });
+    
+    if (!offerId) {
+      console.error('❌ offerId is undefined or null!');
+      setToast({ message: 'Error: Invalid offer ID', type: 'error' });
+      return;
+    }
+
     if (!user) {
       setToast({ message: 'Please log in to delete offers', type: 'error' });
       return;
@@ -840,9 +858,10 @@ const MerchantDashboardPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {offers.map(offer => {
+            console.log('🎨 Rendering offer:', { offer_id: offer.offer_id, title: offer.title });
             const status = getOfferStatus(offer);
             return (
-              <div key={offer.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+              <div key={offer.offer_id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
                 <div className="relative h-48">
                   <img
                     src={offer.image_url || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400'}
@@ -883,10 +902,10 @@ const MerchantDashboardPage = () => {
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    {offer.is_deleted ? (
+                    {status === 'expired' ? (
                       <button
                         onClick={async () => {
-                          const { error } = await supabase.rpc('reactivate_offer', { p_offer_id: offer.id });
+                          const { error } = await supabase.rpc('reactivate_offer', { p_offer_id: offer.offer_id });
                           if (!error) {
                             await loadOffers();
                             setToast({ message: '♻️ Offer reactivated successfully', type: 'success' });
@@ -901,16 +920,16 @@ const MerchantDashboardPage = () => {
                     ) : (
                       <>
                         <button
-                          onClick={() => toggleOfferStatus(offer.id, offer.is_active)}
+                          onClick={() => toggleOfferStatus(offer.offer_id, offer.is_active)}
                           className={'flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ' +
-                            (togglingOfferId === offer.id
+                            (togglingOfferId === offer.offer_id
                               ? 'bg-gray-200 text-gray-500 cursor-wait opacity-60'
                               : offer.is_active
                                 ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 : 'bg-green-100 text-green-700 hover:bg-green-200')}
-                          disabled={togglingOfferId === offer.id}
+                          disabled={togglingOfferId === offer.offer_id}
                         >
-                          {togglingOfferId === offer.id ? (
+                          {togglingOfferId === offer.offer_id ? (
                             <>
                               <div className="w-4 h-4 mr-1 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
                               {offer.is_active ? 'Pausing...' : 'Activating...'}
@@ -935,7 +954,7 @@ const MerchantDashboardPage = () => {
                         </button>
 
                         <button
-                          onClick={() => deleteOffer(offer.id)}
+                          onClick={() => deleteOffer(offer.offer_id)}
                           className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                           title="Delete"
                         >
