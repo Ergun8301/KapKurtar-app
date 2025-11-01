@@ -388,13 +388,12 @@ const handlePublish = async () => {
     price_after: formData.price_after,
     quantity: formData.quantity,
   });
-};
 
-    setIsPublishing(true);
-    try {
-      // Trouver le profil lié à l'utilisateur connecté
-      console.log('🔍 Recherche du profil pour auth_id:', user.id);
-      const { data: profileData, error: profileError } = await supabase
+  setIsPublishing(true);
+  try {
+    // Trouver le profil lié à l'utilisateur connecté
+    console.log('🔍 Recherche du profil pour auth_id:', user.id);
+    const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('auth_id', user.id)
