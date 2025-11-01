@@ -153,6 +153,7 @@ const MerchantDashboardPage = () => {
         .from('offers')
         .select('*')
         .eq('merchant_id', merchantId)
+        .eq('is_deleted', false)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
@@ -165,9 +166,7 @@ const MerchantDashboardPage = () => {
     }
   };
 
-  const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' | 'deleted' => {
-    if (offer.is_deleted) return 'deleted';
-
+  const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' => {
     const now = new Date();
     const availableUntil = new Date(offer.available_until);
 
@@ -731,7 +730,6 @@ setToast({ message: '✅ Offer updated successfully', type: 'success' });
       case 'active': return 'bg-green-100 text-green-800';
       case 'paused': return 'bg-yellow-100 text-yellow-800';
       case 'expired': return 'bg-gray-100 text-gray-800';
-      case 'deleted': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -881,7 +879,7 @@ setToast({ message: '✅ Offer updated successfully', type: 'success' });
                     className="w-full h-full object-cover"
                   />
                   <div className={'absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium ' + getStatusColor(status)}>
-                    {status === 'deleted' ? 'Supprimée' : status === 'paused' ? 'En pause' : status === 'active' ? 'Active' : 'Expirée'}
+                    {status === 'paused' ? 'En pause' : status === 'active' ? 'Active' : 'Expirée'}
                   </div>
                 </div>
 
@@ -914,66 +912,47 @@ setToast({ message: '✅ Offer updated successfully', type: 'success' });
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    {offer.is_deleted ? (
-                      <button
-                        onClick={async () => {
-                          const { error } = await supabase.rpc('reactivate_offer', { p_offer_id: offer.id });
-                          if (!error) {
-                            await loadOffers();
-                            setToast({ message: '♻️ Offer reactivated successfully', type: 'success' });
-                          } else {
-                            setToast({ message: 'Failed to reactivate offer', type: 'error' });
-                          }
-                        }}
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200"
-                      >
-                        <Play className="w-4 h-4 mr-1" /> Reactivate
-                      </button>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => toggleOfferStatus(offer.id, offer.is_active)}
-                          className={'flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ' +
-                            (togglingOfferId === offer.id
-                              ? 'bg-gray-200 text-gray-500 cursor-wait opacity-60'
-                              : offer.is_active
-                                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                : 'bg-green-100 text-green-700 hover:bg-green-200')}
-                          disabled={togglingOfferId === offer.id}
-                        >
-                          {togglingOfferId === offer.id ? (
-                            <>
-                              <div className="w-4 h-4 mr-1 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                              {offer.is_active ? 'Pausing...' : 'Activating...'}
-                            </>
-                          ) : offer.is_active ? (
-                            <>
-                              <Pause className="w-4 h-4 mr-1" /> Pause
-                            </>
-                          ) : (
-                            <>
-                              <Play className="w-4 h-4 mr-1" /> Activate
-                            </>
-                          )}
-                        </button>
+                    <button
+                      onClick={() => toggleOfferStatus(offer.id, offer.is_active)}
+                      className={'flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ' +
+                        (togglingOfferId === offer.id
+                          ? 'bg-gray-200 text-gray-500 cursor-wait opacity-60'
+                          : offer.is_active
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-green-100 text-green-700 hover:bg-green-200')}
+                      disabled={togglingOfferId === offer.id}
+                    >
+                      {togglingOfferId === offer.id ? (
+                        <>
+                          <div className="w-4 h-4 mr-1 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                          {offer.is_active ? 'Pausing...' : 'Activating...'}
+                        </>
+                      ) : offer.is_active ? (
+                        <>
+                          <Pause className="w-4 h-4 mr-1" /> Pause
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4 mr-1" /> Activate
+                        </>
+                      )}
+                    </button>
 
-                        <button
-                          onClick={() => openEditModal(offer)}
-                          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
+                    <button
+                      onClick={() => openEditModal(offer)}
+                      className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                      title="Edit"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
 
-                        <button
-                          onClick={() => deleteOffer(offer.id)}
-                          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </>
-                    )}
+                    <button
+                      onClick={() => deleteOffer(offer.id)}
+                      className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
