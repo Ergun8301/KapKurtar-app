@@ -68,30 +68,37 @@ useEffect(() => {
     }
 
     try {
-      const { data: profile } = await supabase
+      // Trouver le profil lié à l'utilisateur connecté
+      console.log('🔍 Recherche du profil pour auth_id:', user.id);
+
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('auth_id', user.id)
         .maybeSingle();
 
-      if (!profile) {
-        console.warn('No profile found for user');
+      if (profileError) throw profileError;
+      if (!profileData) {
+        console.warn('⚠️ Aucun profil trouvé pour cet utilisateur');
         return;
       }
 
-      const { data: merchant } = await supabase
+      // Trouver le marchand lié à ce profil
+      const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
         .select('id')
-        .eq('profile_id', profile.id)
+        .eq('profile_id', profileData.id)
         .maybeSingle();
 
-      if (merchant) {
-        setMerchantId(merchant.id);
+      if (merchantError) throw merchantError;
+      if (merchantData) {
+        console.log('✅ Marchand trouvé, ID:', merchantData.id);
+        setMerchantId(merchantData.id);
       } else {
-        console.warn('No merchant found for profile');
+        console.warn('⚠️ Aucun marchand trouvé pour ce profil');
       }
     } catch (error) {
-      console.error('Error fetching merchant ID:', error);
+      console.error('Erreur lors de la récupération du merchant ID:', error);
     }
   };
 
