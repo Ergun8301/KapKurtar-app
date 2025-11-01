@@ -59,281 +59,329 @@ const MerchantDashboardPage = () => {
     customDuration: ''
   });
 
-  // Fetch merchant ID from user
-  useEffect(() => {
-    const fetchMerchantId = async () => {
-      if (!user) {
-        setMerchantId(null);
-        return;
-      }
-
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('auth_id', user.id)
-          .maybeSingle();
-
-        if (!profile) {
-          console.warn('No profile found for user');
-          return;
-        }
-
-        const { data: merchant } = await supabase
-          .from('merchants')
-          .select('id')
-          .eq('profile_id', profile.id)
-          .maybeSingle();
-
-        if (merchant) {
-          setMerchantId(merchant.id);
-        } else {
-          console.warn('No merchant found for profile');
-        }
-      } catch (error) {
-        console.error('Error fetching merchant ID:', error);
-      }
-    };
-
-    fetchMerchantId();
-  }, [user]);
-
-  useEffect(() => {
-    const checkExpiredOffers = async () => {
-      try {
-        await supabase.rpc('auto_expire_offers');
-        console.log('Fonction auto_expire_offers exécutée avec succès');
-      } catch (error) {
-        console.error('Erreur lors de la vérification des offres expirées :', error);
-      }
-    };
-
-    checkExpiredOffers();
-    loadOffers();
-
-    // Subscribe to realtime updates for merchant's offers
-    if (!merchantId) return;
-
-    console.log('Subscribing to realtime updates for merchant offers...');
-    const channel = supabase
-      .channel('merchant-offers-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'offers',
-          filter: `merchant_id=eq.${merchantId}`
-        },
-        (payload) => {
-          console.log('Merchant offers table changed:', payload);
-          loadOffers();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('Unsubscribing from merchant offers realtime...');
-      supabase.removeChannel(channel);
-    };
-  }, [merchantId]);
-
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
+ // Fetch merchant ID from user
+useEffect(() => {
+  const fetchMerchantId = async () => {
+    if (!user) {
+      setMerchantId(null);
+      return;
     }
-  }, [toast]);
-
-  const loadOffers = async () => {
-    if (!merchantId) return;
 
     try {
-      const { data, error } = await supabase
-        .from('offers')
-        .select('*')
-        .eq('merchant_id', merchantId)
-        .eq('is_deleted', false)
-        .order('updated_at', { ascending: false });
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
+        .maybeSingle();
 
-      if (error) throw error;
-      setOffers(data || []);
-    } catch (error: any) {
-      console.error('Error loading offers:', error);
-      setToast({ message: error.message || 'Failed to load offers', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' => {
-    const now = new Date();
-    const availableUntil = new Date(offer.available_until);
-
-    if (now > availableUntil) return 'expired';
-    if (!offer.is_active) return 'paused';
-    return 'active';
-  };
-
-  const calculateTimeLeft = (endDate: string) => {
-    const now = new Date();
-    const end = new Date(endDate);
-    const diff = end.getTime() - now.getTime();
-
-    if (diff < 0) return 'Expired';
-
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-    if (hours > 24) {
-      const days = Math.floor(hours / 24);
-      return days + ' day' + (days > 1 ? 's' : '') + ' left';
-    }
-    if (hours > 0) return hours + 'h ' + minutes + 'm left';
-    return minutes + 'm left';
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-
-    if (name === 'duration' || name === 'customDuration') {
-      updateEndDate(value, name === 'duration' ? 'duration' : 'custom');
-    }
-  };
-
-  const calculateDiscount = (priceBefore: string, priceAfter: string): number => {
-    const before = parseFloat(priceBefore);
-    const after = parseFloat(priceAfter);
-    if (!before || !after || before <= 0) return 0;
-    return Math.round(((before - after) / before) * 100);
-  };
-
-  const updateEndDate = (durationValue: string, type: 'duration' | 'custom') => {
-    const startDate = formData.startNow ? new Date() : new Date(formData.available_from);
-    if (isNaN(startDate.getTime())) return;
-
-    let minutes = 0;
-    if (type === 'duration') {
-      switch(durationValue) {
-        case '30min': minutes = 30; break;
-        case '1h': minutes = 60; break;
-        case '2h': minutes = 120; break;
-        case '4h': minutes = 240; break;
-        case 'allday':
-          const endOfDay = new Date(startDate);
-          endOfDay.setHours(23, 59, 0, 0);
-          setFormData(prev => ({
-            ...prev,
-            available_until: endOfDay.toISOString().slice(0, 16)
-          }));
-          return;
-        case 'custom':
-          minutes = parseInt(formData.customDuration) || 0;
-          break;
-        default:
-          return;
-      }
-    } else {
-      minutes = parseInt(durationValue) || 0;
-    }
-
-    const endDate = new Date(startDate.getTime() + minutes * 60000);
-    setFormData(prev => ({
-      ...prev,
-      available_until: endDate.toISOString().slice(0, 16)
-    }));
-  };
-
-  const handleStartNowChange = (checked: boolean) => {
-    setFormData(prev => {
-      const newData = { ...prev, startNow: checked };
-      if (checked) {
-        const now = new Date();
-        newData.available_from = now.toISOString().slice(0, 16);
-      }
-      return newData;
-    });
-    if (checked && formData.duration) {
-      setTimeout(() => updateEndDate(formData.duration, 'duration'), 0);
-    }
-  };
-
-  useEffect(() => {
-    const now = new Date();
-    const twoHoursLater = new Date(now.getTime() + 120 * 60000);
-    setFormData(prev => ({
-      ...prev,
-      available_from: now.toISOString().slice(0, 16),
-      available_until: twoHoursLater.toISOString().slice(0, 16)
-    }));
-  }, []);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const MAX_SIZE = 5 * 1024 * 1024;
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/avif'];
-
-      if (file.size > MAX_SIZE) {
-        setToast({ message: 'Image trop volumineuse (max. 5 Mo). Réduis la taille ou compresse-la avant d\'envoyer.', type: 'error' });
+      if (!profile) {
+        console.warn('No profile found for user');
         return;
       }
 
-      if (!validTypes.includes(file.type.toLowerCase())) {
-        setToast({ message: 'Format non pris en charge. Formats acceptés : JPG, PNG, WEBP, HEIC, HEIF, AVIF.', type: 'error' });
-        return;
-      }
+      const { data: merchant } = await supabase
+        .from('merchants')
+        .select('id')
+        .eq('profile_id', profile.id)
+        .maybeSingle();
 
-      setFormData({ ...formData, image: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, imagePreview: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+      if (merchant) {
+        setMerchantId(merchant.id);
+      } else {
+        console.warn('No merchant found for profile');
+      }
+    } catch (error) {
+      console.error('Error fetching merchant ID:', error);
     }
   };
 
-  const handlePublish = async () => {
-    if (!user) {
-      console.error('User not authenticated');
-      setToast({ message: 'Please log in to create an offer', type: 'error' });
-      return;
-    }
+  fetchMerchantId();
+}, [user]);
 
-    // Validate required fields
-    if (!formData.title.trim()) {
-      setToast({ message: 'Title is required', type: 'error' });
-      return;
+useEffect(() => {
+  const checkExpiredOffers = async () => {
+    try {
+      await supabase.rpc('auto_expire_offers');
+      console.log('Fonction auto_expire_offers exécutée avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la vérification des offres expirées :', error);
     }
+  };
 
-    if (!formData.price_before || parseFloat(formData.price_before) <= 0) {
-      setToast({ message: 'Valid price before is required', type: 'error' });
-      return;
-    }
+  checkExpiredOffers();
 
-    if (!formData.price_after || parseFloat(formData.price_after) <= 0) {
-      setToast({ message: 'Valid price after is required', type: 'error' });
-      return;
-    }
+  if (!merchantId) {
+    console.log('⏳ Merchant ID non disponible, attente...');
+    return;
+  }
 
-    if (!formData.quantity || parseInt(formData.quantity) <= 0) {
-      setToast({ message: 'Valid quantity is required', type: 'error' });
-      return;
-    }
+  console.log('✅ Merchant ID disponible :', merchantId);
+  loadOffers();
 
-    if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
-      setToast({ message: 'Discounted price must be lower than original price', type: 'error' });
-      return;
-    }
+  // Subscribe to realtime updates for merchant's offers
+  console.log('Subscribing to realtime updates for merchant offers...');
+  const channel = supabase
+    .channel('merchant-offers-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'offers',
+        filter: `merchant_id=eq.${merchantId}`,
+      },
+      (payload) => {
+        console.log('Merchant offers table changed:', payload);
+        loadOffers();
+      }
+    )
+    .subscribe();
 
-    console.log('Creating new offer...', {
-      merchant_id: user.id,
-      title: formData.title,
-      price_before: formData.price_before,
-      price_after: formData.price_after,
-      quantity: formData.quantity
+  return () => {
+    console.log('Unsubscribing from merchant offers realtime...');
+    supabase.removeChannel(channel);
+  };
+}, [merchantId]);
+
+useEffect(() => {
+  if (toast) {
+    const timer = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(timer);
+  }
+}, [toast]);
+
+const loadOffers = async () => {
+  if (!merchantId) return;
+
+  try {
+    console.log('Fetching offers for merchant:', merchantId);
+
+    const { data, error } = await supabase
+      .from('offers')
+      .select('*')
+      .eq('merchant_id', merchantId)
+      // ⚠️ Aucun filtre sur is_active ni is_deleted ici
+      .order('updated_at', { ascending: false });
+
+    if (error) throw error;
+
+    console.log('Offers loaded:', data);
+    setOffers(data || []);
+  } catch (error: any) {
+    console.error('Error loading offers:', error);
+    setToast({
+      message: error.message || 'Failed to load offers',
+      type: 'error',
     });
+  } finally {
+    setLoading(false);
+  }
+};
+
+const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' => {
+  const now = new Date();
+  const availableUntil = new Date(offer.available_until);
+
+  // priorité : expirée > pause > active
+  if (now > availableUntil) return 'expired';
+  if (!offer.is_active) return 'paused';
+  return 'active';
+};
+
+const calculateTimeLeft = (endDate: string) => {
+  const now = new Date();
+  const end = new Date(endDate);
+  const diff = end.getTime() - now.getTime();
+
+  if (diff < 0) return 'Expired';
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (hours > 24) {
+    const days = Math.floor(hours / 24);
+    return days + ' day' + (days > 1 ? 's' : '') + ' left';
+  }
+  if (hours > 0) return hours + 'h ' + minutes + 'm left';
+  return minutes + 'm left';
+};
+
+const handleInputChange = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+) => {
+  const { name, value } = e.target;
+  setFormData({ ...formData, [name]: value });
+
+  if (name === 'duration' || name === 'customDuration') {
+    updateEndDate(value, name === 'duration' ? 'duration' : 'custom');
+  }
+};
+
+const calculateDiscount = (priceBefore: string, priceAfter: string): number => {
+  const before = parseFloat(priceBefore);
+  const after = parseFloat(priceAfter);
+  if (!before || !after || before <= 0) return 0;
+  return Math.round(((before - after) / before) * 100);
+};
+
+const updateEndDate = (durationValue: string, type: 'duration' | 'custom') => {
+  const startDate = formData.startNow
+    ? new Date()
+    : new Date(formData.available_from);
+  if (isNaN(startDate.getTime())) return;
+
+  let minutes = 0;
+  if (type === 'duration') {
+    switch (durationValue) {
+      case '30min':
+        minutes = 30;
+        break;
+      case '1h':
+        minutes = 60;
+        break;
+      case '2h':
+        minutes = 120;
+        break;
+      case '4h':
+        minutes = 240;
+        break;
+      case 'allday':
+        const endOfDay = new Date(startDate);
+        endOfDay.setHours(23, 59, 0, 0);
+        setFormData((prev) => ({
+          ...prev,
+          available_until: endOfDay.toISOString().slice(0, 16),
+        }));
+        return;
+      case 'custom':
+        minutes = parseInt(formData.customDuration) || 0;
+        break;
+      default:
+        return;
+    }
+  } else {
+    minutes = parseInt(durationValue) || 0;
+  }
+
+  const endDate = new Date(startDate.getTime() + minutes * 60000);
+  setFormData((prev) => ({
+    ...prev,
+    available_until: endDate.toISOString().slice(0, 16),
+  }));
+};
+
+const handleStartNowChange = (checked: boolean) => {
+  setFormData((prev) => {
+    const newData = { ...prev, startNow: checked };
+    if (checked) {
+      const now = new Date();
+      newData.available_from = now.toISOString().slice(0, 16);
+    }
+    return newData;
+  });
+  if (checked && formData.duration) {
+    setTimeout(() => updateEndDate(formData.duration, 'duration'), 0);
+  }
+};
+
+useEffect(() => {
+  const now = new Date();
+  const twoHoursLater = new Date(now.getTime() + 120 * 60000);
+  setFormData((prev) => ({
+    ...prev,
+    available_from: now.toISOString().slice(0, 16),
+    available_until: twoHoursLater.toISOString().slice(0, 16),
+  }));
+}, []);
+
+const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    const MAX_SIZE = 5 * 1024 * 1024;
+    const validTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/webp',
+      'image/heic',
+      'image/heif',
+      'image/avif',
+    ];
+
+    if (file.size > MAX_SIZE) {
+      setToast({
+        message:
+          "Image trop volumineuse (max. 5 Mo). Réduis la taille ou compresse-la avant d'envoyer.",
+        type: 'error',
+      });
+      return;
+    }
+
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      setToast({
+        message:
+          'Format non pris en charge. Formats acceptés : JPG, PNG, WEBP, HEIC, HEIF, AVIF.',
+        type: 'error',
+      });
+      return;
+    }
+
+    setFormData({ ...formData, image: file });
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        imagePreview: reader.result as string,
+      }));
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const handlePublish = async () => {
+  if (!user) {
+    console.error('User not authenticated');
+    setToast({ message: 'Please log in to create an offer', type: 'error' });
+    return;
+  }
+
+  // Validate required fields
+  if (!formData.title.trim()) {
+    setToast({ message: 'Title is required', type: 'error' });
+    return;
+  }
+
+  if (!formData.price_before || parseFloat(formData.price_before) <= 0) {
+    setToast({ message: 'Valid price before is required', type: 'error' });
+    return;
+  }
+
+  if (!formData.price_after || parseFloat(formData.price_after) <= 0) {
+    setToast({ message: 'Valid price after is required', type: 'error' });
+    return;
+  }
+
+  if (!formData.quantity || parseInt(formData.quantity) <= 0) {
+    setToast({ message: 'Valid quantity is required', type: 'error' });
+    return;
+  }
+
+  if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
+    setToast({
+      message: 'Discounted price must be lower than original price',
+      type: 'error',
+    });
+    return;
+  }
+
+  console.log('Creating new offer...', {
+    merchant_id: user.id,
+    title: formData.title,
+    price_before: formData.price_before,
+    price_after: formData.price_after,
+    quantity: formData.quantity,
+  });
+};
 
     setIsPublishing(true);
     try {
