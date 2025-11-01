@@ -167,7 +167,7 @@ const loadOffers = async () => {
       .from('offers')
       .select('*')
       .eq('merchant_id', merchantId)
-      // ⚠️ Aucun filtre sur is_active ni is_deleted ici pour test
+      .eq('is_deleted', false)
       .order('updated_at', { ascending: false });
 
     if (error) throw error;
