@@ -481,8 +481,8 @@ useEffect(() => {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
         <div style="font-size:14px;font-weight:600;color:#111;">${offer.title || "Offre locale"}</div>
         <div style="display:flex;align-items:center;gap:3px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:600;padding:2px 5px;border-radius:6px;">
-          ⏰ ${timeLeft || "Bientôt expirée"}
-        </div>
+  ⏰ ${timeLeft || "Bientôt expirée"}
+</div>
       </div>
 
       <!-- 💶 Prix -->
