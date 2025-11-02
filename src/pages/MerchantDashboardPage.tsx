@@ -285,7 +285,7 @@ const handlePublish = async (formData: any) => {
 
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
-        .select('id')
+        .select('id, location')
         .eq('profile_id', profileData.id)
         .maybeSingle();
 
@@ -301,6 +301,7 @@ const handlePublish = async (formData: any) => {
       }
 
       console.log('✅ Marchand trouvé, merchant.id:', merchantData.id);
+      console.log('📍 Localisation du marchand:', merchantData.location);
 
       let imageUrl = null;
       if (formData.image) {
@@ -311,7 +312,7 @@ const handlePublish = async (formData: any) => {
         console.log('Image uploaded successfully:', imageUrl);
       }
 
-      const offerData = {
+      const offerData: any = {
         merchant_id: merchantData.id,
         title: formData.title,
         description: formData.description,
@@ -323,6 +324,13 @@ const handlePublish = async (formData: any) => {
         available_until: formData.available_until,
         is_active: true
       };
+
+      if (merchantData.location) {
+        offerData.location = merchantData.location;
+        console.log('✅ Localisation du marchand copiée vers l\'offre');
+      } else {
+        console.warn('⚠️ Aucune localisation trouvée pour ce marchand');
+      }
 
       console.log('Inserting offer into Supabase:', offerData);
 
