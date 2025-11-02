@@ -442,7 +442,7 @@ useEffect(() => {
   fetchOffers();
 }, [center, clientId, viewMode, radiusKm]);
 
-  // Marqueurs d'offres (markers + popups)
+ // 🗺️ Marqueurs d'offres (markers + popups)
 useEffect(() => {
   const map = mapRef.current;
   if (!map) return;
@@ -451,8 +451,11 @@ useEffect(() => {
   (map as any)._markers?.forEach((m: Marker) => m.remove());
   (map as any)._markers = [];
 
+  // détection du mobile
+  const isMobile = window.innerWidth < 768;
+
   offers.forEach((offer) => {
-    // sécurités coordonnées
+    // sécurité coordonnées
     if (
       !Number.isFinite(offer.offer_lng) ||
       !Number.isFinite(offer.offer_lat)
@@ -460,7 +463,7 @@ useEffect(() => {
       return;
     }
 
-    // élément HTML du marqueur vert
+    // 🎯 Élément HTML du marqueur
     const el = document.createElement("div");
     el.className = "offer-marker";
     el.style.background = "#22c55e";
@@ -471,7 +474,7 @@ useEffect(() => {
     el.style.cursor = "pointer";
     el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
 
-    // 🧮 Calculs dynamiques pour le popup
+    // 🧮 Calculs dynamiques
     const discount = Math.round(
       ((offer.price_before - offer.price_after) / offer.price_before) * 100
     );
@@ -479,31 +482,25 @@ useEffect(() => {
     const now = new Date();
     const until = new Date(offer.available_until);
     const from = new Date(
-      // si t'as pas encore ajouté available_from dans le type Offer,
-      // côté TS ça va gueuler => on force l'existence avec fallback now
       (offer as any).available_from || now
     );
 
     const total = until.getTime() - from.getTime();
     const remaining = until.getTime() - now.getTime();
-
-    // pourcentage de temps restant
     const progressPercent = total > 0
       ? Math.max(0, Math.min(100, (remaining / total) * 100))
       : 0;
 
-    // couleur de la barre (vert -> jaune -> rouge)
     let progressColor = "#16a34a"; // vert
     if (progressPercent < 60) progressColor = "#facc15"; // jaune
     if (progressPercent < 30) progressColor = "#ef4444"; // rouge
 
-    // texte "1h 21min"
     const minutesLeft = Math.max(0, Math.floor(remaining / 60000));
     const hours = Math.floor(minutesLeft / 60);
     const mins = minutesLeft % 60;
     const timeLeft = hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
 
-    // 📦 POPUP HTML
+    // 💬 POPUP HTML (seulement pour desktop)
     const popupHTML = `
       <div style="width:210px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border-radius:12px;overflow:hidden;">
         
@@ -570,21 +567,30 @@ useEffect(() => {
       </div>
     `;
 
-    // création du popup mapbox
-    const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
+    // ✅ Création du marker
+    const marker = new mapboxgl.Marker(el).setLngLat([
+      offer.offer_lng,
+      offer.offer_lat,
+    ]);
 
-    // création du marker
-    const marker = new mapboxgl.Marker(el)
-      .setLngLat([offer.offer_lng, offer.offer_lat])
-      .setPopup(popup)
-      .addTo(map);
+    if (!isMobile) {
+      // 💻 sur PC → avec popup
+      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
+      marker.setPopup(popup);
+    } else {
+      // 📱 sur mobile → pas de popup
+      el.addEventListener("click", () => {
+        console.log("Offre cliquée :", offer.title);
+        // TODO: afficher la fiche sous la carte (phase suivante)
+      });
+    }
 
+    marker.addTo(map);
     (map as any)._markers.push(marker);
   });
+}, [offers]);
 
-}, [offers]); // <-- FIN du premier useEffect
-
-  // Ajuste la vue carte quand on est en mode "all"
+// 🎯 Ajuste la vue carte quand on est en mode "all"
 useEffect(() => {
   const map = mapRef.current;
   if (!map) return;
@@ -602,22 +608,27 @@ useEffect(() => {
   }
 }, [offers, viewMode]);
 
-  const handleViewModeChange = (mode: "nearby" | "all") => {
-    setViewMode(mode);
-    
-    if (mode === "nearby" && mapRef.current && Number.isFinite(userLocation[0]) && Number.isFinite(userLocation[1])) {
-      // Retour à la position de l'utilisateur avec le cercle
-      mapRef.current.flyTo({
-        center: userLocation,
-        zoom: 12,
-        essential: true,
-      });
-    }
+// 🧭 Gestion du changement de mode de vue
+const handleViewModeChange = (mode: "nearby" | "all") => {
+  setViewMode(mode);
 
-    if (mode === "all") {
-      setCenter(DEFAULT_LOCATION); // ✅ FIX B: évite (NaN, NaN) au switch
-    }
-  };
+  if (
+    mode === "nearby" &&
+    mapRef.current &&
+    Number.isFinite(userLocation[0]) &&
+    Number.isFinite(userLocation[1])
+  ) {
+    mapRef.current.flyTo({
+      center: userLocation,
+      zoom: 12,
+      essential: true,
+    });
+  }
+
+  if (mode === "all") {
+    setCenter(DEFAULT_LOCATION); // ✅ évite (NaN, NaN)
+  }
+};
 
   // Gestion du changement de rayon
   const handleRadiusChange = (val: number) => {
