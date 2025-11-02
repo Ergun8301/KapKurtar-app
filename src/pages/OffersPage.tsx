@@ -557,6 +557,8 @@ useEffect(() => {
     }
   }, [offers, viewMode]);
 
+}); //
+
   // Gestion du changement de mode de vue
   const handleViewModeChange = (mode: "nearby" | "all") => {
     setViewMode(mode);
