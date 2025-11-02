@@ -465,7 +465,6 @@ useEffect(() => {
       const discount = getDiscountPercent(offer.price_before, offer.price_after);
       const timeLeft = getTimeRemaining(offer.available_until);
 
-      const popupHTML = `
        const popupHTML = `
   <div style="width:200px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border-radius:12px;overflow:hidden;">
     ${offer.image_url
