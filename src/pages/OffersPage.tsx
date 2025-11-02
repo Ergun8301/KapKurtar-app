@@ -481,20 +481,12 @@ useEffect(() => {
 
     const now = new Date();
     const until = new Date(offer.available_until);
-    const from = new Date(
-      (offer as any).available_from || now
-    );
+    const from = new Date((offer as any).available_from || now);
 
     const total = until.getTime() - from.getTime();
     const remaining = until.getTime() - now.getTime();
-    const progressPercent = total > 0
-      ? Math.max(0, Math.min(100, (remaining / total) * 100))
-      : 0;
 
-    let progressColor = "#16a34a"; // vert
-    if (progressPercent < 60) progressColor = "#facc15"; // jaune
-    if (progressPercent < 30) progressColor = "#ef4444"; // rouge
-
+    // temps restant
     const minutesLeft = Math.max(0, Math.floor(remaining / 60000));
     const hours = Math.floor(minutesLeft / 60);
     const mins = minutesLeft % 60;
@@ -507,14 +499,14 @@ useEffect(() => {
         <!-- 📸 Image + badge réduction -->
         <div style="position:relative;width:100%;height:120px;overflow:hidden;">
           <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;">
-          <div style="position:absolute;top:8px;right:8px;background:#dc2626;color:#fff;font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;">
+          <div style="position:absolute;top:8px;right:8px;background:#f9fafb;color:#ea580c;font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;border:1px solid #e5e7eb;">
             -${discount}%
           </div>
         </div>
 
         <!-- 🕒 Titre + Timer -->
         <div style="padding:10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <div style="font-size:14px;font-weight:600;color:#111;">
               ${offer.title || "Offre locale"}
             </div>
@@ -523,29 +515,18 @@ useEffect(() => {
             </div>
           </div>
 
-          <!-- 🔋 Barre de progression -->
-          <div style="width:100%;height:4px;background:#f3f4f6;border-radius:4px;margin-bottom:8px;">
-            <div style="
-              width:${progressPercent}%;
-              height:100%;
-              background:${progressColor};
-              border-radius:4px;
-              transition:width 0.3s ease;
-            "></div>
-          </div>
-
           <!-- 💶 Prix -->
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-            <span style="color:#16a34a;font-weight:700;">
-              ${offer.price_after.toFixed(2)} €
-            </span>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">
             <span style="
               text-decoration:line-through;
               text-decoration-color:#ef4444;
-              color:#444;
+              color:#777;
               font-size:12px;
             ">
               ${offer.price_before.toFixed(2)} €
+            </span>
+            <span style="color:#16a34a;font-weight:700;font-size:15px;">
+              ${offer.price_after.toFixed(2)} €
             </span>
           </div>
 
@@ -574,14 +555,17 @@ useEffect(() => {
     ]);
 
     if (!isMobile) {
-      // 💻 sur PC → avec popup
+      // 💻 Desktop -> popup complet
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
       marker.setPopup(popup);
     } else {
-      // 📱 sur mobile → pas de popup
+      // 📱 Mobile -> affiche la liste d'offres proches
       el.addEventListener("click", () => {
-        console.log("Offre cliquée :", offer.title);
-        // TODO: afficher la fiche sous la carte (phase suivante)
+        console.log("📱 Offre cliquée :", offer.title);
+        // ✅ Change en mode "à proximité" et défile vers la liste
+        setViewMode("nearby");
+        const listSection = document.querySelector(".offers-list-section");
+        if (listSection) listSection.scrollIntoView({ behavior: "smooth" });
       });
     }
 
