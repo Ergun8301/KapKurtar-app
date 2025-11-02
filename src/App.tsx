@@ -27,6 +27,9 @@ import ReviewsPage from "./pages/ReviewsPage";
 import DownloadPage from "./pages/DownloadPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
+// ✅ Nouvelle page carte + liste (test client)
+import OffersMapAndList from "./pages/OffersMapAndList";
+
 /* 🔁 Vérifie la session et redirige selon le rôle */
 function SessionRedirect() {
   const nav = useNavigate();
@@ -78,6 +81,9 @@ function App() {
               {/* 🗺️ Offres */}
               <Route path="/offers" element={<OffersPage />} />
 
+              {/* 🧪 Test carte + liste (nouvelle version client) */}
+              <Route path="/offers/test" element={<OffersMapAndList />} />
+
               {/* ❤️ Favoris */}
               <Route path="/favorites" element={<FavoritesPage />} />
 
@@ -90,10 +96,16 @@ function App() {
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
               {/* 👤 Compléter profil */}
-              <Route path="/profile/complete" element={<ProfileCompletePage />} />
+              <Route
+                path="/profile/complete"
+                element={<ProfileCompletePage />}
+              />
 
               {/* 🏪 Tableau de bord marchand */}
-              <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
+              <Route
+                path="/merchant/dashboard"
+                element={<MerchantDashboardPage />}
+              />
 
               {/* 📱 Téléchargement */}
               <Route path="/download" element={<DownloadPage />} />
