@@ -16,6 +16,7 @@ type Offer = {
   offer_lat: number;
   offer_lng: number;
   image_url: string;
+  available_until?: string;
 };
 
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
@@ -84,6 +85,20 @@ export default function OffersPage() {
   const [isGeolocating, setIsGeolocating] = useState(false);
   const [hasGeolocated, setHasGeolocated] = useState(false);
   const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
+
+  const getDiscountPercent = (before: number, after: number) => {
+    if (!before || before === 0) return 0;
+    return Math.round(((before - after) / before) * 100);
+  };
+
+  const getTimeRemaining = (until?: string) => {
+    if (!until) return "";
+    const diff = new Date(until).getTime() - Date.now();
+    if (diff <= 0) return "⏰ Expirée";
+    const h = Math.floor(diff / 1000 / 60 / 60);
+    const m = Math.floor((diff / 1000 / 60) % 60);
+    return h > 0 ? `⏰ ${h}h ${m}min` : `⏰ ${m} min restantes`;
+  };
 
   // Injection CSS
   useEffect(() => {
@@ -431,13 +446,46 @@ useEffect(() => {
       el.style.cursor = "pointer";
       el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
 
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
-        <strong>${offer.title}</strong><br/>
-        ${offer.merchant_name}<br/>
-        <span style="color:green;font-weight:bold;">${offer.price_after.toFixed(2)} €</span>
-        <span style="text-decoration:line-through;color:#999;margin-left:4px;">${offer.price_before.toFixed(2)} €</span><br/>
-        <a href="https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}" target="_blank">🗺️ Itinéraire</a>
-      `);
+      const discount = getDiscountPercent(offer.price_before, offer.price_after);
+      const timeLeft = getTimeRemaining(offer.available_until);
+
+      const popupHTML = `
+        <div style="width:190px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+          ${offer.image_url
+            ? `<div style="width:100%;height:90px;border-radius:8px;overflow:hidden;margin-bottom:6px;">
+                 <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;" />
+               </div>`
+            : ""}
+          <div style="font-size:13px;font-weight:600;color:#111;line-height:1.3;">
+            ${offer.title || "Offre"}
+          </div>
+          <div style="font-size:12px;color:#555;line-height:1.3;margin-bottom:4px;">
+            ${offer.merchant_name || "Marchand local"}
+          </div>
+          <div style="font-size:12px;display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:4px;">
+            <span style="color:#16a34a;font-weight:600;">
+              ${offer.price_after.toFixed(2)} €
+            </span>
+            <span style="text-decoration:line-through;color:#999;font-size:11px;">
+              ${offer.price_before.toFixed(2)} €
+            </span>
+            <span style="background:#dc2626;color:#fff;font-size:10px;font-weight:600;padding:2px 5px;border-radius:6px;line-height:1;">
+              -${discount}%
+            </span>
+          </div>
+          <div style="font-size:11px;color:#444;margin-bottom:6px;">
+            ${timeLeft || ""}
+          </div>
+          <button style="width:100%;background:#22c55e;color:#fff;border:none;border-radius:8px;padding:6px 8px;font-size:12px;font-weight:600;cursor:pointer;">
+            Voir détails / Réserver
+          </button>
+          <div style="text-align:center;margin-top:6px;">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}" target="_blank" style="color:#2563eb;font-size:11px;text-decoration:underline;">
+              🗺️ Itinéraire
+            </a>
+          </div>
+        </div>`;
+      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
 
       if (!Number.isFinite(offer.offer_lng) || !Number.isFinite(offer.offer_lat)) return;
 
@@ -589,8 +637,16 @@ useEffect(() => {
                       <span className="line-through text-gray-400 text-sm">
                         {o.price_before.toFixed(2)} €
                       </span>
+                      <span className="text-xs text-red-600 font-semibold bg-red-50 px-1.5 py-0.5 rounded">
+                        -{getDiscountPercent(o.price_before, o.price_after)}%
+                      </span>
                     </div>
                   </div>
+                  {o.available_until && (
+                    <div className="text-[11px] text-gray-600 font-medium mt-1">
+                      {getTimeRemaining(o.available_until)}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
