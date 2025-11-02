@@ -444,72 +444,105 @@ useEffect(() => {
 
 
   // Marqueurs d'offres
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
+useEffect(() => {
+  const map = mapRef.current;
+  if (!map) return;
 
-    (map as any)._markers?.forEach((m: Marker) => m.remove());
-    (map as any)._markers = [];
+  (map as any)._markers?.forEach((m: Marker) => m.remove());
+  (map as any)._markers = [];
 
-    offers.forEach((offer) => {
-      const el = document.createElement("div");
-      el.className = "offer-marker";
-      el.style.background = "#22c55e";
-      el.style.width = "20px";
-      el.style.height = "20px";
-      el.style.borderRadius = "50%";
-      el.style.border = "2px solid #fff";
-      el.style.cursor = "pointer";
-      el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+  offers.forEach((offer) => {
+    const el = document.createElement("div");
+    el.className = "offer-marker";
+    el.style.background = "#22c55e";
+    el.style.width = "20px";
+    el.style.height = "20px";
+    el.style.borderRadius = "50%";
+    el.style.border = "2px solid #fff";
+    el.style.cursor = "pointer";
+    el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
 
-      const discount = getDiscountPercent(offer.price_before, offer.price_after);
-      const timeLeft = getTimeRemaining(offer.available_until);
+    // 🧮 Calculs dynamiques
+    const discount = Math.round(
+      ((offer.price_before - offer.price_after) / offer.price_before) * 100
+    );
 
-       const popupHTML = `
-  <div style="width:210px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border-radius:12px;overflow:hidden;">
-    
-    <!-- 📸 Image + badge réduction -->
-    <div style="position:relative;width:100%;height:120px;overflow:hidden;">
-      <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;">
-      <div style="position:absolute;top:8px;right:8px;background:#dc2626;color:#fff;font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;">
-        -${discount}%
+    const now = new Date();
+    const until = new Date(offer.available_until);
+    const from = new Date(offer.available_from || now);
+    const total = until.getTime() - from.getTime();
+    const remaining = until.getTime() - now.getTime();
+
+    // pourcentage de progression du temps restant
+    const progressPercent = Math.max(
+      0,
+      Math.min(100, (remaining / total) * 100)
+    );
+
+    // couleur selon l'urgence
+    let progressColor = "#16a34a"; // vert
+    if (progressPercent < 60) progressColor = "#facc15"; // jaune
+    if (progressPercent < 30) progressColor = "#ef4444"; // rouge
+
+    // format temps restant
+    const minutesLeft = Math.max(0, Math.floor(remaining / 60000));
+    const hours = Math.floor(minutesLeft / 60);
+    const mins = minutesLeft % 60;
+    const timeLeft =
+      hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
+
+    // 📦 POPUP HTML
+    const popupHTML = `
+      <div style="width:210px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border-radius:12px;overflow:hidden;">
+        
+        <!-- 📸 Image + badge réduction -->
+        <div style="position:relative;width:100%;height:120px;overflow:hidden;">
+          <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;">
+          <div style="position:absolute;top:8px;right:8px;background:#dc2626;color:#fff;font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;">
+            -${discount}%
+          </div>
+        </div>
+
+        <!-- 🕒 Titre + Timer -->
+        <div style="padding:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <div style="font-size:14px;font-weight:600;color:#111;">${offer.title || "Offre locale"}</div>
+            <div style="display:flex;align-items:center;gap:3px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:600;padding:2px 5px;border-radius:6px;">
+              ⏰ ${timeLeft || "Bientôt expirée"}
+            </div>
+          </div>
+
+          <!-- 🔋 Barre de progression -->
+          <div style="width:100%;height:4px;background:#f3f4f6;border-radius:4px;margin-bottom:8px;">
+            <div style="width:${progressPercent}%;height:100%;background:${progressColor};border-radius:4px;transition:width 0.3s ease;"></div>
+          </div>
+
+          <!-- 💶 Prix -->
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+            <span style="color:#16a34a;font-weight:700;">${offer.price_after.toFixed(2)} €</span>
+            <span style="text-decoration:line-through;text-decoration-color:#ef4444;color:#444;font-size:12px;">${offer.price_before.toFixed(2)} €</span>
+          </div>
+
+          <!-- 🟢 Bouton -->
+          <button style="width:100%;background:#22c55e;color:#fff;border:none;border-radius:8px;padding:7px 0;font-size:13px;font-weight:600;cursor:pointer;">
+            Voir détails / Réserver
+          </button>
+        </div>
       </div>
-    </div>
+    `;
 
-    <!-- 🕒 Titre + Timer -->
-    <div style="padding:10px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <div style="font-size:14px;font-weight:600;color:#111;">${offer.title || "Offre locale"}</div>
-        <div style="display:flex;align-items:center;gap:3px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:600;padding:2px 5px;border-radius:6px;">
-  ⏰ ${timeLeft || "Bientôt expirée"}
-</div>
-       </div>
+    const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
 
-      <!-- 💶 Prix -->
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-        <span style="color:#16a34a;font-weight:700;">${offer.price_after.toFixed(2)} €</span>
-        <span style="text-decoration:line-through;text-decoration-color:#ef4444;color:#444;font-size:12px;">${offer.price_before.toFixed(2)} €</span>
-      </div>
+    if (!Number.isFinite(offer.offer_lng) || !Number.isFinite(offer.offer_lat)) return;
 
-      <!-- 🟢 Bouton -->
-      <button style="width:100%;background:#22c55e;color:#fff;border:none;border-radius:8px;padding:7px 0;font-size:13px;font-weight:600;cursor:pointer;">
-        Voir détails / Réserver
-      </button>
-    </div>
-  </div>
-`;
+    const marker = new mapboxgl.Marker(el)
+      .setLngLat([offer.offer_lng, offer.offer_lat])
+      .setPopup(popup)
+      .addTo(map);
 
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
-
-      if (!Number.isFinite(offer.offer_lng) || !Number.isFinite(offer.offer_lat)) return;
-
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([offer.offer_lng, offer.offer_lat])
-        .setPopup(popup)
-        .addTo(map);
-
-      (map as any)._markers.push(marker);
-    });
+    (map as any)._markers.push(marker);
+  });
+}, [offers]);
 
     // ✅ FIX A: fitBounds uniquement avec coordonnées valides en mode "all"
     if (viewMode === "all" && offers.length > 0) {
