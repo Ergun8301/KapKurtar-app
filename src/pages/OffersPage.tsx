@@ -466,41 +466,43 @@ useEffect(() => {
       const timeLeft = getTimeRemaining(offer.available_until);
 
       const popupHTML = `
-        <div style="width:190px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
-          ${offer.image_url
-            ? `<div style="width:100%;height:90px;border-radius:8px;overflow:hidden;margin-bottom:6px;">
-                 <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;" />
-               </div>`
-            : ""}
-          <div style="font-size:13px;font-weight:600;color:#111;line-height:1.3;">
-            ${offer.title || "Offre"}
-          </div>
-          <div style="font-size:12px;color:#555;line-height:1.3;margin-bottom:4px;">
-            ${offer.merchant_name || "Marchand local"}
-          </div>
-          <div style="font-size:12px;display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:4px;">
-            <span style="color:#16a34a;font-weight:600;">
-              ${offer.price_after.toFixed(2)} €
-            </span>
-            <span style="text-decoration:line-through;color:#999;font-size:11px;">
-              ${offer.price_before.toFixed(2)} €
-            </span>
-            <span style="background:#dc2626;color:#fff;font-size:10px;font-weight:600;padding:2px 5px;border-radius:6px;line-height:1;">
-              -${discount}%
-            </span>
-          </div>
-          <div style="font-size:11px;color:#444;margin-bottom:6px;">
-            ${timeLeft || ""}
-          </div>
-          <button style="width:100%;background:#22c55e;color:#fff;border:none;border-radius:8px;padding:6px 8px;font-size:12px;font-weight:600;cursor:pointer;">
-            Voir détails / Réserver
-          </button>
-          <div style="text-align:center;margin-top:6px;">
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}" target="_blank" style="color:#2563eb;font-size:11px;text-decoration:underline;">
-              🗺️ Itinéraire
-            </a>
-          </div>
-        </div>`;
+       const popupHTML = `
+  <div style="width:200px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border-radius:12px;overflow:hidden;">
+    ${offer.image_url
+      ? `<div style="width:100%;height:110px;overflow:hidden;position:relative;">
+           <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;">
+           <div style="position:absolute;bottom:6px;left:8px;background:#ef4444;color:#fff;font-size:11px;font-weight:600;padding:2px 6px;border-radius:6px;">
+             ⏰ ${timeLeft || "Bientôt expirée"}
+           </div>
+         </div>`
+      : ""
+    }
+
+    <div style="padding:8px 10px;">
+      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:2px;">${offer.title || "Offre"}</div>
+
+      <div style="display:flex;align-items:center;gap:6px;margin:6px 0;">
+        <span style="color:#16a34a;font-weight:600;">${offer.price_after.toFixed(2)} €</span>
+        <span style="text-decoration:line-through;color:#999;font-size:11px;">${offer.price_before.toFixed(2)} €</span>
+        <span style="background:#dc2626;color:#fff;font-size:10px;font-weight:600;padding:2px 5px;border-radius:6px;">-${discount}%</span>
+      </div>
+
+      <button style="width:100%;background:#22c55e;color:#fff;border:none;border-radius:8px;padding:6px 0;font-size:12px;font-weight:600;cursor:pointer;">
+        Voir détails / Réserver
+      </button>
+
+      <div style="margin-top:8px;text-align:center;">
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}"
+           target="_blank"
+           style="display:inline-flex;align-items:center;gap:4px;background:#f3f4f6;color:#111;padding:5px 8px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:500;">
+          <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="width:14px;height:14px;" />
+          Itinéraire
+        </a>
+      </div>
+    </div>
+  </div>
+`;
+
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
 
       if (!Number.isFinite(offer.offer_lng) || !Number.isFinite(offer.offer_lat)) return;
