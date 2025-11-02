@@ -68,6 +68,22 @@ const customMapboxCSS = `
   .mapbox-improve-map {
     display: none !important;
   }
+
+  /* ✅ Correction popup Mapbox caché derrière le slider */
+  .mapboxgl-popup {
+    z-index: 2000 !important; /* s'affiche toujours au-dessus */
+  }
+
+  .mapboxgl-popup-content {
+    border-radius: 14px !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+    padding: 0 !important; /* supprime le padding interne excessif */
+  }
+
+  .mapboxgl-popup-close-button {
+    top: 4px !important;
+    right: 6px !important;
+  }
 `;
 
 export default function OffersPage() {
