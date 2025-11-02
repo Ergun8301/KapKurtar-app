@@ -453,53 +453,11 @@ const handlePublish = async (formData: any) => {
       return;
     }
 
-    console.log('=== BEFORE UPDATE ===');
-    console.log('Old offer data:', {
-      id: editingOffer.id,
-      title: editingOffer.title,
-      description: editingOffer.description,
-      price_before: editingOffer.price_before,
-      price_after: editingOffer.price_after,
-      quantity: editingOffer.quantity,
-      discount_percent: editingOffer.discount_percent
-    });
+    console.log('=== UPDATING OFFER ===');
+    console.log('Offer ID:', editingOffer.id);
 
     setIsPublishing(true);
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('auth_id', user.id)
-        .maybeSingle();
-
-      if (profileError || !profileData) {
-        console.error('❌ Impossible de trouver le profil lié à cet utilisateur', profileError);
-        setToast({ message: 'Erreur : profil introuvable', type: 'error' });
-        setIsPublishing(false);
-        return;
-      }
-
-      console.log('✅ Profil trouvé, profile.id:', profileData.id);
-
-      const { data: merchantData, error: merchantError } = await supabase
-        .from('merchants')
-        .select('id')
-        .eq('profile_id', profileData.id)
-        .maybeSingle();
-
-      if (merchantError || !merchantData) {
-        console.error('❌ Impossible de trouver le marchand lié à ce profil', {
-          profile_id: profileData.id,
-          error: merchantError,
-          merchantData
-        });
-        setToast({ message: 'Erreur : marchand introuvable', type: 'error' });
-        setIsPublishing(false);
-        return;
-      }
-
-      console.log('✅ Marchand trouvé, merchant.id:', merchantData.id);
-
       let imageUrl = editingOffer.image_url;
       if (formData.image) {
         console.log('Uploading new image to Supabase storage...');
@@ -509,22 +467,30 @@ const handlePublish = async (formData: any) => {
         console.log('New image uploaded successfully:', imageUrl);
       }
 
-      console.log('🛠️ Updating offer via RPC update_offer_details...');
+      const updateData: any = {
+        title: formData.title,
+        description: formData.description,
+        image_url: imageUrl,
+        price_before: parseFloat(formData.price_before),
+        price_after: parseFloat(formData.price_after),
+        quantity: parseInt(formData.quantity),
+        available_from: formData.available_from,
+        available_until: formData.available_until,
+      };
 
-      const { error } = await supabase.rpc('update_offer_details', {
-        p_offer_id: editingOffer.id,
-        p_title: formData.title,
-        p_description: formData.description,
-        p_price_after: parseFloat(formData.price_after),
-        p_stock: parseInt(formData.quantity)
-      });
+      console.log('Updating offer with data:', updateData);
+
+      const { error } = await supabase
+        .from('offers')
+        .update(updateData)
+        .eq('id', editingOffer.id);
 
       if (error) {
-        console.error('❌ RPC update_offer_details error:', error);
+        console.error('❌ Error updating offer:', error);
         throw error;
       }
 
-      console.log('✅ RPC update_offer_details executed successfully.');
+      console.log('✅ Offer updated successfully');
       await loadOffers();
       closeEditModal();
       setToast({ message: '✅ Offer updated successfully', type: 'success' });

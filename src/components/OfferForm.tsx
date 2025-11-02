@@ -62,6 +62,11 @@ export const OfferForm: React.FC<OfferFormProps> = ({
 
   useEffect(() => {
     if (mode === 'edit' && initialData) {
+      const formatDateForInput = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toISOString().slice(0, 16);
+      };
+
       setFormData({
         title: initialData.title,
         description: initialData.description,
@@ -70,8 +75,8 @@ export const OfferForm: React.FC<OfferFormProps> = ({
         price_before: initialData.price_before.toString(),
         price_after: initialData.price_after.toString(),
         quantity: initialData.quantity.toString(),
-        available_from: initialData.available_from,
-        available_until: initialData.available_until,
+        available_from: formatDateForInput(initialData.available_from),
+        available_until: formatDateForInput(initialData.available_until),
         startNow: false,
         duration: '2h',
         customDuration: '',
