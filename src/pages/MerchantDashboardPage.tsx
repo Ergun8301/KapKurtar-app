@@ -4,7 +4,6 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useAddProduct } from '../contexts/AddProductContext';
 import { uploadImageToSupabase } from '../lib/uploadImage';
-import { GeolocationButton } from '../components/GeolocationButton';
 import { NotificationBell } from '../components/NotificationBell';
 import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
 import { type Notification } from '../api/notifications';
@@ -46,16 +45,15 @@ const MerchantDashboardPage = () => {
   const { notifications, unreadCount } = useRealtimeNotifications(user?.id || null);
 
 
- // Fetch merchant ID from user
+// Fetch merchant ID from user and auto-geolocate
 useEffect(() => {
-  const fetchMerchantId = async () => {
+  const fetchMerchantIdAndGeolocate = async () => {
     if (!user) {
       setMerchantId(null);
       return;
     }
 
     try {
-      // Trouver le profil lié à l'utilisateur connecté
       console.log('🔍 Recherche du profil pour auth_id:', user.id);
 
       const { data: profileData, error: profileError } = await supabase
@@ -70,7 +68,6 @@ useEffect(() => {
         return;
       }
 
-      // Trouver le marchand lié à ce profil
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
         .select('id')
@@ -81,6 +78,46 @@ useEffect(() => {
       if (merchantData) {
         console.log('✅ Marchand trouvé, ID:', merchantData.id);
         setMerchantId(merchantData.id);
+
+        // Auto-géolocalisation après avoir trouvé le merchantId
+        if (navigator.geolocation) {
+          console.log('📍 Tentative de géolocalisation automatique...');
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const { latitude, longitude } = position.coords;
+              console.log('✅ Position obtenue:', { latitude, longitude });
+
+              try {
+                const { error: updateError } = await supabase.rpc(
+                  'update_merchant_location',
+                  {
+                    p_merchant_id: merchantData.id,
+                    p_latitude: latitude,
+                    p_longitude: longitude,
+                  }
+                );
+
+                if (updateError) {
+                  console.error('❌ Erreur lors de la mise à jour de la position:', updateError);
+                } else {
+                  console.log('✅ Position du marchand mise à jour avec succès');
+                }
+              } catch (err) {
+                console.error('❌ Erreur RPC update_merchant_location:', err);
+              }
+            },
+            (error) => {
+              console.warn('⚠️ Impossible de récupérer la position:', error.message);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0,
+            }
+          );
+        } else {
+          console.warn('⚠️ La géolocalisation n\'est pas supportée par ce navigateur');
+        }
       } else {
         console.warn('⚠️ Aucun marchand trouvé pour ce profil');
       }
@@ -89,7 +126,7 @@ useEffect(() => {
     }
   };
 
-  fetchMerchantId();
+  fetchMerchantIdAndGeolocate();
 }, [user]);
 
 useEffect(() => {
@@ -524,16 +561,6 @@ const handlePublish = async (formData: any) => {
           </div>
           <div className="flex items-center gap-4">
             <NotificationBell />
-            {user && (
-              <GeolocationButton
-                userRole="merchant"
-                userId={user.id}
-                onSuccess={(coords) => {
-                  setToast({ message: 'Votre position a été mise à jour avec succès !', type: 'success' });
-                  loadOffers();
-                }}
-              />
-            )}
             <button
               onClick={openAddProductModal}
               className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium shadow-sm"
