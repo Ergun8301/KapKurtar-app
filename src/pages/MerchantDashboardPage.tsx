@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Upload, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useAddProduct } from '../contexts/AddProductContext';
@@ -8,6 +8,7 @@ import { GeolocationButton } from '../components/GeolocationButton';
 import { NotificationBell } from '../components/NotificationBell';
 import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
 import { type Notification } from '../api/notifications';
+import { OfferForm } from '../components/OfferForm';
 
 interface Offer {
   id: string;
@@ -44,20 +45,6 @@ const MerchantDashboardPage = () => {
   const [showNotifications, setShowNotifications] = useState(true);
   const { notifications, unreadCount } = useRealtimeNotifications(user?.id || null);
 
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    image: null as File | null,
-    imagePreview: '',
-    price_before: '',
-    price_after: '',
-    quantity: '',
-    available_from: '',
-    available_until: '',
-    startNow: true,
-    duration: '2h',
-    customDuration: ''
-  });
 
  // Fetch merchant ID from user
 useEffect(() => {
@@ -213,163 +200,16 @@ const calculateTimeLeft = (endDate: string) => {
   return minutes + 'm left';
 };
 
-const handleInputChange = (
-  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-) => {
-  const { name, value } = e.target;
-  setFormData({ ...formData, [name]: value });
 
-  if (name === 'duration' || name === 'customDuration') {
-    updateEndDate(value, name === 'duration' ? 'duration' : 'custom');
-  }
-};
 
-const calculateDiscount = (priceBefore: string, priceAfter: string): number => {
-  const before = parseFloat(priceBefore);
-  const after = parseFloat(priceAfter);
-  if (!before || !after || before <= 0) return 0;
-  return Math.round(((before - after) / before) * 100);
-};
 
-const updateEndDate = (durationValue: string, type: 'duration' | 'custom') => {
-  const startDate = formData.startNow
-    ? new Date()
-    : new Date(formData.available_from);
-  if (isNaN(startDate.getTime())) return;
 
-  let minutes = 0;
-  if (type === 'duration') {
-    switch (durationValue) {
-      case '30min':
-        minutes = 30;
-        break;
-      case '1h':
-        minutes = 60;
-        break;
-      case '2h':
-        minutes = 120;
-        break;
-      case '4h':
-        minutes = 240;
-        break;
-      case 'allday':
-        const endOfDay = new Date(startDate);
-        endOfDay.setHours(23, 59, 0, 0);
-        setFormData((prev) => ({
-          ...prev,
-          available_until: endOfDay.toISOString().slice(0, 16),
-        }));
-        return;
-      case 'custom':
-        minutes = parseInt(formData.customDuration) || 0;
-        break;
-      default:
-        return;
-    }
-  } else {
-    minutes = parseInt(durationValue) || 0;
-  }
 
-  const endDate = new Date(startDate.getTime() + minutes * 60000);
-  setFormData((prev) => ({
-    ...prev,
-    available_until: endDate.toISOString().slice(0, 16),
-  }));
-};
 
-const handleStartNowChange = (checked: boolean) => {
-  setFormData((prev) => {
-    const newData = { ...prev, startNow: checked };
-    if (checked) {
-      const now = new Date();
-      newData.available_from = now.toISOString().slice(0, 16);
-    }
-    return newData;
-  });
-  if (checked && formData.duration) {
-    setTimeout(() => updateEndDate(formData.duration, 'duration'), 0);
-  }
-};
-
-useEffect(() => {
-  const now = new Date();
-  const twoHoursLater = new Date(now.getTime() + 120 * 60000);
-  setFormData((prev) => ({
-    ...prev,
-    available_from: now.toISOString().slice(0, 16),
-    available_until: twoHoursLater.toISOString().slice(0, 16),
-  }));
-}, []);
-
-const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (file) {
-    const MAX_SIZE = 5 * 1024 * 1024;
-    const validTypes = [
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'image/webp',
-      'image/heic',
-      'image/heif',
-      'image/avif',
-    ];
-
-    if (file.size > MAX_SIZE) {
-      setToast({
-        message:
-          "Image trop volumineuse (max. 5 Mo). Réduis la taille ou compresse-la avant d'envoyer.",
-        type: 'error',
-      });
-      return;
-    }
-
-    if (!validTypes.includes(file.type.toLowerCase())) {
-      setToast({
-        message:
-          'Format non pris en charge. Formats acceptés : JPG, PNG, WEBP, HEIC, HEIF, AVIF.',
-        type: 'error',
-      });
-      return;
-    }
-
-    setFormData({ ...formData, image: file });
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData((prev) => ({
-        ...prev,
-        imagePreview: reader.result as string,
-      }));
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-const handlePublish = async () => {
+const handlePublish = async (formData: any) => {
   if (!user) {
     console.error('User not authenticated');
     setToast({ message: 'Please log in to create an offer', type: 'error' });
-    return;
-  }
-
-  // Validate required fields
-  if (!formData.title.trim()) {
-    setToast({ message: 'Title is required', type: 'error' });
-    return;
-  }
-
-  if (!formData.price_before || parseFloat(formData.price_before) <= 0) {
-    setToast({ message: 'Valid price before is required', type: 'error' });
-    return;
-  }
-
-  if (!formData.price_after || parseFloat(formData.price_after) <= 0) {
-    setToast({ message: 'Valid price after is required', type: 'error' });
-    return;
-  }
-
-  if (!formData.quantity || parseInt(formData.quantity) <= 0) {
-    setToast({ message: 'Valid quantity is required', type: 'error' });
     return;
   }
 
@@ -391,8 +231,6 @@ const handlePublish = async () => {
 
   setIsPublishing(true);
   try {
-    // Trouver le profil lié à l'utilisateur connecté
-    console.log('🔍 Recherche du profil pour auth_id:', user.id);
     const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -408,8 +246,6 @@ const handlePublish = async () => {
 
       console.log('✅ Profil trouvé, profile.id:', profileData.id);
 
-      // Trouver le marchand correspondant à ce profil
-      console.log('🔍 Recherche du marchand pour profile_id:', profileData.id);
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
         .select('id')
@@ -433,13 +269,10 @@ const handlePublish = async () => {
       if (formData.image) {
         console.log('Uploading image to Supabase storage...');
         const randomId = crypto.randomUUID();
-const path = `${user.id}/${randomId}.jpg`;
-imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
+        const path = `${user.id}/${randomId}.jpg`;
+        imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
         console.log('Image uploaded successfully:', imageUrl);
       }
-
-      const discountPercent = calculateDiscount(formData.price_before, formData.price_after);
-      console.log('Calculated discount:', discountPercent + '%');
 
       const offerData = {
         merchant_id: merchantData.id,
@@ -452,7 +285,6 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
         available_from: formData.available_from,
         available_until: formData.available_until,
         is_active: true
-        // NOTE: discount_percent is a GENERATED column in DB - do NOT send it
       };
 
       console.log('Inserting offer into Supabase:', offerData);
@@ -469,10 +301,7 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
       }
 
       console.log('✅ Offer created successfully:', data);
-      console.log('Offer ID:', data.id);
-      console.log('Created at:', data.created_at);
 
-      // Verify audit log entry was created
       const { data: auditLog, error: auditError } = await supabase
         .from('audit_log')
         .select('*')
@@ -483,27 +312,12 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
 
       if (auditLog) {
         console.log('✅ Audit log entry created:', auditLog);
-        console.log('Audit log new_data:', auditLog.new_data);
       } else if (auditError) {
         console.warn('Could not verify audit log:', auditError);
       }
 
       setOffers([data, ...offers]);
       closeAddProductModal();
-      setFormData({
-        title: '',
-        description: '',
-        image: null,
-        imagePreview: '',
-        price_before: '',
-        price_after: '',
-        quantity: '',
-        available_from: '',
-        available_until: '',
-        startNow: true,
-        duration: '2h',
-        customDuration: ''
-      });
       setToast({ message: '✅ Offer added successfully', type: 'success' });
     } catch (error: any) {
       console.error('❌ Error publishing offer:', error);
@@ -574,67 +388,18 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
   const openEditModal = (offer: Offer) => {
     console.log('Opening edit modal for offer:', offer);
     setEditingOffer(offer);
-    setFormData({
-      title: offer.title,
-      description: offer.description,
-      image: null,
-      imagePreview: offer.image_url || '',
-      price_before: offer.price_before.toString(),
-      price_after: offer.price_after.toString(),
-      quantity: offer.quantity.toString(),
-      available_from: offer.available_from,
-      available_until: offer.available_until,
-      startNow: false,
-      duration: '2h',
-      customDuration: ''
-    });
     setShowEditModal(true);
   };
 
   const closeEditModal = () => {
     setShowEditModal(false);
     setEditingOffer(null);
-    setFormData({
-      title: '',
-      description: '',
-      image: null,
-      imagePreview: '',
-      price_before: '',
-      price_after: '',
-      quantity: '',
-      available_from: '',
-      available_until: '',
-      startNow: true,
-      duration: '2h',
-      customDuration: ''
-    });
   };
 
-  const handleUpdateOffer = async () => {
+  const handleUpdateOffer = async (formData: any) => {
     if (!user || !editingOffer) {
       console.error('User not authenticated or no offer selected');
       setToast({ message: 'Cannot update offer', type: 'error' });
-      return;
-    }
-
-    // Validate required fields
-    if (!formData.title.trim()) {
-      setToast({ message: 'Title is required', type: 'error' });
-      return;
-    }
-
-    if (!formData.price_before || parseFloat(formData.price_before) <= 0) {
-      setToast({ message: 'Valid price before is required', type: 'error' });
-      return;
-    }
-
-    if (!formData.price_after || parseFloat(formData.price_after) <= 0) {
-      setToast({ message: 'Valid price after is required', type: 'error' });
-      return;
-    }
-
-    if (!formData.quantity || parseInt(formData.quantity) < 0) {
-      setToast({ message: 'Valid quantity is required', type: 'error' });
       return;
     }
 
@@ -656,8 +421,6 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
 
     setIsPublishing(true);
     try {
-      // Trouver le profil lié à l'utilisateur connecté
-      console.log('🔍 Recherche du profil pour auth_id:', user.id);
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -673,8 +436,6 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
 
       console.log('✅ Profil trouvé, profile.id:', profileData.id);
 
-      // Trouver le marchand correspondant à ce profil
-      console.log('🔍 Recherche du marchand pour profile_id:', profileData.id);
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
         .select('id')
@@ -698,69 +459,28 @@ imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
       if (formData.image) {
         console.log('Uploading new image to Supabase storage...');
         const randomId = crypto.randomUUID();
-const path = `${user.id}/${randomId}.jpg`;
-imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
+        const path = `${user.id}/${randomId}.jpg`;
+        imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
         console.log('New image uploaded successfully:', imageUrl);
       }
 
-      const discountPercent = calculateDiscount(formData.price_before, formData.price_after);
-      console.log('Calculated new discount:', discountPercent + '%');
-
-      const updatedData = {
-        title: formData.title,
-        description: formData.description,
-        image_url: imageUrl,
-        price_before: parseFloat(formData.price_before),
-        price_after: parseFloat(formData.price_after),
-        quantity: parseInt(formData.quantity),
-        available_from: formData.available_from,
-        available_until: formData.available_until
-        // NOTE: discount_percent is a GENERATED column in DB - do NOT send it
-      };
-
-      console.log('=== AFTER UPDATE (new data) ===');
-      console.log('Updated offer data:', updatedData);
-
       console.log('🛠️ Updating offer via RPC update_offer_details...');
 
-const { error } = await supabase.rpc('update_offer_details', {
-  p_offer_id: editingOffer.id,
-  p_title: formData.title,
-  p_description: formData.description,
-  p_price_after: parseFloat(formData.price_after),
-  p_stock: parseInt(formData.quantity)
-});
+      const { error } = await supabase.rpc('update_offer_details', {
+        p_offer_id: editingOffer.id,
+        p_title: formData.title,
+        p_description: formData.description,
+        p_price_after: parseFloat(formData.price_after),
+        p_stock: parseInt(formData.quantity)
+      });
 
-if (error) {
-  console.error('❌ RPC update_offer_details error:', error);
-  throw error;
-}
-
-console.log('✅ RPC update_offer_details executed successfully.');
-await loadOffers();
-closeEditModal();
-setToast({ message: '✅ Offer updated successfully', type: 'success' });
-
-      // Verify audit log entry was created
-      const { data: auditLog, error: auditError } = await supabase
-        .from('audit_log')
-        .select('*')
-        .eq('table_name', 'offers')
-        .eq('record_id', data.id)
-        .eq('action', 'UPDATE')
-        .order('changed_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (auditLog) {
-        console.log('✅ Audit log entry created:', auditLog);
-        console.log('Audit log old_data:', auditLog.old_data);
-        console.log('Audit log new_data:', auditLog.new_data);
-      } else if (auditError) {
-        console.warn('Could not verify audit log:', auditError);
+      if (error) {
+        console.error('❌ RPC update_offer_details error:', error);
+        throw error;
       }
 
-      setOffers(offers.map(o => o.id === editingOffer.id ? data : o));
+      console.log('✅ RPC update_offer_details executed successfully.');
+      await loadOffers();
       closeEditModal();
       setToast({ message: '✅ Offer updated successfully', type: 'success' });
     } catch (error: any) {
@@ -1030,347 +750,24 @@ setToast({ message: '✅ Offer updated successfully', type: 'success' });
         )}
       </div>
 
+
       {showAddProductModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Add New Product</h2>
-              <button onClick={closeAddProductModal} className="text-gray-400 hover:text-gray-600">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Fresh Croissants Box"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Describe your product..."
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">📸 Photo du produit</label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                  {formData.imagePreview ? (
-                    <div className="relative">
-                      <img src={formData.imagePreview} alt="Preview" className="max-h-48 mx-auto rounded" />
-                      <button
-                        onClick={() => setFormData({ ...formData, image: null, imagePreview: '' })}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="cursor-pointer">
-                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">Prendre une photo ou choisir une image</p>
-                      <input
-  type="file"
-  accept="image/*"
-  capture
-  onChange={handleImageUpload}
-  className="hidden"
-/>
-                    </label>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Original Price (€)</label>
-                  <input
-                    type="number"
-                    name="price_before"
-                    value={formData.price_before}
-                    onChange={handleInputChange}
-                    placeholder="12.00"
-                    step="0.01"
-                    min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Sale Price (€)</label>
-                  <input
-                    type="number"
-                    name="price_after"
-                    value={formData.price_after}
-                    onChange={handleInputChange}
-                    placeholder="5.00"
-                    step="0.01"
-                    min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              {formData.price_before && formData.price_after && parseFloat(formData.price_before) > 0 && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                  <span className="text-lg font-bold text-green-600">
-                    -{calculateDiscount(formData.price_before, formData.price_after)}% discount
-                  </span>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Quantity Available</label>
-                <input
-                  type="number"
-                  name="quantity"
-                  value={formData.quantity}
-                  onChange={handleInputChange}
-                  placeholder="10"
-                  min="0"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="border-t pt-4">
-                <div className="flex items-center mb-3">
-                  <input
-                    type="checkbox"
-                    id="startNow"
-                    checked={formData.startNow}
-                    onChange={(e) => handleStartNowChange(e.target.checked)}
-                    className="w-4 h-4 text-green-500 rounded focus:ring-green-500"
-                  />
-                  <label htmlFor="startNow" className="ml-2 text-sm font-medium text-gray-700">
-                    Start: Now
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Start Date and Time</label>
-                    <input
-                      type="datetime-local"
-                      name="available_from"
-                      value={formData.available_from}
-                      onChange={handleInputChange}
-                      disabled={formData.startNow}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">End Date and Time</label>
-                    <input
-                      type="datetime-local"
-                      name="available_until"
-                      value={formData.available_until}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
-                  <select
-                    name="duration"
-                    value={formData.duration}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  >
-                    <option value="30min">30 minutes</option>
-                    <option value="1h">1 hour</option>
-                    <option value="2h">2 hours</option>
-                    <option value="4h">4 hours</option>
-                    <option value="allday">All day (today)</option>
-                    <option value="custom">Custom</option>
-                  </select>
-                </div>
-
-                {formData.duration === 'custom' && (
-                  <div className="mt-3">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Custom Duration (minutes)</label>
-                    <input
-                      type="number"
-                      name="customDuration"
-                      value={formData.customDuration}
-                      onChange={handleInputChange}
-                      placeholder="120"
-                      min="1"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={handlePublish}
-                disabled={isPublishing || !formData.title || !formData.description || !formData.price_before || !formData.price_after || !formData.available_from || !formData.available_until}
-                className="w-full py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isPublishing ? 'Publishing...' : 'Publish Product'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <OfferForm
+          mode="create"
+          onSubmit={handlePublish}
+          onCancel={closeAddProductModal}
+          isSubmitting={isPublishing}
+        />
       )}
 
       {showEditModal && editingOffer && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Edit Product</h2>
-              <button onClick={closeEditModal} className="text-gray-400 hover:text-gray-600">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Fresh Croissants Box"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={3}
-                  placeholder="Describe your product..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">📸 Photo du produit</label>
-                <div className="flex items-center space-x-4">
-                  <label className="flex-1 flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 transition-colors">
-                    <Upload className="w-5 h-5 text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-600">
-                      {formData.image ? formData.image.name : 'Prendre une photo ou choisir une image (optionnel)'}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-                {formData.imagePreview && (
-                  <div className="mt-3">
-                    <img src={formData.imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Original Price</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      name="price_before"
-                      value={formData.price_before}
-                      onChange={handleInputChange}
-                      step="0.01"
-                      min="0"
-                      placeholder="20.00"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                    <span className="absolute right-3 top-2.5 text-gray-500">€</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Discounted Price</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      name="price_after"
-                      value={formData.price_after}
-                      onChange={handleInputChange}
-                      step="0.01"
-                      min="0"
-                      placeholder="10.00"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                    <span className="absolute right-3 top-2.5 text-gray-500">€</span>
-                  </div>
-                  {formData.price_before && formData.price_after && (
-                    <p className="text-sm text-green-600 mt-1">
-                      {calculateDiscount(formData.price_before, formData.price_after)}% discount
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Quantity Available</label>
-                <input
-                  type="number"
-                  name="quantity"
-                  value={formData.quantity}
-                  onChange={handleInputChange}
-                  min="0"
-                  placeholder="10"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Available From</label>
-                <input
-                  type="datetime-local"
-                  name="available_from"
-                  value={formData.available_from}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Available Until</label>
-                <input
-                  type="datetime-local"
-                  name="available_until"
-                  value={formData.available_until}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <button
-                onClick={handleUpdateOffer}
-                disabled={isPublishing || !formData.title || !formData.description || !formData.price_before || !formData.price_after || !formData.available_from || !formData.available_until}
-                className="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isPublishing ? 'Updating...' : 'Update Product'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <OfferForm
+          mode="edit"
+          initialData={editingOffer}
+          onSubmit={handleUpdateOffer}
+          onCancel={closeEditModal}
+          isSubmitting={isPublishing}
+        />
       )}
     </div>
   );
