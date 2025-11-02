@@ -442,16 +442,25 @@ useEffect(() => {
   fetchOffers();
 }, [center, clientId, viewMode, radiusKm]);
 
-
-  // Marqueurs d'offres
+  // Marqueurs d'offres (markers + popups)
 useEffect(() => {
   const map = mapRef.current;
   if (!map) return;
 
+  // on nettoie les anciens marqueurs
   (map as any)._markers?.forEach((m: Marker) => m.remove());
   (map as any)._markers = [];
 
   offers.forEach((offer) => {
+    // sécurités coordonnées
+    if (
+      !Number.isFinite(offer.offer_lng) ||
+      !Number.isFinite(offer.offer_lat)
+    ) {
+      return;
+    }
+
+    // élément HTML du marqueur vert
     const el = document.createElement("div");
     el.className = "offer-marker";
     el.style.background = "#22c55e";
@@ -462,34 +471,37 @@ useEffect(() => {
     el.style.cursor = "pointer";
     el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
 
-    // 🧮 Calculs dynamiques
+    // 🧮 Calculs dynamiques pour le popup
     const discount = Math.round(
       ((offer.price_before - offer.price_after) / offer.price_before) * 100
     );
 
     const now = new Date();
     const until = new Date(offer.available_until);
-    const from = new Date(offer.available_from || now);
+    const from = new Date(
+      // si t'as pas encore ajouté available_from dans le type Offer,
+      // côté TS ça va gueuler => on force l'existence avec fallback now
+      (offer as any).available_from || now
+    );
+
     const total = until.getTime() - from.getTime();
     const remaining = until.getTime() - now.getTime();
 
-    // pourcentage de progression du temps restant
-    const progressPercent = Math.max(
-      0,
-      Math.min(100, (remaining / total) * 100)
-    );
+    // pourcentage de temps restant
+    const progressPercent = total > 0
+      ? Math.max(0, Math.min(100, (remaining / total) * 100))
+      : 0;
 
-    // couleur selon l'urgence
+    // couleur de la barre (vert -> jaune -> rouge)
     let progressColor = "#16a34a"; // vert
     if (progressPercent < 60) progressColor = "#facc15"; // jaune
     if (progressPercent < 30) progressColor = "#ef4444"; // rouge
 
-    // format temps restant
+    // texte "1h 21min"
     const minutesLeft = Math.max(0, Math.floor(remaining / 60000));
     const hours = Math.floor(minutesLeft / 60);
     const mins = minutesLeft % 60;
-    const timeLeft =
-      hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
+    const timeLeft = hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
 
     // 📦 POPUP HTML
     const popupHTML = `
@@ -506,7 +518,9 @@ useEffect(() => {
         <!-- 🕒 Titre + Timer -->
         <div style="padding:10px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-            <div style="font-size:14px;font-weight:600;color:#111;">${offer.title || "Offre locale"}</div>
+            <div style="font-size:14px;font-weight:600;color:#111;">
+              ${offer.title || "Offre locale"}
+            </div>
             <div style="display:flex;align-items:center;gap:3px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:600;padding:2px 5px;border-radius:6px;">
               ⏰ ${timeLeft || "Bientôt expirée"}
             </div>
@@ -514,27 +528,52 @@ useEffect(() => {
 
           <!-- 🔋 Barre de progression -->
           <div style="width:100%;height:4px;background:#f3f4f6;border-radius:4px;margin-bottom:8px;">
-            <div style="width:${progressPercent}%;height:100%;background:${progressColor};border-radius:4px;transition:width 0.3s ease;"></div>
+            <div style="
+              width:${progressPercent}%;
+              height:100%;
+              background:${progressColor};
+              border-radius:4px;
+              transition:width 0.3s ease;
+            "></div>
           </div>
 
           <!-- 💶 Prix -->
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-            <span style="color:#16a34a;font-weight:700;">${offer.price_after.toFixed(2)} €</span>
-            <span style="text-decoration:line-through;text-decoration-color:#ef4444;color:#444;font-size:12px;">${offer.price_before.toFixed(2)} €</span>
+            <span style="color:#16a34a;font-weight:700;">
+              ${offer.price_after.toFixed(2)} €
+            </span>
+            <span style="
+              text-decoration:line-through;
+              text-decoration-color:#ef4444;
+              color:#444;
+              font-size:12px;
+            ">
+              ${offer.price_before.toFixed(2)} €
+            </span>
           </div>
 
           <!-- 🟢 Bouton -->
-          <button style="width:100%;background:#22c55e;color:#fff;border:none;border-radius:8px;padding:7px 0;font-size:13px;font-weight:600;cursor:pointer;">
+          <button style="
+            width:100%;
+            background:#22c55e;
+            color:#fff;
+            border:none;
+            border-radius:8px;
+            padding:7px 0;
+            font-size:13px;
+            font-weight:600;
+            cursor:pointer;
+          ">
             Voir détails / Réserver
           </button>
         </div>
       </div>
     `;
 
+    // création du popup mapbox
     const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
 
-    if (!Number.isFinite(offer.offer_lng) || !Number.isFinite(offer.offer_lat)) return;
-
+    // création du marker
     const marker = new mapboxgl.Marker(el)
       .setLngLat([offer.offer_lng, offer.offer_lat])
       .setPopup(popup)
@@ -542,24 +581,27 @@ useEffect(() => {
 
     (map as any)._markers.push(marker);
   });
-}, [offers]);
 
-    // ✅ FIX A: fitBounds uniquement avec coordonnées valides en mode "all"
-    if (viewMode === "all" && offers.length > 0) {
-      const valid = offers.filter(
-        (o) => Number.isFinite(o.offer_lng) && Number.isFinite(o.offer_lat)
-      );
-      if (valid.length > 0) {
-        const bounds = new mapboxgl.LngLatBounds();
-        valid.forEach((o) => bounds.extend([o.offer_lng, o.offer_lat]));
-        map.fitBounds(bounds, { padding: 80, duration: 800 });
-      }
+}, [offers]); // <-- FIN du premier useEffect
+
+  // Ajuste la vue carte quand on est en mode "all"
+useEffect(() => {
+  const map = mapRef.current;
+  if (!map) return;
+
+  if (viewMode === "all" && offers.length > 0) {
+    const valid = offers.filter(
+      (o) => Number.isFinite(o.offer_lng) && Number.isFinite(o.offer_lat)
+    );
+
+    if (valid.length > 0) {
+      const bounds = new mapboxgl.LngLatBounds();
+      valid.forEach((o) => bounds.extend([o.offer_lng, o.offer_lat]));
+      map.fitBounds(bounds, { padding: 80, duration: 800 });
     }
-  }, [offers, viewMode]);
+  }
+}, [offers, viewMode]);
 
-}); //
-
-  // Gestion du changement de mode de vue
   const handleViewModeChange = (mode: "nearby" | "all") => {
     setViewMode(mode);
     
