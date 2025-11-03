@@ -442,7 +442,61 @@ useEffect(() => {
   fetchOffers();
 }, [center, clientId, viewMode, radiusKm]);
 
-  // Marqueurs d'offres (markers + popups)
+import React, { useEffect, useRef, useState } from "react";
+import mapboxgl, { Marker } from "mapbox-gl";
+import { supabase } from "../lib/supabaseClient";
+
+type Offer = {
+  offer_id: string;
+  title: string;
+  image_url: string;
+  price_before: number;
+  price_after: number;
+  offer_lat: number;
+  offer_lng: number;
+  available_until: string;
+  available_from?: string;
+};
+
+const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
+const DEFAULT_LOCATION: [number, number] = [2.35, 48.85]; // Paris par défaut
+
+export default function OffersPage() {
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
+
+  // Initialisation de la carte
+  useEffect(() => {
+    mapboxgl.accessToken = "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNsa2p3dHV4ZzA3aGkzbnF6dW90YjJicTgifQ.7V8A7Lh-lMZ6f3RrQgbSQA";
+    const map = new mapboxgl.Map({
+      container: "map",
+      style: MAP_STYLE,
+      center: DEFAULT_LOCATION,
+      zoom: 11,
+    });
+    mapRef.current = map;
+    return () => map.remove();
+  }, []);
+
+  // Exemple d’offres statiques (à remplacer par ton Supabase)
+  useEffect(() => {
+    setOffers([
+      {
+        offer_id: "1",
+        title: "Pizza",
+        image_url: "https://images.unsplash.com/photo-1601924582971-d42bb6f88c7d",
+        price_before: 12,
+        price_after: 7,
+        offer_lat: 48.86,
+        offer_lng: 2.33,
+        available_until: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
+      },
+    ]);
+  }, []);
+
+  // 🗺️ Marqueurs d'offres (markers + popups)
 useEffect(() => {
   const map = mapRef.current;
   if (!map) return;
@@ -451,8 +505,11 @@ useEffect(() => {
   (map as any)._markers?.forEach((m: Marker) => m.remove());
   (map as any)._markers = [];
 
+  // détection du mobile
+  const isMobile = window.innerWidth < 768;
+
   offers.forEach((offer) => {
-    // sécurités coordonnées
+    // sécurité coordonnées
     if (
       !Number.isFinite(offer.offer_lng) ||
       !Number.isFinite(offer.offer_lat)
@@ -460,7 +517,7 @@ useEffect(() => {
       return;
     }
 
-    // élément HTML du marqueur vert
+    // 🎯 Élément HTML du marqueur
     const el = document.createElement("div");
     el.className = "offer-marker";
     el.style.background = "#22c55e";
@@ -471,53 +528,39 @@ useEffect(() => {
     el.style.cursor = "pointer";
     el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
 
-    // 🧮 Calculs dynamiques pour le popup
+    // 🧮 Calculs dynamiques
     const discount = Math.round(
       ((offer.price_before - offer.price_after) / offer.price_before) * 100
     );
 
     const now = new Date();
     const until = new Date(offer.available_until);
-    const from = new Date(
-      // si t'as pas encore ajouté available_from dans le type Offer,
-      // côté TS ça va gueuler => on force l'existence avec fallback now
-      (offer as any).available_from || now
-    );
+    const from = new Date((offer as any).available_from || now);
 
     const total = until.getTime() - from.getTime();
     const remaining = until.getTime() - now.getTime();
 
-    // pourcentage de temps restant
-    const progressPercent = total > 0
-      ? Math.max(0, Math.min(100, (remaining / total) * 100))
-      : 0;
-
-    // couleur de la barre (vert -> jaune -> rouge)
-    let progressColor = "#16a34a"; // vert
-    if (progressPercent < 60) progressColor = "#facc15"; // jaune
-    if (progressPercent < 30) progressColor = "#ef4444"; // rouge
-
-    // texte "1h 21min"
+    // temps restant
     const minutesLeft = Math.max(0, Math.floor(remaining / 60000));
     const hours = Math.floor(minutesLeft / 60);
     const mins = minutesLeft % 60;
     const timeLeft = hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
 
-    // 📦 POPUP HTML
+    // 💬 POPUP HTML (seulement pour desktop)
     const popupHTML = `
       <div style="width:210px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border-radius:12px;overflow:hidden;">
-        
+
         <!-- 📸 Image + badge réduction -->
         <div style="position:relative;width:100%;height:120px;overflow:hidden;">
           <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;">
-          <div style="position:absolute;top:8px;right:8px;background:#dc2626;color:#fff;font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;">
+          <div style="position:absolute;top:8px;right:8px;background:#f9fafb;color:#ea580c;font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;border:1px solid #e5e7eb;">
             -${discount}%
           </div>
         </div>
 
         <!-- 🕒 Titre + Timer -->
         <div style="padding:10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <div style="font-size:14px;font-weight:600;color:#111;">
               ${offer.title || "Offre locale"}
             </div>
@@ -526,29 +569,18 @@ useEffect(() => {
             </div>
           </div>
 
-          <!-- 🔋 Barre de progression -->
-          <div style="width:100%;height:4px;background:#f3f4f6;border-radius:4px;margin-bottom:8px;">
-            <div style="
-              width:${progressPercent}%;
-              height:100%;
-              background:${progressColor};
-              border-radius:4px;
-              transition:width 0.3s ease;
-            "></div>
-          </div>
-
           <!-- 💶 Prix -->
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-            <span style="color:#16a34a;font-weight:700;">
-              ${offer.price_after.toFixed(2)} €
-            </span>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">
             <span style="
               text-decoration:line-through;
               text-decoration-color:#ef4444;
-              color:#444;
+              color:#777;
               font-size:12px;
             ">
               ${offer.price_before.toFixed(2)} €
+            </span>
+            <span style="color:#16a34a;font-weight:700;font-size:15px;">
+              ${offer.price_after.toFixed(2)} €
             </span>
           </div>
 
@@ -570,21 +602,33 @@ useEffect(() => {
       </div>
     `;
 
-    // création du popup mapbox
-    const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
+    // ✅ Création du marker
+    const marker = new mapboxgl.Marker(el).setLngLat([
+      offer.offer_lng,
+      offer.offer_lat,
+    ]);
 
-    // création du marker
-    const marker = new mapboxgl.Marker(el)
-      .setLngLat([offer.offer_lng, offer.offer_lat])
-      .setPopup(popup)
-      .addTo(map);
+    if (!isMobile) {
+      // 💻 Desktop -> popup complet
+      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
+      marker.setPopup(popup);
+    } else {
+      // 📱 Mobile -> affiche la liste d'offres proches
+      el.addEventListener("click", () => {
+        console.log("📱 Offre cliquée :", offer.title);
+        // ✅ Change en mode "à proximité" et défile vers la liste
+        setViewMode("nearby");
+        const listSection = document.querySelector(".offers-list-section");
+        if (listSection) listSection.scrollIntoView({ behavior: "smooth" });
+      });
+    }
 
+    marker.addTo(map);
     (map as any)._markers.push(marker);
   });
+}, [offers]);
 
-}, [offers]); // <-- FIN du premier useEffect
-
-  // Ajuste la vue carte quand on est en mode "all"
+// 🎯 Ajuste la vue carte quand on est en mode "all"
 useEffect(() => {
   const map = mapRef.current;
   if (!map) return;
@@ -602,22 +646,27 @@ useEffect(() => {
   }
 }, [offers, viewMode]);
 
-  const handleViewModeChange = (mode: "nearby" | "all") => {
-    setViewMode(mode);
-    
-    if (mode === "nearby" && mapRef.current && Number.isFinite(userLocation[0]) && Number.isFinite(userLocation[1])) {
-      // Retour à la position de l'utilisateur avec le cercle
-      mapRef.current.flyTo({
-        center: userLocation,
-        zoom: 12,
-        essential: true,
-      });
-    }
+// 🧭 Gestion du changement de mode de vue
+const handleViewModeChange = (mode: "nearby" | "all") => {
+  setViewMode(mode);
 
-    if (mode === "all") {
-      setCenter(DEFAULT_LOCATION); // ✅ FIX B: évite (NaN, NaN) au switch
-    }
-  };
+  if (
+    mode === "nearby" &&
+    mapRef.current &&
+    Number.isFinite(userLocation[0]) &&
+    Number.isFinite(userLocation[1])
+  ) {
+    mapRef.current.flyTo({
+      center: userLocation,
+      zoom: 12,
+      essential: true,
+    });
+  }
+
+  if (mode === "all") {
+    setCenter(DEFAULT_LOCATION); // ✅ évite (NaN, NaN)
+  }
+};
 
   // Gestion du changement de rayon
   const handleRadiusChange = (val: number) => {
