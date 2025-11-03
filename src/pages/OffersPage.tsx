@@ -5,9 +5,11 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
+import { OfferDetailsModal } from "../components/OfferDetailsModal";
 
 type Offer = {
   offer_id: string;
+  merchant_id?: string;
   title: string;
   merchant_name: string;
   price_before: number;
@@ -17,6 +19,12 @@ type Offer = {
   offer_lng: number;
   image_url: string;
   available_until?: string;
+  available_from?: string;
+  description?: string;
+  quantity?: number;
+  merchant_street?: string;
+  merchant_city?: string;
+  merchant_postal_code?: string;
 };
 
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
@@ -101,6 +109,7 @@ export default function OffersPage() {
   const [isGeolocating, setIsGeolocating] = useState(false);
   const [hasGeolocated, setHasGeolocated] = useState(false);
   const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
 
   const getDiscountPercent = (before: number, after: number) => {
     if (!before || before === 0) return 0;
@@ -579,6 +588,16 @@ useEffect(() => {
       .setPopup(popup)
       .addTo(map);
 
+    // ajout du listener sur le bouton dans le popup
+    popup.on('open', () => {
+      const button = document.querySelector('.mapboxgl-popup-content button');
+      if (button) {
+        button.addEventListener('click', () => {
+          setSelectedOffer(offer);
+        });
+      }
+    });
+
     (map as any)._markers.push(marker);
   });
 
@@ -699,6 +718,7 @@ useEffect(() => {
               <div
                 key={o.offer_id}
                 className="flex bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
+                onClick={() => setSelectedOffer(o)}
               >
                 {o.image_url && (
                   <img
@@ -744,6 +764,11 @@ useEffect(() => {
           </div>
         )}
       </div>
+
+      <OfferDetailsModal
+        offer={selectedOffer}
+        onClose={() => setSelectedOffer(null)}
+      />
     </div>
   );
 }

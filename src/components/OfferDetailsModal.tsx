@@ -1,53 +1,96 @@
-import React from 'react';
-import { X, MapPin, Navigation, Clock, Tag } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, MapPin, Navigation, Clock, Tag, Star } from 'lucide-react';
 import { getPublicImageUrl } from '../lib/supabasePublic';
+import { supabase } from '../lib/supabaseClient';
 
 interface OfferDetailsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onReserve: () => void;
   offer: {
-    id: string;
+    offer_id: string;
+    merchant_id?: string;
+    merchant_name: string;
     title: string;
     description?: string;
-    image_url?: string;
-    price_before?: number;
+    image_url: string;
+    price_before: number;
     price_after: number;
     quantity?: number;
-    available_until: string;
+    available_until?: string;
+    available_from?: string;
     category?: string;
-    distance_km?: number;
-    merchant_address?: string;
+    distance_meters?: number;
     merchant_street?: string;
     merchant_city?: string;
     merchant_postal_code?: string;
-    merchant_lat?: number;
-    merchant_lng?: number;
-  };
-  onViewMap?: () => void;
+    offer_lat: number;
+    offer_lng: number;
+  } | null;
+  onClose: () => void;
 }
 
-export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
-  isOpen,
-  onClose,
-  onReserve,
-  offer,
-  onViewMap
-}) => {
-  if (!isOpen) return null;
+interface MerchantOffer {
+  offer_id: string;
+  title: string;
+  image_url: string;
+  price_after: number;
+  price_before: number;
+}
+
+export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onClose }) => {
+  const [merchantOffers, setMerchantOffers] = useState<MerchantOffer[]>([]);
+  const [averageRating] = useState<number>(4.6);
+  const [totalReviews] = useState<number>(32);
+
+  if (!offer) return null;
+
+  useEffect(() => {
+    const fetchMerchantOffers = async () => {
+      if (!offer.merchant_id) return;
+
+      const { data, error } = await supabase
+        .from('offers')
+        .select('id, title, image_url, price_after, price_before')
+        .eq('merchant_id', offer.merchant_id)
+        .eq('is_active', true)
+        .neq('id', offer.offer_id)
+        .limit(4);
+
+      if (!error && data) {
+        setMerchantOffers(data.map(o => ({
+          offer_id: o.id,
+          title: o.title,
+          image_url: o.image_url,
+          price_after: o.price_after,
+          price_before: o.price_before
+        })));
+      }
+    };
+
+    fetchMerchantOffers();
+  }, [offer.merchant_id, offer.offer_id]);
 
   const calculateDiscount = (priceBefore: number, priceAfter: number): number => {
     return Math.round(100 * (1 - priceAfter / priceBefore));
   };
 
-  const discount = offer.price_before ? calculateDiscount(offer.price_before, offer.price_after) : 0;
+  const discount = calculateDiscount(offer.price_before, offer.price_after);
 
-  const formatDistance = (distanceKm?: number): string => {
-    if (!distanceKm) return '';
-    if (distanceKm < 1) {
-      return `${Math.round(distanceKm * 1000)}m`;
+  const openGPS = (lat: number, lng: number) => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    let url = "";
+    if (/iphone|ipad|ipod/.test(userAgent)) {
+      url = `http://maps.apple.com/?daddr=${lat},${lng}`;
+    } else {
+      url = `https://www.google.com/maps?q=${lat},${lng}`;
     }
-    return `${distanceKm.toFixed(1)}km`;
+    window.open(url, "_blank");
+  };
+
+  const formatDistance = (distanceMeters?: number): string => {
+    if (!distanceMeters) return '';
+    if (distanceMeters < 1000) {
+      return `${Math.round(distanceMeters)}m`;
+    }
+    return `${(distanceMeters / 1000).toFixed(1)}km`;
   };
 
   const formatAddress = (): string => {
@@ -63,48 +106,58 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
     return parts.join(', ') || 'Adresse non disponible';
   };
 
-  const formatTimeRemaining = (availableUntil: string): string => {
+  const formatTimeRemaining = (availableUntil?: string): { text: string; percent: number; color: string } => {
+    if (!availableUntil) return { text: 'Non spécifié', percent: 0, color: '#9ca3af' };
+
     const now = new Date();
     const until = new Date(availableUntil);
-    const diffMs = until.getTime() - now.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const from = new Date(offer.available_from || now);
 
-    if (diffHours > 24) {
+    const total = until.getTime() - from.getTime();
+    const remaining = until.getTime() - now.getTime();
+    const diffHours = Math.floor(remaining / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+
+    const percent = total > 0 ? Math.max(0, Math.min(100, (remaining / total) * 100)) : 0;
+
+    let color = '#16a34a';
+    if (percent < 60) color = '#facc15';
+    if (percent < 30) color = '#ef4444';
+
+    let text = '';
+    if (remaining <= 0) {
+      text = 'Expirée';
+    } else if (diffHours > 24) {
       const diffDays = Math.floor(diffHours / 24);
-      return `${diffDays}j`;
+      text = `${diffDays}j ${diffHours % 24}h`;
+    } else if (diffHours > 0) {
+      text = `${diffHours}h ${diffMinutes}min`;
+    } else {
+      text = `${diffMinutes}min`;
     }
-    if (diffHours > 0) {
-      return `${diffHours}h ${diffMinutes}m`;
-    }
-    return `${diffMinutes}m`;
+
+    return { text, percent, color };
   };
+
+  const timeData = formatTimeRemaining(offer.available_until);
 
   const fullAddress = formatAddress();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-60" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="relative">
-          {offer.image_url ? (
-            <img
-              src={getPublicImageUrl(offer.image_url)}
-              alt={offer.title}
-              className="w-full h-80 object-cover rounded-t-2xl bg-gray-100"
-              referrerPolicy="no-referrer"
-              crossOrigin="anonymous"
-              onError={(e) => {
-                console.error('❌ Modal image load failed for:', offer.title, '| URL:', offer.image_url);
-                (e.currentTarget as HTMLImageElement).classList.add('hidden');
-              }}
-            />
-          ) : (
-            <div className="w-full h-80 bg-gradient-to-br from-green-400 to-green-600 rounded-t-2xl flex items-center justify-center">
-              <span className="text-white text-6xl font-bold opacity-30">
-                {offer.title.charAt(0)}
-              </span>
-            </div>
-          )}
+          <img
+            src={getPublicImageUrl(offer.image_url)}
+            alt={offer.title}
+            className="w-full h-80 object-cover rounded-t-2xl bg-gray-100"
+            referrerPolicy="no-referrer"
+            crossOrigin="anonymous"
+            onError={(e) => {
+              console.error('Image load failed for:', offer.title);
+              (e.currentTarget as HTMLImageElement).src = 'https://via.placeholder.com/800x400?text=Image+non+disponible';
+            }}
+          />
 
           <button
             onClick={onClose}
@@ -113,18 +166,25 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             <X className="w-6 h-6 text-gray-600" />
           </button>
 
-          {discount > 0 && (
-            <div className="absolute top-4 left-4 bg-red-500 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg">
-              -{discount}%
-            </div>
-          )}
+          <div className="absolute top-4 left-4 bg-red-500 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg">
+            -{discount}%
+          </div>
 
-          {offer.category && (
-            <div className="absolute bottom-4 left-4 bg-white bg-opacity-95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium text-gray-700 shadow-md flex items-center gap-1">
-              <Tag className="w-4 h-4" />
-              {offer.category}
+          <div className="absolute bottom-4 left-4 bg-white bg-opacity-95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-md">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-lg">
+                {offer.merchant_name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div className="font-semibold text-gray-800">{offer.merchant_name}</div>
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <span className="font-medium">{averageRating}</span>
+                  <span className="text-gray-400">({totalReviews} avis)</span>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
         <div className="p-6">
@@ -138,21 +198,34 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             </p>
           )}
 
-          <div className="space-y-4 mb-6">
-            <div className="flex items-center text-gray-700">
-              <Clock className="w-5 h-5 text-green-600 mr-3" />
-              <span className="font-medium">Disponible pendant</span>
-              <span className="ml-2 text-green-600 font-semibold">
-                {formatTimeRemaining(offer.available_until)}
+          <div className="bg-gray-50 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 text-gray-700">
+                <Clock className="w-5 h-5 text-green-600" />
+                <span className="font-medium">Temps restant</span>
+              </div>
+              <span className="font-semibold" style={{ color: timeData.color }}>
+                {timeData.text}
               </span>
             </div>
+            <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full transition-all duration-300 rounded-full"
+                style={{
+                  width: `${timeData.percent}%`,
+                  backgroundColor: timeData.color
+                }}
+              />
+            </div>
+          </div>
 
-            {offer.distance_km !== undefined && (
+          <div className="space-y-3 mb-6">
+            {offer.distance_meters !== undefined && (
               <div className="flex items-center text-gray-700">
                 <Navigation className="w-5 h-5 text-blue-600 mr-3" />
                 <span className="font-medium">Distance</span>
                 <span className="ml-2 text-blue-600 font-semibold">
-                  {formatDistance(offer.distance_km)}
+                  {formatDistance(offer.distance_meters)}
                 </span>
               </div>
             )}
@@ -167,56 +240,73 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
               </div>
             </div>
 
-            {onViewMap && (
-              <button
-                onClick={onViewMap}
-                className="ml-8 text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2 transition-colors"
-              >
-                <MapPin className="w-4 h-4" />
-                Voir sur la carte
-              </button>
-            )}
+            <button
+              onClick={() => openGPS(offer.offer_lat, offer.offer_lng)}
+              className="ml-8 bg-blue-500 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-blue-600 transition-colors"
+            >
+              <Navigation className="w-4 h-4" />
+              Itinéraire
+            </button>
           </div>
 
           <div className="border-t border-gray-200 pt-6 mb-6">
             <div className="flex items-end justify-between">
               <div>
-                {offer.price_before && (
-                  <div className="text-gray-400 line-through text-lg mb-1">
-                    ${offer.price_before.toFixed(2)}
-                  </div>
-                )}
+                <div className="text-gray-400 line-through text-lg mb-1">
+                  {offer.price_before.toFixed(2)} €
+                </div>
                 <div className="text-4xl font-bold text-green-600">
-                  ${offer.price_after.toFixed(2)}
+                  {offer.price_after.toFixed(2)} €
                 </div>
               </div>
 
               {offer.quantity !== undefined && (
                 <div className="text-right">
-                  <div className="text-sm text-gray-500 mb-1">Stock disponible</div>
+                  <div className="text-sm text-gray-500 mb-1">Quantité restante</div>
                   <div className="text-2xl font-semibold text-gray-900">
-                    {offer.quantity} unité{offer.quantity !== 1 ? 's' : ''}
+                    {offer.quantity}
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 px-6 py-4 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-colors"
-            >
-              Fermer
-            </button>
-            <button
-              onClick={onReserve}
-              disabled={offer.quantity === 0}
-              className="flex-1 px-6 py-4 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-            >
-              Réserver maintenant
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            disabled={offer.quantity === 0}
+            className="w-full px-6 py-4 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl mb-6"
+          >
+            Réserver maintenant
+          </button>
+
+          {merchantOffers.length > 0 && (
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Autres produits du même commerçant</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {merchantOffers.map((merchantOffer) => (
+                  <div key={merchantOffer.offer_id} className="bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+                    <img
+                      src={getPublicImageUrl(merchantOffer.image_url)}
+                      alt={merchantOffer.title}
+                      className="w-full h-24 object-cover"
+                      referrerPolicy="no-referrer"
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = 'https://via.placeholder.com/200x120?text=Image';
+                      }}
+                    />
+                    <div className="p-2">
+                      <h4 className="text-sm font-semibold text-gray-800 truncate">{merchantOffer.title}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-green-600 font-bold text-sm">{merchantOffer.price_after.toFixed(2)} €</span>
+                        <span className="text-gray-400 line-through text-xs">{merchantOffer.price_before.toFixed(2)} €</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
