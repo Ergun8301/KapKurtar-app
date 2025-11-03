@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Navigation, Clock, Tag, Star } from 'lucide-react';
+import { X, MapPin, Navigation, Clock, Star } from 'lucide-react';
 import { getPublicImageUrl } from '../lib/supabasePublic';
 import { supabase } from '../lib/supabaseClient';
 
@@ -35,7 +35,7 @@ interface MerchantOffer {
   price_before: number;
 }
 
-export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onClose }) => {
+export default function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
   const [merchantOffers, setMerchantOffers] = useState<MerchantOffer[]>([]);
   const [averageRating] = useState<number>(4.6);
   const [totalReviews] = useState<number>(32);
@@ -55,13 +55,15 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
         .limit(4);
 
       if (!error && data) {
-        setMerchantOffers(data.map(o => ({
-          offer_id: o.id,
-          title: o.title,
-          image_url: o.image_url,
-          price_after: o.price_after,
-          price_before: o.price_before
-        })));
+        setMerchantOffers(
+          data.map((o) => ({
+            offer_id: o.id,
+            title: o.title,
+            image_url: o.image_url,
+            price_after: o.price_after,
+            price_before: o.price_before,
+          }))
+        );
       }
     };
 
@@ -76,20 +78,20 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
 
   const openGPS = (lat: number, lng: number) => {
     const userAgent = navigator.userAgent.toLowerCase();
-    let url = "";
+    let url = '';
+
     if (/iphone|ipad|ipod/.test(userAgent)) {
       url = `http://maps.apple.com/?daddr=${lat},${lng}`;
     } else {
       url = `https://www.google.com/maps?q=${lat},${lng}`;
     }
-    window.open(url, "_blank");
+
+    window.open(url, '_blank');
   };
 
   const formatDistance = (distanceMeters?: number): string => {
     if (!distanceMeters) return '';
-    if (distanceMeters < 1000) {
-      return `${Math.round(distanceMeters)}m`;
-    }
+    if (distanceMeters < 1000) return `${Math.round(distanceMeters)}m`;
     return `${(distanceMeters / 1000).toFixed(1)}km`;
   };
 
@@ -98,11 +100,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
     if (offer.merchant_street) parts.push(offer.merchant_street);
     if (offer.merchant_city) parts.push(offer.merchant_city);
     if (offer.merchant_postal_code) parts.push(offer.merchant_postal_code);
-
-    if (parts.length === 0 && offer.merchant_address) {
-      return offer.merchant_address;
-    }
-
     return parts.join(', ') || 'Adresse non disponible';
   };
 
@@ -141,11 +138,16 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
 
   const timeData = formatTimeRemaining(offer.available_until);
 
-  const fullAddress = formatAddress();
-
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-60" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-60"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* IMAGE PRINCIPALE */}
         <div className="relative">
           <img
             src={getPublicImageUrl(offer.image_url)}
@@ -155,7 +157,8 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
             crossOrigin="anonymous"
             onError={(e) => {
               console.error('Image load failed for:', offer.title);
-              (e.currentTarget as HTMLImageElement).src = 'https://via.placeholder.com/800x400?text=Image+non+disponible';
+              (e.currentTarget as HTMLImageElement).src =
+                'https://via.placeholder.com/800x400?text=Image+non+disponible';
             }}
           />
 
@@ -170,6 +173,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
             -{discount}%
           </div>
 
+          {/* INFO MARCHAND */}
           <div className="absolute bottom-4 left-4 bg-white bg-opacity-95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-md">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-lg">
@@ -187,17 +191,15 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
           </div>
         </div>
 
+        {/* CONTENU PRINCIPAL */}
         <div className="p-6">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            {offer.title}
-          </h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">{offer.title}</h2>
 
           {offer.description && (
-            <p className="text-gray-600 text-base leading-relaxed mb-6">
-              {offer.description}
-            </p>
+            <p className="text-gray-600 text-base leading-relaxed mb-6">{offer.description}</p>
           )}
 
+          {/* TEMPS RESTANT */}
           <div className="bg-gray-50 rounded-xl p-4 mb-6">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2 text-gray-700">
@@ -213,12 +215,13 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
                 className="h-full transition-all duration-300 rounded-full"
                 style={{
                   width: `${timeData.percent}%`,
-                  backgroundColor: timeData.color
+                  backgroundColor: timeData.color,
                 }}
               />
             </div>
           </div>
 
+          {/* ADRESSE ET GPS */}
           <div className="space-y-3 mb-6">
             {offer.distance_meters !== undefined && (
               <div className="flex items-center text-gray-700">
@@ -234,9 +237,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
               <MapPin className="w-5 h-5 text-orange-600 mr-3 mt-0.5" />
               <div className="flex-1">
                 <span className="font-medium block mb-1">Adresse</span>
-                <span className="text-gray-600">
-                  {fullAddress}
-                </span>
+                <span className="text-gray-600">{formatAddress()}</span>
               </div>
             </div>
 
@@ -249,6 +250,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
             </button>
           </div>
 
+          {/* PRIX & QUANTITÉ */}
           <div className="border-t border-gray-200 pt-6 mb-6">
             <div className="flex items-end justify-between">
               <div>
@@ -263,14 +265,13 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
               {offer.quantity !== undefined && (
                 <div className="text-right">
                   <div className="text-sm text-gray-500 mb-1">Quantité restante</div>
-                  <div className="text-2xl font-semibold text-gray-900">
-                    {offer.quantity}
-                  </div>
+                  <div className="text-2xl font-semibold text-gray-900">{offer.quantity}</div>
                 </div>
               )}
             </div>
           </div>
 
+          {/* RÉSERVER */}
           <button
             onClick={onClose}
             disabled={offer.quantity === 0}
@@ -279,12 +280,18 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
             Réserver maintenant
           </button>
 
+          {/* AUTRES PRODUITS */}
           {merchantOffers.length > 0 && (
             <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Autres produits du même commerçant</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                Autres produits du même commerçant
+              </h3>
               <div className="grid grid-cols-2 gap-3">
                 {merchantOffers.map((merchantOffer) => (
-                  <div key={merchantOffer.offer_id} className="bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+                  <div
+                    key={`merchant-offer-${merchantOffer.offer_id}`}
+                    className="bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                  >
                     <img
                       src={getPublicImageUrl(merchantOffer.image_url)}
                       alt={merchantOffer.title}
@@ -292,14 +299,21 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
                       referrerPolicy="no-referrer"
                       crossOrigin="anonymous"
                       onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = 'https://via.placeholder.com/200x120?text=Image';
+                        (e.currentTarget as HTMLImageElement).src =
+                          'https://via.placeholder.com/200x120?text=Image';
                       }}
                     />
                     <div className="p-2">
-                      <h4 className="text-sm font-semibold text-gray-800 truncate">{merchantOffer.title}</h4>
+                      <h4 className="text-sm font-semibold text-gray-800 truncate">
+                        {merchantOffer.title}
+                      </h4>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-green-600 font-bold text-sm">{merchantOffer.price_after.toFixed(2)} €</span>
-                        <span className="text-gray-400 line-through text-xs">{merchantOffer.price_before.toFixed(2)} €</span>
+                        <span className="text-green-600 font-bold text-sm">
+                          {merchantOffer.price_after.toFixed(2)} €
+                        </span>
+                        <span className="text-gray-400 line-through text-xs">
+                          {merchantOffer.price_before.toFixed(2)} €
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -311,4 +325,4 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
       </div>
     </div>
   );
-};
+}
