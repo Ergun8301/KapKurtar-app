@@ -55,36 +55,25 @@ const MerchantOnboardingPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (!formData.company_name.trim()) {
+      alert('Veuillez renseigner le nom de votre entreprise');
+      return;
+    }
 
     setIsLoading(true);
-    setError("");
+    setError('');
 
     try {
       await upsertMerchantProfile({
         id: user.id,
         email: user.email,
-        company_name: formData.company_name,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        phone: formData.phone,
-        street: formData.street,
-        city: formData.city,
-        postal_code: formData.postal_code,
-        country: formData.country,
+        ...formData,
+        onboarding_completed: true, // ✅ Flag activé
       });
 
-      await supabase
-        .from("merchants")
-        .update({ onboarding_completed: true })
-        .eq("email", user.email);
-
-      alert("✅ Profil sauvegardé avec succès !");
-
-      setTimeout(() => {
-        navigate("/merchant/dashboard");
-      }, 800);
+      navigate('/merchant/dashboard');
     } catch (err: any) {
-      setError(err.message || "Échec de la sauvegarde du profil");
+      setError(err.message || 'Erreur lors de la sauvegarde');
     } finally {
       setIsLoading(false);
     }
@@ -117,10 +106,6 @@ const MerchantOnboardingPage = () => {
         </div>
 
         <div className="bg-white shadow-lg rounded-lg p-8">
-          <div className="animate-fadeIn bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4 text-center shadow-sm">
-            👋 Bienvenue chez <b>TILKAPP</b> ! Complétez votre profil marchand pour commencer à publier vos offres.
-          </div>
-
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
               {error}

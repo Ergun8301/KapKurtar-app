@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp, MapPin, Phone } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Plus, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useAddProduct } from '../contexts/AddProductContext';
@@ -33,10 +32,8 @@ const MerchantDashboardPage = () => {
   }, []);
 
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { showAddProductModal, openAddProductModal, closeAddProductModal } = useAddProduct();
   const [merchantId, setMerchantId] = useState<string | null>(null);
-  const [merchantInfo, setMerchantInfo] = useState<any>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -47,114 +44,90 @@ const MerchantDashboardPage = () => {
   const [showNotifications, setShowNotifications] = useState(true);
   const { notifications, unreadCount } = useRealtimeNotifications(user?.id || null);
 
-  // Vérification du profil à la première connexion (empêche la boucle infinie)
-  useEffect(() => {
-    const checkMerchantProfile = async () => {
-      if (!user) return;
-      if (window.location.pathname.includes("/merchant/onboarding")) return;
 
-      const { data, error } = await supabase
-        .from("merchants")
-        .select("company_name, onboarding_completed")
-        .eq("email", user.email)
+// Fetch merchant ID from user and auto-geolocate
+useEffect(() => {
+  const fetchMerchantIdAndGeolocate = async () => {
+    if (!user) {
+      setMerchantId(null);
+      return;
+    }
+
+    try {
+      console.log('🔍 Recherche du profil pour auth_id:', user.id);
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Erreur check profil marchand :", error);
+      if (profileError) throw profileError;
+      if (!profileData) {
+        console.warn('⚠️ Aucun profil trouvé pour cet utilisateur');
         return;
       }
 
-      if (!data?.company_name?.trim() || data.onboarding_completed === false) {
-        navigate("/merchant/onboarding", { replace: true });
-      }
-    };
-    checkMerchantProfile();
-  }, [user, navigate]);
-
-  // Chargement du résumé profil
-  useEffect(() => {
-    const fetchMerchantInfo = async () => {
-      if (!user) return;
-      const { data } = await supabase
-        .from("merchants")
-        .select("company_name, logo_url, phone, street, city, postal_code")
-        .eq("email", user.email)
+      const { data: merchantData, error: merchantError } = await supabase
+        .from('merchants')
+        .select('id')
+        .eq('profile_id', profileData.id)
         .maybeSingle();
-      if (data) setMerchantInfo(data);
-    };
-    fetchMerchantInfo();
-  }, [user]);
 
+      if (merchantError) throw merchantError;
+      if (merchantData) {
+        console.log('✅ Marchand trouvé, ID:', merchantData.id);
+        setMerchantId(merchantData.id);
 
-// ✅ Version finale stable — cherche par profile_id, plus de boucle infinie
-useEffect(() => {
-  const verifyAndInitMerchant = async () => {
-    if (!user) return;
+        // Auto-géolocalisation après avoir trouvé le merchantId
+        if (navigator.geolocation) {
+          console.log('📍 Tentative de géolocalisation automatique...');
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const { latitude, longitude } = position.coords;
+              console.log('✅ Position obtenue:', { latitude, longitude });
 
-    // Empêche redirection si on est déjà sur la page onboarding
-    if (window.location.pathname.includes("/merchant/onboarding")) return;
+              try {
+                const { error: updateError } = await supabase.rpc(
+                  'update_merchant_location',
+                  {
+                    p_merchant_id: merchantData.id,
+                    p_latitude: latitude,
+                    p_longitude: longitude,
+                  }
+                );
 
-    console.log("🔍 Vérification du profil marchand (v2) pour :", user.email);
-
-    // 1️⃣ Récupère le profile_id du user connecté
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("auth_id", user.id)
-      .maybeSingle();
-
-    if (profileError || !profileData) {
-      console.error("❌ Aucun profil trouvé pour ce user");
-      return;
-    }
-
-    // 2️⃣ Cherche le marchand lié à ce profil
-    const { data: merchantData, error: merchantError } = await supabase
-      .from("merchants")
-      .select("id, company_name, onboarding_completed, logo_url, phone, street, city, postal_code, location")
-      .eq("profile_id", profileData.id)
-      .maybeSingle();
-
-    if (merchantError) {
-      console.error("Erreur check marchand :", merchantError);
-      return;
-    }
-
-    // 3️⃣ Si pas de profil complet → onboarding
-    if (!merchantData || !merchantData.company_name?.trim() || merchantData.onboarding_completed === false) {
-      console.log("⚠️ Profil marchand incomplet → redirection onboarding");
-      navigate("/merchant/onboarding", { replace: true });
-      return;
-    }
-
-    // 4️⃣ Sinon on stocke le marchand et on géolocalise une seule fois
-    console.log("✅ Profil marchand complet trouvé :", merchantData.company_name);
-    setMerchantInfo(merchantData);
-    setMerchantId(merchantData.id);
-
-    if (navigator.geolocation && !merchantData.location) {
-      console.log("📍 Tentative de géolocalisation automatique...");
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const { latitude, longitude } = pos.coords;
-          console.log("✅ Position obtenue :", { latitude, longitude });
-
-          const { error: locErr } = await supabase.rpc("update_merchant_location", {
-            p_merchant_id: merchantData.id,
-            p_latitude: latitude,
-            p_longitude: longitude,
-          });
-          if (locErr) console.error("❌ Erreur update_merchant_location :", locErr);
-          else console.log("✅ Position mise à jour avec succès");
-        },
-        (err) => console.warn("⚠️ Géolocalisation refusée :", err.message),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
+                if (updateError) {
+                  console.error('❌ Erreur lors de la mise à jour de la position:', updateError);
+                } else {
+                  console.log('✅ Position du marchand mise à jour avec succès');
+                }
+              } catch (err) {
+                console.error('❌ Erreur RPC update_merchant_location:', err);
+              }
+            },
+            (error) => {
+              console.warn('⚠️ Impossible de récupérer la position:', error.message);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0,
+            }
+          );
+        } else {
+          console.warn('⚠️ La géolocalisation n\'est pas supportée par ce navigateur');
+        }
+      } else {
+        console.warn('⚠️ Aucun marchand trouvé pour ce profil');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération du merchant ID:', error);
     }
   };
 
-  verifyAndInitMerchant();
-}, [user, navigate]);
+  fetchMerchantIdAndGeolocate();
+}, [user]);
 
 useEffect(() => {
   const checkExpiredOffers = async () => {
@@ -546,14 +519,6 @@ const handlePublish = async (formData: any) => {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-screen text-gray-600 text-lg">
-        Chargement...
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {toast && (
@@ -676,47 +641,6 @@ const handlePublish = async (formData: any) => {
             </div>
           )}
         </div>
-
-        {/* Résumé du profil marchand */}
-        {merchantInfo && (
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
-            <div className="flex items-center space-x-4">
-              <img
-                src={
-                  merchantInfo.logo_url ||
-                  "https://cdn-icons-png.flaticon.com/512/847/847969.png"
-                }
-                alt={merchantInfo.company_name || "Logo marchand"}
-                className="w-14 h-14 rounded-full object-cover border border-gray-200 bg-gray-100"
-              />
-              <div>
-                <h2 className="font-semibold text-lg text-gray-800">
-                  {merchantInfo.company_name || "Nom d'entreprise non défini"}
-                </h2>
-                {merchantInfo.street && (
-                  <p className="text-sm text-gray-600 flex items-center gap-1">
-                    <MapPin className="w-4 h-4 text-green-600" />
-                    {merchantInfo.street}, {merchantInfo.city || ""}{" "}
-                    {merchantInfo.postal_code || ""}
-                  </p>
-                )}
-                {merchantInfo.phone && (
-                  <p className="text-sm text-gray-600 flex items-center gap-1">
-                    <Phone className="w-4 h-4 text-green-600" />
-                    {merchantInfo.phone}
-                  </p>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={() => navigate("/merchant/onboarding")}
-              className="flex items-center justify-center gap-2 text-green-600 hover:text-green-700 font-medium transition bg-green-50 px-4 py-2 rounded-lg w-full sm:w-auto"
-            >
-              <Edit className="w-4 h-4" />
-              Modifier mon profil
-            </button>
-          </div>
-        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {offers.map(offer => {
