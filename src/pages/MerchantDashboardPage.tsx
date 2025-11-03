@@ -431,7 +431,7 @@ const handlePublish = async (formData: any) => {
     setOffers([data, ...offers]);
     closeAddProductModal();
     setToast({ message: "✅ Offer added successfully", type: "success" });
-  } catch (error: any) {
+    } catch (error: any) {
     console.error("❌ Error publishing offer:", error);
     setToast({
       message: error.message || "Failed to publish offer",
@@ -440,22 +440,40 @@ const handlePublish = async (formData: any) => {
   } finally {
     setIsPublishing(false);
   }
-}; // ✅ handlePublish bien fermé
+}; // ✅ handlePublish bien fermé ici
 
+// 🟢 Fonction pour activer / désactiver une offre
+const toggleOfferStatus = async (offerId: string, currentStatus: boolean) => {
   try {
+    if (!user) {
+      setToast({ message: "Veuillez vous reconnecter", type: "error" });
+      return;
+    }
+
+    // Évite les doubles clics
+    if (togglingOfferId === offerId) return;
+
+    setTogglingOfferId(offerId);
+    const newStatus = !currentStatus;
+    const actionText = newStatus ? "activation" : "mise en pause";
+    console.log(`⏳ ${actionText} de l'offre ${offerId}...`);
+
     // 🟢 Appel RPC sécurisé Supabase
-    const { error } = await supabase.rpc('toggle_offer_status', { p_offer_id: offerId });
+    const { error } = await supabase.rpc("toggle_offer_status", { p_offer_id: offerId });
 
     if (error) throw error;
 
-    console.log('✅ RPC toggle_offer_status executed successfully.');
+    console.log("✅ RPC toggle_offer_status exécutée avec succès !");
     await loadOffers();
 
-    const successMessage = newStatus ? '✅ Offer activated' : '✅ Offer paused';
-    setToast({ message: successMessage, type: 'success' });
+    const successMsg = newStatus ? "✅ Offre activée" : "⏸️ Offre mise en pause";
+    setToast({ message: successMsg, type: "success" });
   } catch (error: any) {
-    console.error('❌ Error toggling offer status:', error);
-    setToast({ message: error.message || 'Failed to toggle offer status', type: 'error' });
+    console.error("❌ Erreur toggle_offer_status:", error);
+    setToast({
+      message: error.message || "Erreur lors du changement de statut",
+      type: "error",
+    });
   } finally {
     setTogglingOfferId(null);
   }
