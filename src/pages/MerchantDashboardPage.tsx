@@ -592,12 +592,11 @@ const geoResponse = await fetch(
     };
 
     // Si les coordonnées existent → ajoute-les au payload
-    if (latitude && longitude) {
-      updatePayload.location = {
-        type: 'Point',
-        coordinates: [longitude, latitude],
-      };
-    }
+if (latitude && longitude) {
+  // ✅ PostGIS attend un format WKT "SRID=4326;POINT(lon lat)"
+  updatePayload.location = `SRID=4326;POINT(${longitude} ${latitude})`;
+  console.log("✅ Localisation prête pour Supabase :", updatePayload.location);
+}
 
     const { error: updateError } = await supabase
       .from('merchants')
