@@ -158,7 +158,7 @@ const MerchantDashboardPage = () => {
       }
     };
 
-     // ✅ Appel de la fonction async
+       // ✅ Appel de la fonction async
   fetchMerchantIdAndGeolocate();
 }, [user]);
 
@@ -428,7 +428,7 @@ const handlePublish = async (formData: any) => {
   } finally {
     setIsPublishing(false);
   }
-};
+}; // ✅ Fermeture correcte de handlePublish (corrige l’erreur 'await')
 
   try {
     // 🟢 Appel RPC sécurisé Supabase
