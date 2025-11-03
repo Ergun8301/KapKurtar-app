@@ -528,24 +528,7 @@ const handlePublish = async (formData: any) => {
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        {/* 🟡 Bandeau profil incomplet */}
-{merchantId && !offers.length && (
-  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-lg shadow-sm">
-    <p className="text-yellow-800 font-medium">
-      ⚠️ Votre profil professionnel semble incomplet.<br />
-      Complétez-le pour améliorer votre visibilité et publier vos offres.
-    </p>
-    <button
-      onClick={() => window.location.href = '/merchant/profile-edit'}
-      className="mt-3 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
-    >
-      Compléter mon profil
-    </button>
-  </div>
-)}
-
-        <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">My Products</h2>
             <p className="text-gray-600 mt-1">{offers.length} total products</p>
