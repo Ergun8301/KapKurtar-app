@@ -36,7 +36,7 @@ const MerchantProfileEditPage = () => {
       try {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('id')
+          .select('id, auth_id')
           .eq('auth_id', user.id)
           .maybeSingle();
 
@@ -49,7 +49,7 @@ const MerchantProfileEditPage = () => {
         const { data: merchantData, error: merchantError } = await supabase
           .from('merchants')
           .select('id, company_name, phone, street, city, postal_code, logo_url')
-          .eq('profile_id', profileData.id)
+          .eq('id', profileData.auth_id)
           .maybeSingle();
 
         if (merchantError) throw merchantError;

@@ -61,7 +61,7 @@ useEffect(() => {
 
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, auth_id')
         .eq('auth_id', user.id)
         .maybeSingle();
 
@@ -73,24 +73,15 @@ useEffect(() => {
 
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
-        .select('id')
-        .eq('profile_id', profileData.id)
+        .select('id, company_name, phone, street, city, postal_code, logo_url')
+        .eq('id', profileData.auth_id)
         .maybeSingle();
 
       if (merchantError) throw merchantError;
       if (merchantData) {
         console.log('✅ Marchand trouvé, ID:', merchantData.id);
         setMerchantId(merchantData.id);
-
-        const { data: fullMerchantData, error: merchantDetailError } = await supabase
-          .from('merchants')
-          .select('id, company_name, phone, street, city, postal_code, logo_url')
-          .eq('id', merchantData.id)
-          .maybeSingle();
-
-        if (!merchantDetailError && fullMerchantData) {
-          setMerchantInfo(fullMerchantData);
-        }
+        setMerchantInfo(merchantData);
 
         // Auto-géolocalisation après avoir trouvé le merchantId
         if (navigator.geolocation) {
@@ -283,7 +274,7 @@ const handlePublish = async (formData: any) => {
   try {
     const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, auth_id')
         .eq('auth_id', user.id)
         .maybeSingle();
 
@@ -299,7 +290,7 @@ const handlePublish = async (formData: any) => {
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
         .select('id, location')
-        .eq('profile_id', profileData.id)
+        .eq('id', profileData.auth_id)
         .maybeSingle();
 
       if (merchantError || !merchantData) {
