@@ -447,32 +447,19 @@ useEffect(() => {
   const map = mapRef.current;
   if (!map) return;
 
-  // on nettoie les anciens marqueurs
+  // Nettoyage des anciens marqueurs
   (map as any)._markers?.forEach((m: Marker) => m.remove());
   (map as any)._markers = [];
 
-  // détection du mobile
   const isMobile = window.innerWidth < 768;
 
   offers.forEach((offer) => {
-    // sécurité coordonnées
+    // 🔒 Sécurité : coordonnées valides
     if (
       !Number.isFinite(offer.offer_lng) ||
       !Number.isFinite(offer.offer_lat)
-    ) {
+    )
       return;
-    }
-
-    // 🎯 Élément HTML du marqueur
-    const el = document.createElement("div");
-    el.className = "offer-marker";
-    el.style.background = "#22c55e";
-    el.style.width = "20px";
-    el.style.height = "20px";
-    el.style.borderRadius = "50%";
-    el.style.border = "2px solid #fff";
-    el.style.cursor = "pointer";
-    el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
 
     // 🧮 Calculs dynamiques
     const discount = Math.round(
@@ -485,18 +472,35 @@ useEffect(() => {
 
     const total = until.getTime() - from.getTime();
     const remaining = until.getTime() - now.getTime();
+    const progress = Math.max(0, Math.min(1, remaining / total)); // entre 0 et 1
 
-    // temps restant
+    // ⏰ Temps restant
     const minutesLeft = Math.max(0, Math.floor(remaining / 60000));
     const hours = Math.floor(minutesLeft / 60);
     const mins = minutesLeft % 60;
     const timeLeft = hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
 
-    // 💬 POPUP HTML (seulement pour desktop)
+    // 🎨 Couleur dynamique du marqueur selon le temps restant
+    // vert → orange → rouge
+    let color = "#22c55e"; // vert
+    if (progress < 0.5) color = "#f97316"; // orange
+    if (progress < 0.2) color = "#ef4444"; // rouge
+
+    // 📍 Élément HTML du marqueur
+    const el = document.createElement("div");
+    el.className = "offer-marker";
+    el.style.background = color;
+    el.style.width = "20px";
+    el.style.height = "20px";
+    el.style.borderRadius = "50%";
+    el.style.border = "2px solid #fff";
+    el.style.cursor = "pointer";
+    el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+    el.title = `${offer.title} (${timeLeft} restants)`;
+
+    // 💬 Popup HTML (desktop)
     const popupHTML = `
       <div style="width:210px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border-radius:12px;overflow:hidden;">
-        
-        <!-- 📸 Image + badge réduction -->
         <div style="position:relative;width:100%;height:120px;overflow:hidden;">
           <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;">
           <div style="position:absolute;top:8px;right:8px;background:#f9fafb;color:#ea580c;font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;border:1px solid #e5e7eb;">
@@ -504,7 +508,6 @@ useEffect(() => {
           </div>
         </div>
 
-        <!-- 🕒 Titre + Timer -->
         <div style="padding:10px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <div style="font-size:14px;font-weight:600;color:#111;">
@@ -515,14 +518,8 @@ useEffect(() => {
             </div>
           </div>
 
-          <!-- 💶 Prix -->
           <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">
-            <span style="
-              text-decoration:line-through;
-              text-decoration-color:#ef4444;
-              color:#777;
-              font-size:12px;
-            ">
+            <span style="text-decoration:line-through;text-decoration-color:#ef4444;color:#777;font-size:12px;">
               ${offer.price_before.toFixed(2)} €
             </span>
             <span style="color:#16a34a;font-weight:700;font-size:15px;">
@@ -530,42 +527,41 @@ useEffect(() => {
             </span>
           </div>
 
-          <!-- 🟢 Bouton -->
-          <button style="
-            width:100%;
-            background:#22c55e;
-            color:#fff;
-            border:none;
-            border-radius:8px;
-            padding:7px 0;
-            font-size:13px;
-            font-weight:600;
-            cursor:pointer;
-          ">
+          <button style="width:100%;background:#22c55e;color:#fff;border:none;border-radius:8px;padding:7px 0;font-size:13px;font-weight:600;cursor:pointer;">
             Voir détails / Réserver
           </button>
         </div>
       </div>
     `;
 
-    // ✅ Création du marker
+    // ✅ Création du marqueur
     const marker = new mapboxgl.Marker(el).setLngLat([
       offer.offer_lng,
       offer.offer_lat,
     ]);
 
     if (!isMobile) {
-      // 💻 Desktop -> popup complet
+      // 💻 Desktop → popup complet
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
       marker.setPopup(popup);
     } else {
-      // 📱 Mobile -> affiche la liste d'offres proches
+      // 📱 Mobile → interaction fluide
       el.addEventListener("click", () => {
         console.log("📱 Offre cliquée :", offer.title);
-        // ✅ Change en mode "à proximité" et défile vers la liste
-        setViewMode("nearby");
-        const listSection = document.querySelector(".offers-list-section");
-        if (listSection) listSection.scrollIntoView({ behavior: "smooth" });
+
+        if (offers.length === 1) {
+          // ✅ Si une seule offre → mini popup rapide
+          alert(
+            `${offer.title}\nAvant: ${offer.price_before}€ → Après: ${offer.price_after}€\nTemps restant: ${timeLeft}`
+          );
+        } else {
+          // ✅ Sinon, focus sur la liste d’offres
+          setViewMode("nearby");
+          const listSection = document.querySelector(".offers-list-section");
+          if (listSection) {
+            listSection.scrollIntoView({ behavior: "smooth" });
+          }
+        }
       });
     }
 
