@@ -67,6 +67,7 @@ const MerchantDashboardPage = () => {
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isSubmittingOnboarding, setIsSubmittingOnboarding] = useState(false);
+  const [usedGeolocation, setUsedGeolocation] = useState(false);
 
 
 // Fetch merchant ID from user and auto-geolocate
