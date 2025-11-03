@@ -55,32 +55,36 @@ const MerchantOnboardingPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!formData.company_name.trim()) {
-      alert('Veuillez renseigner le nom de votre entreprise');
-      return;
-    }
 
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       await upsertMerchantProfile({
         id: user.id,
         email: user.email,
-        ...formData,
-        onboarding_completed: true,
+        company_name: formData.company_name,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        phone: formData.phone,
+        street: formData.street,
+        city: formData.city,
+        postal_code: formData.postal_code,
+        country: formData.country,
       });
-
-      alert("✅ Profil sauvegardé avec succès !");
 
       await supabase
         .from("merchants")
         .update({ onboarding_completed: true })
         .eq("email", user.email);
 
-      navigate('/merchant/dashboard');
+      alert("✅ Profil sauvegardé avec succès !");
+
+      setTimeout(() => {
+        navigate("/merchant/dashboard");
+      }, 800);
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la sauvegarde');
+      setError(err.message || "Échec de la sauvegarde du profil");
     } finally {
       setIsLoading(false);
     }

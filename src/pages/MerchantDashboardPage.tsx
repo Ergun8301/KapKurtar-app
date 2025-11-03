@@ -47,17 +47,23 @@ const MerchantDashboardPage = () => {
   const [showNotifications, setShowNotifications] = useState(true);
   const { notifications, unreadCount } = useRealtimeNotifications(user?.id || null);
 
-  // Vérification du profil à la première connexion
+  // Vérification du profil à la première connexion (empêche la boucle infinie)
   useEffect(() => {
     const checkMerchantProfile = async () => {
       if (!user) return;
-      const { data } = await supabase
+      if (window.location.pathname.includes("/merchant/onboarding")) return;
+
+      const { data, error } = await supabase
         .from("merchants")
         .select("company_name, onboarding_completed")
         .eq("email", user.email)
         .maybeSingle();
 
-      // Si pas de nom ou onboarding non terminé → redirection
+      if (error) {
+        console.error("Erreur check profil marchand :", error);
+        return;
+      }
+
       if (!data?.company_name?.trim() || data.onboarding_completed === false) {
         navigate("/merchant/onboarding", { replace: true });
       }
@@ -554,6 +560,14 @@ const handlePublish = async (formData: any) => {
     }
   };
 
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen text-gray-600 text-lg">
+        Chargement...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {toast && (
@@ -679,7 +693,7 @@ const handlePublish = async (formData: any) => {
 
         {/* Résumé du profil marchand */}
         {merchantInfo && (
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-6 flex items-center justify-between">
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
             <div className="flex items-center space-x-4">
               <img
                 src={
@@ -710,7 +724,7 @@ const handlePublish = async (formData: any) => {
             </div>
             <button
               onClick={() => navigate("/merchant/onboarding")}
-              className="flex items-center gap-2 text-green-600 hover:text-green-700 font-medium transition"
+              className="flex items-center justify-center gap-2 text-green-600 hover:text-green-700 font-medium transition bg-green-50 px-4 py-2 rounded-lg w-full sm:w-auto"
             >
               <Edit className="w-4 h-4" />
               Modifier mon profil
