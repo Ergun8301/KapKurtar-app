@@ -178,7 +178,7 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
           <div className="absolute bottom-4 left-4 bg-white bg-opacity-95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-md">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-lg">
-                {offer.merchant_name.charAt(0).toUpperCase()}
+                {offer.merchant_name ? offer.merchant_name.charAt(0).toUpperCase() : "?"}
               </div>
               <div>
                 <div className="font-semibold text-gray-800">{offer.merchant_name}</div>
