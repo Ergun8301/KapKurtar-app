@@ -688,205 +688,216 @@ const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               </div>
             </div>
 
-            <form onSubmit={handleOnboardingSubmit} className="p-6 space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nom de l'entreprise *
-                </label>
-                <input
-                  type="text"
-                  value={onboardingData.company_name}
-                  onChange={(e) => setOnboardingData({ ...onboardingData, company_name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Ex: Boulangerie Martin"
-                  required
-                />
-              </div>
+        <form onSubmit={handleOnboardingSubmit} className="p-6 space-y-6">
+  {/* 🏢 Nom de l’entreprise */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Nom de l'entreprise *
+    </label>
+    <input
+      type="text"
+      value={onboardingData.company_name}
+      onChange={(e) => setOnboardingData({ ...onboardingData, company_name: e.target.value })}
+      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+      placeholder="Ex: Boulangerie Martin"
+      required
+    />
+  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Téléphone *
-                </label>
-                <input
-                  type="tel"
-                  value={onboardingData.phone}
-                  onChange={(e) => setOnboardingData({ ...onboardingData, phone: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Ex: 06 12 34 56 78"
-                  required
-                />
-              </div>
+  {/* ☎️ Téléphone */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Téléphone *
+    </label>
+    <input
+      type="tel"
+      value={onboardingData.phone}
+      onChange={(e) => setOnboardingData({ ...onboardingData, phone: e.target.value })}
+      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+      placeholder="Ex: 06 12 34 56 78"
+      required
+    />
+  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Adresse *
-                </label>
-                <input
-                  type="text"
-                  value={onboardingData.street}
-                  onChange={(e) => setOnboardingData({ ...onboardingData, street: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Ex: 123 rue de la République"
-                  required
-                />
-              </div>
+  {/* === 🧭 Choix de la méthode de position === */}
+  <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+    <p className="text-sm font-medium text-gray-700 mb-3">
+      Choisissez une méthode pour définir votre position :
+    </p>
 
-              {/* Bouton pour détecter la position manuellement avec meilleure UX */}
-<div className="mt-3">
-  <button
-    type="button"
-    disabled={isSubmittingOnboarding}
-    onClick={async () => {
-      if (!merchantId) {
-        setToast({ message: '⚠️ Profil marchand introuvable.', type: 'error' });
-        return;
-      }
+    {/* 🏠 Bloc adresse manuelle */}
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Adresse {usedGeolocation ? '' : '*'}
+        </label>
+        <input
+          type="text"
+          value={onboardingData.street}
+          onChange={(e) => setOnboardingData({ ...onboardingData, street: e.target.value })}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          placeholder="Ex: 123 rue de la République"
+          required={!usedGeolocation}
+          disabled={usedGeolocation}
+        />
+      </div>
 
-      if (!navigator.geolocation) {
-        setToast({ message: 'La géolocalisation n’est pas supportée par ce navigateur.', type: 'error' });
-        return;
-      }
-
-      setIsSubmittingOnboarding(true);
-      setToast({ message: '📍 Détection de la position en cours...', type: 'success' });
-
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          console.log('✅ Position détectée manuellement :', { latitude, longitude });
-
-          try {
-            const { error: updateError } = await supabase.rpc('update_merchant_location', {
-              p_merchant_id: merchantId,
-              p_latitude: latitude,
-              p_longitude: longitude,
-            });
-
-            if (updateError) {
-              console.error('❌ Erreur RPC update_merchant_location:', updateError);
-              setToast({ message: '❌ Erreur lors de la mise à jour de la position.', type: 'error' });
-            } else {
-              console.log('✅ Position mise à jour avec succès');
-              setToast({ message: '✅ Position mise à jour avec succès !', type: 'success' });
-            }
-          } catch (err) {
-            console.error('❌ Erreur RPC:', err);
-            setToast({ message: '❌ Erreur lors de la détection de la position.', type: 'error' });
-          } finally {
-            setIsSubmittingOnboarding(false);
-          }
-        },
-        (error) => {
-          console.warn('⚠️ Impossible de récupérer la position :', error.message);
-          setToast({ message: '⚠️ ' + error.message, type: 'error' });
-          setIsSubmittingOnboarding(false);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        }
-      );
-    }}
-    className={`w-full flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors ${
-      isSubmittingOnboarding
-        ? 'bg-gray-200 text-gray-400 cursor-wait'
-        : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
-    }`}
-  >
-    {isSubmittingOnboarding ? (
-      <>
-        <div className="w-4 h-4 mr-2 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-        Détection en cours...
-      </>
-    ) : (
-      <>
-        <span role="img" aria-label="pin">📍</span>
-        <span className="ml-2">Détecter ma position actuelle</span>
-      </>
-    )}
-  </button>
-</div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ville *
-                  </label>
-                  <input
-                    type="text"
-                    value={onboardingData.city}
-                    onChange={(e) => setOnboardingData({ ...onboardingData, city: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Ex: Paris"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Code postal *
-                  </label>
-                  <input
-                    type="text"
-                    value={onboardingData.postal_code}
-                    onChange={(e) => setOnboardingData({ ...onboardingData, postal_code: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Ex: 75001"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Logo de l'entreprise *
-                </label>
-                <div className="flex items-center gap-4">
-                  {onboardingData.logo_url && (
-                    <img
-                      src={onboardingData.logo_url}
-                      alt="Logo preview"
-                      className="w-20 h-20 object-cover rounded-lg border border-gray-300"
-                    />
-                  )}
-                  <label className="flex-1 flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 transition-colors">
-                    <Upload className="w-5 h-5 text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-600">
-                      {logoFile ? logoFile.name : 'Choisir un logo'}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoChange}
-                      className="hidden"
-                      required={!onboardingData.logo_url}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={isSubmittingOnboarding}
-                  className="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowOnboardingModal(false)}
-                  disabled={isSubmittingOnboarding}
-                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Fermer
-                </button>
-              </div>
-            </form>
-          </div>
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Ville {usedGeolocation ? '' : '*'}
+          </label>
+          <input
+            type="text"
+            value={onboardingData.city}
+            onChange={(e) => setOnboardingData({ ...onboardingData, city: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            placeholder="Ex: Paris"
+            required={!usedGeolocation}
+            disabled={usedGeolocation}
+          />
         </div>
+
+        <div className="w-full md:w-1/3">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Code postal {usedGeolocation ? '' : '*'}
+          </label>
+          <input
+            type="text"
+            value={onboardingData.postal_code}
+            onChange={(e) => setOnboardingData({ ...onboardingData, postal_code: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            placeholder="Ex: 75001"
+            required={!usedGeolocation}
+            disabled={usedGeolocation}
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* 🚀 Séparateur visuel “ou” */}
+    <div className="relative my-6 text-center">
+      <span className="absolute left-0 right-0 top-1/2 h-px bg-gray-200"></span>
+      <span className="relative bg-gray-50 px-3 text-sm text-gray-500">ou</span>
+    </div>
+
+    {/* 📍 Bouton géolocalisation */}
+    <button
+      type="button"
+      disabled={isSubmittingOnboarding}
+      onClick={async () => {
+        if (!merchantId) {
+          setToast({ message: '⚠️ Profil marchand introuvable.', type: 'error' });
+          return;
+        }
+
+        if (!navigator.geolocation) {
+          setToast({ message: 'La géolocalisation n’est pas supportée par ce navigateur.', type: 'error' });
+          return;
+        }
+
+        setIsSubmittingOnboarding(true);
+        setToast({ message: '📍 Détection de la position en cours...', type: 'success' });
+
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log('✅ Position détectée :', { latitude, longitude });
+
+            try {
+              const { error: updateError } = await supabase.rpc('update_merchant_location', {
+                p_merchant_id: merchantId,
+                p_latitude: latitude,
+                p_longitude: longitude,
+              });
+
+              if (updateError) {
+                console.error('❌ Erreur RPC update_merchant_location:', updateError);
+                setToast({ message: '❌ Erreur lors de la mise à jour de la position.', type: 'error' });
+              } else {
+                console.log('✅ Position mise à jour avec succès');
+                setToast({ message: '✅ Position mise à jour avec succès !', type: 'success' });
+
+                setUsedGeolocation(true);
+                setOnboardingData({
+                  ...onboardingData,
+                  street: 'Détectée automatiquement',
+                  city: 'Localisation GPS',
+                  postal_code: '00000',
+                });
+              }
+            } catch (err) {
+              console.error('❌ Erreur RPC:', err);
+              setToast({ message: '❌ Erreur lors de la détection de la position.', type: 'error' });
+            } finally {
+              setIsSubmittingOnboarding(false);
+            }
+          },
+          (error) => {
+            console.warn('⚠️ Impossible de récupérer la position :', error.message);
+            setToast({ message: '⚠️ ' + error.message, type: 'error' });
+            setIsSubmittingOnboarding(false);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          }
+        );
+      }}
+      className={`w-full flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors ${
+        isSubmittingOnboarding
+          ? 'bg-gray-200 text-gray-400 cursor-wait'
+          : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
+      }`}
+    >
+      {isSubmittingOnboarding ? (
+        <>
+          <div className="w-4 h-4 mr-2 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+          Détection en cours...
+        </>
+      ) : (
+        <>
+          <span role="img" aria-label="pin">📍</span>
+          <span className="ml-2">Me géolocaliser automatiquement</span>
+        </>
       )}
+    </button>
+
+    {/* 📝 Note d'information */}
+    <p className="text-xs text-gray-500 mt-3 text-center">
+      Vous pourrez modifier ces informations plus tard depuis votre tableau de bord marchand.
+    </p>
+  </div>
+
+  {/* 🖼️ Logo */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Logo de l'entreprise *
+    </label>
+    <input
+      type="file"
+      accept="image/*"
+      onChange={handleLogoChange}
+      className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-sm text-gray-500 cursor-pointer hover:border-green-400"
+      required={!onboardingData.logo_url}
+    />
+    {onboardingData.logo_url && (
+      <div className="mt-3 flex justify-center">
+        <img src={onboardingData.logo_url} alt="Logo prévisualisé" className="h-16 rounded-md shadow-sm" />
+      </div>
+    )}
+  </div>
+
+  {/* ✅ Bouton unique plein largeur */}
+  <button
+    type="submit"
+    disabled={isSubmittingOnboarding}
+    className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+  >
+    {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
+  </button>
+</form>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
