@@ -559,17 +559,49 @@ const handleOnboardingSubmit = async (e: React.FormEvent) => {
       console.log('Logo uploaded:', logoUrl);
     }
 
+    // 🧭 Étape 1 — Construire l’adresse complète
+    const fullAddress = `${onboardingData.street}, ${onboardingData.postal_code} ${onboardingData.city}, ${onboardingData.country || 'FR'}`;
+
+    // 🗺️ Étape 2 — Convertir l’adresse en coordonnées via Mapbox
+    const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNsa3RlbHRmczAxdWkya3BybjRrdm42d2MifQ.6iqMWKKUpzGg1O-RJIFa7A'; // 🔒 ton token Mapbox
+    const geoResponse = await fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${MAPBOX_TOKEN}`
+    );
+
+    const geoData = await geoResponse.json();
+    let latitude = null;
+    let longitude = null;
+
+    if (geoData.features && geoData.features.length > 0) {
+      longitude = geoData.features[0].center[0];
+      latitude = geoData.features[0].center[1];
+      console.log('✅ Coordonnées trouvées :', { latitude, longitude });
+    } else {
+      console.warn('⚠️ Impossible de géocoder cette adresse');
+    }
+
+    // 🗂️ Étape 3 — Mise à jour Supabase
+    const updatePayload: any = {
+      company_name: onboardingData.company_name,
+      phone: onboardingData.phone,
+      street: onboardingData.street,
+      city: onboardingData.city,
+      postal_code: onboardingData.postal_code,
+      logo_url: logoUrl,
+      onboarding_completed: true,
+    };
+
+    // Si les coordonnées existent → ajoute-les au payload
+    if (latitude && longitude) {
+      updatePayload.location = {
+        type: 'Point',
+        coordinates: [longitude, latitude],
+      };
+    }
+
     const { error: updateError } = await supabase
       .from('merchants')
-      .update({
-        company_name: onboardingData.company_name,
-        phone: onboardingData.phone,
-        street: onboardingData.street,
-        city: onboardingData.city,
-        postal_code: onboardingData.postal_code,
-        logo_url: logoUrl,
-        onboarding_completed: true
-      })
+      .update(updatePayload)
       .eq('id', merchantId);
 
     if (updateError) throw updateError;
@@ -580,12 +612,13 @@ const handleOnboardingSubmit = async (e: React.FormEvent) => {
 
     const { data: updatedMerchant } = await supabase
       .from('merchants')
-      .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed')
+      .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed, location')
       .eq('id', merchantId)
       .single();
 
     if (updatedMerchant) {
       setMerchantProfile(updatedMerchant);
+      console.log('📍 Nouveau profil marchand enregistré :', updatedMerchant);
     }
   } catch (error: any) {
     console.error('❌ Erreur lors de la mise à jour du profil:', error);
