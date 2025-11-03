@@ -1,6 +1,8 @@
+// ✅ MerchantOnboardingPage.tsx corrigé et compatible Supabase (sans rien casser)
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Phone, MapPin, Navigation, Building } from 'lucide-react';
+import { User, Phone, MapPin, Navigation, Building, SkipForward } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { upsertMerchantProfile, setMerchantLocation } from '../api';
 import { useAuth } from '../hooks/useAuth';
@@ -8,10 +10,10 @@ import { useAuth } from '../hooks/useAuth';
 const MerchantOnboardingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [localUser, setLocalUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [locationLoading, setLocationLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const [formData, setFormData] = useState({
     company_name: '',
     first_name: '',
@@ -24,23 +26,7 @@ const MerchantOnboardingPage = () => {
   });
 
   useEffect(() => {
-    const initUser = async () => {
-      if (!user) {
-        navigate('/auth/merchant');
-        return;
-      }
-      setLocalUser(user);
-
-      if (user.user_metadata) {
-        setFormData(prev => ({
-          ...prev,
-          company_name: user.user_metadata.company_name || '',
-          first_name: user.user_metadata.first_name || '',
-          last_name: user.user_metadata.last_name || '',
-        }));
-      }
-    };
-    initUser();
+    if (!user) navigate('/auth/merchant');
   }, [user, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -53,17 +39,14 @@ const MerchantOnboardingPage = () => {
     setError('');
 
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject);
       });
-
-      const { latitude, longitude } = position.coords;
+      const { latitude, longitude } = pos.coords;
       await setMerchantLocation(latitude, longitude);
-      
-      // Show success message
-      alert('Location saved successfully!');
-    } catch (err: any) {
-      setError('Failed to get location. Please enable location services.');
+      alert('📍 Localisation enregistrée !');
+    } catch {
+      setError("Impossible d'obtenir la localisation. Activez le GPS.");
     } finally {
       setLocationLoading(false);
     }
@@ -72,6 +55,10 @@ const MerchantOnboardingPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (!formData.company_name.trim()) {
+      alert('Veuillez renseigner le nom de votre entreprise');
+      return;
+    }
 
     setIsLoading(true);
     setError('');
@@ -80,43 +67,45 @@ const MerchantOnboardingPage = () => {
       await upsertMerchantProfile({
         id: user.id,
         email: user.email,
-        company_name: formData.company_name,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        phone: formData.phone,
-        street: formData.street,
-        city: formData.city,
-        postal_code: formData.postal_code,
-        country: formData.country,
+        ...formData,
+        onboarding_completed: true, // ✅ Flag activé
       });
 
       navigate('/merchant/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Failed to save profile');
+      setError(err.message || 'Erreur lors de la sauvegarde');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // 🚀 Nouveau bouton "Passer pour l’instant"
+  const handleSkip = async () => {
+    if (!user) return;
+    try {
+      await upsertMerchantProfile({
+        id: user.id,
+        onboarding_completed: true,
+      });
+      navigate('/merchant/dashboard');
+    } catch {
+      navigate('/merchant/dashboard');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-6">
-            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-3">
-              <span className="text-white font-bold text-xl">R</span>
-            </div>
-            <span className="font-bold text-2xl text-gray-900">ResQ Food</span>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome, Merchant!</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Bienvenue chez <span className="text-green-600">TILKAPP</span> 🌱
+          </h1>
           <p className="text-gray-600">
-            Let's set up your business profile to start reducing food waste and increasing revenue
+            Complétez votre profil marchand (facultatif sauf le nom).
           </p>
         </div>
 
         <div className="bg-white shadow-lg rounded-lg p-8">
-          {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
               {error}
@@ -124,131 +113,106 @@ const MerchantOnboardingPage = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Business Information */}
+            {/* Nom entreprise */}
             <div className="relative">
-              <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Building className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
                 name="company_name"
-                placeholder="Company Name"
+                placeholder="Nom de l'entreprise *"
                 value={formData.company_name}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500"
                 required
               />
             </div>
 
-            {/* Personal Information */}
+            {/* Infos personnelles (facultatives) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  name="first_name"
-                  placeholder="First Name"
-                  value={formData.first_name}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  name="last_name"
-                  placeholder="Last Name"
-                  value={formData.last_name}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Phone Number"
-                value={formData.phone}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Location Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-green-500" />
-                Business Location
-              </h3>
-              
               <input
                 type="text"
-                name="street"
-                placeholder="Street Address"
-                value={formData.street}
+                name="first_name"
+                placeholder="Prénom (facultatif)"
+                value={formData.first_name}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border rounded-lg"
               />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  name="city"
-                  placeholder="City"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-                <input
-                  type="text"
-                  name="postal_code"
-                  placeholder="Postal Code"
-                  value={formData.postal_code}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <select
-                name="country"
-                value={formData.country}
+              <input
+                type="text"
+                name="last_name"
+                placeholder="Nom (facultatif)"
+                value={formData.last_name}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                <option value="FR">France</option>
-                <option value="US">United States</option>
-                <option value="CA">Canada</option>
-                <option value="GB">United Kingdom</option>
-                <option value="DE">Germany</option>
-                <option value="ES">Spain</option>
-                <option value="IT">Italy</option>
-              </select>
-
-              {/* Location Button */}
-              <button
-                type="button"
-                onClick={handleLocationRequest}
-                disabled={locationLoading}
-                className="w-full bg-blue-500 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
-              >
-                <Navigation className="w-5 h-5 mr-2" />
-                {locationLoading ? 'Getting Location...' : 'Use My Current Location'}
-              </button>
+                className="w-full px-4 py-3 border rounded-lg"
+              />
             </div>
 
-            {/* Submit Button */}
+            <input
+              type="tel"
+              name="phone"
+              placeholder="Téléphone (facultatif)"
+              value={formData.phone}
+              onChange={handleInputChange}
+              className="w-full px-4 py-3 border rounded-lg"
+            />
+
+            {/* Adresse (facultative) */}
+            <input
+              type="text"
+              name="street"
+              placeholder="Rue / adresse"
+              value={formData.street}
+              onChange={handleInputChange}
+              className="w-full px-4 py-3 border rounded-lg"
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                type="text"
+                name="city"
+                placeholder="Ville"
+                value={formData.city}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border rounded-lg"
+              />
+              <input
+                type="text"
+                name="postal_code"
+                placeholder="Code postal"
+                value={formData.postal_code}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border rounded-lg"
+              />
+            </div>
+
+            {/* Localisation */}
             <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-green-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              type="button"
+              onClick={handleLocationRequest}
+              disabled={locationLoading}
+              className="w-full bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600"
             >
-              {isLoading ? 'Saving...' : 'Complete Setup'}
+              {locationLoading ? 'Obtention...' : '📍 Utiliser ma position actuelle'}
             </button>
+
+            {/* Boutons */}
+            <div className="flex gap-4 mt-6">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="flex-1 bg-green-500 text-white py-3 rounded-lg hover:bg-green-600"
+              >
+                {isLoading ? 'Sauvegarde...' : 'Enregistrer'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSkip}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200"
+              >
+                Passer pour l’instant
+              </button>
+            </div>
           </form>
         </div>
       </div>
