@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useAddProduct } from '../contexts/AddProductContext';
@@ -32,8 +33,10 @@ const MerchantDashboardPage = () => {
   }, []);
 
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { showAddProductModal, openAddProductModal, closeAddProductModal } = useAddProduct();
   const [merchantId, setMerchantId] = useState<string | null>(null);
+  const [merchantInfo, setMerchantInfo] = useState<any>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -78,6 +81,16 @@ useEffect(() => {
       if (merchantData) {
         console.log('✅ Marchand trouvé, ID:', merchantData.id);
         setMerchantId(merchantData.id);
+
+        const { data: fullMerchantData, error: merchantDetailError } = await supabase
+          .from('merchants')
+          .select('id, company_name, phone, street, city, postal_code, logo_url')
+          .eq('id', merchantData.id)
+          .maybeSingle();
+
+        if (!merchantDetailError && fullMerchantData) {
+          setMerchantInfo(fullMerchantData);
+        }
 
         // Auto-géolocalisation après avoir trouvé le merchantId
         if (navigator.geolocation) {
@@ -519,6 +532,16 @@ const handlePublish = async (formData: any) => {
     }
   };
 
+  const isProfileComplete = merchantInfo &&
+    merchantInfo.company_name &&
+    merchantInfo.company_name.trim() !== '' &&
+    merchantInfo.phone &&
+    merchantInfo.phone.trim() !== '' &&
+    merchantInfo.street &&
+    merchantInfo.street.trim() !== '' &&
+    merchantInfo.logo_url &&
+    merchantInfo.logo_url.trim() !== '';
+
   return (
     <div className="min-h-screen bg-gray-50">
       {toast && (
@@ -528,6 +551,28 @@ const handlePublish = async (formData: any) => {
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {merchantInfo && !isProfileComplete && (
+          <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-4 shadow-sm">
+            <div className="flex items-start">
+              <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-yellow-800 mb-1">
+                  Profil incomplet
+                </h3>
+                <p className="text-sm text-yellow-700 mb-3">
+                  Votre profil n'est pas encore complet. Complétez votre profil pour améliorer votre visibilité.
+                </p>
+                <button
+                  onClick={() => navigate('/merchant/profile-edit')}
+                  className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium"
+                >
+                  Compléter mon profil
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">My Products</h2>
