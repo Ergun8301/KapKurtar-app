@@ -77,87 +77,88 @@ const MerchantDashboardPage = () => {
 
   // 📍 Recherche du marchand et géolocalisation
   useEffect(() => {
-    const fetchMerchantIdAndGeolocate = async () => {
-      if (!user) {
-        setMerchantId(null);
+  const fetchMerchantIdAndGeolocate = async () => {
+    if (!user) {
+      setMerchantId(null);
+      return;
+    }
+
+    try {
+      console.log("🔍 Recherche du profil pour auth_id:", user.id);
+
+      // ✅ On utilise await à l'intérieur d'une fonction async
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_id", user.id)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+      if (!profileData) {
+        console.warn("⚠️ Aucun profil trouvé pour cet utilisateur");
         return;
       }
 
-      try {
-        console.log("🔍 Recherche du profil pour auth_id:", user.id);
+      const { data: merchantData, error: merchantError } = await supabase
+        .from("merchants")
+        .select("id")
+        .eq("profile_id", profileData.id)
+        .maybeSingle();
 
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("auth_id", user.id)
-          .maybeSingle();
+      if (merchantError) throw merchantError;
 
-        if (profileError) throw profileError;
-        if (!profileData) {
-          console.warn("⚠️ Aucun profil trouvé pour cet utilisateur");
-          return;
-        }
+      if (merchantData) {
+        console.log("✅ Marchand trouvé, ID:", merchantData.id);
+        setMerchantId(merchantData.id);
 
-        const { data: merchantData, error: merchantError } = await supabase
-          .from("merchants")
-          .select("id")
-          .eq("profile_id", profileData.id)
-          .maybeSingle();
+        // 📍 Auto-géolocalisation
+        if (navigator.geolocation) {
+          console.log("📍 Tentative de géolocalisation automatique...");
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const { latitude, longitude } = position.coords;
+              console.log("✅ Position obtenue:", { latitude, longitude });
 
-        if (merchantError) throw merchantError;
-        if (merchantData) {
-          console.log("✅ Marchand trouvé, ID:", merchantData.id);
-          setMerchantId(merchantData.id);
-
-          // Auto-géolocalisation
-          if (navigator.geolocation) {
-            console.log("📍 Tentative de géolocalisation automatique...");
-            navigator.geolocation.getCurrentPosition(
-              async (position) => {
-                const { latitude, longitude } = position.coords;
-                console.log("✅ Position obtenue:", { latitude, longitude });
-
-                try {
-                  const { error: updateError } = await supabase.rpc(
-                    "update_merchant_location",
-                    {
-                      p_merchant_id: merchantData.id,
-                      p_latitude: latitude,
-                      p_longitude: longitude,
-                    }
-                  );
-
-                  if (updateError) {
-                    console.error("❌ Erreur lors de la mise à jour de la position:", updateError);
-                  } else {
-                    console.log("✅ Position du marchand mise à jour avec succès");
+              try {
+                const { error: updateError } = await supabase.rpc(
+                  "update_merchant_location",
+                  {
+                    p_merchant_id: merchantData.id,
+                    p_latitude: latitude,
+                    p_longitude: longitude,
                   }
-                } catch (err) {
-                  console.error("❌ Erreur RPC update_merchant_location:", err);
-                }
-              },
-              (error) => {
-                console.warn("⚠️ Impossible de récupérer la position:", error.message);
-              },
-              {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0,
-              }
-            );
-          } else {
-            console.warn("⚠️ La géolocalisation n'est pas supportée par ce navigateur");
-          }
-        } else {
-          console.warn("⚠️ Aucun marchand trouvé pour ce profil");
-        }
-      } catch (error) {
-        console.error("Erreur lors de la récupération du merchant ID:", error);
-      }
-    };
+                );
 
-    fetchMerchantIdAndGeolocate();
-  }, [user]);
+                if (updateError)
+                  console.error("❌ Erreur mise à jour position:", updateError);
+                else console.log("✅ Position du marchand mise à jour !");
+              } catch (err) {
+                console.error("❌ Erreur RPC update_merchant_location:", err);
+              }
+            },
+            (error) => {
+              console.warn("⚠️ Impossible de récupérer la position:", error.message);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0,
+            }
+          );
+        } else {
+          console.warn("⚠️ La géolocalisation n'est pas supportée");
+        }
+      } else {
+        console.warn("⚠️ Aucun marchand trouvé pour ce profil");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération du merchant ID:", error);
+    }
+  };
+
+  // ✅ On appelle la fonction async ici
+  fetchMerchantIdAndGeolocate();
+}, [user]);
 
     try {
       console.log('🔍 Recherche du profil pour auth_id:', user.id);
