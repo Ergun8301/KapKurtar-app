@@ -68,8 +68,15 @@ const MerchantOnboardingPage = () => {
         id: user.id,
         email: user.email,
         ...formData,
-        onboarding_completed: true, // ✅ Flag activé
+        onboarding_completed: true,
       });
+
+      alert("✅ Profil sauvegardé avec succès !");
+
+      await supabase
+        .from("merchants")
+        .update({ onboarding_completed: true })
+        .eq("email", user.email);
 
       navigate('/merchant/dashboard');
     } catch (err: any) {
@@ -106,6 +113,10 @@ const MerchantOnboardingPage = () => {
         </div>
 
         <div className="bg-white shadow-lg rounded-lg p-8">
+          <div className="animate-fadeIn bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4 text-center shadow-sm">
+            👋 Bienvenue chez <b>TILKAPP</b> ! Complétez votre profil marchand pour commencer à publier vos offres.
+          </div>
+
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
               {error}

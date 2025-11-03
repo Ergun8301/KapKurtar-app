@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp, MapPin, Phone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useAddProduct } from '../contexts/AddProductContext';
@@ -32,8 +33,10 @@ const MerchantDashboardPage = () => {
   }, []);
 
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { showAddProductModal, openAddProductModal, closeAddProductModal } = useAddProduct();
   const [merchantId, setMerchantId] = useState<string | null>(null);
+  const [merchantInfo, setMerchantInfo] = useState<any>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -43,6 +46,38 @@ const MerchantDashboardPage = () => {
   const [togglingOfferId, setTogglingOfferId] = useState<string | null>(null);
   const [showNotifications, setShowNotifications] = useState(true);
   const { notifications, unreadCount } = useRealtimeNotifications(user?.id || null);
+
+  // Vérification du profil à la première connexion
+  useEffect(() => {
+    const checkMerchantProfile = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("merchants")
+        .select("company_name, onboarding_completed")
+        .eq("email", user.email)
+        .maybeSingle();
+
+      // Si pas de nom ou onboarding non terminé → redirection
+      if (!data?.company_name?.trim() || data.onboarding_completed === false) {
+        navigate("/merchant/onboarding", { replace: true });
+      }
+    };
+    checkMerchantProfile();
+  }, [user, navigate]);
+
+  // Chargement du résumé profil
+  useEffect(() => {
+    const fetchMerchantInfo = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("merchants")
+        .select("company_name, logo_url, phone, street, city, postal_code")
+        .eq("email", user.email)
+        .maybeSingle();
+      if (data) setMerchantInfo(data);
+    };
+    fetchMerchantInfo();
+  }, [user]);
 
 
 // Fetch merchant ID from user and auto-geolocate
@@ -641,6 +676,47 @@ const handlePublish = async (formData: any) => {
             </div>
           )}
         </div>
+
+        {/* Résumé du profil marchand */}
+        {merchantInfo && (
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-6 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <img
+                src={
+                  merchantInfo.logo_url ||
+                  "https://cdn-icons-png.flaticon.com/512/847/847969.png"
+                }
+                alt={merchantInfo.company_name || "Logo marchand"}
+                className="w-14 h-14 rounded-full object-cover border border-gray-200 bg-gray-100"
+              />
+              <div>
+                <h2 className="font-semibold text-lg text-gray-800">
+                  {merchantInfo.company_name || "Nom d'entreprise non défini"}
+                </h2>
+                {merchantInfo.street && (
+                  <p className="text-sm text-gray-600 flex items-center gap-1">
+                    <MapPin className="w-4 h-4 text-green-600" />
+                    {merchantInfo.street}, {merchantInfo.city || ""}{" "}
+                    {merchantInfo.postal_code || ""}
+                  </p>
+                )}
+                {merchantInfo.phone && (
+                  <p className="text-sm text-gray-600 flex items-center gap-1">
+                    <Phone className="w-4 h-4 text-green-600" />
+                    {merchantInfo.phone}
+                  </p>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => navigate("/merchant/onboarding")}
+              className="flex items-center gap-2 text-green-600 hover:text-green-700 font-medium transition"
+            >
+              <Edit className="w-4 h-4" />
+              Modifier mon profil
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {offers.map(offer => {
