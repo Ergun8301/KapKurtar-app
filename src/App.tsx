@@ -20,7 +20,6 @@ import MerchantAuthPage from "./pages/MerchantAuthPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import ProfileCompletePage from "./pages/ProfileCompletePage";
 import MerchantDashboardPage from "./pages/MerchantDashboardPage";
-import MerchantProfileEditPage from "./pages/MerchantProfileEditPage";
 
 // ✅ Pages utilisateurs
 import FavoritesPage from "./pages/FavoritesPage";
@@ -95,7 +94,6 @@ function App() {
 
               {/* 🏪 Tableau de bord marchand */}
               <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
-              <Route path="/merchant/profile-edit" element={<MerchantProfileEditPage />} />
 
               {/* 📱 Téléchargement */}
               <Route path="/download" element={<DownloadPage />} />
