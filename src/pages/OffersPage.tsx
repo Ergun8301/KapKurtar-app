@@ -495,7 +495,7 @@ useEffect(() => {
     // 💬 POPUP HTML (seulement pour desktop)
     const popupHTML = `
       <div style="width:210px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border-radius:12px;overflow:hidden;">
-
+        
         <!-- 📸 Image + badge réduction -->
         <div style="position:relative;width:100%;height:120px;overflow:hidden;">
           <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;">
@@ -559,13 +559,16 @@ useEffect(() => {
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
       marker.setPopup(popup);
     } else {
-      // 📱 Mobile -> affiche la liste d'offres proches
+      // 📱 Mobile -> bottom sheet
       el.addEventListener("click", () => {
-        console.log("📱 Offre cliquée :", offer.title);
-        // ✅ Change en mode "à proximité" et défile vers la liste
-        setViewMode("nearby");
-        const listSection = document.querySelector(".offers-list-section");
-        if (listSection) listSection.scrollIntoView({ behavior: "smooth" });
+        mapRef.current?.flyTo({
+          center: [offer.offer_lng, offer.offer_lat],
+          zoom: 14,
+          speed: 1.2,
+          curve: 1.4,
+          essential: true,
+        });
+        setSelectedOffer(offer); // affiche la fiche mobile
       });
     }
 
@@ -613,6 +616,64 @@ const handleViewModeChange = (mode: "nearby" | "all") => {
     setCenter(DEFAULT_LOCATION); // ✅ évite (NaN, NaN)
   }
 };
+
+// 📱 BOTTOM SHEET MOBILE
+{selectedOffer && (
+  <div
+    onClick={() => setSelectedOffer(null)}
+    style={{
+      position: "fixed",
+      bottom: "0",
+      left: "0",
+      right: "0",
+      background: "#fff",
+      borderTopLeftRadius: "16px",
+      borderTopRightRadius: "16px",
+      boxShadow: "0 -2px 10px rgba(0,0,0,0.15)",
+      zIndex: 1000,
+      animation: "slideUp 0.3s ease-out",
+      padding: "12px 16px",
+    }}
+  >
+    <div style={{ textAlign: "center" }}>
+      <img
+        src={selectedOffer.image_url}
+        alt={selectedOffer.title}
+        style={{
+          width: "100%",
+          height: "140px",
+          borderRadius: "12px",
+          objectFit: "cover",
+          marginBottom: "8px",
+        }}
+      />
+      <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "4px" }}>
+        {selectedOffer.title}
+      </h3>
+      <p style={{ color: "#16a34a", fontWeight: 700 }}>
+        {selectedOffer.price_after.toFixed(2)} €{" "}
+        <span style={{ textDecoration: "line-through", color: "#888", fontSize: "13px" }}>
+          {selectedOffer.price_before.toFixed(2)} €
+        </span>
+      </p>
+      <button
+        style={{
+          marginTop: "10px",
+          background: "#22c55e",
+          color: "white",
+          border: "none",
+          borderRadius: "8px",
+          padding: "8px 16px",
+          fontWeight: 600,
+          fontSize: "14px",
+          width: "100%",
+        }}
+      >
+        Voir détails / Réserver
+      </button>
+    </div>
+  </div>
+)}
 
   // Gestion du changement de rayon
   const handleRadiusChange = (val: number) => {
