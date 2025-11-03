@@ -26,6 +26,217 @@ interface Offer {
   quantity: number;
 }
 
+// --- Bandeau & formulaire profil marchand ---
+const MerchantProfileReminder = ({ merchantId }: { merchantId: string }) => {
+  const [merchant, setMerchant] = useState<any>(null);
+  const [isIncomplete, setIsIncomplete] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    company_name: "",
+    phone: "",
+    street: "",
+    city: "",
+    postal_code: "",
+    logo_url: ""
+  });
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  // Charger les infos du marchand
+  useEffect(() => {
+    const fetchMerchant = async () => {
+      const { data, error } = await supabase
+        .from("merchants")
+        .select("company_name, phone, street, city, postal_code, logo_url, onboarding_completed")
+        .eq("id", merchantId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Erreur récupération merchant:", error);
+        return;
+      }
+
+      if (data) {
+        setMerchant(data);
+        setForm({
+          company_name: data.company_name || "",
+          phone: data.phone || "",
+          street: data.street || "",
+          city: data.city || "",
+          postal_code: data.postal_code || "",
+          logo_url: data.logo_url || ""
+        });
+
+        const isIncomplete =
+          !data.company_name ||
+          !data.phone ||
+          !data.street ||
+          !data.city ||
+          !data.postal_code ||
+          !data.logo_url ||
+          data.onboarding_completed === false;
+        setIsIncomplete(isIncomplete);
+      }
+    };
+
+    fetchMerchant();
+  }, [merchantId]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const randomId = crypto.randomUUID();
+      const path = `${merchantId}/${randomId}.jpg`;
+      const imageUrl = await uploadImageToSupabase(file, "merchant-logos", path);
+      setForm((prev) => ({ ...prev, logo_url: imageUrl }));
+    } catch (err) {
+      console.error("Erreur upload logo:", err);
+      setToast({ message: "Erreur upload logo", type: "error" });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from("merchants")
+        .update({
+          company_name: form.company_name,
+          phone: form.phone,
+          street: form.street,
+          city: form.city,
+          postal_code: form.postal_code,
+          logo_url: form.logo_url,
+          onboarding_completed: true
+        })
+        .eq("id", merchantId);
+
+      if (error) throw error;
+
+      setToast({ message: "✅ Profil complété avec succès", type: "success" });
+      setIsIncomplete(false);
+      setShowForm(false);
+    } catch (err: any) {
+      console.error("Erreur update profil:", err);
+      setToast({ message: err.message || "Erreur de mise à jour", type: "error" });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setToast(null), 3000);
+    }
+  };
+
+  if (!isIncomplete) return null;
+
+  return (
+    <div className="mb-6">
+      {toast && (
+        <div
+          className={
+            "mb-3 px-4 py-2 rounded-lg shadow-sm text-white " +
+            (toast.type === "success" ? "bg-green-500" : "bg-red-500")
+          }
+        >
+          {toast.message}
+        </div>
+      )}
+
+      <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <p className="text-yellow-800 font-medium">
+            ⚠️ Votre profil marchand semble incomplet. Complétez-le pour améliorer votre visibilité.
+          </p>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="px-4 py-2 bg-yellow-400 text-yellow-900 rounded-md font-semibold hover:bg-yellow-500 transition"
+          >
+            {showForm ? "Fermer" : "Compléter mon profil"}
+          </button>
+        </div>
+
+        {showForm && (
+          <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+            <input
+              type="text"
+              name="company_name"
+              value={form.company_name}
+              onChange={handleChange}
+              placeholder="Nom de l'entreprise"
+              className="w-full p-2 border rounded-md"
+              required
+            />
+            <input
+              type="text"
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              placeholder="Téléphone"
+              className="w-full p-2 border rounded-md"
+              required
+            />
+            <input
+              type="text"
+              name="street"
+              value={form.street}
+              onChange={handleChange}
+              placeholder="Adresse"
+              className="w-full p-2 border rounded-md"
+              required
+            />
+            <input
+              type="text"
+              name="city"
+              value={form.city}
+              onChange={handleChange}
+              placeholder="Ville"
+              className="w-full p-2 border rounded-md"
+              required
+            />
+            <input
+              type="text"
+              name="postal_code"
+              value={form.postal_code}
+              onChange={handleChange}
+              placeholder="Code postal"
+              className="w-full p-2 border rounded-md"
+              required
+            />
+
+            {/* Upload du logo */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Logo de l'entreprise
+              </label>
+              <input type="file" accept="image/*" onChange={handleLogoUpload} />
+              {form.logo_url && (
+                <img
+                  src={form.logo_url}
+                  alt="Logo preview"
+                  className="mt-2 w-20 h-20 object-cover rounded-md border"
+                />
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition w-full"
+            >
+              {loading ? "Enregistrement..." : "Enregistrer"}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const MerchantDashboardPage = () => {
     useEffect(() => {
     window.scrollTo(0, 0);
@@ -528,6 +739,12 @@ const handlePublish = async (formData: any) => {
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* === Bandeau Profil Incomplet + Formulaire === */}
+{merchantId && (
+  <MerchantProfileReminder merchantId={merchantId} />
+)}
+
       <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">My Products</h2>
