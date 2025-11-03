@@ -126,45 +126,39 @@ useEffect(() => {
           });
         }
 
-        // Auto-géolocalisation après avoir trouvé le merchantId
-        if (navigator.geolocation) {
-          console.log('📍 Tentative de géolocalisation automatique...');
+                // 🧭 Pas de géolocalisation automatique
+        // Si tu veux plus tard proposer un bouton "Détecter ma position", tu pourras réutiliser ce code :
+        /*
+        const handleManualGeolocation = async () => {
+          if (!navigator.geolocation) {
+            console.warn("⚠️ La géolocalisation n'est pas supportée par ce navigateur");
+            return;
+          }
+
           navigator.geolocation.getCurrentPosition(
             async (position) => {
               const { latitude, longitude } = position.coords;
-              console.log('✅ Position obtenue:', { latitude, longitude });
+              console.log('✅ Position obtenue manuellement:', { latitude, longitude });
 
-              try {
-                const { error: updateError } = await supabase.rpc(
-                  'update_merchant_location',
-                  {
-                    p_merchant_id: merchantData.id,
-                    p_latitude: latitude,
-                    p_longitude: longitude,
-                  }
-                );
+              const { error: updateError } = await supabase.rpc('update_merchant_location', {
+                p_merchant_id: merchantData.id,
+                p_latitude: latitude,
+                p_longitude: longitude,
+              });
 
-                if (updateError) {
-                  console.error('❌ Erreur lors de la mise à jour de la position:', updateError);
-                } else {
-                  console.log('✅ Position du marchand mise à jour avec succès');
-                }
-              } catch (err) {
-                console.error('❌ Erreur RPC update_merchant_location:', err);
+              if (updateError) {
+                console.error('❌ Erreur RPC update_merchant_location:', updateError);
+              } else {
+                console.log('✅ Position du marchand mise à jour avec succès');
               }
             },
             (error) => {
               console.warn('⚠️ Impossible de récupérer la position:', error.message);
-            },
-            {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 0,
             }
           );
-        } else {
-          console.warn('⚠️ La géolocalisation n\'est pas supportée par ce navigateur');
-        }
+        };
+        */
+
       } else {
         console.warn('⚠️ Aucun marchand trouvé pour ce profil');
       }
