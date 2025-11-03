@@ -158,92 +158,120 @@ const MerchantDashboardPage = () => {
       }
     };
 
-    // ✅ Appel de la fonction async
-    fetchMerchantIdAndGeolocate();
-  }, [user]);
+     // ✅ Appel de la fonction async
+  fetchMerchantIdAndGeolocate();
+}, [user]);
 
-  // ✅ Vérifier et désactiver les offres expirées
-  useEffect(() => {
-    const checkExpiredOffers = async () => {
-      try {
-        await supabase.rpc("auto_expire_offers");
-        console.log("Fonction auto_expire_offers exécutée avec succès");
-      } catch (error) {
-        console.error("Erreur lors de la vérification des offres expirées :", error);
-      }
-    };
-
-    checkExpiredOffers();
-
-    if (!merchantId) {
-      console.log("⏳ Merchant ID non disponible, attente...");
-      return;
-    }
-
-    console.log("✅ Merchant ID disponible :", merchantId);
-    loadOffers();
-
-    // 🔁 Abonnement en temps réel aux offres du marchand
-    console.log("Subscribing to realtime updates for merchant offers...");
-    const channel = supabase
-      .channel("merchant-offers-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "offers",
-          filter: `merchant_id=eq.${merchantId}`,
-        },
-        (payload) => {
-          console.log("Merchant offers table changed:", payload);
-          loadOffers();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log("Unsubscribing from merchant offers realtime...");
-      supabase.removeChannel(channel);
-    };
-  }, [merchantId]);
-
-  // 🕒 Disparition automatique des toasts
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-
-  // 🧩 Fonction de chargement des offres
-  const loadOffers = async () => {
-    if (!merchantId) return;
-
+// ✅ Vérifier et désactiver les offres expirées
+useEffect(() => {
+  const checkExpiredOffers = async () => {
     try {
-      console.log("Fetching offers for merchant:", merchantId);
-
-      const { data, error } = await supabase
-        .from("offers")
-        .select("*")
-        .eq("merchant_id", merchantId)
-        .eq("is_deleted", false)
-        .order("updated_at", { ascending: false });
-
-      if (error) throw error;
-
-      console.log("Offers loaded:", data);
-      setOffers(data || []);
-    } catch (error: any) {
-      console.error("Error loading offers:", error);
-      setToast({
-        message: error.message || "Failed to load offers",
-        type: "error",
-      });
-    } finally {
-      setLoading(false);
+      await supabase.rpc("auto_expire_offers");
+      console.log("Fonction auto_expire_offers exécutée avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la vérification des offres expirées :", error);
     }
   };
+
+  checkExpiredOffers();
+
+  if (!merchantId) {
+    console.log("⏳ Merchant ID non disponible, attente...");
+    return;
+  }
+
+  console.log("✅ Merchant ID disponible :", merchantId);
+  loadOffers();
+
+  // 🔁 Abonnement en temps réel aux offres du marchand
+  console.log("Subscribing to realtime updates for merchant offers...");
+  const channel = supabase
+    .channel("merchant-offers-changes")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "offers",
+        filter: `merchant_id=eq.${merchantId}`,
+      },
+      (payload) => {
+        console.log("Merchant offers table changed:", payload);
+        loadOffers();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    console.log("Unsubscribing from merchant offers realtime...");
+    supabase.removeChannel(channel);
+  };
+}, [merchantId]);
+
+// 🕒 Disparition automatique des toasts
+useEffect(() => {
+  if (toast) {
+    const timer = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(timer);
+  }
+}, [toast]);
+
+// 🧩 Fonction de chargement des offres
+const loadOffers = async () => {
+  if (!merchantId) return;
+
+  try {
+    console.log("Fetching offers for merchant:", merchantId);
+
+    const { data, error } = await supabase
+      .from("offers")
+      .select("*")
+      .eq("merchant_id", merchantId)
+      .eq("is_deleted", false)
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+
+    console.log("Offers loaded:", data);
+    setOffers(data || []);
+  } catch (error: any) {
+    console.error("Error loading offers:", error);
+    setToast({
+      message: error.message || "Failed to load offers",
+      type: "error",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+// 💾 Sauvegarde du profil marchand (formulaire onboarding)
+const handleSaveProfile = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const { error } = await supabase
+      .from("merchants")
+      .update({
+        name: formData.company_name,
+        phone: formData.phone,
+        street: formData.street,
+        city: formData.city,
+        postal_code: formData.postal_code,
+        onboarding_completed: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", user?.id);
+
+    if (error) throw error;
+
+    alert("✅ Profil enregistré avec succès !");
+    setShowProfileForm(false);
+    window.location.reload();
+  } catch (error: any) {
+    alert("❌ Erreur lors de l’enregistrement du profil : " + error.message);
+  }
+};
 
 const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' => {
   const now = new Date();
@@ -273,12 +301,6 @@ const calculateTimeLeft = (endDate: string) => {
   return minutes + 'm left';
 };
 
-
-
-
-
-
-
 const handlePublish = async (formData: any) => {
   if (!user) {
     console.error('User not authenticated');
@@ -305,123 +327,108 @@ const handlePublish = async (formData: any) => {
   setIsPublishing(true);
   try {
     const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('auth_id', user.id)
-        .maybeSingle();
+      .from('profiles')
+      .select('id')
+      .eq('auth_id', user.id)
+      .maybeSingle();
 
-      if (profileError || !profileData) {
-        console.error('❌ Impossible de trouver le profil lié à cet utilisateur', profileError);
-        setToast({ message: 'Erreur : profil introuvable', type: 'error' });
-        setIsPublishing(false);
-        return;
-      }
-
-      console.log('✅ Profil trouvé, profile.id:', profileData.id);
-
-      const { data: merchantData, error: merchantError } = await supabase
-        .from('merchants')
-        .select('id, location')
-        .eq('profile_id', profileData.id)
-        .maybeSingle();
-
-      if (merchantError || !merchantData) {
-        console.error('❌ Impossible de trouver le marchand lié à ce profil', {
-          profile_id: profileData.id,
-          error: merchantError,
-          merchantData
-        });
-        setToast({ message: 'Erreur : marchand introuvable', type: 'error' });
-        setIsPublishing(false);
-        return;
-      }
-
-      console.log('✅ Marchand trouvé, merchant.id:', merchantData.id);
-      console.log('📍 Localisation du marchand:', merchantData.location);
-
-      let imageUrl = null;
-      if (formData.image) {
-        console.log('Uploading image to Supabase storage...');
-        const randomId = crypto.randomUUID();
-        const path = `${user.id}/${randomId}.jpg`;
-        imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
-        console.log('Image uploaded successfully:', imageUrl);
-      }
-
-      const offerData: any = {
-        merchant_id: merchantData.id,
-        title: formData.title,
-        description: formData.description,
-        image_url: imageUrl,
-        price_before: parseFloat(formData.price_before),
-        price_after: parseFloat(formData.price_after),
-        quantity: parseInt(formData.quantity),
-        available_from: formData.available_from,
-        available_until: formData.available_until,
-        is_active: true
-      };
-
-      if (merchantData.location) {
-        offerData.location = merchantData.location;
-        console.log('✅ Localisation du marchand copiée vers l\'offre');
-      } else {
-        console.warn('⚠️ Aucune localisation trouvée pour ce marchand');
-      }
-
-      console.log('Inserting offer into Supabase:', offerData);
-
-      const { data, error } = await supabase
-        .from('offers')
-        .insert([offerData])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase insert error:', error);
-        throw error;
-      }
-
-      console.log('✅ Offer created successfully:', data);
-
-      const { data: auditLog, error: auditError } = await supabase
-        .from('audit_log')
-        .select('*')
-        .eq('table_name', 'offers')
-        .eq('record_id', data.id)
-        .eq('action', 'INSERT')
-        .maybeSingle();
-
-      if (auditLog) {
-        console.log('✅ Audit log entry created:', auditLog);
-      } else if (auditError) {
-        console.warn('Could not verify audit log:', auditError);
-      }
-
-      setOffers([data, ...offers]);
-      closeAddProductModal();
-      setToast({ message: '✅ Offer added successfully', type: 'success' });
-    } catch (error: any) {
-      console.error('❌ Error publishing offer:', error);
-      setToast({ message: error.message || 'Failed to publish offer', type: 'error' });
-    } finally {
+    if (profileError || !profileData) {
+      console.error('❌ Impossible de trouver le profil lié à cet utilisateur', profileError);
+      setToast({ message: 'Erreur : profil introuvable', type: 'error' });
       setIsPublishing(false);
+      return;
     }
-  };
 
-  const toggleOfferStatus = async (offerId: string, currentStatus: boolean) => {
-  if (!user) {
-    console.error('User not authenticated');
-    setToast({ message: 'Please log in to update offer status', type: 'error' });
-    return;
+    console.log('✅ Profil trouvé, profile.id:', profileData.id);
+
+    const { data: merchantData, error: merchantError } = await supabase
+      .from('merchants')
+      .select('id, location')
+      .eq('profile_id', profileData.id)
+      .maybeSingle();
+
+    if (merchantError || !merchantData) {
+      console.error('❌ Impossible de trouver le marchand lié à ce profil', {
+        profile_id: profileData.id,
+        error: merchantError,
+        merchantData
+      });
+      setToast({ message: 'Erreur : marchand introuvable', type: 'error' });
+      setIsPublishing(false);
+      return;
+    }
+
+    console.log('✅ Marchand trouvé, merchant.id:', merchantData.id);
+    console.log('📍 Localisation du marchand:', merchantData.location);
+
+    let imageUrl = null;
+    if (formData.image) {
+      console.log('Uploading image to Supabase storage...');
+      const randomId = crypto.randomUUID();
+      const path = `${user.id}/${randomId}.jpg`;
+      imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
+      console.log('Image uploaded successfully:', imageUrl);
+    }
+
+    const offerData: any = {
+      merchant_id: merchantData.id,
+      title: formData.title,
+      description: formData.description,
+      image_url: imageUrl,
+      price_before: parseFloat(formData.price_before),
+      price_after: parseFloat(formData.price_after),
+      quantity: parseInt(formData.quantity),
+      available_from: formData.available_from,
+      available_until: formData.available_until,
+      is_active: true
+    };
+
+    if (merchantData.location) {
+      offerData.location = merchantData.location;
+      console.log('✅ Localisation du marchand copiée vers l\'offre');
+    } else {
+      console.warn('⚠️ Aucune localisation trouvée pour ce marchand');
+    }
+
+    console.log('Inserting offer into Supabase:', offerData);
+
+    const { data, error } = await supabase
+      .from('offers')
+      .insert([offerData])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase insert error:', error);
+      throw error;
+    }
+
+    console.log('✅ Offer created successfully:', data);
+
+    const { data: auditLog, error: auditError } = await supabase
+      .from('audit_log')
+      .select('*')
+      .eq('table_name', 'offers')
+      .eq('record_id', data.id)
+      .eq('action', 'INSERT')
+      .maybeSingle();
+
+    if (auditLog) {
+      console.log('✅ Audit log entry created:', auditLog);
+    } else if (auditError) {
+      console.warn('Could not verify audit log:', auditError);
+    }
+
+    setOffers([data, ...offers]);
+    closeAddProductModal();
+    setToast({ message: '✅ Offer added successfully', type: 'success' });
+  } catch (error: any) {
+    console.error('❌ Error publishing offer:', error);
+    setToast({ message: error.message || 'Failed to publish offer', type: 'error' });
+  } finally {
+    setIsPublishing(false);
   }
-
-  if (togglingOfferId === offerId) return;
-
-  const newStatus = !currentStatus;
-  const actionText = newStatus ? 'Activating' : 'Pausing';
-  console.log(`${actionText} offer via RPC...`);
-
-  setTogglingOfferId(offerId);
+};
 
   try {
     // 🟢 Appel RPC sécurisé Supabase
