@@ -77,244 +77,173 @@ const MerchantDashboardPage = () => {
 
   // 📍 Recherche du marchand et géolocalisation
   useEffect(() => {
-  const fetchMerchantIdAndGeolocate = async () => {
-    if (!user) {
-      setMerchantId(null);
+    // ✅ Fonction async interne (évite l’erreur 'await')
+    const fetchMerchantIdAndGeolocate = async () => {
+      if (!user) {
+        setMerchantId(null);
+        return;
+      }
+
+      try {
+        console.log("🔍 Recherche du profil pour auth_id:", user.id);
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("auth_id", user.id)
+          .maybeSingle();
+
+        if (profileError) throw profileError;
+        if (!profileData) {
+          console.warn("⚠️ Aucun profil trouvé pour cet utilisateur");
+          return;
+        }
+
+        const { data: merchantData, error: merchantError } = await supabase
+          .from("merchants")
+          .select("id")
+          .eq("profile_id", profileData.id)
+          .maybeSingle();
+
+        if (merchantError) throw merchantError;
+
+        if (merchantData) {
+          console.log("✅ Marchand trouvé, ID:", merchantData.id);
+          setMerchantId(merchantData.id);
+
+          // 🗺️ Auto-géolocalisation
+          if (navigator.geolocation) {
+            console.log("📍 Tentative de géolocalisation automatique...");
+            navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                const { latitude, longitude } = position.coords;
+                console.log("✅ Position obtenue:", { latitude, longitude });
+
+                try {
+                  const { error: updateError } = await supabase.rpc(
+                    "update_merchant_location",
+                    {
+                      p_merchant_id: merchantData.id,
+                      p_latitude: latitude,
+                      p_longitude: longitude,
+                    }
+                  );
+
+                  if (updateError) {
+                    console.error("❌ Erreur RPC update_merchant_location:", updateError);
+                  } else {
+                    console.log("✅ Position du marchand mise à jour avec succès");
+                  }
+                } catch (err) {
+                  console.error("❌ Erreur RPC update_merchant_location:", err);
+                }
+              },
+              (error) => {
+                console.warn("⚠️ Impossible de récupérer la position:", error.message);
+              },
+              {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0,
+              }
+            );
+          } else {
+            console.warn("⚠️ La géolocalisation n'est pas supportée par ce navigateur");
+          }
+        } else {
+          console.warn("⚠️ Aucun marchand trouvé pour ce profil");
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération du merchant ID:", error);
+      }
+    };
+
+    // ✅ Appel de la fonction async
+    fetchMerchantIdAndGeolocate();
+  }, [user]);
+
+  // ✅ Vérifier et désactiver les offres expirées
+  useEffect(() => {
+    const checkExpiredOffers = async () => {
+      try {
+        await supabase.rpc("auto_expire_offers");
+        console.log("Fonction auto_expire_offers exécutée avec succès");
+      } catch (error) {
+        console.error("Erreur lors de la vérification des offres expirées :", error);
+      }
+    };
+
+    checkExpiredOffers();
+
+    if (!merchantId) {
+      console.log("⏳ Merchant ID non disponible, attente...");
       return;
     }
 
-    try {
-      console.log("🔍 Recherche du profil pour auth_id:", user.id);
+    console.log("✅ Merchant ID disponible :", merchantId);
+    loadOffers();
 
-      // ✅ On utilise await à l'intérieur d'une fonction async
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("auth_id", user.id)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-      if (!profileData) {
-        console.warn("⚠️ Aucun profil trouvé pour cet utilisateur");
-        return;
-      }
-
-      const { data: merchantData, error: merchantError } = await supabase
-        .from("merchants")
-        .select("id")
-        .eq("profile_id", profileData.id)
-        .maybeSingle();
-
-      if (merchantError) throw merchantError;
-
-      if (merchantData) {
-        console.log("✅ Marchand trouvé, ID:", merchantData.id);
-        setMerchantId(merchantData.id);
-
-        // 📍 Auto-géolocalisation
-        if (navigator.geolocation) {
-          console.log("📍 Tentative de géolocalisation automatique...");
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              const { latitude, longitude } = position.coords;
-              console.log("✅ Position obtenue:", { latitude, longitude });
-
-              try {
-                const { error: updateError } = await supabase.rpc(
-                  "update_merchant_location",
-                  {
-                    p_merchant_id: merchantData.id,
-                    p_latitude: latitude,
-                    p_longitude: longitude,
-                  }
-                );
-
-                if (updateError)
-                  console.error("❌ Erreur mise à jour position:", updateError);
-                else console.log("✅ Position du marchand mise à jour !");
-              } catch (err) {
-                console.error("❌ Erreur RPC update_merchant_location:", err);
-              }
-            },
-            (error) => {
-              console.warn("⚠️ Impossible de récupérer la position:", error.message);
-            },
-            {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 0,
-            }
-          );
-        } else {
-          console.warn("⚠️ La géolocalisation n'est pas supportée");
+    // 🔁 Abonnement en temps réel aux offres du marchand
+    console.log("Subscribing to realtime updates for merchant offers...");
+    const channel = supabase
+      .channel("merchant-offers-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "offers",
+          filter: `merchant_id=eq.${merchantId}`,
+        },
+        (payload) => {
+          console.log("Merchant offers table changed:", payload);
+          loadOffers();
         }
-      } else {
-        console.warn("⚠️ Aucun marchand trouvé pour ce profil");
-      }
-    } catch (error) {
-      console.error("Erreur lors de la récupération du merchant ID:", error);
-    }
-  };
+      )
+      .subscribe();
 
-  // ✅ On appelle la fonction async ici
-  fetchMerchantIdAndGeolocate();
-}, [user]);
+    return () => {
+      console.log("Unsubscribing from merchant offers realtime...");
+      supabase.removeChannel(channel);
+    };
+  }, [merchantId]);
+
+  // 🕒 Disparition automatique des toasts
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  // 🧩 Fonction de chargement des offres
+  const loadOffers = async () => {
+    if (!merchantId) return;
 
     try {
-      console.log('🔍 Recherche du profil pour auth_id:', user.id);
+      console.log("Fetching offers for merchant:", merchantId);
 
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('auth_id', user.id)
-        .maybeSingle();
+      const { data, error } = await supabase
+        .from("offers")
+        .select("*")
+        .eq("merchant_id", merchantId)
+        .eq("is_deleted", false)
+        .order("updated_at", { ascending: false });
 
-      if (profileError) throw profileError;
-      if (!profileData) {
-        console.warn('⚠️ Aucun profil trouvé pour cet utilisateur');
-        return;
-      }
+      if (error) throw error;
 
-      const { data: merchantData, error: merchantError } = await supabase
-        .from('merchants')
-        .select('id')
-        .eq('profile_id', profileData.id)
-        .maybeSingle();
-
-      if (merchantError) throw merchantError;
-      if (merchantData) {
-        console.log('✅ Marchand trouvé, ID:', merchantData.id);
-        setMerchantId(merchantData.id);
-
-        // Auto-géolocalisation après avoir trouvé le merchantId
-        if (navigator.geolocation) {
-          console.log('📍 Tentative de géolocalisation automatique...');
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              const { latitude, longitude } = position.coords;
-              console.log('✅ Position obtenue:', { latitude, longitude });
-
-              try {
-                const { error: updateError } = await supabase.rpc(
-                  'update_merchant_location',
-                  {
-                    p_merchant_id: merchantData.id,
-                    p_latitude: latitude,
-                    p_longitude: longitude,
-                  }
-                );
-
-                if (updateError) {
-                  console.error('❌ Erreur lors de la mise à jour de la position:', updateError);
-                } else {
-                  console.log('✅ Position du marchand mise à jour avec succès');
-                }
-              } catch (err) {
-                console.error('❌ Erreur RPC update_merchant_location:', err);
-              }
-            },
-            (error) => {
-              console.warn('⚠️ Impossible de récupérer la position:', error.message);
-            },
-            {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 0,
-            }
-          );
-        } else {
-          console.warn('⚠️ La géolocalisation n\'est pas supportée par ce navigateur');
-        }
-      } else {
-        console.warn('⚠️ Aucun marchand trouvé pour ce profil');
-      }
-    } catch (error) {
-      console.error('Erreur lors de la récupération du merchant ID:', error);
+      console.log("Offers loaded:", data);
+      setOffers(data || []);
+    } catch (error: any) {
+      console.error("Error loading offers:", error);
+      setToast({
+        message: error.message || "Failed to load offers",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
     }
   };
-
-  fetchMerchantIdAndGeolocate();
-}, [user]);
-
-useEffect(() => {
-  const checkExpiredOffers = async () => {
-    try {
-      await supabase.rpc('auto_expire_offers');
-      console.log('Fonction auto_expire_offers exécutée avec succès');
-    } catch (error) {
-      console.error('Erreur lors de la vérification des offres expirées :', error);
-    }
-  };
-
-  checkExpiredOffers();
-
-  if (!merchantId) {
-    console.log('⏳ Merchant ID non disponible, attente...');
-    return;
-  }
-
-  console.log('✅ Merchant ID disponible :', merchantId);
-  loadOffers();
-
-  // Subscribe to realtime updates for merchant's offers
-  console.log('Subscribing to realtime updates for merchant offers...');
-  const channel = supabase
-    .channel('merchant-offers-changes')
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'offers',
-        filter: `merchant_id=eq.${merchantId}`,
-      },
-      (payload) => {
-        console.log('Merchant offers table changed:', payload);
-        loadOffers();
-      }
-    )
-    .subscribe();
-
-  return () => {
-    console.log('Unsubscribing from merchant offers realtime...');
-    supabase.removeChannel(channel);
-  };
-}, [merchantId]);
-
-useEffect(() => {
-  if (toast) {
-    const timer = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(timer);
-  }
-}, [toast]);
-
-const loadOffers = async () => {
-  if (!merchantId) return;
-
-  try {
-    console.log('Fetching offers for merchant:', merchantId);
-
-    const { data, error } = await supabase
-      .from('offers')
-      .select('*')
-      .eq('merchant_id', merchantId)
-      .eq('is_deleted', false)
-      .order('updated_at', { ascending: false });
-
-    if (error) throw error;
-
-    console.log('Offers loaded:', data);
-    setOffers(data || []);
-  } catch (error: any) {
-    console.error('Error loading offers:', error);
-    setToast({
-      message: error.message || 'Failed to load offers',
-      type: 'error',
-    });
-  } finally {
-    setLoading(false);
-  }
-};
 
 const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' => {
   const now = new Date();
