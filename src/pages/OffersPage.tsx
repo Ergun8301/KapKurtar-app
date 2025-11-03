@@ -442,238 +442,186 @@ useEffect(() => {
   fetchOffers();
 }, [center, clientId, viewMode, radiusKm]);
 
-// 🗺️ Marqueurs d'offres (markers + popups)
-useEffect(() => {
-  const map = mapRef.current;
-  if (!map) return;
+import React, { useEffect, useRef, useState } from "react";
+import mapboxgl, { Marker } from "mapbox-gl";
+import { supabase } from "../lib/supabaseClient";
 
-  // on nettoie les anciens marqueurs
-  (map as any)._markers?.forEach((m: Marker) => m.remove());
-  (map as any)._markers = [];
-
-  // détection du mobile
-  const isMobile = window.innerWidth < 768;
-
-  offers.forEach((offer) => {
-    // sécurité coordonnées
-    if (
-      !Number.isFinite(offer.offer_lng) ||
-      !Number.isFinite(offer.offer_lat)
-    ) {
-      return;
-    }
-
-    // 🎯 Élément HTML du marqueur
-    const el = document.createElement("div");
-    el.className = "offer-marker";
-    el.style.background = "#22c55e";
-    el.style.width = "20px";
-    el.style.height = "20px";
-    el.style.borderRadius = "50%";
-    el.style.border = "2px solid #fff";
-    el.style.cursor = "pointer";
-    el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
-
-    // 🧮 Calculs dynamiques
-    const discount = Math.round(
-      ((offer.price_before - offer.price_after) / offer.price_before) * 100
-    );
-
-    const now = new Date();
-    const until = new Date(offer.available_until);
-    const from = new Date((offer as any).available_from || now);
-
-    const total = until.getTime() - from.getTime();
-    const remaining = until.getTime() - now.getTime();
-
-    // temps restant
-    const minutesLeft = Math.max(0, Math.floor(remaining / 60000));
-    const hours = Math.floor(minutesLeft / 60);
-    const mins = minutesLeft % 60;
-    const timeLeft = hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
-
-    // 💬 POPUP HTML (seulement pour desktop)
-    const popupHTML = `
-      <div style="width:210px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border-radius:12px;overflow:hidden;">
-        
-        <!-- 📸 Image + badge réduction -->
-        <div style="position:relative;width:100%;height:120px;overflow:hidden;">
-          <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;">
-          <div style="position:absolute;top:8px;right:8px;background:#f9fafb;color:#ea580c;font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;border:1px solid #e5e7eb;">
-            -${discount}%
-          </div>
-        </div>
-
-        <!-- 🕒 Titre + Timer -->
-        <div style="padding:10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <div style="font-size:14px;font-weight:600;color:#111;">
-              ${offer.title || "Offre locale"}
-            </div>
-            <div style="display:flex;align-items:center;gap:3px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:600;padding:2px 5px;border-radius:6px;">
-              ⏰ ${timeLeft || "Bientôt expirée"}
-            </div>
-          </div>
-
-          <!-- 💶 Prix -->
-          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">
-            <span style="
-              text-decoration:line-through;
-              text-decoration-color:#ef4444;
-              color:#777;
-              font-size:12px;
-            ">
-              ${offer.price_before.toFixed(2)} €
-            </span>
-            <span style="color:#16a34a;font-weight:700;font-size:15px;">
-              ${offer.price_after.toFixed(2)} €
-            </span>
-          </div>
-
-          <!-- 🟢 Bouton -->
-          <button style="
-            width:100%;
-            background:#22c55e;
-            color:#fff;
-            border:none;
-            border-radius:8px;
-            padding:7px 0;
-            font-size:13px;
-            font-weight:600;
-            cursor:pointer;
-          ">
-            Voir détails / Réserver
-          </button>
-        </div>
-      </div>
-    `;
-
-    // ✅ Création du marker
-    const marker = new mapboxgl.Marker(el).setLngLat([
-      offer.offer_lng,
-      offer.offer_lat,
-    ]);
-
-    if (!isMobile) {
-      // 💻 Desktop -> popup complet
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
-      marker.setPopup(popup);
-    } else {
-      // 📱 Mobile -> bottom sheet
-      el.addEventListener("click", () => {
-        mapRef.current?.flyTo({
-          center: [offer.offer_lng, offer.offer_lat],
-          zoom: 14,
-          speed: 1.2,
-          curve: 1.4,
-          essential: true,
-        });
-        setSelectedOffer(offer); // affiche la fiche mobile
-      });
-    }
-
-    marker.addTo(map);
-    (map as any)._markers.push(marker);
-  });
-}, [offers]);
-
-// 🎯 Ajuste la vue carte quand on est en mode "all"
-useEffect(() => {
-  const map = mapRef.current;
-  if (!map) return;
-
-  if (viewMode === "all" && offers.length > 0) {
-    const valid = offers.filter(
-      (o) => Number.isFinite(o.offer_lng) && Number.isFinite(o.offer_lat)
-    );
-
-    if (valid.length > 0) {
-      const bounds = new mapboxgl.LngLatBounds();
-      valid.forEach((o) => bounds.extend([o.offer_lng, o.offer_lat]));
-      map.fitBounds(bounds, { padding: 80, duration: 800 });
-    }
-  }
-}, [offers, viewMode]);
-
-// 🧭 Gestion du changement de mode de vue
-const handleViewModeChange = (mode: "nearby" | "all") => {
-  setViewMode(mode);
-
-  if (
-    mode === "nearby" &&
-    mapRef.current &&
-    Number.isFinite(userLocation[0]) &&
-    Number.isFinite(userLocation[1])
-  ) {
-    mapRef.current.flyTo({
-      center: userLocation,
-      zoom: 12,
-      essential: true,
-    });
-  }
-
-  if (mode === "all") {
-    setCenter(DEFAULT_LOCATION); // ✅ évite (NaN, NaN)
-  }
+type Offer = {
+  offer_id: string;
+  title: string;
+  image_url: string;
+  price_before: number;
+  price_after: number;
+  offer_lat: number;
+  offer_lng: number;
+  available_until: string;
+  available_from?: string;
 };
 
-// 📱 BOTTOM SHEET MOBILE
-{selectedOffer && (
-  <div
-    onClick={() => setSelectedOffer(null)}
-    style={{
-      position: "fixed",
-      bottom: "0",
-      left: "0",
-      right: "0",
-      background: "#fff",
-      borderTopLeftRadius: "16px",
-      borderTopRightRadius: "16px",
-      boxShadow: "0 -2px 10px rgba(0,0,0,0.15)",
-      zIndex: 1000,
-      animation: "slideUp 0.3s ease-out",
-      padding: "12px 16px",
-    }}
-  >
-    <div style={{ textAlign: "center" }}>
-      <img
-        src={selectedOffer.image_url}
-        alt={selectedOffer.title}
-        style={{
-          width: "100%",
-          height: "140px",
-          borderRadius: "12px",
-          objectFit: "cover",
-          marginBottom: "8px",
-        }}
-      />
-      <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "4px" }}>
-        {selectedOffer.title}
-      </h3>
-      <p style={{ color: "#16a34a", fontWeight: 700 }}>
-        {selectedOffer.price_after.toFixed(2)} €{" "}
-        <span style={{ textDecoration: "line-through", color: "#888", fontSize: "13px" }}>
-          {selectedOffer.price_before.toFixed(2)} €
-        </span>
-      </p>
-      <button
-        style={{
-          marginTop: "10px",
-          background: "#22c55e",
-          color: "white",
-          border: "none",
-          borderRadius: "8px",
-          padding: "8px 16px",
-          fontWeight: 600,
-          fontSize: "14px",
-          width: "100%",
-        }}
-      >
-        Voir détails / Réserver
-      </button>
+const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
+const DEFAULT_LOCATION: [number, number] = [2.35, 48.85]; // Paris par défaut
+
+export default function OffersPage() {
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
+
+  // Initialisation de la carte
+  useEffect(() => {
+    mapboxgl.accessToken = "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNsa2p3dHV4ZzA3aGkzbnF6dW90YjJicTgifQ.7V8A7Lh-lMZ6f3RrQgbSQA";
+    const map = new mapboxgl.Map({
+      container: "map",
+      style: MAP_STYLE,
+      center: DEFAULT_LOCATION,
+      zoom: 11,
+    });
+    mapRef.current = map;
+    return () => map.remove();
+  }, []);
+
+  // Exemple d’offres statiques (à remplacer par ton Supabase)
+  useEffect(() => {
+    setOffers([
+      {
+        offer_id: "1",
+        title: "Pizza",
+        image_url: "https://images.unsplash.com/photo-1601924582971-d42bb6f88c7d",
+        price_before: 12,
+        price_after: 7,
+        offer_lat: 48.86,
+        offer_lng: 2.33,
+        available_until: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
+      },
+    ]);
+  }, []);
+
+  // 🗺️ Marqueurs d'offres
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    (map as any)._markers?.forEach((m: Marker) => m.remove());
+    (map as any)._markers = [];
+
+    const isMobile = window.innerWidth < 768;
+
+    offers.forEach((offer) => {
+      if (!Number.isFinite(offer.offer_lng) || !Number.isFinite(offer.offer_lat)) return;
+
+      // Élément visuel du marqueur
+      const el = document.createElement("div");
+      el.className = "offer-marker";
+      el.style.background = "#22c55e";
+      el.style.width = "20px";
+      el.style.height = "20px";
+      el.style.borderRadius = "50%";
+      el.style.border = "2px solid #fff";
+      el.style.cursor = "pointer";
+      el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+
+      const marker = new mapboxgl.Marker(el).setLngLat([offer.offer_lng, offer.offer_lat]);
+
+      if (!isMobile) {
+        const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
+          <div style="width:200px;font-family:sans-serif;">
+            <img src="${offer.image_url}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:4px;">
+            <strong>${offer.title}</strong><br/>
+            ${offer.price_after.toFixed(2)}€ <span style="color:#888;text-decoration:line-through;">${offer.price_before.toFixed(2)}€</span>
+          </div>
+        `);
+        marker.setPopup(popup);
+      } else {
+        el.addEventListener("click", () => {
+          map.flyTo({
+            center: [offer.offer_lng, offer.offer_lat],
+            zoom: 14,
+            speed: 1.3,
+            curve: 1.4,
+            essential: true,
+          });
+          setSelectedOffer(offer); // affiche la fiche mobile
+        });
+      }
+
+      marker.addTo(map);
+      (map as any)._markers.push(marker);
+    });
+  }, [offers]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100vh" }}>
+      {/* 🗺️ Carte */}
+      <div id="map" style={{ width: "100%", height: "100%" }} />
+
+      {/* 📱 Fiche mobile flottante */}
+      {selectedOffer && (
+        <div
+          onClick={() => setSelectedOffer(null)}
+          style={{
+            position: "fixed",
+            bottom: "0",
+            left: "0",
+            right: "0",
+            background: "#fff",
+            borderTopLeftRadius: "16px",
+            borderTopRightRadius: "16px",
+            boxShadow: "0 -2px 10px rgba(0,0,0,0.15)",
+            zIndex: 1000,
+            animation: "slideUp 0.3s ease-out",
+            padding: "12px 16px",
+          }}
+        >
+          <div style={{ textAlign: "center" }}>
+            <img
+              src={selectedOffer.image_url}
+              alt={selectedOffer.title}
+              style={{
+                width: "100%",
+                height: "140px",
+                borderRadius: "12px",
+                objectFit: "cover",
+                marginBottom: "8px",
+              }}
+            />
+            <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "4px" }}>
+              {selectedOffer.title}
+            </h3>
+            <p style={{ color: "#16a34a", fontWeight: 700 }}>
+              {selectedOffer.price_after.toFixed(2)} €{" "}
+              <span style={{ textDecoration: "line-through", color: "#888", fontSize: "13px" }}>
+                {selectedOffer.price_before.toFixed(2)} €
+              </span>
+            </p>
+            <button
+              style={{
+                marginTop: "10px",
+                background: "#22c55e",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                padding: "8px 16px",
+                fontWeight: 600,
+                fontSize: "14px",
+                width: "100%",
+              }}
+            >
+              Voir détails / Réserver
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 🌿 Animation CSS */}
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      `}</style>
     </div>
-  </div>
-)}
+  );
+}
 
   // Gestion du changement de rayon
   const handleRadiusChange = (val: number) => {
