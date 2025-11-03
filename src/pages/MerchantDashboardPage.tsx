@@ -529,15 +529,15 @@ const handlePublish = async (formData: any) => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* ⚠️ Bandeau profil incomplet */}
-{!merchantId && (
+        {/* 🟡 Bandeau profil incomplet */}
+{merchantId && !offers.length && (
   <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-lg shadow-sm">
     <p className="text-yellow-800 font-medium">
-      ⚠️ Votre profil marchand semble incomplet.<br />
-      Complétez-le pour améliorer votre visibilité.
+      ⚠️ Votre profil professionnel semble incomplet.<br />
+      Complétez-le pour améliorer votre visibilité et publier vos offres.
     </p>
     <button
-      onClick={() => alert('➡️ Ici on ouvrira le mini formulaire plus tard')}
+      onClick={() => window.location.href = '/merchant/profile-edit'}
       className="mt-3 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
     >
       Compléter mon profil
