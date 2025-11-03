@@ -560,13 +560,13 @@ const handleOnboardingSubmit = async (e: React.FormEvent) => {
     }
 
     // 🧭 Étape 1 — Construire l’adresse complète
-    const fullAddress = `${onboardingData.street}, ${onboardingData.postal_code} ${onboardingData.city}, ${onboardingData.country || 'FR'}`;
+const fullAddress = `${onboardingData.street}, ${onboardingData.postal_code} ${onboardingData.city}, ${onboardingData.country || 'FR'}`;
 
-    // 🗺️ Étape 2 — Convertir l’adresse en coordonnées via Mapbox
-    const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNsa3RlbHRmczAxdWkya3BybjRrdm42d2MifQ.6iqMWKKUpzGg1O-RJIFa7A'; // 🔒 ton token Mapbox
-    const geoResponse = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${MAPBOX_TOKEN}`
-    );
+// 🗺️ Étape 2 — Convertir l’adresse en coordonnées via Mapbox
+const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA'; // ✅ nouveau token géocodage
+const geoResponse = await fetch(
+  `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${MAPBOX_TOKEN}`
+);
 
     const geoData = await geoResponse.json();
     let latitude = null;
