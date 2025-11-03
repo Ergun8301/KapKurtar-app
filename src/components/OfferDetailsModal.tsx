@@ -35,14 +35,13 @@ interface MerchantOffer {
   price_before: number;
 }
 
-export default function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
+export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
   const [merchantOffers, setMerchantOffers] = useState<MerchantOffer[]>([]);
   const [averageRating] = useState<number>(4.6);
   const [totalReviews] = useState<number>(32);
 
-  if (!offer) return null;
-
   useEffect(() => {
+    if (!offer) return;
     const fetchMerchantOffers = async () => {
       if (!offer.merchant_id) return;
 
@@ -68,7 +67,9 @@ export default function OfferDetailsModal({ offer, onClose }: OfferDetailsModalP
     };
 
     fetchMerchantOffers();
-  }, [offer.merchant_id, offer.offer_id]);
+  }, [offer?.merchant_id, offer?.offer_id]);
+
+  if (!offer) return null;
 
   const calculateDiscount = (priceBefore: number, priceAfter: number): number => {
     return Math.round(100 * (1 - priceAfter / priceBefore));
@@ -326,3 +327,5 @@ export default function OfferDetailsModal({ offer, onClose }: OfferDetailsModalP
     </div>
   );
 }
+
+export default OfferDetailsModal;

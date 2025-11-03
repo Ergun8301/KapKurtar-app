@@ -562,17 +562,21 @@ useEffect(() => {
           </div>
 
           <!-- 🟢 Bouton -->
-          <button style="
-            width:100%;
-            background:#22c55e;
-            color:#fff;
-            border:none;
-            border-radius:8px;
-            padding:7px 0;
-            font-size:13px;
-            font-weight:600;
-            cursor:pointer;
-          ">
+          <button
+            class="offer-details-btn"
+            data-offer-id="${offer.offer_id}"
+            style="
+              width:100%;
+              background:#22c55e;
+              color:#fff;
+              border:none;
+              border-radius:8px;
+              padding:7px 0;
+              font-size:13px;
+              font-weight:600;
+              cursor:pointer;
+            "
+          >
             Voir détails / Réserver
           </button>
         </div>
@@ -590,12 +594,19 @@ useEffect(() => {
 
     // ajout du listener sur le bouton dans le popup
     popup.on('open', () => {
-      const button = document.querySelector('.mapboxgl-popup-content button');
-      if (button) {
-        button.addEventListener('click', () => {
-          setSelectedOffer(offer);
-        });
-      }
+      setTimeout(() => {
+        const button = document.querySelector(`[data-offer-id="${offer.offer_id}"]`) as HTMLButtonElement;
+        if (button && !button.dataset.listenerAdded) {
+          const handleClick = () => setSelectedOffer(offer);
+          button.addEventListener('click', handleClick);
+          button.dataset.listenerAdded = 'true';
+
+          popup.on('close', () => {
+            button.removeEventListener('click', handleClick);
+            delete button.dataset.listenerAdded;
+          });
+        }
+      }, 10);
     });
 
     (map as any)._markers.push(marker);
