@@ -549,7 +549,7 @@ useEffect(() => {
     // 💬 POPUP HTML (seulement pour desktop)
     const popupHTML = `
       <div style="width:210px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border-radius:12px;overflow:hidden;">
-        
+
         <!-- 📸 Image + badge réduction -->
         <div style="position:relative;width:100%;height:120px;overflow:hidden;">
           <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;">
