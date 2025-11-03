@@ -158,7 +158,7 @@ const MerchantDashboardPage = () => {
       }
     };
 
-       // ✅ Appel de la fonction async
+         // ✅ Appel de la fonction async
   fetchMerchantIdAndGeolocate();
 }, [user]);
 
@@ -248,7 +248,9 @@ const loadOffers = async () => {
 // 💾 Sauvegarde du profil marchand (formulaire onboarding)
 const handleSaveProfile = async () => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const { error } = await supabase
       .from("merchants")
@@ -273,14 +275,14 @@ const handleSaveProfile = async () => {
   }
 };
 
-const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' => {
+const getOfferStatus = (offer: Offer): "active" | "paused" | "expired" => {
   const now = new Date();
   const availableUntil = new Date(offer.available_until);
 
   // priorité : expirée > pause > active
-  if (now > availableUntil) return 'expired';
-  if (!offer.is_active) return 'paused';
-  return 'active';
+  if (now > availableUntil) return "expired";
+  if (!offer.is_active) return "paused";
+  return "active";
 };
 
 const calculateTimeLeft = (endDate: string) => {
@@ -288,35 +290,35 @@ const calculateTimeLeft = (endDate: string) => {
   const end = new Date(endDate);
   const diff = end.getTime() - now.getTime();
 
-  if (diff < 0) return 'Expired';
+  if (diff < 0) return "Expired";
 
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
   if (hours > 24) {
     const days = Math.floor(hours / 24);
-    return days + ' day' + (days > 1 ? 's' : '') + ' left';
+    return days + " day" + (days > 1 ? "s" : "") + " left";
   }
-  if (hours > 0) return hours + 'h ' + minutes + 'm left';
-  return minutes + 'm left';
+  if (hours > 0) return hours + "h " + minutes + "m left";
+  return minutes + "m left";
 };
 
 const handlePublish = async (formData: any) => {
   if (!user) {
-    console.error('User not authenticated');
-    setToast({ message: 'Please log in to create an offer', type: 'error' });
+    console.error("User not authenticated");
+    setToast({ message: "Please log in to create an offer", type: "error" });
     return;
   }
 
   if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
     setToast({
-      message: 'Discounted price must be lower than original price',
-      type: 'error',
+      message: "Discounted price must be lower than original price",
+      type: "error",
     });
     return;
   }
 
-  console.log('Creating new offer...', {
+  console.log("Creating new offer...", {
     merchant_id: user.id,
     title: formData.title,
     price_before: formData.price_before,
@@ -327,47 +329,54 @@ const handlePublish = async (formData: any) => {
   setIsPublishing(true);
   try {
     const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('auth_id', user.id)
+      .from("profiles")
+      .select("id")
+      .eq("auth_id", user.id)
       .maybeSingle();
 
     if (profileError || !profileData) {
-      console.error('❌ Impossible de trouver le profil lié à cet utilisateur', profileError);
-      setToast({ message: 'Erreur : profil introuvable', type: 'error' });
+      console.error(
+        "❌ Impossible de trouver le profil lié à cet utilisateur",
+        profileError
+      );
+      setToast({ message: "Erreur : profil introuvable", type: "error" });
       setIsPublishing(false);
       return;
     }
 
-    console.log('✅ Profil trouvé, profile.id:', profileData.id);
+    console.log("✅ Profil trouvé, profile.id:", profileData.id);
 
     const { data: merchantData, error: merchantError } = await supabase
-      .from('merchants')
-      .select('id, location')
-      .eq('profile_id', profileData.id)
+      .from("merchants")
+      .select("id, location")
+      .eq("profile_id", profileData.id)
       .maybeSingle();
 
     if (merchantError || !merchantData) {
-      console.error('❌ Impossible de trouver le marchand lié à ce profil', {
+      console.error("❌ Impossible de trouver le marchand lié à ce profil", {
         profile_id: profileData.id,
         error: merchantError,
-        merchantData
+        merchantData,
       });
-      setToast({ message: 'Erreur : marchand introuvable', type: 'error' });
+      setToast({ message: "Erreur : marchand introuvable", type: "error" });
       setIsPublishing(false);
       return;
     }
 
-    console.log('✅ Marchand trouvé, merchant.id:', merchantData.id);
-    console.log('📍 Localisation du marchand:', merchantData.location);
+    console.log("✅ Marchand trouvé, merchant.id:", merchantData.id);
+    console.log("📍 Localisation du marchand:", merchantData.location);
 
     let imageUrl = null;
     if (formData.image) {
-      console.log('Uploading image to Supabase storage...');
+      console.log("Uploading image to Supabase storage...");
       const randomId = crypto.randomUUID();
       const path = `${user.id}/${randomId}.jpg`;
-      imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
-      console.log('Image uploaded successfully:', imageUrl);
+      imageUrl = await uploadImageToSupabase(
+        formData.image,
+        "product-images",
+        path
+      );
+      console.log("Image uploaded successfully:", imageUrl);
     }
 
     const offerData: any = {
@@ -380,55 +389,58 @@ const handlePublish = async (formData: any) => {
       quantity: parseInt(formData.quantity),
       available_from: formData.available_from,
       available_until: formData.available_until,
-      is_active: true
+      is_active: true,
     };
 
     if (merchantData.location) {
       offerData.location = merchantData.location;
-      console.log('✅ Localisation du marchand copiée vers l\'offre');
+      console.log("✅ Localisation du marchand copiée vers l'offre");
     } else {
-      console.warn('⚠️ Aucune localisation trouvée pour ce marchand');
+      console.warn("⚠️ Aucune localisation trouvée pour ce marchand");
     }
 
-    console.log('Inserting offer into Supabase:', offerData);
+    console.log("Inserting offer into Supabase:", offerData);
 
     const { data, error } = await supabase
-      .from('offers')
+      .from("offers")
       .insert([offerData])
       .select()
       .single();
 
     if (error) {
-      console.error('Supabase insert error:', error);
+      console.error("Supabase insert error:", error);
       throw error;
     }
 
-    console.log('✅ Offer created successfully:', data);
+    console.log("✅ Offer created successfully:", data);
 
     const { data: auditLog, error: auditError } = await supabase
-      .from('audit_log')
-      .select('*')
-      .eq('table_name', 'offers')
-      .eq('record_id', data.id)
-      .eq('action', 'INSERT')
+      .from("audit_log")
+      .select("*")
+      .eq("table_name", "offers")
+      .eq("record_id", data.id)
+      .eq("action", "INSERT")
       .maybeSingle();
 
     if (auditLog) {
-      console.log('✅ Audit log entry created:', auditLog);
+      console.log("✅ Audit log entry created:", auditLog);
     } else if (auditError) {
-      console.warn('Could not verify audit log:', auditError);
+      console.warn("Could not verify audit log:", auditError);
     }
 
     setOffers([data, ...offers]);
     closeAddProductModal();
-    setToast({ message: '✅ Offer added successfully', type: 'success' });
+    setToast({ message: "✅ Offer added successfully", type: "success" });
   } catch (error: any) {
-    console.error('❌ Error publishing offer:', error);
-    setToast({ message: error.message || 'Failed to publish offer', type: 'error' });
+    console.error("❌ Error publishing offer:", error);
+    setToast({
+      message: error.message || "Failed to publish offer",
+      type: "error",
+    });
   } finally {
     setIsPublishing(false);
   }
-}; // ✅ Fermeture correcte de handlePublish (corrige l’erreur 'await')
+}; // ✅ handlePublish bien fermé
 
   try {
     // 🟢 Appel RPC sécurisé Supabase
