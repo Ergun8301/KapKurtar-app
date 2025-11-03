@@ -699,55 +699,82 @@ const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 />
               </div>
 
-              {/* Bouton pour détecter la position manuellement */}
-<button
-  type="button"
-  onClick={async () => {
-    if (!merchantId) return alert('⚠️ Profil marchand introuvable.');
-
-    if (!navigator.geolocation) {
-      alert("La géolocalisation n'est pas supportée par ce navigateur.");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        console.log('✅ Position détectée manuellement :', { latitude, longitude });
-
-        try {
-          const { error: updateError } = await supabase.rpc('update_merchant_location', {
-            p_merchant_id: merchantId,
-            p_latitude: latitude,
-            p_longitude: longitude,
-          });
-
-          if (updateError) {
-            console.error('❌ Erreur lors de la mise à jour de la position :', updateError);
-            alert('Erreur lors de la mise à jour de la position.');
-          } else {
-            alert('✅ Position mise à jour avec succès !');
-          }
-        } catch (err) {
-          console.error('❌ Erreur RPC update_merchant_location :', err);
-          alert('Erreur lors de la détection de la position.');
-        }
-      },
-      (error) => {
-        console.warn('⚠️ Impossible de récupérer la position :', error.message);
-        alert('Impossible de récupérer la position : ' + error.message);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+              {/* Bouton pour détecter la position manuellement avec meilleure UX */}
+<div className="mt-3">
+  <button
+    type="button"
+    disabled={isSubmittingOnboarding}
+    onClick={async () => {
+      if (!merchantId) {
+        setToast({ message: '⚠️ Profil marchand introuvable.', type: 'error' });
+        return;
       }
-    );
-  }}
-  className="mt-3 w-full px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-lg transition-colors"
->
-  📍 Détecter ma position actuelle
-</button>
+
+      if (!navigator.geolocation) {
+        setToast({ message: 'La géolocalisation n’est pas supportée par ce navigateur.', type: 'error' });
+        return;
+      }
+
+      setIsSubmittingOnboarding(true);
+      setToast({ message: '📍 Détection de la position en cours...', type: 'success' });
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          console.log('✅ Position détectée manuellement :', { latitude, longitude });
+
+          try {
+            const { error: updateError } = await supabase.rpc('update_merchant_location', {
+              p_merchant_id: merchantId,
+              p_latitude: latitude,
+              p_longitude: longitude,
+            });
+
+            if (updateError) {
+              console.error('❌ Erreur RPC update_merchant_location:', updateError);
+              setToast({ message: '❌ Erreur lors de la mise à jour de la position.', type: 'error' });
+            } else {
+              console.log('✅ Position mise à jour avec succès');
+              setToast({ message: '✅ Position mise à jour avec succès !', type: 'success' });
+            }
+          } catch (err) {
+            console.error('❌ Erreur RPC:', err);
+            setToast({ message: '❌ Erreur lors de la détection de la position.', type: 'error' });
+          } finally {
+            setIsSubmittingOnboarding(false);
+          }
+        },
+        (error) => {
+          console.warn('⚠️ Impossible de récupérer la position :', error.message);
+          setToast({ message: '⚠️ ' + error.message, type: 'error' });
+          setIsSubmittingOnboarding(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        }
+      );
+    }}
+    className={`w-full flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors ${
+      isSubmittingOnboarding
+        ? 'bg-gray-200 text-gray-400 cursor-wait'
+        : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
+    }`}
+  >
+    {isSubmittingOnboarding ? (
+      <>
+        <div className="w-4 h-4 mr-2 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+        Détection en cours...
+      </>
+    ) : (
+      <>
+        <span role="img" aria-label="pin">📍</span>
+        <span className="ml-2">Détecter ma position actuelle</span>
+      </>
+    )}
+  </button>
+</div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
