@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp, X, Building2, Upload } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useAddProduct } from '../contexts/AddProductContext';
@@ -26,6 +26,18 @@ interface Offer {
   quantity: number;
 }
 
+interface MerchantProfile {
+  id: string;
+  profile_id: string;
+  company_name: string | null;
+  phone: string | null;
+  street: string | null;
+  city: string | null;
+  postal_code: string | null;
+  logo_url: string | null;
+  onboarding_completed: boolean;
+}
+
 const MerchantDashboardPage = () => {
     useEffect(() => {
     window.scrollTo(0, 0);
@@ -34,6 +46,7 @@ const MerchantDashboardPage = () => {
   const { user } = useAuth();
   const { showAddProductModal, openAddProductModal, closeAddProductModal } = useAddProduct();
   const [merchantId, setMerchantId] = useState<string | null>(null);
+  const [merchantProfile, setMerchantProfile] = useState<MerchantProfile | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -43,6 +56,17 @@ const MerchantDashboardPage = () => {
   const [togglingOfferId, setTogglingOfferId] = useState<string | null>(null);
   const [showNotifications, setShowNotifications] = useState(true);
   const { notifications, unreadCount } = useRealtimeNotifications(user?.id || null);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [onboardingData, setOnboardingData] = useState({
+    company_name: '',
+    phone: '',
+    street: '',
+    city: '',
+    postal_code: '',
+    logo_url: ''
+  });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [isSubmittingOnboarding, setIsSubmittingOnboarding] = useState(false);
 
 
 // Fetch merchant ID from user and auto-geolocate
@@ -70,7 +94,7 @@ useEffect(() => {
 
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
-        .select('id')
+        .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed')
         .eq('profile_id', profileData.id)
         .maybeSingle();
 
@@ -78,6 +102,29 @@ useEffect(() => {
       if (merchantData) {
         console.log('✅ Marchand trouvé, ID:', merchantData.id);
         setMerchantId(merchantData.id);
+        setMerchantProfile(merchantData);
+
+        const isProfileIncomplete =
+          !merchantData.onboarding_completed ||
+          !merchantData.company_name ||
+          !merchantData.phone ||
+          !merchantData.street ||
+          !merchantData.city ||
+          !merchantData.postal_code ||
+          !merchantData.logo_url;
+
+        if (isProfileIncomplete) {
+          console.log('⚠️ Profil marchand incomplet, affichage de la modale');
+          setShowOnboardingModal(true);
+          setOnboardingData({
+            company_name: merchantData.company_name || '',
+            phone: merchantData.phone || '',
+            street: merchantData.street || '',
+            city: merchantData.city || '',
+            postal_code: merchantData.postal_code || '',
+            logo_url: merchantData.logo_url || ''
+          });
+        }
 
         // Auto-géolocalisation après avoir trouvé le merchantId
         if (navigator.geolocation) {
@@ -502,6 +549,70 @@ const handlePublish = async (formData: any) => {
     }
   };
 
+const handleOnboardingSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!merchantId) return;
+
+  setIsSubmittingOnboarding(true);
+  try {
+    let logoUrl = onboardingData.logo_url;
+
+    if (logoFile) {
+      console.log('Uploading logo...');
+      const randomId = crypto.randomUUID();
+      const path = `${merchantId}/${randomId}.jpg`;
+      logoUrl = await uploadImageToSupabase(logoFile, 'merchant-logos', path);
+      console.log('Logo uploaded:', logoUrl);
+    }
+
+    const { error: updateError } = await supabase
+      .from('merchants')
+      .update({
+        company_name: onboardingData.company_name,
+        phone: onboardingData.phone,
+        street: onboardingData.street,
+        city: onboardingData.city,
+        postal_code: onboardingData.postal_code,
+        logo_url: logoUrl,
+        onboarding_completed: true
+      })
+      .eq('id', merchantId);
+
+    if (updateError) throw updateError;
+
+    console.log('✅ Profil marchand complété avec succès');
+    setToast({ message: '✅ Profil complété avec succès', type: 'success' });
+    setShowOnboardingModal(false);
+
+    const { data: updatedMerchant } = await supabase
+      .from('merchants')
+      .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed')
+      .eq('id', merchantId)
+      .single();
+
+    if (updatedMerchant) {
+      setMerchantProfile(updatedMerchant);
+    }
+  } catch (error: any) {
+    console.error('❌ Erreur lors de la mise à jour du profil:', error);
+    setToast({ message: error.message || 'Erreur lors de la mise à jour', type: 'error' });
+  } finally {
+    setIsSubmittingOnboarding(false);
+  }
+};
+
+const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    setLogoFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setOnboardingData({ ...onboardingData, logo_url: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -527,23 +638,154 @@ const handlePublish = async (formData: any) => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {showOnboardingModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9998] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Complétez votre profil marchand</h2>
+                    <p className="text-sm text-gray-600 mt-1">Finalisez votre inscription pour publier des offres</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowOnboardingModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  disabled={isSubmittingOnboarding}
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
 
-        {/* ⚠️ Bandeau profil incomplet */}
-{!merchantId && (
-  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-lg shadow-sm">
-    <p className="text-yellow-800 font-medium">
-      ⚠️ Votre profil marchand semble incomplet.<br />
-      Complétez-le pour améliorer votre visibilité.
-    </p>
-    <button
-      onClick={() => alert('➡️ Ici on ouvrira le mini formulaire plus tard')}
-      className="mt-3 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
-    >
-      Compléter mon profil
-    </button>
-  </div>
-)}
+            <form onSubmit={handleOnboardingSubmit} className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nom de l'entreprise *
+                </label>
+                <input
+                  type="text"
+                  value={onboardingData.company_name}
+                  onChange={(e) => setOnboardingData({ ...onboardingData, company_name: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Ex: Boulangerie Martin"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Téléphone *
+                </label>
+                <input
+                  type="tel"
+                  value={onboardingData.phone}
+                  onChange={(e) => setOnboardingData({ ...onboardingData, phone: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Ex: 06 12 34 56 78"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Adresse *
+                </label>
+                <input
+                  type="text"
+                  value={onboardingData.street}
+                  onChange={(e) => setOnboardingData({ ...onboardingData, street: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Ex: 123 rue de la République"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ville *
+                  </label>
+                  <input
+                    type="text"
+                    value={onboardingData.city}
+                    onChange={(e) => setOnboardingData({ ...onboardingData, city: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Ex: Paris"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Code postal *
+                  </label>
+                  <input
+                    type="text"
+                    value={onboardingData.postal_code}
+                    onChange={(e) => setOnboardingData({ ...onboardingData, postal_code: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Ex: 75001"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Logo de l'entreprise *
+                </label>
+                <div className="flex items-center gap-4">
+                  {onboardingData.logo_url && (
+                    <img
+                      src={onboardingData.logo_url}
+                      alt="Logo preview"
+                      className="w-20 h-20 object-cover rounded-lg border border-gray-300"
+                    />
+                  )}
+                  <label className="flex-1 flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 transition-colors">
+                    <Upload className="w-5 h-5 text-gray-400 mr-2" />
+                    <span className="text-sm text-gray-600">
+                      {logoFile ? logoFile.name : 'Choisir un logo'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoChange}
+                      className="hidden"
+                      required={!onboardingData.logo_url}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={isSubmittingOnboarding}
+                  className="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowOnboardingModal(false)}
+                  disabled={isSubmittingOnboarding}
+                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Fermer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <div className="mb-6 flex items-center justify-between">
           <div>
