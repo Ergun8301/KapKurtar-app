@@ -699,6 +699,56 @@ const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 />
               </div>
 
+              {/* Bouton pour détecter la position manuellement */}
+<button
+  type="button"
+  onClick={async () => {
+    if (!merchantId) return alert('⚠️ Profil marchand introuvable.');
+
+    if (!navigator.geolocation) {
+      alert("La géolocalisation n'est pas supportée par ce navigateur.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        console.log('✅ Position détectée manuellement :', { latitude, longitude });
+
+        try {
+          const { error: updateError } = await supabase.rpc('update_merchant_location', {
+            p_merchant_id: merchantId,
+            p_latitude: latitude,
+            p_longitude: longitude,
+          });
+
+          if (updateError) {
+            console.error('❌ Erreur lors de la mise à jour de la position :', updateError);
+            alert('Erreur lors de la mise à jour de la position.');
+          } else {
+            alert('✅ Position mise à jour avec succès !');
+          }
+        } catch (err) {
+          console.error('❌ Erreur RPC update_merchant_location :', err);
+          alert('Erreur lors de la détection de la position.');
+        }
+      },
+      (error) => {
+        console.warn('⚠️ Impossible de récupérer la position :', error.message);
+        alert('Impossible de récupérer la position : ' + error.message);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  }}
+  className="mt-3 w-full px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-lg transition-colors"
+>
+  📍 Détecter ma position actuelle
+</button>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
