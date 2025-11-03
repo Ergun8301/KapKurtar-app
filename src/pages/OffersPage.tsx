@@ -451,83 +451,168 @@ useEffect(() => {
   (map as any)._markers?.forEach((m: Marker) => m.remove());
   (map as any)._markers = [];
 
+  // détection du mobile
   const isMobile = window.innerWidth < 768;
 
   offers.forEach((offer) => {
-    if (!Number.isFinite(offer.offer_lng) || !Number.isFinite(offer.offer_lat)) return;
+    // sécurité coordonnées
+    if (
+      !Number.isFinite(offer.offer_lng) ||
+      !Number.isFinite(offer.offer_lat)
+    ) {
+      return;
+    }
 
-    const now = new Date();
-    const from = new Date(offer.available_from || offer.created_at || now);
-    const until = new Date(offer.available_until);
-    const total = until.getTime() - from.getTime();
-    const elapsed = now.getTime() - from.getTime();
-    const progress = Math.min(1, Math.max(0, elapsed / total)); // 0→début, 1→presque fini
-
-    // 🎨 Couleur dynamique (vert → orange → rouge)
-    let color = "#22c55e";
-    if (progress >= 0.5 && progress < 0.8) color = "#f97316";
-    if (progress >= 0.8) color = "#ef4444";
-
-    const remaining = until.getTime() - now.getTime();
-    const minutesLeft = Math.max(0, Math.floor(remaining / 60000));
-    const hours = Math.floor(minutesLeft / 60);
-    const mins = minutesLeft % 60;
-    const timeLeft = hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
-
-    // Élément HTML du marqueur
+    // 🎯 Élément HTML du marqueur
     const el = document.createElement("div");
     el.className = "offer-marker";
-    el.style.background = color;
+    el.style.background = "#22c55e";
     el.style.width = "20px";
     el.style.height = "20px";
     el.style.borderRadius = "50%";
     el.style.border = "2px solid #fff";
     el.style.cursor = "pointer";
     el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
-    el.title = `${offer.title} (${timeLeft} restants)`;
 
-    const marker = new mapboxgl.Marker(el).setLngLat([offer.offer_lng, offer.offer_lat]);
+    // 🧮 Calculs dynamiques
+    const discount = Math.round(
+      ((offer.price_before - offer.price_after) / offer.price_before) * 100
+    );
+
+    const now = new Date();
+    const until = new Date(offer.available_until);
+    const from = new Date((offer as any).available_from || now);
+
+    const total = until.getTime() - from.getTime();
+    const remaining = until.getTime() - now.getTime();
+
+    // temps restant
+    const minutesLeft = Math.max(0, Math.floor(remaining / 60000));
+    const hours = Math.floor(minutesLeft / 60);
+    const mins = minutesLeft % 60;
+    const timeLeft = hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
+
+    // 💬 POPUP HTML (seulement pour desktop)
+    const popupHTML = `
+      <div style="width:210px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border-radius:12px;overflow:hidden;">
+
+        <!-- 📸 Image + badge réduction -->
+        <div style="position:relative;width:100%;height:120px;overflow:hidden;">
+          <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;">
+          <div style="position:absolute;top:8px;right:8px;background:#f9fafb;color:#ea580c;font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;border:1px solid #e5e7eb;">
+            -${discount}%
+          </div>
+        </div>
+
+        <!-- 🕒 Titre + Timer -->
+        <div style="padding:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="font-size:14px;font-weight:600;color:#111;">
+              ${offer.title || "Offre locale"}
+            </div>
+            <div style="display:flex;align-items:center;gap:3px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:600;padding:2px 5px;border-radius:6px;">
+              ⏰ ${timeLeft || "Bientôt expirée"}
+            </div>
+          </div>
+
+          <!-- 💶 Prix -->
+          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">
+            <span style="
+              text-decoration:line-through;
+              text-decoration-color:#ef4444;
+              color:#777;
+              font-size:12px;
+            ">
+              ${offer.price_before.toFixed(2)} €
+            </span>
+            <span style="color:#16a34a;font-weight:700;font-size:15px;">
+              ${offer.price_after.toFixed(2)} €
+            </span>
+          </div>
+
+          <!-- 🟢 Bouton -->
+          <button style="
+            width:100%;
+            background:#22c55e;
+            color:#fff;
+            border:none;
+            border-radius:8px;
+            padding:7px 0;
+            font-size:13px;
+            font-weight:600;
+            cursor:pointer;
+          ">
+            Voir détails / Réserver
+          </button>
+        </div>
+      </div>
+    `;
+
+    // ✅ Création du marker
+    const marker = new mapboxgl.Marker(el).setLngLat([
+      offer.offer_lng,
+      offer.offer_lat,
+    ]);
 
     if (!isMobile) {
-      // Desktop : popup complet
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
-        <div style="padding:8px;font-family:sans-serif;font-size:13px;">
-          <strong>${offer.title}</strong><br/>
-          Avant : ${offer.price_before} € → <b>${offer.price_after} €</b><br/>
-          ⏰ ${timeLeft}
-        </div>
-      `);
+      // 💻 Desktop -> popup complet
+      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
       marker.setPopup(popup);
     } else {
-      // Mobile : carte plein écran, liste cachée au départ
+      // 📱 Mobile -> affiche la liste d'offres proches
       el.addEventListener("click", () => {
         console.log("📱 Offre cliquée :", offer.title);
-
-        const listSection = document.querySelector(".offers-list-section") as HTMLElement;
-        if (listSection) {
-          listSection.style.display = "block";
-          listSection.scrollIntoView({ behavior: "smooth" });
-        }
-
-        // Si la carte est contenue dans un conteneur flex, on force la hauteur à 50%
-        const mapContainer = document.querySelector("#map") as HTMLElement;
-        if (mapContainer) mapContainer.style.height = "50vh";
+        // ✅ Change en mode "à proximité" et défile vers la liste
+        setViewMode("nearby");
+        const listSection = document.querySelector(".offers-list-section");
+        if (listSection) listSection.scrollIntoView({ behavior: "smooth" });
       });
     }
 
     marker.addTo(map);
     (map as any)._markers.push(marker);
   });
-
-  // Cache la liste au départ sur mobile
-  if (isMobile) {
-    const listSection = document.querySelector(".offers-list-section") as HTMLElement;
-    if (listSection) listSection.style.display = "none";
-
-    const mapContainer = document.querySelector("#map") as HTMLElement;
-    if (mapContainer) mapContainer.style.height = "100vh";
-  }
 }, [offers]);
+
+// 🎯 Ajuste la vue carte quand on est en mode "all"
+useEffect(() => {
+  const map = mapRef.current;
+  if (!map) return;
+
+  if (viewMode === "all" && offers.length > 0) {
+    const valid = offers.filter(
+      (o) => Number.isFinite(o.offer_lng) && Number.isFinite(o.offer_lat)
+    );
+
+    if (valid.length > 0) {
+      const bounds = new mapboxgl.LngLatBounds();
+      valid.forEach((o) => bounds.extend([o.offer_lng, o.offer_lat]));
+      map.fitBounds(bounds, { padding: 80, duration: 800 });
+    }
+  }
+}, [offers, viewMode]);
+
+// 🧭 Gestion du changement de mode de vue
+const handleViewModeChange = (mode: "nearby" | "all") => {
+  setViewMode(mode);
+
+  if (
+    mode === "nearby" &&
+    mapRef.current &&
+    Number.isFinite(userLocation[0]) &&
+    Number.isFinite(userLocation[1])
+  ) {
+    mapRef.current.flyTo({
+      center: userLocation,
+      zoom: 12,
+      essential: true,
+    });
+  }
+
+  if (mode === "all") {
+    setCenter(DEFAULT_LOCATION); // ✅ évite (NaN, NaN)
+  }
+};
 
   // Gestion du changement de rayon
   const handleRadiusChange = (val: number) => {
