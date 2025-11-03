@@ -27,27 +27,12 @@ interface Offer {
 }
 
 const MerchantDashboardPage = () => {
-  // 🟡 État du formulaire de profil marchand
-  const [showProfileForm, setShowProfileForm] = useState(false);
-  const [merchant, setMerchant] = useState<any>(null);
-  const [formData, setFormData] = useState({
-    company_name: "",
-    phone: "",
-    street: "",
-    city: "",
-    postal_code: "",
-  });
-
-  // 🟢 Effet visuel : remonter la page en haut
-  useEffect(() => {
+    useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // 🔐 Authentification + contextes
   const { user } = useAuth();
   const { showAddProductModal, openAddProductModal, closeAddProductModal } = useAddProduct();
-
-  // 📦 États du tableau de bord
   const [merchantId, setMerchantId] = useState<string | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,156 +44,136 @@ const MerchantDashboardPage = () => {
   const [showNotifications, setShowNotifications] = useState(true);
   const { notifications, unreadCount } = useRealtimeNotifications(user?.id || null);
 
-  // 🧭 Charger les infos du marchand (profil + onboarding)
-  useEffect(() => {
-    const fetchMerchant = async () => {
-      if (!user) return;
-      const { data, error } = await supabase
-        .from("merchants")
-        .select("*")
-        .eq("user_id", user.id)
+
+// Fetch merchant ID from user and auto-geolocate
+useEffect(() => {
+  const fetchMerchantIdAndGeolocate = async () => {
+    if (!user) {
+      setMerchantId(null);
+      return;
+    }
+
+    try {
+      console.log('🔍 Recherche du profil pour auth_id:', user.id);
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
         .maybeSingle();
 
-      if (error) console.error("Erreur chargement marchand:", error);
-      else setMerchant(data);
-    };
-    fetchMerchant();
-  }, [user]);
-
-  // 📍 Recherche du marchand et géolocalisation
-  useEffect(() => {
-    // ✅ Fonction async interne (évite l’erreur 'await')
-    const fetchMerchantIdAndGeolocate = async () => {
-      if (!user) {
-        setMerchantId(null);
+      if (profileError) throw profileError;
+      if (!profileData) {
+        console.warn('⚠️ Aucun profil trouvé pour cet utilisateur');
         return;
       }
 
-      try {
-        console.log("🔍 Recherche du profil pour auth_id:", user.id);
+      const { data: merchantData, error: merchantError } = await supabase
+        .from('merchants')
+        .select('id')
+        .eq('profile_id', profileData.id)
+        .maybeSingle();
 
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("auth_id", user.id)
-          .maybeSingle();
+      if (merchantError) throw merchantError;
+      if (merchantData) {
+        console.log('✅ Marchand trouvé, ID:', merchantData.id);
+        setMerchantId(merchantData.id);
 
-        if (profileError) throw profileError;
-        if (!profileData) {
-          console.warn("⚠️ Aucun profil trouvé pour cet utilisateur");
-          return;
-        }
+        // Auto-géolocalisation après avoir trouvé le merchantId
+        if (navigator.geolocation) {
+          console.log('📍 Tentative de géolocalisation automatique...');
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const { latitude, longitude } = position.coords;
+              console.log('✅ Position obtenue:', { latitude, longitude });
 
-        const { data: merchantData, error: merchantError } = await supabase
-          .from("merchants")
-          .select("id")
-          .eq("profile_id", profileData.id)
-          .maybeSingle();
-
-        if (merchantError) throw merchantError;
-
-        if (merchantData) {
-          console.log("✅ Marchand trouvé, ID:", merchantData.id);
-          setMerchantId(merchantData.id);
-
-          // 🗺️ Auto-géolocalisation
-          if (navigator.geolocation) {
-            console.log("📍 Tentative de géolocalisation automatique...");
-            navigator.geolocation.getCurrentPosition(
-              async (position) => {
-                const { latitude, longitude } = position.coords;
-                console.log("✅ Position obtenue:", { latitude, longitude });
-
-                try {
-                  const { error: updateError } = await supabase.rpc(
-                    "update_merchant_location",
-                    {
-                      p_merchant_id: merchantData.id,
-                      p_latitude: latitude,
-                      p_longitude: longitude,
-                    }
-                  );
-
-                  if (updateError) {
-                    console.error("❌ Erreur RPC update_merchant_location:", updateError);
-                  } else {
-                    console.log("✅ Position du marchand mise à jour avec succès");
+              try {
+                const { error: updateError } = await supabase.rpc(
+                  'update_merchant_location',
+                  {
+                    p_merchant_id: merchantData.id,
+                    p_latitude: latitude,
+                    p_longitude: longitude,
                   }
-                } catch (err) {
-                  console.error("❌ Erreur RPC update_merchant_location:", err);
-                }
-              },
-              (error) => {
-                console.warn("⚠️ Impossible de récupérer la position:", error.message);
-              },
-              {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0,
-              }
-            );
-          } else {
-            console.warn("⚠️ La géolocalisation n'est pas supportée par ce navigateur");
-          }
-        } else {
-          console.warn("⚠️ Aucun marchand trouvé pour ce profil");
-        }
-      } catch (error) {
-        console.error("Erreur lors de la récupération du merchant ID:", error);
-      }
-    };
+                );
 
-         // ✅ Appel de la fonction async
+                if (updateError) {
+                  console.error('❌ Erreur lors de la mise à jour de la position:', updateError);
+                } else {
+                  console.log('✅ Position du marchand mise à jour avec succès');
+                }
+              } catch (err) {
+                console.error('❌ Erreur RPC update_merchant_location:', err);
+              }
+            },
+            (error) => {
+              console.warn('⚠️ Impossible de récupérer la position:', error.message);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0,
+            }
+          );
+        } else {
+          console.warn('⚠️ La géolocalisation n\'est pas supportée par ce navigateur');
+        }
+      } else {
+        console.warn('⚠️ Aucun marchand trouvé pour ce profil');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération du merchant ID:', error);
+    }
+  };
+
   fetchMerchantIdAndGeolocate();
 }, [user]);
 
-// ✅ Vérifier et désactiver les offres expirées
 useEffect(() => {
   const checkExpiredOffers = async () => {
     try {
-      await supabase.rpc("auto_expire_offers");
-      console.log("Fonction auto_expire_offers exécutée avec succès");
+      await supabase.rpc('auto_expire_offers');
+      console.log('Fonction auto_expire_offers exécutée avec succès');
     } catch (error) {
-      console.error("Erreur lors de la vérification des offres expirées :", error);
+      console.error('Erreur lors de la vérification des offres expirées :', error);
     }
   };
 
   checkExpiredOffers();
 
   if (!merchantId) {
-    console.log("⏳ Merchant ID non disponible, attente...");
+    console.log('⏳ Merchant ID non disponible, attente...');
     return;
   }
 
-  console.log("✅ Merchant ID disponible :", merchantId);
+  console.log('✅ Merchant ID disponible :', merchantId);
   loadOffers();
 
-  // 🔁 Abonnement en temps réel aux offres du marchand
-  console.log("Subscribing to realtime updates for merchant offers...");
+  // Subscribe to realtime updates for merchant's offers
+  console.log('Subscribing to realtime updates for merchant offers...');
   const channel = supabase
-    .channel("merchant-offers-changes")
+    .channel('merchant-offers-changes')
     .on(
-      "postgres_changes",
+      'postgres_changes',
       {
-        event: "*",
-        schema: "public",
-        table: "offers",
+        event: '*',
+        schema: 'public',
+        table: 'offers',
         filter: `merchant_id=eq.${merchantId}`,
       },
       (payload) => {
-        console.log("Merchant offers table changed:", payload);
+        console.log('Merchant offers table changed:', payload);
         loadOffers();
       }
     )
     .subscribe();
 
   return () => {
-    console.log("Unsubscribing from merchant offers realtime...");
+    console.log('Unsubscribing from merchant offers realtime...');
     supabase.removeChannel(channel);
   };
 }, [merchantId]);
 
-// 🕒 Disparition automatique des toasts
 useEffect(() => {
   if (toast) {
     const timer = setTimeout(() => setToast(null), 3000);
@@ -216,73 +181,42 @@ useEffect(() => {
   }
 }, [toast]);
 
-// 🧩 Fonction de chargement des offres
 const loadOffers = async () => {
   if (!merchantId) return;
 
   try {
-    console.log("Fetching offers for merchant:", merchantId);
+    console.log('Fetching offers for merchant:', merchantId);
 
     const { data, error } = await supabase
-      .from("offers")
-      .select("*")
-      .eq("merchant_id", merchantId)
-      .eq("is_deleted", false)
-      .order("updated_at", { ascending: false });
+      .from('offers')
+      .select('*')
+      .eq('merchant_id', merchantId)
+      .eq('is_deleted', false)
+      .order('updated_at', { ascending: false });
 
     if (error) throw error;
 
-    console.log("Offers loaded:", data);
+    console.log('Offers loaded:', data);
     setOffers(data || []);
   } catch (error: any) {
-    console.error("Error loading offers:", error);
+    console.error('Error loading offers:', error);
     setToast({
-      message: error.message || "Failed to load offers",
-      type: "error",
+      message: error.message || 'Failed to load offers',
+      type: 'error',
     });
   } finally {
     setLoading(false);
   }
 };
 
-// 💾 Sauvegarde du profil marchand (formulaire onboarding)
-const handleSaveProfile = async () => {
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const { error } = await supabase
-      .from("merchants")
-      .update({
-        name: formData.company_name,
-        phone: formData.phone,
-        street: formData.street,
-        city: formData.city,
-        postal_code: formData.postal_code,
-        onboarding_completed: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", user?.id);
-
-    if (error) throw error;
-
-    alert("✅ Profil enregistré avec succès !");
-    setShowProfileForm(false);
-    window.location.reload();
-  } catch (error: any) {
-    alert("❌ Erreur lors de l’enregistrement du profil : " + error.message);
-  }
-};
-
-const getOfferStatus = (offer: Offer): "active" | "paused" | "expired" => {
+const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' => {
   const now = new Date();
   const availableUntil = new Date(offer.available_until);
 
   // priorité : expirée > pause > active
-  if (now > availableUntil) return "expired";
-  if (!offer.is_active) return "paused";
-  return "active";
+  if (now > availableUntil) return 'expired';
+  if (!offer.is_active) return 'paused';
+  return 'active';
 };
 
 const calculateTimeLeft = (endDate: string) => {
@@ -290,35 +224,41 @@ const calculateTimeLeft = (endDate: string) => {
   const end = new Date(endDate);
   const diff = end.getTime() - now.getTime();
 
-  if (diff < 0) return "Expired";
+  if (diff < 0) return 'Expired';
 
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
   if (hours > 24) {
     const days = Math.floor(hours / 24);
-    return days + " day" + (days > 1 ? "s" : "") + " left";
+    return days + ' day' + (days > 1 ? 's' : '') + ' left';
   }
-  if (hours > 0) return hours + "h " + minutes + "m left";
-  return minutes + "m left";
+  if (hours > 0) return hours + 'h ' + minutes + 'm left';
+  return minutes + 'm left';
 };
+
+
+
+
+
+
 
 const handlePublish = async (formData: any) => {
   if (!user) {
-    console.error("User not authenticated");
-    setToast({ message: "Please log in to create an offer", type: "error" });
+    console.error('User not authenticated');
+    setToast({ message: 'Please log in to create an offer', type: 'error' });
     return;
   }
 
   if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
     setToast({
-      message: "Discounted price must be lower than original price",
-      type: "error",
+      message: 'Discounted price must be lower than original price',
+      type: 'error',
     });
     return;
   }
 
-  console.log("Creating new offer...", {
+  console.log('Creating new offer...', {
     merchant_id: user.id,
     title: formData.title,
     price_before: formData.price_before,
@@ -329,151 +269,138 @@ const handlePublish = async (formData: any) => {
   setIsPublishing(true);
   try {
     const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("auth_id", user.id)
-      .maybeSingle();
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
+        .maybeSingle();
 
-    if (profileError || !profileData) {
-      console.error(
-        "❌ Impossible de trouver le profil lié à cet utilisateur",
-        profileError
-      );
-      setToast({ message: "Erreur : profil introuvable", type: "error" });
-      setIsPublishing(false);
-      return;
-    }
+      if (profileError || !profileData) {
+        console.error('❌ Impossible de trouver le profil lié à cet utilisateur', profileError);
+        setToast({ message: 'Erreur : profil introuvable', type: 'error' });
+        setIsPublishing(false);
+        return;
+      }
 
-    console.log("✅ Profil trouvé, profile.id:", profileData.id);
+      console.log('✅ Profil trouvé, profile.id:', profileData.id);
 
-    const { data: merchantData, error: merchantError } = await supabase
-      .from("merchants")
-      .select("id, location")
-      .eq("profile_id", profileData.id)
-      .maybeSingle();
+      const { data: merchantData, error: merchantError } = await supabase
+        .from('merchants')
+        .select('id, location')
+        .eq('profile_id', profileData.id)
+        .maybeSingle();
 
-    if (merchantError || !merchantData) {
-      console.error("❌ Impossible de trouver le marchand lié à ce profil", {
-        profile_id: profileData.id,
-        error: merchantError,
-        merchantData,
-      });
-      setToast({ message: "Erreur : marchand introuvable", type: "error" });
-      setIsPublishing(false);
-      return;
-    }
+      if (merchantError || !merchantData) {
+        console.error('❌ Impossible de trouver le marchand lié à ce profil', {
+          profile_id: profileData.id,
+          error: merchantError,
+          merchantData
+        });
+        setToast({ message: 'Erreur : marchand introuvable', type: 'error' });
+        setIsPublishing(false);
+        return;
+      }
 
-    console.log("✅ Marchand trouvé, merchant.id:", merchantData.id);
-    console.log("📍 Localisation du marchand:", merchantData.location);
+      console.log('✅ Marchand trouvé, merchant.id:', merchantData.id);
+      console.log('📍 Localisation du marchand:', merchantData.location);
 
-    let imageUrl = null;
-    if (formData.image) {
-      console.log("Uploading image to Supabase storage...");
-      const randomId = crypto.randomUUID();
-      const path = `${user.id}/${randomId}.jpg`;
-      imageUrl = await uploadImageToSupabase(
-        formData.image,
-        "product-images",
-        path
-      );
-      console.log("Image uploaded successfully:", imageUrl);
-    }
+      let imageUrl = null;
+      if (formData.image) {
+        console.log('Uploading image to Supabase storage...');
+        const randomId = crypto.randomUUID();
+        const path = `${user.id}/${randomId}.jpg`;
+        imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
+        console.log('Image uploaded successfully:', imageUrl);
+      }
 
-    const offerData: any = {
-      merchant_id: merchantData.id,
-      title: formData.title,
-      description: formData.description,
-      image_url: imageUrl,
-      price_before: parseFloat(formData.price_before),
-      price_after: parseFloat(formData.price_after),
-      quantity: parseInt(formData.quantity),
-      available_from: formData.available_from,
-      available_until: formData.available_until,
-      is_active: true,
-    };
+      const offerData: any = {
+        merchant_id: merchantData.id,
+        title: formData.title,
+        description: formData.description,
+        image_url: imageUrl,
+        price_before: parseFloat(formData.price_before),
+        price_after: parseFloat(formData.price_after),
+        quantity: parseInt(formData.quantity),
+        available_from: formData.available_from,
+        available_until: formData.available_until,
+        is_active: true
+      };
 
-    if (merchantData.location) {
-      offerData.location = merchantData.location;
-      console.log("✅ Localisation du marchand copiée vers l'offre");
-    } else {
-      console.warn("⚠️ Aucune localisation trouvée pour ce marchand");
-    }
+      if (merchantData.location) {
+        offerData.location = merchantData.location;
+        console.log('✅ Localisation du marchand copiée vers l\'offre');
+      } else {
+        console.warn('⚠️ Aucune localisation trouvée pour ce marchand');
+      }
 
-    console.log("Inserting offer into Supabase:", offerData);
+      console.log('Inserting offer into Supabase:', offerData);
 
-    const { data, error } = await supabase
-      .from("offers")
-      .insert([offerData])
-      .select()
-      .single();
+      const { data, error } = await supabase
+        .from('offers')
+        .insert([offerData])
+        .select()
+        .single();
 
-    if (error) {
-      console.error("Supabase insert error:", error);
-      throw error;
-    }
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw error;
+      }
 
-    console.log("✅ Offer created successfully:", data);
+      console.log('✅ Offer created successfully:', data);
 
-    const { data: auditLog, error: auditError } = await supabase
-      .from("audit_log")
-      .select("*")
-      .eq("table_name", "offers")
-      .eq("record_id", data.id)
-      .eq("action", "INSERT")
-      .maybeSingle();
+      const { data: auditLog, error: auditError } = await supabase
+        .from('audit_log')
+        .select('*')
+        .eq('table_name', 'offers')
+        .eq('record_id', data.id)
+        .eq('action', 'INSERT')
+        .maybeSingle();
 
-    if (auditLog) {
-      console.log("✅ Audit log entry created:", auditLog);
-    } else if (auditError) {
-      console.warn("Could not verify audit log:", auditError);
-    }
+      if (auditLog) {
+        console.log('✅ Audit log entry created:', auditLog);
+      } else if (auditError) {
+        console.warn('Could not verify audit log:', auditError);
+      }
 
-    setOffers([data, ...offers]);
-    closeAddProductModal();
-    setToast({ message: "✅ Offer added successfully", type: "success" });
+      setOffers([data, ...offers]);
+      closeAddProductModal();
+      setToast({ message: '✅ Offer added successfully', type: 'success' });
     } catch (error: any) {
-    console.error("❌ Error publishing offer:", error);
-    setToast({
-      message: error.message || "Failed to publish offer",
-      type: "error",
-    });
-  } finally {
-    setIsPublishing(false);
-  }
-}; // ✅ handlePublish bien fermé ici
-
-// 🟢 Fonction pour activer / désactiver une offre
-const toggleOfferStatus = async (offerId: string, currentStatus: boolean) => {
-  try {
-    if (!user) {
-      setToast({ message: "Veuillez vous reconnecter", type: "error" });
-      return;
+      console.error('❌ Error publishing offer:', error);
+      setToast({ message: error.message || 'Failed to publish offer', type: 'error' });
+    } finally {
+      setIsPublishing(false);
     }
+  };
 
-    // Évite les doubles clics
-    if (togglingOfferId === offerId) return;
+  const toggleOfferStatus = async (offerId: string, currentStatus: boolean) => {
+  if (!user) {
+    console.error('User not authenticated');
+    setToast({ message: 'Please log in to update offer status', type: 'error' });
+    return;
+  }
 
-    setTogglingOfferId(offerId);
-    const newStatus = !currentStatus;
-    const actionText = newStatus ? "activation" : "mise en pause";
-    console.log(`⏳ ${actionText} de l'offre ${offerId}...`);
+  if (togglingOfferId === offerId) return;
 
+  const newStatus = !currentStatus;
+  const actionText = newStatus ? 'Activating' : 'Pausing';
+  console.log(`${actionText} offer via RPC...`);
+
+  setTogglingOfferId(offerId);
+
+  try {
     // 🟢 Appel RPC sécurisé Supabase
-    const { error } = await supabase.rpc("toggle_offer_status", { p_offer_id: offerId });
+    const { error } = await supabase.rpc('toggle_offer_status', { p_offer_id: offerId });
 
     if (error) throw error;
 
-    console.log("✅ RPC toggle_offer_status exécutée avec succès !");
+    console.log('✅ RPC toggle_offer_status executed successfully.');
     await loadOffers();
 
-    const successMsg = newStatus ? "✅ Offre activée" : "⏸️ Offre mise en pause";
-    setToast({ message: successMsg, type: "success" });
+    const successMessage = newStatus ? '✅ Offer activated' : '✅ Offer paused';
+    setToast({ message: successMessage, type: 'success' });
   } catch (error: any) {
-    console.error("❌ Erreur toggle_offer_status:", error);
-    setToast({
-      message: error.message || "Erreur lors du changement de statut",
-      type: "error",
-    });
+    console.error('❌ Error toggling offer status:', error);
+    setToast({ message: error.message || 'Failed to toggle offer status', type: 'error' });
   } finally {
     setTogglingOfferId(null);
   }
