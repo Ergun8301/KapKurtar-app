@@ -86,41 +86,53 @@ const MerchantDashboardPage = () => {
   }, [user]);
 
 
-// ✅ Correctif complet - version stable anti-boucle
+// ✅ Version finale stable — cherche par profile_id, plus de boucle infinie
 useEffect(() => {
   const verifyAndInitMerchant = async () => {
     if (!user) return;
 
-    // Empêche redirection si on est déjà sur l’onboarding
+    // Empêche redirection si on est déjà sur la page onboarding
     if (window.location.pathname.includes("/merchant/onboarding")) return;
 
-    console.log("🔍 Vérification du profil marchand pour :", user.email);
+    console.log("🔍 Vérification du profil marchand (v2) pour :", user.email);
 
-    // 1️⃣ Vérifie si profil marchand existe
-    const { data: merchantData, error: merchantError } = await supabase
-      .from("merchants")
-      .select("id, company_name, onboarding_completed, logo_url, phone, street, city, postal_code")
-      .eq("email", user.email)
+    // 1️⃣ Récupère le profile_id du user connecté
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("auth_id", user.id)
       .maybeSingle();
 
-    if (merchantError) {
-      console.error("Erreur check profil marchand :", merchantError);
+    if (profileError || !profileData) {
+      console.error("❌ Aucun profil trouvé pour ce user");
       return;
     }
 
-    // 2️⃣ Si pas de profil → onboarding
+    // 2️⃣ Cherche le marchand lié à ce profil
+    const { data: merchantData, error: merchantError } = await supabase
+      .from("merchants")
+      .select("id, company_name, onboarding_completed, logo_url, phone, street, city, postal_code, location")
+      .eq("profile_id", profileData.id)
+      .maybeSingle();
+
+    if (merchantError) {
+      console.error("Erreur check marchand :", merchantError);
+      return;
+    }
+
+    // 3️⃣ Si pas de profil complet → onboarding
     if (!merchantData || !merchantData.company_name?.trim() || merchantData.onboarding_completed === false) {
-      console.log("⚠️ Profil incomplet → redirection onboarding");
+      console.log("⚠️ Profil marchand incomplet → redirection onboarding");
       navigate("/merchant/onboarding", { replace: true });
       return;
     }
 
-    // 3️⃣ Stocke les infos
+    // 4️⃣ Sinon on stocke le marchand et on géolocalise une seule fois
+    console.log("✅ Profil marchand complet trouvé :", merchantData.company_name);
     setMerchantInfo(merchantData);
     setMerchantId(merchantData.id);
 
-    // 4️⃣ Géolocalisation unique (une fois le merchant_id trouvé)
-    if (navigator.geolocation && merchantData.id) {
+    if (navigator.geolocation && !merchantData.location) {
       console.log("📍 Tentative de géolocalisation automatique...");
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
@@ -133,7 +145,7 @@ useEffect(() => {
             p_longitude: longitude,
           });
           if (locErr) console.error("❌ Erreur update_merchant_location :", locErr);
-          else console.log("✅ Position du marchand mise à jour avec succès");
+          else console.log("✅ Position mise à jour avec succès");
         },
         (err) => console.warn("⚠️ Géolocalisation refusée :", err.message),
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -143,7 +155,6 @@ useEffect(() => {
 
   verifyAndInitMerchant();
 }, [user, navigate]);
-
 
 useEffect(() => {
   const checkExpiredOffers = async () => {
