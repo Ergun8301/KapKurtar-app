@@ -957,24 +957,6 @@ const MerchantDashboardPage = () => {
                 </p>
               </div>
 
-              {/* 🌍 Mini-carte interactive Mapbox */}
-              {onboardingData.latitude && onboardingData.longitude && (
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Localisation précise sur la carte
-                  </label>
-
-                  <div
-                    id="merchant-map"
-                    className="w-full h-64 rounded-lg border border-gray-300"
-                  ></div>
-
-                  <p className="text-xs text-gray-500 mt-2">
-                    🧭 Déplacez le marqueur si nécessaire pour corriger votre position exacte.
-                  </p>
-                </div>
-              )}
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Logo de l'entreprise *
