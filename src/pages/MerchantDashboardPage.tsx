@@ -179,7 +179,16 @@ const MerchantDashboardPage = () => {
   }, [merchantProfile]);
 
   useEffect(() => {
-    if (!showOnboardingModal || !mapContainerRef.current || mapRef.current) return;
+    if (!showOnboardingModal || !mapContainerRef.current) return;
+
+    // 🧹 Nettoyer la carte existante si elle existe
+    if (mapRef.current) {
+      console.log('🧹 Nettoyage de la carte existante');
+      mapRef.current.remove();
+      mapRef.current = null;
+      markerRef.current = null;
+      setMapLoaded(false);
+    }
 
     // ⏱️ Attendre que le DOM soit prêt
     const timer = setTimeout(() => {
@@ -187,28 +196,34 @@ const MerchantDashboardPage = () => {
 
       console.log('🗺️ Initialisation Mapbox');
 
-      const map = new mapboxgl.Map({
-        container: mapContainerRef.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [onboardingData.longitude, onboardingData.latitude],
-        zoom: 13,
-      });
+      try {
+        const map = new mapboxgl.Map({
+          container: mapContainerRef.current,
+          style: 'mapbox://styles/mapbox/streets-v12',
+          center: [onboardingData.longitude, onboardingData.latitude],
+          zoom: 13,
+        });
 
-      mapRef.current = map;
+        mapRef.current = map;
 
-      map.on('load', () => {
-        console.log('✅ Carte Mapbox chargée');
-        setMapLoaded(true);
-      });
+        map.on('load', () => {
+          console.log('✅ Carte Mapbox chargée');
+          setMapLoaded(true);
+        });
 
-      const marker = new mapboxgl.Marker({
-        draggable: true,
-        color: '#16a34a',
-      })
-        .setLngLat([onboardingData.longitude, onboardingData.latitude])
-        .addTo(map);
+        map.on('error', (e) => {
+          console.error('❌ Erreur Mapbox:', e);
+          setMapLoaded(false);
+        });
 
-      markerRef.current = marker;
+        const marker = new mapboxgl.Marker({
+          draggable: true,
+          color: '#16a34a',
+        })
+          .setLngLat([onboardingData.longitude, onboardingData.latitude])
+          .addTo(map);
+
+        markerRef.current = marker;
 
       marker.on('dragend', () => {
         const lngLat = marker.getLngLat();
@@ -231,17 +246,21 @@ const MerchantDashboardPage = () => {
 
       map.addControl(geocoder, 'top-left');
 
-      geocoder.on('result', (e) => {
-        const { center, place_name } = e.result;
-        marker.setLngLat(center);
-        setOnboardingData((prev) => ({
-          ...prev,
-          latitude: center[1],
-          longitude: center[0],
-        }));
-        console.log('🔍 Adresse sélectionnée:', place_name, center);
-      });
-    }, 300);
+        geocoder.on('result', (e) => {
+          const { center, place_name } = e.result;
+          marker.setLngLat(center);
+          setOnboardingData((prev) => ({
+            ...prev,
+            latitude: center[1],
+            longitude: center[0],
+          }));
+          console.log('🔍 Adresse sélectionnée:', place_name, center);
+        });
+      } catch (error) {
+        console.error('❌ Erreur initialisation Mapbox:', error);
+        setMapLoaded(false);
+      }
+    }, 500); // 🔥 Augmenté à 500ms pour être sûr
 
     return () => {
       clearTimeout(timer);
@@ -252,7 +271,7 @@ const MerchantDashboardPage = () => {
       markerRef.current = null;
       setMapLoaded(false);
     };
-  }, [showOnboardingModal]);
+  }, [showOnboardingModal]); // 🔥 Ne dépend QUE de showOnboardingModal
 
   useEffect(() => {
     const checkExpiredOffers = async () => {
