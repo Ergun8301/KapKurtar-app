@@ -718,37 +718,46 @@ const MerchantDashboardPage = () => {
                 />
               </div>
 
-              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-3">Définissez votre position :</p>
+              <div className="space-y-4">
+                <p className="text-sm font-medium text-gray-700">📍 Définissez votre position sur la carte</p>
 
-                {!mapLoaded && (
-                  <div className="w-full h-[300px] rounded-lg border border-gray-300 mb-4 bg-gray-100 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-2"></div>
-                      <p className="text-sm text-gray-500">Chargement de la carte...</p>
+                {/* 🗺️ Carte en pleine largeur avec coins arrondis */}
+                <div className="relative">
+                  {!mapLoaded && (
+                    <div className="w-full h-[400px] rounded-xl bg-gray-100 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-2"></div>
+                        <p className="text-sm text-gray-500">Chargement de la carte...</p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                <div
-                  ref={mapContainerRef}
-                  className={`w-full h-[300px] rounded-lg border border-gray-300 mb-4 relative ${!mapLoaded ? 'hidden' : 'block'}`}
-                  style={{ position: 'relative' }}
-                ></div>
+                  <div
+                    ref={mapContainerRef}
+                    className={`w-full h-[400px] rounded-xl shadow-lg overflow-hidden ${!mapLoaded ? 'hidden' : 'block'}`}
+                    style={{ position: 'relative' }}
+                  ></div>
 
-                <p className="text-xs text-gray-500 mb-3">💡 Recherchez une adresse, déplacez le marqueur ou utilisez la géolocalisation</p>
+                  {/* 🎯 Bouton GPS style pro (en bas à droite) */}
+                  {mapLoaded && (
+                    <button
+                      type="button"
+                      onClick={handleGeolocate}
+                      className="absolute bottom-4 right-4 w-12 h-12 bg-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center border border-gray-200 hover:bg-gray-50 z-10"
+                      title="Me géolocaliser"
+                    >
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
 
-                <button
-                  type="button"
-                  onClick={handleGeolocate}
-                  className="w-full flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors bg-blue-50 hover:bg-blue-100 text-blue-700"
-                >
-                  📍 Me géolocaliser automatiquement
-                </button>
-
-                <p className="text-xs text-gray-400 mt-2 text-center">
-                  Position actuelle: {onboardingData.latitude.toFixed(6)}, {onboardingData.longitude.toFixed(6)}
-                </p>
+                {/* 📝 Affichage des coordonnées */}
+                <div className="text-xs text-gray-400 text-center">
+                  Position : {onboardingData.latitude.toFixed(6)}, {onboardingData.longitude.toFixed(6)}
+                </div>
               </div>
 
               <div>
