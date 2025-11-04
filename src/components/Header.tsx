@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown, User, Settings, LogOut, ArrowRight, Store, LayoutDashboard, Plus, TrendingUp, Bell } from 'lucide-react';
+import { Menu, X, ChevronDown, User, Settings, LogOut, ArrowRight, Store, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useAddProduct } from '../contexts/AddProductContext';
 import { NotificationBell } from './NotificationBell';
-import { logoutUser } from '../lib/logout'; // ✅ ajouté
+import { logoutUser } from '../lib/logout';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -35,15 +35,12 @@ const Header = () => {
     checkUserType();
   }, [user]);
 
-  // ✅ remplacé pour utiliser la fonction centralisée
   const handleSignOut = async () => {
     await logoutUser(navigate);
     setIsUserMenuOpen(false);
   };
 
-  const getUserDisplayName = () => {
-    return user?.email?.split('@')[0] || 'User';
-  };
+  const getUserDisplayName = () => user?.email?.split('@')[0] || 'User';
 
   const navigation = [
     { name: 'Explore Offers', href: '/offers' },
@@ -58,6 +55,7 @@ const Header = () => {
       <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
+            {/* Logo */}
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
                 <a href="/" className="flex items-center">
@@ -69,6 +67,7 @@ const Header = () => {
               </div>
             </div>
 
+            {/* Desktop navigation */}
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
                 {navigation.map((item) => (
@@ -83,6 +82,7 @@ const Header = () => {
               </div>
             </div>
 
+            {/* Right side */}
             <div className="flex items-center space-x-4">
               {loading ? (
                 <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
@@ -109,6 +109,7 @@ const Header = () => {
                       <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                         {isMerchant ? (
                           <>
+                            {/* Dashboard */}
                             <button
                               onClick={() => {
                                 setIsUserMenuOpen(false);
@@ -117,38 +118,10 @@ const Header = () => {
                               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
                               <LayoutDashboard className="w-4 h-4 mr-2" />
-                              My Dashboard
+                              Dashboard
                             </button>
-                            <button
-                              onClick={() => {
-                                setIsUserMenuOpen(false);
-                                navigate('/merchant/stats');
-                              }}
-                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              <TrendingUp className="w-4 h-4 mr-2" />
-                              Statistics
-                            </button>
-                            <button
-                              onClick={() => {
-                                setIsUserMenuOpen(false);
-                                openAddProductModal();
-                              }}
-                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              <Plus className="w-4 h-4 mr-2" />
-                              Add Product
-                            </button>
-                            <button
-                              onClick={() => {
-                                setIsUserMenuOpen(false);
-                                navigate('/merchant/profile');
-                              }}
-                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              <Store className="w-4 h-4 mr-2" />
-                              Business Profile
-                            </button>
+
+                            {/* Settings */}
                             <button
                               onClick={() => {
                                 setIsUserMenuOpen(false);
@@ -175,13 +148,6 @@ const Header = () => {
                             >
                               <Settings className="w-4 h-4 mr-2" />
                               Settings
-                            </a>
-                            <a
-                              href="/notifications"
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              <Bell className="w-4 h-4 mr-2" />
-                              Notifications
                             </a>
                           </>
                         )}
@@ -245,6 +211,7 @@ const Header = () => {
                 </div>
               )}
 
+              {/* Mobile menu toggle */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
@@ -255,6 +222,7 @@ const Header = () => {
           </div>
         </nav>
 
+        {/* Mobile menu */}
         {isMenuOpen && (
           <div className="md:hidden border-t border-gray-200">
             <div className="px-2 pt-2 pb-3 space-y-1">
