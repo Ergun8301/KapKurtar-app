@@ -27,16 +27,34 @@ const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMerchant, setIsMerchant] = useState(false);
 
-  useEffect(() => {
+    useEffect(() => {
     const checkUserType = async () => {
       if (!user) return setIsMerchant(false);
+
+      // 🔍 Étape 1 : récupérer le profil lié à ce user
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
+        .maybeSingle();
+
+      if (profileError || !profileData) {
+        console.warn('⚠️ Aucun profil trouvé pour cet utilisateur');
+        setIsMerchant(false);
+        return;
+      }
+
+      // 🔍 Étape 2 : vérifier si ce profil est un marchand
       const { data: merchantData } = await supabase
         .from('merchants')
         .select('id')
-        .eq('id', user.id)
+        .eq('profile_id', profileData.id)
         .maybeSingle();
+
       setIsMerchant(!!merchantData);
+      console.log('✅ Type détecté :', merchantData ? 'Marchand' : 'Client');
     };
+
     checkUserType();
   }, [user]);
 
