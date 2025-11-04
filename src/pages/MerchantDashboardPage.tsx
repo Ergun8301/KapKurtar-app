@@ -80,19 +80,18 @@ const MerchantDashboardPage = () => {
     city: '',
     postal_code: '',
     logo_url: '',
-    latitude: 46.2044, // Bourg-en-Bresse par défaut
+    latitude: 46.2044,
     longitude: 5.2258
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isSubmittingOnboarding, setIsSubmittingOnboarding] = useState(false);
   const [isFromSettings, setIsFromSettings] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Refs pour Mapbox
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
 
-  // ✅ Fetch merchant profile (avec protection contre la boucle infinie)
   useEffect(() => {
     const fetchMerchantProfile = async () => {
       if (!user) {
@@ -128,7 +127,6 @@ const MerchantDashboardPage = () => {
           setMerchantId(merchantData.id);
           setMerchantProfile(merchantData);
 
-          // ✅ CONDITION STRICTE pour éviter la boucle infinie
           const isIncomplete =
             !merchantData.onboarding_completed ||
             !merchantData.company_name?.trim() ||
@@ -159,7 +157,6 @@ const MerchantDashboardPage = () => {
     fetchMerchantProfile();
   }, [user, showOnboardingModal]);
 
-  // ✅ Ouvrir modale depuis Settings
   useEffect(() => {
     const handleOpenProfileModal = () => {
       setIsFromSettings(true);
@@ -181,77 +178,82 @@ const MerchantDashboardPage = () => {
     return () => window.removeEventListener('openMerchantProfileModal', handleOpenProfileModal);
   }, [merchantProfile]);
 
-  // ✅ Initialiser Mapbox UNE SEULE FOIS
   useEffect(() => {
     if (!showOnboardingModal || !mapContainerRef.current || mapRef.current) return;
 
-    console.log('🗺️ Initialisation Mapbox');
+    // ⏱️ Attendre que le DOM soit prêt
+    const timer = setTimeout(() => {
+      if (!mapContainerRef.current) return;
 
-    const map = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [onboardingData.longitude, onboardingData.latitude],
-      zoom: 13,
-    });
+      console.log('🗺️ Initialisation Mapbox');
 
-    mapRef.current = map;
+      const map = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [onboardingData.longitude, onboardingData.latitude],
+        zoom: 13,
+      });
 
-    // Marqueur déplaçable
-    const marker = new mapboxgl.Marker({
-      draggable: true,
-      color: '#16a34a',
-    })
-      .setLngLat([onboardingData.longitude, onboardingData.latitude])
-      .addTo(map);
+      mapRef.current = map;
 
-    markerRef.current = marker;
+      map.on('load', () => {
+        console.log('✅ Carte Mapbox chargée');
+        setMapLoaded(true);
+      });
 
-    // Mise à jour coordonnées quand marqueur bougé
-    marker.on('dragend', () => {
-      const lngLat = marker.getLngLat();
-      setOnboardingData((prev) => ({
-        ...prev,
-        latitude: lngLat.lat,
-        longitude: lngLat.lng,
-      }));
-      console.log('📍 Marqueur déplacé:', lngLat);
-    });
+      const marker = new mapboxgl.Marker({
+        draggable: true,
+        color: '#16a34a',
+      })
+        .setLngLat([onboardingData.longitude, onboardingData.latitude])
+        .addTo(map);
 
-    // Geocoder
-    const geocoder = new MapboxGeocoder({
-      accessToken: MAPBOX_TOKEN,
-      mapboxgl: mapboxgl,
-      marker: false,
-      placeholder: 'Rechercher une adresse...',
-      language: 'fr',
-      types: 'address,poi',
-    });
+      markerRef.current = marker;
 
-    map.addControl(geocoder, 'top-left');
+      marker.on('dragend', () => {
+        const lngLat = marker.getLngLat();
+        setOnboardingData((prev) => ({
+          ...prev,
+          latitude: lngLat.lat,
+          longitude: lngLat.lng,
+        }));
+        console.log('📍 Marqueur déplacé:', lngLat);
+      });
 
-    // Quand adresse sélectionnée
-    geocoder.on('result', (e) => {
-      const { center, place_name } = e.result;
-      marker.setLngLat(center);
-      setOnboardingData((prev) => ({
-        ...prev,
-        latitude: center[1],
-        longitude: center[0],
-      }));
-      console.log('🔍 Adresse sélectionnée:', place_name, center);
-    });
+      const geocoder = new MapboxGeocoder({
+        accessToken: MAPBOX_TOKEN,
+        mapboxgl: mapboxgl,
+        marker: false,
+        placeholder: 'Rechercher une adresse...',
+        language: 'fr',
+        types: 'address,poi',
+      });
 
-    // Nettoyage
+      map.addControl(geocoder, 'top-left');
+
+      geocoder.on('result', (e) => {
+        const { center, place_name } = e.result;
+        marker.setLngLat(center);
+        setOnboardingData((prev) => ({
+          ...prev,
+          latitude: center[1],
+          longitude: center[0],
+        }));
+        console.log('🔍 Adresse sélectionnée:', place_name, center);
+      });
+    }, 300);
+
     return () => {
+      clearTimeout(timer);
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
       markerRef.current = null;
+      setMapLoaded(false);
     };
   }, [showOnboardingModal]);
 
-  // ✅ Charger offres
   useEffect(() => {
     const checkExpiredOffers = async () => {
       try {
@@ -536,6 +538,7 @@ const MerchantDashboardPage = () => {
       };
 
       console.log('📍 Payload envoyé:', updatePayload);
+      console.log('📍 Coordonnées exactes:', { latitude, longitude });
 
       const { error: updateError } = await supabase
         .from('merchants')
@@ -547,7 +550,6 @@ const MerchantDashboardPage = () => {
       setToast({ message: '✅ Profil complété avec succès', type: 'success' });
       setShowOnboardingModal(false);
 
-      // Recharger le profil
       const { data: updatedMerchant } = await supabase
         .from('merchants')
         .select('*')
@@ -583,30 +585,30 @@ const MerchantDashboardPage = () => {
       return;
     }
 
-    setIsSubmittingOnboarding(true);
+    setToast({ message: '📍 Détection en cours...', type: 'success' });
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         
+        console.log('✅ Position GPS détectée:', { latitude, longitude, accuracy: position.coords.accuracy });
+
         setOnboardingData((prev) => ({
           ...prev,
           latitude,
           longitude,
         }));
 
-        // Centrer la carte
         if (mapRef.current && markerRef.current) {
           mapRef.current.flyTo({ center: [longitude, latitude], zoom: 15 });
           markerRef.current.setLngLat([longitude, latitude]);
         }
 
-        setToast({ message: '✅ Position détectée !', type: 'success' });
-        setIsSubmittingOnboarding(false);
+        setToast({ message: `✅ Position détectée (précision: ${Math.round(position.coords.accuracy)}m)`, type: 'success' });
       },
       (error) => {
+        console.error('❌ Erreur géolocalisation:', error);
         setToast({ message: '⚠️ ' + error.message, type: 'error' });
-        setIsSubmittingOnboarding(false);
       },
       {
         enableHighAccuracy: true,
@@ -686,30 +688,29 @@ const MerchantDashboardPage = () => {
 
                 <div
                   ref={mapContainerRef}
-                  className="w-full h-[300px] rounded-lg border border-gray-300 mb-4"
-                ></div>
+                  className="w-full h-[300px] rounded-lg border border-gray-300 mb-4 bg-gray-100 flex items-center justify-center"
+                >
+                  {!mapLoaded && (
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-2"></div>
+                      <p className="text-sm text-gray-500">Chargement de la carte...</p>
+                    </div>
+                  )}
+                </div>
 
                 <p className="text-xs text-gray-500 mb-3">💡 Recherchez une adresse, déplacez le marqueur ou utilisez la géolocalisation</p>
 
                 <button
                   type="button"
-                  disabled={isSubmittingOnboarding}
                   onClick={handleGeolocate}
-                  className={`w-full flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors ${
-                    isSubmittingOnboarding
-                      ? 'bg-gray-200 text-gray-400 cursor-wait'
-                      : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
-                  }`}
+                  className="w-full flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors bg-blue-50 hover:bg-blue-100 text-blue-700"
                 >
-                  {isSubmittingOnboarding ? (
-                    <>
-                      <div className="w-4 h-4 mr-2 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                      Détection en cours...
-                    </>
-                  ) : (
-                    <>📍 Me géolocaliser automatiquement</>
-                  )}
+                  📍 Me géolocaliser automatiquement
                 </button>
+
+                <p className="text-xs text-gray-400 mt-2 text-center">
+                  Position actuelle: {onboardingData.latitude.toFixed(6)}, {onboardingData.longitude.toFixed(6)}
+                </p>
               </div>
 
               <div>
