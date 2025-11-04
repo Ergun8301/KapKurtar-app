@@ -57,14 +57,23 @@ const MerchantDashboardPage = () => {
   const [showNotifications, setShowNotifications] = useState(true);
   const { notifications, unreadCount } = useRealtimeNotifications(user?.id || null);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
-  const [onboardingData, setOnboardingData] = useState({
-    company_name: '',
-    phone: '',
-    street: '',
-    city: '',
-    postal_code: '',
-    logo_url: ''
-  });
+  const [onboardingData, setOnboardingData] = useState<{
+  company_name: string;
+  phone: string;
+  street: string;
+  city: string;
+  postal_code: string;
+  logo_url: string;
+  latitude?: number | null;   // ⭐ AJOUT
+  longitude?: number | null;  // ⭐ AJOUT
+}>({
+  company_name: '',
+  phone: '',
+  street: '',
+  city: '',
+  postal_code: '',
+  logo_url: ''
+});
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isSubmittingOnboarding, setIsSubmittingOnboarding] = useState(false);
   const [usedGeolocation, setUsedGeolocation] = useState(false);
@@ -563,23 +572,31 @@ const handleOnboardingSubmit = async (e: React.FormEvent) => {
     // 🧭 Étape 1 — Construire l’adresse complète
 const fullAddress = `${onboardingData.street}, ${onboardingData.postal_code} ${onboardingData.city}, ${onboardingData.country || 'FR'}`;
 
-// 🗺️ Étape 2 — Convertir l’adresse en coordonnées via Mapbox
-const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA'; // ✅ nouveau token géocodage
-const geoResponse = await fetch(
-  `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${MAPBOX_TOKEN}`
-);
+// 🗺️ Étape 2 — Récupérer les coordonnées (géoloc OU Mapbox)
+const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA';
 
-    const geoData = await geoResponse.json();
-    let latitude = null;
-    let longitude = null;
+// ⭐ Prendre d'abord les coordonnées de la géolocalisation si elles existent
+let latitude = onboardingData.latitude || null;
+let longitude = onboardingData.longitude || null;
 
-    if (geoData.features && geoData.features.length > 0) {
-      longitude = geoData.features[0].center[0];
-      latitude = geoData.features[0].center[1];
-      console.log('✅ Coordonnées trouvées :', { latitude, longitude });
-    } else {
-      console.warn('⚠️ Impossible de géocoder cette adresse');
-    }
+// Si pas de coordonnées → géocoder l'adresse via Mapbox
+if (!latitude || !longitude) {
+  const geoResponse = await fetch(
+    `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${MAPBOX_TOKEN}`
+  );
+
+  const geoData = await geoResponse.json();
+
+  if (geoData.features && geoData.features.length > 0) {
+    longitude = geoData.features[0].center[0];
+    latitude = geoData.features[0].center[1];
+    console.log('✅ Coordonnées trouvées via Mapbox :', { latitude, longitude });
+  } else {
+    console.warn('⚠️ Impossible de géocoder cette adresse');
+  }
+} else {
+  console.log('✅ Utilisation des coordonnées de la géolocalisation :', { latitude, longitude });
+}
 
     // 🗂️ Étape 3 — Mise à jour Supabase
     const updatePayload: any = {
@@ -881,6 +898,8 @@ const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                         street: 'Position détectée automatiquement',
                         city: 'Localisation GPS',
                         postal_code: '00000',
+                        latitude: latitude,      // ⭐ AJOUT
+                        longitude: longitude,    // ⭐ AJOUT
                       });
                     }
                   } catch (err) {
