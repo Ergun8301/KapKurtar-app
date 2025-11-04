@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp, X, Building2, Upload } from 'lucide-react';
+import { Plus, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp, Building2 } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
@@ -42,6 +42,9 @@ interface MerchantProfile {
   onboarding_completed: boolean;
 }
 
+const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA';
+mapboxgl.accessToken = MAPBOX_TOKEN;
+
 const MerchantDashboardPage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -68,9 +71,8 @@ const MerchantDashboardPage = () => {
     city: string;
     postal_code: string;
     logo_url: string;
-    latitude?: number | null;
-    longitude?: number | null;
-    country?: string;
+    latitude: number;
+    longitude: number;
   }>({
     company_name: '',
     phone: '',
@@ -78,25 +80,21 @@ const MerchantDashboardPage = () => {
     city: '',
     postal_code: '',
     logo_url: '',
-    country: 'FR'
+    latitude: 46.2044, // Bourg-en-Bresse par défaut
+    longitude: 5.2258
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isSubmittingOnboarding, setIsSubmittingOnboarding] = useState(false);
-  const [usedGeolocation, setUsedGeolocation] = useState(false);
   const [isFromSettings, setIsFromSettings] = useState(false);
-  const [mapInstance, setMapInstance] = useState<any>(null);
 
-  // 🗺️ Refs pour la carte Mapbox
+  // Refs pour Mapbox
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
 
-  // Configure Mapbox token
-  mapboxgl.accessToken = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA';
-
-  // Fetch merchant ID from user and auto-geolocate
+  // ✅ Fetch merchant profile (avec protection contre la boucle infinie)
   useEffect(() => {
-    const fetchMerchantIdAndGeolocate = async () => {
+    const fetchMerchantProfile = async () => {
       if (!user) {
         setMerchantId(null);
         return;
@@ -113,34 +111,32 @@ const MerchantDashboardPage = () => {
 
         if (profileError) throw profileError;
         if (!profileData) {
-          console.warn('⚠️ Aucun profil trouvé pour cet utilisateur');
+          console.warn('⚠️ Aucun profil trouvé');
           return;
         }
 
         const { data: merchantData, error: merchantError } = await supabase
           .from('merchants')
-          .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed')
+          .select('*')
           .eq('profile_id', profileData.id)
           .maybeSingle();
 
         if (merchantError) throw merchantError;
 
         if (merchantData) {
-          console.log('✅ Marchand trouvé, ID:', merchantData.id);
+          console.log('✅ Marchand trouvé:', merchantData.id);
           setMerchantId(merchantData.id);
           setMerchantProfile(merchantData);
 
-          const isProfileIncomplete =
+          // ✅ CONDITION STRICTE pour éviter la boucle infinie
+          const isIncomplete =
             !merchantData.onboarding_completed ||
-            !merchantData.company_name ||
-            !merchantData.phone ||
-            !merchantData.street ||
-            !merchantData.city ||
-            !merchantData.postal_code ||
-            !merchantData.logo_url;
+            !merchantData.company_name?.trim() ||
+            !merchantData.phone?.trim() ||
+            !merchantData.logo_url?.trim();
 
-          if (isProfileIncomplete) {
-            console.log('⚠️ Profil marchand incomplet, affichage de la modale');
+          if (isIncomplete && !showOnboardingModal) {
+            console.log('⚠️ Profil incomplet → ouverture modale');
             setIsFromSettings(false);
             setShowOnboardingModal(true);
             setOnboardingData({
@@ -150,21 +146,20 @@ const MerchantDashboardPage = () => {
               city: merchantData.city || '',
               postal_code: merchantData.postal_code || '',
               logo_url: merchantData.logo_url || '',
-              country: 'FR'
+              latitude: 46.2044,
+              longitude: 5.2258
             });
           }
-        } else {
-          console.warn('⚠️ Aucun marchand trouvé pour ce profil');
         }
       } catch (error) {
-        console.error('Erreur lors de la récupération du merchant ID:', error);
+        console.error('❌ Erreur fetch merchant:', error);
       }
     };
 
-    fetchMerchantIdAndGeolocate();
-  }, [user]);
+    fetchMerchantProfile();
+  }, [user, showOnboardingModal]);
 
-  // Ouvrir la modale depuis le bouton Settings
+  // ✅ Ouvrir modale depuis Settings
   useEffect(() => {
     const handleOpenProfileModal = () => {
       setIsFromSettings(true);
@@ -177,7 +172,8 @@ const MerchantDashboardPage = () => {
           city: merchantProfile.city || '',
           postal_code: merchantProfile.postal_code || '',
           logo_url: merchantProfile.logo_url || '',
-          country: 'FR'
+          latitude: 46.2044,
+          longitude: 5.2258
         });
       }
     };
@@ -185,35 +181,32 @@ const MerchantDashboardPage = () => {
     return () => window.removeEventListener('openMerchantProfileModal', handleOpenProfileModal);
   }, [merchantProfile]);
 
-  // 🗺️ Initialiser la carte Mapbox quand la modale s'ouvre
+  // ✅ Initialiser Mapbox UNE SEULE FOIS
   useEffect(() => {
-    if (!showOnboardingModal || !mapContainerRef.current) return;
+    if (!showOnboardingModal || !mapContainerRef.current || mapRef.current) return;
 
-    // Coordonnées par défaut (Paris) ou du marchand
-    const defaultLat = onboardingData.latitude || 48.8566;
-    const defaultLng = onboardingData.longitude || 2.3522;
+    console.log('🗺️ Initialisation Mapbox');
 
-    // Créer la carte
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [defaultLng, defaultLat],
+      center: [onboardingData.longitude, onboardingData.latitude],
       zoom: 13,
     });
 
     mapRef.current = map;
 
-    // Créer un marqueur déplaçable
+    // Marqueur déplaçable
     const marker = new mapboxgl.Marker({
       draggable: true,
       color: '#16a34a',
     })
-      .setLngLat([defaultLng, defaultLat])
+      .setLngLat([onboardingData.longitude, onboardingData.latitude])
       .addTo(map);
 
     markerRef.current = marker;
 
-    // Mise à jour des coordonnées quand le marqueur est déplacé
+    // Mise à jour coordonnées quand marqueur bougé
     marker.on('dragend', () => {
       const lngLat = marker.getLngLat();
       setOnboardingData((prev) => ({
@@ -221,31 +214,31 @@ const MerchantDashboardPage = () => {
         latitude: lngLat.lat,
         longitude: lngLat.lng,
       }));
-      console.log('📍 Marqueur déplacé:', { lat: lngLat.lat, lng: lngLat.lng });
+      console.log('📍 Marqueur déplacé:', lngLat);
     });
 
-    // Ajouter le geocoder
+    // Geocoder
     const geocoder = new MapboxGeocoder({
-      accessToken: mapboxgl.accessToken,
+      accessToken: MAPBOX_TOKEN,
       mapboxgl: mapboxgl,
       marker: false,
       placeholder: 'Rechercher une adresse...',
       language: 'fr',
-      countries: 'fr',
+      types: 'address,poi',
     });
 
     map.addControl(geocoder, 'top-left');
 
-    // Quand une adresse est sélectionnée dans le geocoder
+    // Quand adresse sélectionnée
     geocoder.on('result', (e) => {
-      const { center } = e.result;
+      const { center, place_name } = e.result;
       marker.setLngLat(center);
       setOnboardingData((prev) => ({
         ...prev,
         latitude: center[1],
         longitude: center[0],
       }));
-      console.log('🔍 Adresse sélectionnée:', { lat: center[1], lng: center[0] });
+      console.log('🔍 Adresse sélectionnée:', place_name, center);
     });
 
     // Nettoyage
@@ -258,27 +251,22 @@ const MerchantDashboardPage = () => {
     };
   }, [showOnboardingModal]);
 
+  // ✅ Charger offres
   useEffect(() => {
     const checkExpiredOffers = async () => {
       try {
         await supabase.rpc('auto_expire_offers');
-        console.log('Fonction auto_expire_offers exécutée avec succès');
       } catch (error) {
-        console.error('Erreur lors de la vérification des offres expirées :', error);
+        console.error('Erreur auto_expire_offers:', error);
       }
     };
 
     checkExpiredOffers();
 
-    if (!merchantId) {
-      console.log('⏳ Merchant ID non disponible, attente...');
-      return;
-    }
+    if (!merchantId) return;
 
-    console.log('✅ Merchant ID disponible :', merchantId);
     loadOffers();
 
-    console.log('Subscribing to realtime updates for merchant offers...');
     const channel = supabase
       .channel('merchant-offers-changes')
       .on(
@@ -289,15 +277,11 @@ const MerchantDashboardPage = () => {
           table: 'offers',
           filter: `merchant_id=eq.${merchantId}`,
         },
-        (payload) => {
-          console.log('Merchant offers table changed:', payload);
-          loadOffers();
-        }
+        () => loadOffers()
       )
       .subscribe();
 
     return () => {
-      console.log('Unsubscribing from merchant offers realtime...');
       supabase.removeChannel(channel);
     };
   }, [merchantId]);
@@ -309,65 +293,10 @@ const MerchantDashboardPage = () => {
     }
   }, [toast]);
 
-  // 🗺️ Mini-carte Mapbox : affiche et permet de déplacer le marqueur
-  useEffect(() => {
-    if (typeof window === 'undefined' || !(window as any).mapboxgl) return;
-    if (!showOnboardingModal) return;
-    if (!onboardingData.latitude || !onboardingData.longitude) return;
-
-    const mapboxgl = (window as any).mapboxgl;
-    mapboxgl.accessToken = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA';
-
-    const mapContainer = document.getElementById('merchant-map');
-    if (!mapContainer) return;
-
-    // Vérifier si une carte existe déjà
-    if (mapInstance) {
-      mapInstance.remove();
-    }
-
-    console.log('🗺️ Carte Mapbox affichée');
-
-    // Création de la carte centrée sur la position actuelle
-    const map = new mapboxgl.Map({
-      container: 'merchant-map',
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: [onboardingData.longitude, onboardingData.latitude],
-      zoom: 14,
-    });
-
-    // Création du marqueur déplaçable
-    const marker = new mapboxgl.Marker({ draggable: true })
-      .setLngLat([onboardingData.longitude, onboardingData.latitude])
-      .addTo(map);
-
-    // Mise à jour de la position lorsqu'on déplace le marqueur
-    marker.on('dragend', () => {
-      const lngLat = marker.getLngLat();
-      setOnboardingData((prev) => ({
-        ...prev,
-        latitude: lngLat.lat,
-        longitude: lngLat.lng,
-      }));
-      console.log('📍 Nouvelle position :', lngLat);
-    });
-
-    setMapInstance(map);
-
-    // Nettoyage à la fin
-    return () => {
-      if (map) {
-        map.remove();
-      }
-    };
-  }, [showOnboardingModal, onboardingData.latitude, onboardingData.longitude]);
-
   const loadOffers = async () => {
     if (!merchantId) return;
 
     try {
-      console.log('Fetching offers for merchant:', merchantId);
-
       const { data, error } = await supabase
         .from('offers')
         .select('*')
@@ -376,15 +305,10 @@ const MerchantDashboardPage = () => {
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-
-      console.log('Offers loaded:', data);
       setOffers(data || []);
     } catch (error: any) {
       console.error('Error loading offers:', error);
-      setToast({
-        message: error.message || 'Failed to load offers',
-        type: 'error',
-      });
+      setToast({ message: error.message || 'Failed to load offers', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -393,7 +317,6 @@ const MerchantDashboardPage = () => {
   const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' => {
     const now = new Date();
     const availableUntil = new Date(offer.available_until);
-
     if (now > availableUntil) return 'expired';
     if (!offer.is_active) return 'paused';
     return 'active';
@@ -419,26 +342,14 @@ const MerchantDashboardPage = () => {
 
   const handlePublish = async (formData: any) => {
     if (!user) {
-      console.error('User not authenticated');
       setToast({ message: 'Please log in to create an offer', type: 'error' });
       return;
     }
 
     if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
-      setToast({
-        message: 'Discounted price must be lower than original price',
-        type: 'error',
-      });
+      setToast({ message: 'Discounted price must be lower than original price', type: 'error' });
       return;
     }
-
-    console.log('Creating new offer...', {
-      merchant_id: user.id,
-      title: formData.title,
-      price_before: formData.price_before,
-      price_after: formData.price_after,
-      quantity: formData.quantity,
-    });
 
     setIsPublishing(true);
     try {
@@ -449,13 +360,10 @@ const MerchantDashboardPage = () => {
         .maybeSingle();
 
       if (profileError || !profileData) {
-        console.error('❌ Impossible de trouver le profil lié à cet utilisateur', profileError);
         setToast({ message: 'Erreur : profil introuvable', type: 'error' });
         setIsPublishing(false);
         return;
       }
-
-      console.log('✅ Profil trouvé, profile.id:', profileData.id);
 
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
@@ -464,26 +372,16 @@ const MerchantDashboardPage = () => {
         .maybeSingle();
 
       if (merchantError || !merchantData) {
-        console.error('❌ Impossible de trouver le marchand lié à ce profil', {
-          profile_id: profileData.id,
-          error: merchantError,
-          merchantData
-        });
         setToast({ message: 'Erreur : marchand introuvable', type: 'error' });
         setIsPublishing(false);
         return;
       }
 
-      console.log('✅ Marchand trouvé, merchant.id:', merchantData.id);
-      console.log('📍 Localisation du marchand:', merchantData.location);
-
       let imageUrl = null;
       if (formData.image) {
-        console.log('Uploading image to Supabase storage...');
         const randomId = crypto.randomUUID();
         const path = `${user.id}/${randomId}.jpg`;
         imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
-        console.log('Image uploaded successfully:', imageUrl);
       }
 
       const offerData: any = {
@@ -501,12 +399,7 @@ const MerchantDashboardPage = () => {
 
       if (merchantData.location) {
         offerData.location = merchantData.location;
-        console.log('✅ Localisation du marchand copiée vers l\'offre');
-      } else {
-        console.warn('⚠️ Aucune localisation trouvée pour ce marchand');
       }
-
-      console.log('Inserting offer into Supabase:', offerData);
 
       const { data, error } = await supabase
         .from('offers')
@@ -514,26 +407,7 @@ const MerchantDashboardPage = () => {
         .select()
         .single();
 
-      if (error) {
-        console.error('Supabase insert error:', error);
-        throw error;
-      }
-
-      console.log('✅ Offer created successfully:', data);
-
-      const { data: auditLog, error: auditError } = await supabase
-        .from('audit_log')
-        .select('*')
-        .eq('table_name', 'offers')
-        .eq('record_id', data.id)
-        .eq('action', 'INSERT')
-        .maybeSingle();
-
-      if (auditLog) {
-        console.log('✅ Audit log entry created:', auditLog);
-      } else if (auditError) {
-        console.warn('Could not verify audit log:', auditError);
-      }
+      if (error) throw error;
 
       setOffers([data, ...offers]);
       closeAddProductModal();
@@ -547,32 +421,16 @@ const MerchantDashboardPage = () => {
   };
 
   const toggleOfferStatus = async (offerId: string, currentStatus: boolean) => {
-    if (!user) {
-      console.error('User not authenticated');
-      setToast({ message: 'Please log in to update offer status', type: 'error' });
-      return;
-    }
-
-    if (togglingOfferId === offerId) return;
-
-    const newStatus = !currentStatus;
-    const actionText = newStatus ? 'Activating' : 'Pausing';
-    console.log(`${actionText} offer via RPC...`);
+    if (!user || togglingOfferId === offerId) return;
 
     setTogglingOfferId(offerId);
 
     try {
       const { error } = await supabase.rpc('toggle_offer_status', { p_offer_id: offerId });
-
       if (error) throw error;
-
-      console.log('✅ RPC toggle_offer_status executed successfully.');
       await loadOffers();
-
-      const successMessage = newStatus ? '✅ Offer activated' : '✅ Offer paused';
-      setToast({ message: successMessage, type: 'success' });
+      setToast({ message: currentStatus ? '✅ Offer paused' : '✅ Offer activated', type: 'success' });
     } catch (error: any) {
-      console.error('❌ Error toggling offer status:', error);
       setToast({ message: error.message || 'Failed to toggle offer status', type: 'error' });
     } finally {
       setTogglingOfferId(null);
@@ -580,31 +438,22 @@ const MerchantDashboardPage = () => {
   };
 
   const deleteOffer = async (offerId: string) => {
-    if (!user) {
-      setToast({ message: 'Please log in to delete offers', type: 'error' });
-      return;
-    }
+    if (!user) return;
 
-    const confirmed = confirm('Are you sure you want to hide (soft delete) this offer?');
+    const confirmed = confirm('Are you sure you want to hide this offer?');
     if (!confirmed) return;
 
     try {
-      console.log('🗑️ Calling delete_offer_soft RPC...');
       const { error } = await supabase.rpc('delete_offer_soft', { p_offer_id: offerId });
-
       if (error) throw error;
-
-      console.log('✅ RPC delete_offer_soft executed successfully.');
       await loadOffers();
-      setToast({ message: '🗑️ Offer hidden (soft deleted)', type: 'success' });
+      setToast({ message: '🗑️ Offer hidden', type: 'success' });
     } catch (error: any) {
-      console.error('❌ Error soft deleting offer:', error);
       setToast({ message: error.message || 'Failed to delete offer', type: 'error' });
     }
   };
 
   const openEditModal = (offer: Offer) => {
-    console.log('Opening edit modal for offer:', offer);
     setEditingOffer(offer);
     setShowEditModal(true);
   };
@@ -615,29 +464,20 @@ const MerchantDashboardPage = () => {
   };
 
   const handleUpdateOffer = async (formData: any) => {
-    if (!user || !editingOffer) {
-      console.error('User not authenticated or no offer selected');
-      setToast({ message: 'Cannot update offer', type: 'error' });
-      return;
-    }
+    if (!user || !editingOffer) return;
 
     if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
       setToast({ message: 'Discounted price must be lower than original price', type: 'error' });
       return;
     }
 
-    console.log('=== UPDATING OFFER ===');
-    console.log('Offer ID:', editingOffer.id);
-
     setIsPublishing(true);
     try {
       let imageUrl = editingOffer.image_url;
       if (formData.image) {
-        console.log('Uploading new image to Supabase storage...');
         const randomId = crypto.randomUUID();
         const path = `${user.id}/${randomId}.jpg`;
         imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
-        console.log('New image uploaded successfully:', imageUrl);
       }
 
       const updateData: any = {
@@ -651,24 +491,17 @@ const MerchantDashboardPage = () => {
         available_until: formData.available_until,
       };
 
-      console.log('Updating offer with data:', updateData);
-
       const { error } = await supabase
         .from('offers')
         .update(updateData)
         .eq('id', editingOffer.id);
 
-      if (error) {
-        console.error('❌ Error updating offer:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ Offer updated successfully');
       await loadOffers();
       closeEditModal();
       setToast({ message: '✅ Offer updated successfully', type: 'success' });
     } catch (error: any) {
-      console.error('❌ Error updating offer:', error);
       setToast({ message: error.message || 'Failed to update offer', type: 'error' });
     } finally {
       setIsPublishing(false);
@@ -684,51 +517,25 @@ const MerchantDashboardPage = () => {
       let logoUrl = onboardingData.logo_url;
 
       if (logoFile) {
-        console.log('Uploading logo...');
         const randomId = crypto.randomUUID();
         const path = `${merchantId}/${randomId}.jpg`;
         logoUrl = await uploadImageToSupabase(logoFile, 'merchant-logos', path);
-        console.log('Logo uploaded:', logoUrl);
       }
 
-      const fullAddress = `${onboardingData.street}, ${onboardingData.postal_code} ${onboardingData.city}, ${onboardingData.country || 'FR'}`;
-      const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA';
-
-      let latitude = onboardingData.latitude || null;
-      let longitude = onboardingData.longitude || null;
-
-      if (!latitude || !longitude) {
-        const geoResponse = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${MAPBOX_TOKEN}`
-        );
-
-        const geoData = await geoResponse.json();
-
-        if (geoData.features && geoData.features.length > 0) {
-          longitude = geoData.features[0].center[0];
-          latitude = geoData.features[0].center[1];
-          console.log('✅ Coordonnées trouvées via Mapbox :', { latitude, longitude });
-        } else {
-          console.warn('⚠️ Impossible de géocoder cette adresse');
-        }
-      } else {
-        console.log('✅ Utilisation des coordonnées de la géolocalisation :', { latitude, longitude });
-      }
+      const { latitude, longitude } = onboardingData;
 
       const updatePayload: any = {
         company_name: onboardingData.company_name,
         phone: onboardingData.phone,
-        street: onboardingData.street,
-        city: onboardingData.city,
-        postal_code: onboardingData.postal_code,
+        street: onboardingData.street || 'Position GPS',
+        city: onboardingData.city || 'À définir',
+        postal_code: onboardingData.postal_code || '00000',
         logo_url: logoUrl,
         onboarding_completed: true,
+        location: `SRID=4326;POINT(${longitude} ${latitude})`
       };
 
-      if (latitude && longitude) {
-        updatePayload.location = `SRID=4326;POINT(${longitude} ${latitude})`;
-        console.log("✅ Localisation prête pour Supabase :", updatePayload.location);
-      }
+      console.log('📍 Payload envoyé:', updatePayload);
 
       const { error: updateError } = await supabase
         .from('merchants')
@@ -737,22 +544,21 @@ const MerchantDashboardPage = () => {
 
       if (updateError) throw updateError;
 
-      console.log('✅ Profil marchand complété avec succès');
       setToast({ message: '✅ Profil complété avec succès', type: 'success' });
       setShowOnboardingModal(false);
 
+      // Recharger le profil
       const { data: updatedMerchant } = await supabase
         .from('merchants')
-        .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed, location')
+        .select('*')
         .eq('id', merchantId)
         .single();
 
       if (updatedMerchant) {
         setMerchantProfile(updatedMerchant);
-        console.log('📍 Nouveau profil marchand enregistré :', updatedMerchant);
       }
     } catch (error: any) {
-      console.error('❌ Erreur lors de la mise à jour du profil:', error);
+      console.error('❌ Erreur mise à jour:', error);
       setToast({ message: error.message || 'Erreur lors de la mise à jour', type: 'error' });
     } finally {
       setIsSubmittingOnboarding(false);
@@ -771,6 +577,45 @@ const MerchantDashboardPage = () => {
     }
   };
 
+  const handleGeolocate = () => {
+    if (!navigator.geolocation) {
+      setToast({ message: 'Géolocalisation non supportée', type: 'error' });
+      return;
+    }
+
+    setIsSubmittingOnboarding(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        setOnboardingData((prev) => ({
+          ...prev,
+          latitude,
+          longitude,
+        }));
+
+        // Centrer la carte
+        if (mapRef.current && markerRef.current) {
+          mapRef.current.flyTo({ center: [longitude, latitude], zoom: 15 });
+          markerRef.current.setLngLat([longitude, latitude]);
+        }
+
+        setToast({ message: '✅ Position détectée !', type: 'success' });
+        setIsSubmittingOnboarding(false);
+      },
+      (error) => {
+        setToast({ message: '⚠️ ' + error.message, type: 'error' });
+        setIsSubmittingOnboarding(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -780,7 +625,7 @@ const MerchantDashboardPage = () => {
   }
 
   const getStatusColor = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
       case 'paused': return 'bg-yellow-100 text-yellow-800';
       case 'expired': return 'bg-gray-100 text-gray-800';
@@ -800,136 +645,56 @@ const MerchantDashboardPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9998] p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                    <Building2 className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      Complétez votre profil marchand
-                    </h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Finalisez votre inscription pour publier des offres
-                    </p>
-                  </div>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Complétez votre profil marchand</h2>
+                  <p className="text-sm text-gray-600 mt-1">Finalisez votre inscription pour publier des offres</p>
                 </div>
               </div>
             </div>
 
             <form onSubmit={handleOnboardingSubmit} className="p-6 space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nom de l'entreprise *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nom de l'entreprise *</label>
                 <input
                   type="text"
                   value={onboardingData.company_name}
-                  onChange={(e) =>
-                    setOnboardingData({
-                      ...onboardingData,
-                      company_name: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  onChange={(e) => setOnboardingData({ ...onboardingData, company_name: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   placeholder="Ex: Boulangerie Martin"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Téléphone *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone *</label>
                 <input
                   type="tel"
                   value={onboardingData.phone}
-                  onChange={(e) =>
-                    setOnboardingData({
-                      ...onboardingData,
-                      phone: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  onChange={(e) => setOnboardingData({ ...onboardingData, phone: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   placeholder="Ex: 06 12 34 56 78"
                   required
                 />
               </div>
 
-              <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-3">
-                  Définissez votre position sur la carte :
-                </p>
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-3">Définissez votre position :</p>
 
-                {/* 🗺️ Carte Mapbox interactive */}
                 <div
                   ref={mapContainerRef}
-                  id="merchant-map"
-                  className="w-full h-[220px] rounded-lg border border-gray-300 mb-4"
+                  className="w-full h-[300px] rounded-lg border border-gray-300 mb-4"
                 ></div>
 
-                <p className="text-xs text-gray-500 mb-4">
-                  💡 Recherchez une adresse, déplacez le marqueur ou utilisez la géolocalisation ci-dessous
-                </p>
+                <p className="text-xs text-gray-500 mb-3">💡 Recherchez une adresse, déplacez le marqueur ou utilisez la géolocalisation</p>
 
                 <button
                   type="button"
                   disabled={isSubmittingOnboarding}
-                  onClick={() => {
-                    if (!navigator.geolocation) {
-                      setToast({
-                        message:
-                          "La géolocalisation n'est pas supportée par ce navigateur.",
-                        type: 'error',
-                      });
-                      return;
-                    }
-
-                    setIsSubmittingOnboarding(true);
-                    setToast({
-                      message: '📍 Détection de la position en cours...',
-                      type: 'success',
-                    });
-
-                    navigator.geolocation.getCurrentPosition(
-                      (position) => {
-                        const { latitude, longitude } = position.coords;
-                        console.log('✅ Position détectée :', { latitude, longitude });
-
-                        // Mettre à jour les coordonnées dans le state
-                        setOnboardingData((prev) => ({
-                          ...prev,
-                          latitude,
-                          longitude,
-                        }));
-
-                        // Centrer la carte et déplacer le marqueur
-                        if (mapRef.current && markerRef.current) {
-                          mapRef.current.flyTo({ center: [longitude, latitude], zoom: 15 });
-                          markerRef.current.setLngLat([longitude, latitude]);
-                        }
-
-                        setToast({
-                          message: '✅ Position détectée avec succès !',
-                          type: 'success',
-                        });
-                        setIsSubmittingOnboarding(false);
-                      },
-                      (error) => {
-                        console.warn('⚠️ Impossible de récupérer la position :', error.message);
-                        setToast({
-                          message: '⚠️ ' + error.message,
-                          type: 'error',
-                        });
-                        setIsSubmittingOnboarding(false);
-                      },
-                      {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0,
-                      }
-                    );
-                  }}
+                  onClick={handleGeolocate}
                   className={`w-full flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors ${
                     isSubmittingOnboarding
                       ? 'bg-gray-200 text-gray-400 cursor-wait'
@@ -942,25 +707,13 @@ const MerchantDashboardPage = () => {
                       Détection en cours...
                     </>
                   ) : (
-                    <>
-                      <span role="img" aria-label="pin">
-                        📍
-                      </span>
-                      <span className="ml-2">Me géolocaliser automatiquement</span>
-                    </>
+                    <>📍 Me géolocaliser automatiquement</>
                   )}
                 </button>
-
-                <p className="text-xs text-gray-500 mt-3 text-center">
-                  Vous pourrez modifier ces informations plus tard depuis votre
-                  tableau de bord marchand.
-                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Logo de l'entreprise *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Logo de l'entreprise *</label>
                 <input
                   type="file"
                   accept="image/*"
@@ -970,28 +723,24 @@ const MerchantDashboardPage = () => {
                 />
                 {onboardingData.logo_url && (
                   <div className="mt-3 flex justify-center">
-                    <img
-                      src={onboardingData.logo_url}
-                      alt="Logo prévisualisé"
-                      className="h-16 rounded-md shadow-sm"
-                    />
+                    <img src={onboardingData.logo_url} alt="Logo" className="h-16 rounded-md shadow-sm" />
                   </div>
                 )}
               </div>
 
               {isFromSettings ? (
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 mt-4">
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                   <button
                     type="button"
                     onClick={() => setShowOnboardingModal(false)}
-                    className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition-colors"
+                    className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmittingOnboarding}
-                    className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors"
+                    className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium"
                   >
                     {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
                   </button>
@@ -1000,7 +749,7 @@ const MerchantDashboardPage = () => {
                 <button
                   type="submit"
                   disabled={isSubmittingOnboarding}
-                  className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+                  className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg"
                 >
                   {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
                 </button>
@@ -1147,8 +896,8 @@ const MerchantDashboardPage = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <div className="flex items-baseline space-x-2">
-                        <span className="text-xs text-gray-500 line-through">{offer.price_before.toFixed(2)} euro</span>
-                        <span className="text-lg font-bold text-green-600">{offer.price_after.toFixed(2)} euro</span>
+                        <span className="text-xs text-gray-500 line-through">{offer.price_before.toFixed(2)} €</span>
+                        <span className="text-lg font-bold text-green-600">{offer.price_after.toFixed(2)} €</span>
                       </div>
                       {offer.discount_percent && (
                         <span className="text-xs font-medium text-green-600">
