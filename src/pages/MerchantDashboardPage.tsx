@@ -222,9 +222,17 @@ const MerchantDashboardPage = () => {
         mapRef.current = map;
 
         map.on('load', () => {
-          console.log('✅ Carte Mapbox chargée');
-          setMapLoaded(true);
-        });
+  console.log('✅ Carte Mapbox chargée');
+  setMapLoaded(true);
+
+  // 🪄 Forcer Mapbox à recalculer la taille du conteneur
+  setTimeout(() => {
+    if (map) {
+      map.resize();
+      console.log('🧭 Mapbox redimensionné après ouverture de la modale');
+    }
+  }, 300);
+});
 
         map.on('error', (e) => {
           console.error('❌ Erreur Mapbox:', e);
@@ -544,7 +552,7 @@ const MerchantDashboardPage = () => {
     }
   };
 
-  const handleOnboardingSubmit = async (e: React.FormEvent) => {
+    const handleOnboardingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!merchantId) return;
 
@@ -652,6 +660,16 @@ const MerchantDashboardPage = () => {
       }
     );
   };
+
+  // 🪄 Redimensionner la carte quand la modale s'affiche
+  useEffect(() => {
+    if (showOnboardingModal && mapRef.current) {
+      setTimeout(() => {
+        mapRef.current?.resize();
+        console.log('📐 Redimensionnement de la carte après ouverture de la modale');
+      }, 400);
+    }
+  }, [showOnboardingModal]);
 
   if (loading) {
     return (
