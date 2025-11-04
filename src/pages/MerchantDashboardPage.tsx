@@ -136,7 +136,7 @@ useEffect(() => {
           });
         }
 
-                // 🧭 Pas de géolocalisation automatique
+        // 🧭 Pas de géolocalisation automatique
         // Si tu veux plus tard proposer un bouton "Détecter ma position", tu pourras réutiliser ce code :
         /*
         const handleManualGeolocation = async () => {
@@ -168,7 +168,6 @@ useEffect(() => {
           );
         };
         */
-
       } else {
         console.warn('⚠️ Aucun marchand trouvé pour ce profil');
       }
@@ -179,6 +178,14 @@ useEffect(() => {
 
   fetchMerchantIdAndGeolocate();
 }, [user]);
+
+// 🧩 Permet d’ouvrir la modale “Profil marchand” depuis le bouton Settings du header
+useEffect(() => {
+  const handleOpenProfileModal = () => setShowOnboardingModal(true);
+  window.addEventListener('openMerchantProfileModal', handleOpenProfileModal);
+  return () => window.removeEventListener('openMerchantProfileModal', handleOpenProfileModal);
+}, []);
+
 
 useEffect(() => {
   const checkExpiredOffers = async () => {
