@@ -87,6 +87,7 @@ const MerchantDashboardPage = () => {
   const [isSubmittingOnboarding, setIsSubmittingOnboarding] = useState(false);
   const [isFromSettings, setIsFromSettings] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [modalReady, setModalReady] = useState(false); // 🆕 État pour contrôler l'initialisation
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -137,6 +138,12 @@ const MerchantDashboardPage = () => {
             console.log('⚠️ Profil incomplet → ouverture modale');
             setIsFromSettings(false);
             setShowOnboardingModal(true);
+            
+            // 🆕 Attendre un instant avant de permettre l'initialisation de la carte
+            setTimeout(() => {
+              setModalReady(true);
+            }, 100);
+            
             setOnboardingData({
               company_name: merchantData.company_name || '',
               phone: merchantData.phone || '',
@@ -161,6 +168,7 @@ const MerchantDashboardPage = () => {
     const handleOpenProfileModal = () => {
       setIsFromSettings(true);
       setShowOnboardingModal(true);
+      setModalReady(true); // 🆕 Carte prête immédiatement depuis Settings
       if (merchantProfile) {
         setOnboardingData({
           company_name: merchantProfile.company_name || '',
@@ -179,7 +187,11 @@ const MerchantDashboardPage = () => {
   }, [merchantProfile]);
 
   useEffect(() => {
-    if (!showOnboardingModal || !mapContainerRef.current) return;
+    // 🔥 Attendre que la modale soit prête ET visible
+    if (!showOnboardingModal || !modalReady || !mapContainerRef.current) {
+      console.log('⏳ En attente:', { showOnboardingModal, modalReady, hasContainer: !!mapContainerRef.current });
+      return;
+    }
 
     // 🧹 Nettoyer la carte existante si elle existe
     if (mapRef.current) {
@@ -192,7 +204,10 @@ const MerchantDashboardPage = () => {
 
     // ⏱️ Attendre que le DOM soit prêt
     const timer = setTimeout(() => {
-      if (!mapContainerRef.current) return;
+      if (!mapContainerRef.current) {
+        console.log('❌ Container non disponible');
+        return;
+      }
 
       console.log('🗺️ Initialisation Mapbox');
 
@@ -271,7 +286,7 @@ const MerchantDashboardPage = () => {
       markerRef.current = null;
       setMapLoaded(false);
     };
-  }, [showOnboardingModal]); // 🔥 Ne dépend QUE de showOnboardingModal
+  }, [showOnboardingModal, modalReady]); // 🔥 Dépend maintenant de modalReady aussi
 
   useEffect(() => {
     const checkExpiredOffers = async () => {
@@ -568,6 +583,7 @@ const MerchantDashboardPage = () => {
 
       setToast({ message: '✅ Profil complété avec succès', type: 'success' });
       setShowOnboardingModal(false);
+      setModalReady(false); // 🆕 Réinitialiser l'état
 
       const { data: updatedMerchant } = await supabase
         .from('merchants')
