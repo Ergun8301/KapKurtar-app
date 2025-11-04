@@ -82,73 +82,73 @@ const MerchantDashboardPage = () => {
   const [isFromSettings, setIsFromSettings] = useState(false);
 
   // Fetch merchant ID from user and auto-geolocate
-  useEffect(() => {
-    const fetchMerchantIdAndGeolocate = async () => {
-      if (!user) {
-        setMerchantId(null);
+useEffect(() => {
+  const fetchMerchantIdAndGeolocate = async () => {
+    if (!user) {
+      setMerchantId(null);
+      return;
+    }
+
+    try {
+      console.log('🔍 Recherche du profil pour auth_id:', user.id);
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_id', user.id)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+      if (!profileData) {
+        console.warn('⚠️ Aucun profil trouvé pour cet utilisateur');
         return;
       }
 
-      try {
-        console.log('🔍 Recherche du profil pour auth_id:', user.id);
+      const { data: merchantData, error: merchantError } = await supabase
+        .from('merchants')
+        .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed')
+        .eq('profile_id', profileData.id)
+        .maybeSingle();
 
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('auth_id', user.id)
-          .maybeSingle();
+      if (merchantError) throw merchantError;
 
-        if (profileError) throw profileError;
-        if (!profileData) {
-          console.warn('⚠️ Aucun profil trouvé pour cet utilisateur');
-          return;
+      if (merchantData) {
+        console.log('✅ Marchand trouvé, ID:', merchantData.id);
+        setMerchantId(merchantData.id);
+        setMerchantProfile(merchantData);
+
+        const isProfileIncomplete =
+          !merchantData.onboarding_completed ||
+          !merchantData.company_name ||
+          !merchantData.phone ||
+          !merchantData.street ||
+          !merchantData.city ||
+          !merchantData.postal_code ||
+          !merchantData.logo_url;
+
+        if (isProfileIncomplete) {
+          console.log('⚠️ Profil marchand incomplet, affichage de la modale');
+          setIsFromSettings(false);
+          setShowOnboardingModal(true);
+          setOnboardingData({
+            company_name: merchantData.company_name || '',
+            phone: merchantData.phone || '',
+            street: merchantData.street || '',
+            city: merchantData.city || '',
+            postal_code: merchantData.postal_code || '',
+            logo_url: merchantData.logo_url || ''
+          });
         }
-
-        const { data: merchantData, error: merchantError } = await supabase
-          .from('merchants')
-          .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed')
-          .eq('profile_id', profileData.id)
-          .maybeSingle();
-
-        if (merchantError) throw merchantError;
-        if (merchantData) {
-          console.log('✅ Marchand trouvé, ID:', merchantData.id);
-          setMerchantId(merchantData.id);
-          setMerchantProfile(merchantData);
-
-          const isProfileIncomplete =
-            !merchantData.onboarding_completed ||
-            !merchantData.company_name ||
-            !merchantData.phone ||
-            !merchantData.street ||
-            !merchantData.city ||
-            !merchantData.postal_code ||
-            !merchantData.logo_url;
-
-          if (isProfileIncomplete) {
-            console.log('⚠️ Profil marchand incomplet, affichage de la modale');
-            setIsFromSettings(false); // 🚫 Inscription → pas fermable
-            setShowOnboardingModal(true);
-            setOnboardingData({
-              company_name: merchantData.company_name || '',
-              phone: merchantData.phone || '',
-              street: merchantData.street || '',
-              city: merchantData.city || '',
-              postal_code: merchantData.postal_code || '',
-              logo_url: merchantData.logo_url || ''
-            });
-          }
-        } else {
-          console.warn('⚠️ Aucun marchand trouvé pour ce profil');
-        }
-      } catch (error) {
-        console.error('Erreur lors de la récupération du merchant ID:', error);
+      } else {
+        console.warn('⚠️ Aucun marchand trouvé pour ce profil');
       }
-    };
+    } catch (error) {
+      console.error('Erreur lors de la récupération du merchant ID:', error);
+    }
+  };
 
-        fetchMerchantIdAndGeolocate();
-  }, [user]); // ✅ on garde juste cette fermeture, pas d’accolade en plus à la fin
-
+  fetchMerchantIdAndGeolocate(); // ✅ appel ici à la fonction async
+}, [user]); // ✅ fin correcte
 
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
