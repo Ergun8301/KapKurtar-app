@@ -154,12 +154,25 @@ useEffect(() => {
   fetchMerchantIdAndGeolocate();
 }, [user]);
 
-// 🧩 Permet d’ouvrir la modale “Profil marchand” depuis le bouton Settings du header
+// 🧩 Permet d'ouvrir la modale "Profil marchand" depuis le bouton Settings du header
 useEffect(() => {
-  const handleOpenProfileModal = () => setShowOnboardingModal(true);
+  const handleOpenProfileModal = () => {
+    setIsFromSettings(true);
+    setShowOnboardingModal(true);
+    if (merchantProfile) {
+      setOnboardingData({
+        company_name: merchantProfile.company_name || '',
+        phone: merchantProfile.phone || '',
+        street: merchantProfile.street || '',
+        city: merchantProfile.city || '',
+        postal_code: merchantProfile.postal_code || '',
+        logo_url: merchantProfile.logo_url || ''
+      });
+    }
+  };
   window.addEventListener('openMerchantProfileModal', handleOpenProfileModal);
   return () => window.removeEventListener('openMerchantProfileModal', handleOpenProfileModal);
-}, []);
+}, [merchantProfile]);
 
 
 useEffect(() => {
@@ -964,14 +977,33 @@ const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           )}
         </div>
 
-        {/* ✅ Bouton unique plein largeur (plus de bouton "Fermer") */}
-        <button
-          type="submit"
-          disabled={isSubmittingOnboarding}
-          className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
-        >
-          {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
-        </button>
+        {/* ✅ Boutons conditionnels selon isFromSettings */}
+        {isFromSettings ? (
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 mt-4">
+            <button
+              type="button"
+              onClick={() => setShowOnboardingModal(false)}
+              className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition-colors"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmittingOnboarding}
+              className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors"
+            >
+              {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="submit"
+            disabled={isSubmittingOnboarding}
+            className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+          >
+            {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
+          </button>
+        )}
       </form>
     </div>
   </div>
