@@ -222,17 +222,17 @@ const MerchantDashboardPage = () => {
         mapRef.current = map;
 
         map.on('load', () => {
-  console.log('✅ Carte Mapbox chargée');
-  setMapLoaded(true);
+          console.log('✅ Carte Mapbox chargée');
+          setMapLoaded(true);
 
-  // 🪄 Forcer Mapbox à recalculer la taille du conteneur
-  setTimeout(() => {
-    if (map) {
-      map.resize();
-      console.log('🧭 Mapbox redimensionné après ouverture de la modale');
-    }
-  }, 300);
-});
+          // 🪄 Forcer Mapbox à recalculer la taille du conteneur
+          setTimeout(() => {
+            if (map) {
+              map.resize();
+              console.log('🧭 Mapbox redimensionné après ouverture de la modale');
+            }
+          }, 300);
+        });
 
         map.on('error', (e) => {
           console.error('❌ Erreur Mapbox:', e);
@@ -248,26 +248,26 @@ const MerchantDashboardPage = () => {
 
         markerRef.current = marker;
 
-      marker.on('dragend', () => {
-        const lngLat = marker.getLngLat();
-        setOnboardingData((prev) => ({
-          ...prev,
-          latitude: lngLat.lat,
-          longitude: lngLat.lng,
-        }));
-        console.log('📍 Marqueur déplacé:', lngLat);
-      });
+        marker.on('dragend', () => {
+          const lngLat = marker.getLngLat();
+          setOnboardingData((prev) => ({
+            ...prev,
+            latitude: lngLat.lat,
+            longitude: lngLat.lng,
+          }));
+          console.log('📍 Marqueur déplacé:', lngLat);
+        });
 
-      const geocoder = new MapboxGeocoder({
-        accessToken: MAPBOX_TOKEN,
-        mapboxgl: mapboxgl,
-        marker: false,
-        placeholder: 'Rechercher une adresse...',
-        language: 'fr',
-        types: 'address,poi',
-      });
+        const geocoder = new MapboxGeocoder({
+          accessToken: MAPBOX_TOKEN,
+          mapboxgl: mapboxgl,
+          marker: false,
+          placeholder: 'Rechercher une adresse...',
+          language: 'fr',
+          types: 'address,poi',
+        });
 
-      map.addControl(geocoder, 'top-left');
+        map.addControl(geocoder, 'top-left');
 
         geocoder.on('result', (e) => {
           const { center, place_name } = e.result;
