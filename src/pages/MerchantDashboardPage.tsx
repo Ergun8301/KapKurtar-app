@@ -16,7 +16,7 @@ interface Offer {
   image_url: string | null;
   price_before: number;
   price_after: number;
-  discount_percent: number | null; // GENERATED column in DB
+  discount_percent: number | null;
   available_from: string;
   available_until: string;
   is_active: boolean;
@@ -64,257 +64,300 @@ const MerchantDashboardPage = () => {
     city: string;
     postal_code: string;
     logo_url: string;
-    latitude?: number | null;   // ⭐ AJOUT
-    longitude?: number | null;  // ⭐ AJOUT
+    latitude?: number | null;
+    longitude?: number | null;
+    country?: string;
   }>({
     company_name: '',
     phone: '',
     street: '',
     city: '',
     postal_code: '',
-    logo_url: ''
+    logo_url: '',
+    country: 'FR'
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isSubmittingOnboarding, setIsSubmittingOnboarding] = useState(false);
   const [usedGeolocation, setUsedGeolocation] = useState(false);
-
-  // 🆕 AJOUT ici — savoir si la modale vient du bouton Settings
   const [isFromSettings, setIsFromSettings] = useState(false);
+  const [mapInstance, setMapInstance] = useState<any>(null);
 
   // Fetch merchant ID from user and auto-geolocate
-useEffect(() => {
-  const fetchMerchantIdAndGeolocate = async () => {
-    if (!user) {
-      setMerchantId(null);
-      return;
-    }
-
-    try {
-      console.log('🔍 Recherche du profil pour auth_id:', user.id);
-
-      // 1️⃣ Récupération du profil lié à l’utilisateur
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('auth_id', user.id)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-      if (!profileData) {
-        console.warn('⚠️ Aucun profil trouvé pour cet utilisateur');
+  useEffect(() => {
+    const fetchMerchantIdAndGeolocate = async () => {
+      if (!user) {
+        setMerchantId(null);
         return;
       }
 
-      // 2️⃣ Récupération du marchand lié à ce profil
-      const { data: merchantData, error: merchantError } = await supabase
-        .from('merchants')
-        .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed')
-        .eq('profile_id', profileData.id)
-        .maybeSingle();
+      try {
+        console.log('🔍 Recherche du profil pour auth_id:', user.id);
 
-      if (merchantError) throw merchantError;
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('auth_id', user.id)
+          .maybeSingle();
 
-      if (merchantData) {
-        console.log('✅ Marchand trouvé, ID:', merchantData.id);
-        setMerchantId(merchantData.id);
-        setMerchantProfile(merchantData);
-
-        // 3️⃣ Vérifie si le profil est incomplet
-        const isProfileIncomplete =
-          !merchantData.onboarding_completed ||
-          !merchantData.company_name ||
-          !merchantData.phone ||
-          !merchantData.street ||
-          !merchantData.city ||
-          !merchantData.postal_code ||
-          !merchantData.logo_url;
-
-        if (isProfileIncomplete) {
-          console.log('⚠️ Profil marchand incomplet, affichage de la modale');
-          setIsFromSettings(false);
-          setShowOnboardingModal(true);
-          setOnboardingData({
-            company_name: merchantData.company_name || '',
-            phone: merchantData.phone || '',
-            street: merchantData.street || '',
-            city: merchantData.city || '',
-            postal_code: merchantData.postal_code || '',
-            logo_url: merchantData.logo_url || ''
-          });
+        if (profileError) throw profileError;
+        if (!profileData) {
+          console.warn('⚠️ Aucun profil trouvé pour cet utilisateur');
+          return;
         }
-      } else {
-        console.warn('⚠️ Aucun marchand trouvé pour ce profil');
+
+        const { data: merchantData, error: merchantError } = await supabase
+          .from('merchants')
+          .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed')
+          .eq('profile_id', profileData.id)
+          .maybeSingle();
+
+        if (merchantError) throw merchantError;
+
+        if (merchantData) {
+          console.log('✅ Marchand trouvé, ID:', merchantData.id);
+          setMerchantId(merchantData.id);
+          setMerchantProfile(merchantData);
+
+          const isProfileIncomplete =
+            !merchantData.onboarding_completed ||
+            !merchantData.company_name ||
+            !merchantData.phone ||
+            !merchantData.street ||
+            !merchantData.city ||
+            !merchantData.postal_code ||
+            !merchantData.logo_url;
+
+          if (isProfileIncomplete) {
+            console.log('⚠️ Profil marchand incomplet, affichage de la modale');
+            setIsFromSettings(false);
+            setShowOnboardingModal(true);
+            setOnboardingData({
+              company_name: merchantData.company_name || '',
+              phone: merchantData.phone || '',
+              street: merchantData.street || '',
+              city: merchantData.city || '',
+              postal_code: merchantData.postal_code || '',
+              logo_url: merchantData.logo_url || '',
+              country: 'FR'
+            });
+          }
+        } else {
+          console.warn('⚠️ Aucun marchand trouvé pour ce profil');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération du merchant ID:', error);
       }
-    } catch (error) {
-      console.error('Erreur lors de la récupération du merchant ID:', error);
+    };
+
+    fetchMerchantIdAndGeolocate();
+  }, [user]);
+
+  // Ouvrir la modale depuis le bouton Settings
+  useEffect(() => {
+    const handleOpenProfileModal = () => {
+      setIsFromSettings(true);
+      setShowOnboardingModal(true);
+      if (merchantProfile) {
+        setOnboardingData({
+          company_name: merchantProfile.company_name || '',
+          phone: merchantProfile.phone || '',
+          street: merchantProfile.street || '',
+          city: merchantProfile.city || '',
+          postal_code: merchantProfile.postal_code || '',
+          logo_url: merchantProfile.logo_url || '',
+          country: 'FR'
+        });
+      }
+    };
+    window.addEventListener('openMerchantProfileModal', handleOpenProfileModal);
+    return () => window.removeEventListener('openMerchantProfileModal', handleOpenProfileModal);
+  }, [merchantProfile]);
+
+  useEffect(() => {
+    const checkExpiredOffers = async () => {
+      try {
+        await supabase.rpc('auto_expire_offers');
+        console.log('Fonction auto_expire_offers exécutée avec succès');
+      } catch (error) {
+        console.error('Erreur lors de la vérification des offres expirées :', error);
+      }
+    };
+
+    checkExpiredOffers();
+
+    if (!merchantId) {
+      console.log('⏳ Merchant ID non disponible, attente...');
+      return;
     }
-  };
 
-  // 4️⃣ Exécution de la fonction asynchrone
-  fetchMerchantIdAndGeolocate();
-}, [user]);
+    console.log('✅ Merchant ID disponible :', merchantId);
+    loadOffers();
 
-// 🧩 Permet d'ouvrir la modale "Profil marchand" depuis le bouton Settings du header
-useEffect(() => {
-  const handleOpenProfileModal = () => {
-    setIsFromSettings(true);
-    setShowOnboardingModal(true);
-    if (merchantProfile) {
-      setOnboardingData({
-        company_name: merchantProfile.company_name || '',
-        phone: merchantProfile.phone || '',
-        street: merchantProfile.street || '',
-        city: merchantProfile.city || '',
-        postal_code: merchantProfile.postal_code || '',
-        logo_url: merchantProfile.logo_url || ''
-      });
+    console.log('Subscribing to realtime updates for merchant offers...');
+    const channel = supabase
+      .channel('merchant-offers-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'offers',
+          filter: `merchant_id=eq.${merchantId}`,
+        },
+        (payload) => {
+          console.log('Merchant offers table changed:', payload);
+          loadOffers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Unsubscribing from merchant offers realtime...');
+      supabase.removeChannel(channel);
+    };
+  }, [merchantId]);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
     }
-  };
-  window.addEventListener('openMerchantProfileModal', handleOpenProfileModal);
-  return () => window.removeEventListener('openMerchantProfileModal', handleOpenProfileModal);
-}, [merchantProfile]);
+  }, [toast]);
 
+  // 🗺️ Mini-carte Mapbox : affiche et permet de déplacer le marqueur
+  useEffect(() => {
+    if (typeof window === 'undefined' || !(window as any).mapboxgl) return;
+    if (!showOnboardingModal) return;
+    if (!onboardingData.latitude || !onboardingData.longitude) return;
 
-useEffect(() => {
-  const checkExpiredOffers = async () => {
+    const mapboxgl = (window as any).mapboxgl;
+    mapboxgl.accessToken = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA';
+
+    const mapContainer = document.getElementById('merchant-map');
+    if (!mapContainer) return;
+
+    // Vérifier si une carte existe déjà
+    if (mapInstance) {
+      mapInstance.remove();
+    }
+
+    console.log('🗺️ Carte Mapbox affichée');
+
+    // Création de la carte centrée sur la position actuelle
+    const map = new mapboxgl.Map({
+      container: 'merchant-map',
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [onboardingData.longitude, onboardingData.latitude],
+      zoom: 14,
+    });
+
+    // Création du marqueur déplaçable
+    const marker = new mapboxgl.Marker({ draggable: true })
+      .setLngLat([onboardingData.longitude, onboardingData.latitude])
+      .addTo(map);
+
+    // Mise à jour de la position lorsqu'on déplace le marqueur
+    marker.on('dragend', () => {
+      const lngLat = marker.getLngLat();
+      setOnboardingData((prev) => ({
+        ...prev,
+        latitude: lngLat.lat,
+        longitude: lngLat.lng,
+      }));
+      console.log('📍 Nouvelle position :', lngLat);
+    });
+
+    setMapInstance(map);
+
+    // Nettoyage à la fin
+    return () => {
+      if (map) {
+        map.remove();
+      }
+    };
+  }, [showOnboardingModal, onboardingData.latitude, onboardingData.longitude]);
+
+  const loadOffers = async () => {
+    if (!merchantId) return;
+
     try {
-      await supabase.rpc('auto_expire_offers');
-      console.log('Fonction auto_expire_offers exécutée avec succès');
-    } catch (error) {
-      console.error('Erreur lors de la vérification des offres expirées :', error);
+      console.log('Fetching offers for merchant:', merchantId);
+
+      const { data, error } = await supabase
+        .from('offers')
+        .select('*')
+        .eq('merchant_id', merchantId)
+        .eq('is_deleted', false)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+
+      console.log('Offers loaded:', data);
+      setOffers(data || []);
+    } catch (error: any) {
+      console.error('Error loading offers:', error);
+      setToast({
+        message: error.message || 'Failed to load offers',
+        type: 'error',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  checkExpiredOffers();
+  const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' => {
+    const now = new Date();
+    const availableUntil = new Date(offer.available_until);
 
-  if (!merchantId) {
-    console.log('⏳ Merchant ID non disponible, attente...');
-    return;
-  }
-
-  console.log('✅ Merchant ID disponible :', merchantId);
-  loadOffers();
-
-  // Subscribe to realtime updates for merchant's offers
-  console.log('Subscribing to realtime updates for merchant offers...');
-  const channel = supabase
-    .channel('merchant-offers-changes')
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'offers',
-        filter: `merchant_id=eq.${merchantId}`,
-      },
-      (payload) => {
-        console.log('Merchant offers table changed:', payload);
-        loadOffers();
-      }
-    )
-    .subscribe();
-
-  return () => {
-    console.log('Unsubscribing from merchant offers realtime...');
-    supabase.removeChannel(channel);
+    if (now > availableUntil) return 'expired';
+    if (!offer.is_active) return 'paused';
+    return 'active';
   };
-}, [merchantId]);
 
-useEffect(() => {
-  if (toast) {
-    const timer = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(timer);
-  }
-}, [toast]);
+  const calculateTimeLeft = (endDate: string) => {
+    const now = new Date();
+    const end = new Date(endDate);
+    const diff = end.getTime() - now.getTime();
 
-const loadOffers = async () => {
-  if (!merchantId) return;
+    if (diff < 0) return 'Expired';
 
-  try {
-    console.log('Fetching offers for merchant:', merchantId);
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-    const { data, error } = await supabase
-      .from('offers')
-      .select('*')
-      .eq('merchant_id', merchantId)
-      .eq('is_deleted', false)
-      .order('updated_at', { ascending: false });
+    if (hours > 24) {
+      const days = Math.floor(hours / 24);
+      return days + ' day' + (days > 1 ? 's' : '') + ' left';
+    }
+    if (hours > 0) return hours + 'h ' + minutes + 'm left';
+    return minutes + 'm left';
+  };
 
-    if (error) throw error;
+  const handlePublish = async (formData: any) => {
+    if (!user) {
+      console.error('User not authenticated');
+      setToast({ message: 'Please log in to create an offer', type: 'error' });
+      return;
+    }
 
-    console.log('Offers loaded:', data);
-    setOffers(data || []);
-  } catch (error: any) {
-    console.error('Error loading offers:', error);
-    setToast({
-      message: error.message || 'Failed to load offers',
-      type: 'error',
+    if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
+      setToast({
+        message: 'Discounted price must be lower than original price',
+        type: 'error',
+      });
+      return;
+    }
+
+    console.log('Creating new offer...', {
+      merchant_id: user.id,
+      title: formData.title,
+      price_before: formData.price_before,
+      price_after: formData.price_after,
+      quantity: formData.quantity,
     });
-  } finally {
-    setLoading(false);
-  }
-};
 
-const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' => {
-  const now = new Date();
-  const availableUntil = new Date(offer.available_until);
-
-  // priorité : expirée > pause > active
-  if (now > availableUntil) return 'expired';
-  if (!offer.is_active) return 'paused';
-  return 'active';
-};
-
-const calculateTimeLeft = (endDate: string) => {
-  const now = new Date();
-  const end = new Date(endDate);
-  const diff = end.getTime() - now.getTime();
-
-  if (diff < 0) return 'Expired';
-
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-  if (hours > 24) {
-    const days = Math.floor(hours / 24);
-    return days + ' day' + (days > 1 ? 's' : '') + ' left';
-  }
-  if (hours > 0) return hours + 'h ' + minutes + 'm left';
-  return minutes + 'm left';
-};
-
-
-
-
-
-
-
-const handlePublish = async (formData: any) => {
-  if (!user) {
-    console.error('User not authenticated');
-    setToast({ message: 'Please log in to create an offer', type: 'error' });
-    return;
-  }
-
-  if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
-    setToast({
-      message: 'Discounted price must be lower than original price',
-      type: 'error',
-    });
-    return;
-  }
-
-  console.log('Creating new offer...', {
-    merchant_id: user.id,
-    title: formData.title,
-    price_before: formData.price_before,
-    price_after: formData.price_after,
-    quantity: formData.quantity,
-  });
-
-  setIsPublishing(true);
-  try {
-    const { data: profileData, error: profileError } = await supabase
+    setIsPublishing(true);
+    try {
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('auth_id', user.id)
@@ -419,62 +462,61 @@ const handlePublish = async (formData: any) => {
   };
 
   const toggleOfferStatus = async (offerId: string, currentStatus: boolean) => {
-  if (!user) {
-    console.error('User not authenticated');
-    setToast({ message: 'Please log in to update offer status', type: 'error' });
-    return;
-  }
+    if (!user) {
+      console.error('User not authenticated');
+      setToast({ message: 'Please log in to update offer status', type: 'error' });
+      return;
+    }
 
-  if (togglingOfferId === offerId) return;
+    if (togglingOfferId === offerId) return;
 
-  const newStatus = !currentStatus;
-  const actionText = newStatus ? 'Activating' : 'Pausing';
-  console.log(`${actionText} offer via RPC...`);
+    const newStatus = !currentStatus;
+    const actionText = newStatus ? 'Activating' : 'Pausing';
+    console.log(`${actionText} offer via RPC...`);
 
-  setTogglingOfferId(offerId);
+    setTogglingOfferId(offerId);
 
-  try {
-    // 🟢 Appel RPC sécurisé Supabase
-    const { error } = await supabase.rpc('toggle_offer_status', { p_offer_id: offerId });
+    try {
+      const { error } = await supabase.rpc('toggle_offer_status', { p_offer_id: offerId });
 
-    if (error) throw error;
+      if (error) throw error;
 
-    console.log('✅ RPC toggle_offer_status executed successfully.');
-    await loadOffers();
+      console.log('✅ RPC toggle_offer_status executed successfully.');
+      await loadOffers();
 
-    const successMessage = newStatus ? '✅ Offer activated' : '✅ Offer paused';
-    setToast({ message: successMessage, type: 'success' });
-  } catch (error: any) {
-    console.error('❌ Error toggling offer status:', error);
-    setToast({ message: error.message || 'Failed to toggle offer status', type: 'error' });
-  } finally {
-    setTogglingOfferId(null);
-  }
-};
+      const successMessage = newStatus ? '✅ Offer activated' : '✅ Offer paused';
+      setToast({ message: successMessage, type: 'success' });
+    } catch (error: any) {
+      console.error('❌ Error toggling offer status:', error);
+      setToast({ message: error.message || 'Failed to toggle offer status', type: 'error' });
+    } finally {
+      setTogglingOfferId(null);
+    }
+  };
 
   const deleteOffer = async (offerId: string) => {
-  if (!user) {
-    setToast({ message: 'Please log in to delete offers', type: 'error' });
-    return;
-  }
+    if (!user) {
+      setToast({ message: 'Please log in to delete offers', type: 'error' });
+      return;
+    }
 
-  const confirmed = confirm('Are you sure you want to hide (soft delete) this offer?');
-  if (!confirmed) return;
+    const confirmed = confirm('Are you sure you want to hide (soft delete) this offer?');
+    if (!confirmed) return;
 
-  try {
-    console.log('🗑️ Calling delete_offer_soft RPC...');
-    const { error } = await supabase.rpc('delete_offer_soft', { p_offer_id: offerId });
+    try {
+      console.log('🗑️ Calling delete_offer_soft RPC...');
+      const { error } = await supabase.rpc('delete_offer_soft', { p_offer_id: offerId });
 
-    if (error) throw error;
+      if (error) throw error;
 
-    console.log('✅ RPC delete_offer_soft executed successfully.');
-    await loadOffers();
-    setToast({ message: '🗑️ Offer hidden (soft deleted)', type: 'success' });
-  } catch (error: any) {
-    console.error('❌ Error soft deleting offer:', error);
-    setToast({ message: error.message || 'Failed to delete offer', type: 'error' });
-  }
-};
+      console.log('✅ RPC delete_offer_soft executed successfully.');
+      await loadOffers();
+      setToast({ message: '🗑️ Offer hidden (soft deleted)', type: 'success' });
+    } catch (error: any) {
+      console.error('❌ Error soft deleting offer:', error);
+      setToast({ message: error.message || 'Failed to delete offer', type: 'error' });
+    }
+  };
 
   const openEditModal = (offer: Offer) => {
     console.log('Opening edit modal for offer:', offer);
@@ -548,109 +590,101 @@ const handlePublish = async (formData: any) => {
     }
   };
 
-const handleOnboardingSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!merchantId) return;
+  const handleOnboardingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!merchantId) return;
 
-  setIsSubmittingOnboarding(true);
-  try {
-    let logoUrl = onboardingData.logo_url;
+    setIsSubmittingOnboarding(true);
+    try {
+      let logoUrl = onboardingData.logo_url;
 
-    if (logoFile) {
-      console.log('Uploading logo...');
-      const randomId = crypto.randomUUID();
-      const path = `${merchantId}/${randomId}.jpg`;
-      logoUrl = await uploadImageToSupabase(logoFile, 'merchant-logos', path);
-      console.log('Logo uploaded:', logoUrl);
+      if (logoFile) {
+        console.log('Uploading logo...');
+        const randomId = crypto.randomUUID();
+        const path = `${merchantId}/${randomId}.jpg`;
+        logoUrl = await uploadImageToSupabase(logoFile, 'merchant-logos', path);
+        console.log('Logo uploaded:', logoUrl);
+      }
+
+      const fullAddress = `${onboardingData.street}, ${onboardingData.postal_code} ${onboardingData.city}, ${onboardingData.country || 'FR'}`;
+      const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA';
+
+      let latitude = onboardingData.latitude || null;
+      let longitude = onboardingData.longitude || null;
+
+      if (!latitude || !longitude) {
+        const geoResponse = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${MAPBOX_TOKEN}`
+        );
+
+        const geoData = await geoResponse.json();
+
+        if (geoData.features && geoData.features.length > 0) {
+          longitude = geoData.features[0].center[0];
+          latitude = geoData.features[0].center[1];
+          console.log('✅ Coordonnées trouvées via Mapbox :', { latitude, longitude });
+        } else {
+          console.warn('⚠️ Impossible de géocoder cette adresse');
+        }
+      } else {
+        console.log('✅ Utilisation des coordonnées de la géolocalisation :', { latitude, longitude });
+      }
+
+      const updatePayload: any = {
+        company_name: onboardingData.company_name,
+        phone: onboardingData.phone,
+        street: onboardingData.street,
+        city: onboardingData.city,
+        postal_code: onboardingData.postal_code,
+        logo_url: logoUrl,
+        onboarding_completed: true,
+      };
+
+      if (latitude && longitude) {
+        updatePayload.location = `SRID=4326;POINT(${longitude} ${latitude})`;
+        console.log("✅ Localisation prête pour Supabase :", updatePayload.location);
+      }
+
+      const { error: updateError } = await supabase
+        .from('merchants')
+        .update(updatePayload)
+        .eq('id', merchantId);
+
+      if (updateError) throw updateError;
+
+      console.log('✅ Profil marchand complété avec succès');
+      setToast({ message: '✅ Profil complété avec succès', type: 'success' });
+      setShowOnboardingModal(false);
+
+      const { data: updatedMerchant } = await supabase
+        .from('merchants')
+        .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed, location')
+        .eq('id', merchantId)
+        .single();
+
+      if (updatedMerchant) {
+        setMerchantProfile(updatedMerchant);
+        console.log('📍 Nouveau profil marchand enregistré :', updatedMerchant);
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur lors de la mise à jour du profil:', error);
+      setToast({ message: error.message || 'Erreur lors de la mise à jour', type: 'error' });
+    } finally {
+      setIsSubmittingOnboarding(false);
     }
+  };
 
-    // 🧭 Étape 1 — Construire l’adresse complète
-const fullAddress = `${onboardingData.street}, ${onboardingData.postal_code} ${onboardingData.city}, ${onboardingData.country || 'FR'}`;
-
-// 🗺️ Étape 2 — Récupérer les coordonnées (géoloc OU Mapbox)
-const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA';
-
-// ⭐ Prendre d'abord les coordonnées de la géolocalisation si elles existent
-let latitude = onboardingData.latitude || null;
-let longitude = onboardingData.longitude || null;
-
-// Si pas de coordonnées → géocoder l'adresse via Mapbox
-if (!latitude || !longitude) {
-  const geoResponse = await fetch(
-    `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${MAPBOX_TOKEN}`
-  );
-
-  const geoData = await geoResponse.json();
-
-  if (geoData.features && geoData.features.length > 0) {
-    longitude = geoData.features[0].center[0];
-    latitude = geoData.features[0].center[1];
-    console.log('✅ Coordonnées trouvées via Mapbox :', { latitude, longitude });
-  } else {
-    console.warn('⚠️ Impossible de géocoder cette adresse');
-  }
-} else {
-  console.log('✅ Utilisation des coordonnées de la géolocalisation :', { latitude, longitude });
-}
-
-    // 🗂️ Étape 3 — Mise à jour Supabase
-    const updatePayload: any = {
-      company_name: onboardingData.company_name,
-      phone: onboardingData.phone,
-      street: onboardingData.street,
-      city: onboardingData.city,
-      postal_code: onboardingData.postal_code,
-      logo_url: logoUrl,
-      onboarding_completed: true,
-    };
-
-    // Si les coordonnées existent → ajoute-les au payload
-if (latitude && longitude) {
-  // ✅ PostGIS attend un format WKT "SRID=4326;POINT(lon lat)"
-  updatePayload.location = `SRID=4326;POINT(${longitude} ${latitude})`;
-  console.log("✅ Localisation prête pour Supabase :", updatePayload.location);
-}
-
-    const { error: updateError } = await supabase
-      .from('merchants')
-      .update(updatePayload)
-      .eq('id', merchantId);
-
-    if (updateError) throw updateError;
-
-    console.log('✅ Profil marchand complété avec succès');
-    setToast({ message: '✅ Profil complété avec succès', type: 'success' });
-    setShowOnboardingModal(false);
-
-    const { data: updatedMerchant } = await supabase
-      .from('merchants')
-      .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed, location')
-      .eq('id', merchantId)
-      .single();
-
-    if (updatedMerchant) {
-      setMerchantProfile(updatedMerchant);
-      console.log('📍 Nouveau profil marchand enregistré :', updatedMerchant);
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setOnboardingData({ ...onboardingData, logo_url: reader.result as string });
+      };
+      reader.readAsDataURL(file);
     }
-  } catch (error: any) {
-    console.error('❌ Erreur lors de la mise à jour du profil:', error);
-    setToast({ message: error.message || 'Erreur lors de la mise à jour', type: 'error' });
-  } finally {
-    setIsSubmittingOnboarding(false);
-  }
-};
-
-const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (file) {
-    setLogoFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setOnboardingData({ ...onboardingData, logo_url: reader.result as string });
-    };
-    reader.readAsDataURL(file);
-  }
-};
+  };
 
   if (loading) {
     return (
@@ -677,340 +711,341 @@ const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         </div>
       )}
 
-    {showOnboardingModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9998] p-4">
-    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-      {/* Header du popup */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                Complétez votre profil marchand
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Finalisez votre inscription pour publier des offres
-              </p>
-            </div>
-          </div>
-
-          {/* ❌ On enlève la fermeture “X” pour forcer le remplissage au premier coup */}
-          {/* Si plus tard tu veux le remettre, tu pourras réactiver ce bouton */}
-        </div>
-      </div>
-
-      {/* Formulaire */}
-      <form onSubmit={handleOnboardingSubmit} className="p-6 space-y-6">
-        {/* 🏢 Nom de l’entreprise */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Nom de l'entreprise *
-          </label>
-          <input
-            type="text"
-            value={onboardingData.company_name}
-            onChange={(e) =>
-              setOnboardingData({
-                ...onboardingData,
-                company_name: e.target.value,
-              })
-            }
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            placeholder="Ex: Boulangerie Martin"
-            required
-          />
-        </div>
-
-        {/* ☎️ Téléphone */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Téléphone *
-          </label>
-          <input
-            type="tel"
-            value={onboardingData.phone}
-            onChange={(e) =>
-              setOnboardingData({
-                ...onboardingData,
-                phone: e.target.value,
-              })
-            }
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            placeholder="Ex: 06 12 34 56 78"
-            required
-          />
-        </div>
-
-        {/* === 🧭 Choix de la méthode de position === */}
-        <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-          <p className="text-sm font-medium text-gray-700 mb-3">
-            Choisissez une méthode pour définir votre position :
-          </p>
-
-          {/* 🏠 Bloc adresse manuelle */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Adresse {usedGeolocation ? '' : '*'}
-              </label>
-              <input
-                type="text"
-                value={onboardingData.street}
-                onChange={(e) =>
-                  setOnboardingData({
-                    ...onboardingData,
-                    street: e.target.value,
-                  })
-                }
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="Ex: 123 rue de la République"
-                required={!usedGeolocation}
-                disabled={usedGeolocation}
-              />
+      {showOnboardingModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9998] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      Complétez votre profil marchand
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Finalisez votre inscription pour publier des offres
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
+            <form onSubmit={handleOnboardingSubmit} className="p-6 space-y-6">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ville {usedGeolocation ? '' : '*'}
+                  Nom de l'entreprise *
                 </label>
                 <input
                   type="text"
-                  value={onboardingData.city}
+                  value={onboardingData.company_name}
                   onChange={(e) =>
                     setOnboardingData({
                       ...onboardingData,
-                      city: e.target.value,
+                      company_name: e.target.value,
                     })
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Ex: Paris"
-                  required={!usedGeolocation}
-                  disabled={usedGeolocation}
+                  placeholder="Ex: Boulangerie Martin"
+                  required
                 />
               </div>
 
-              <div className="w-full md:w-1/3">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Code postal {usedGeolocation ? '' : '*'}
+                  Téléphone *
                 </label>
                 <input
-                  type="text"
-                  value={onboardingData.postal_code}
+                  type="tel"
+                  value={onboardingData.phone}
                   onChange={(e) =>
                     setOnboardingData({
                       ...onboardingData,
-                      postal_code: e.target.value,
+                      phone: e.target.value,
                     })
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Ex: 75001"
-                  required={!usedGeolocation}
-                  disabled={usedGeolocation}
+                  placeholder="Ex: 06 12 34 56 78"
+                  required
                 />
               </div>
-            </div>
-          </div>
 
-          {/* 🚀 Séparateur visuel “ou” */}
-          <div className="relative my-6 text-center">
-            <span className="absolute left-0 right-0 top-1/2 h-px bg-gray-200"></span>
-            <span className="relative bg-gray-50 px-3 text-sm text-gray-500">
-              ou
-            </span>
-          </div>
-
-          {/* 📍 Bouton géolocalisation */}
-          <button
-            type="button"
-            disabled={isSubmittingOnboarding}
-            onClick={async () => {
-              if (!merchantId) {
-                setToast({
-                  message: '⚠️ Profil marchand introuvable.',
-                  type: 'error',
-                });
-                return;
-              }
-
-              if (!navigator.geolocation) {
-                setToast({
-                  message:
-                    'La géolocalisation n’est pas supportée par ce navigateur.',
-                  type: 'error',
-                });
-                return;
-              }
-
-              setIsSubmittingOnboarding(true);
-              setToast({
-                message: '📍 Détection de la position en cours...',
-                type: 'success',
-              });
-
-              navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                  const { latitude, longitude } = position.coords;
-                  console.log('✅ Position détectée :', {
-                    latitude,
-                    longitude,
-                  });
-
-                  try {
-                    const { error: updateError } = await supabase.rpc(
-                      'update_merchant_location',
-                      {
-                        p_merchant_id: merchantId,
-                        p_latitude: latitude,
-                        p_longitude: longitude,
+              <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-3">
+                  Choisissez une méthode pour définir votre position :
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Adresse {usedGeolocation ? '' : '*'}
+                    </label>
+                    <input
+                      type="text"
+                      value={onboardingData.street}
+                      onChange={(e) =>
+                        setOnboardingData({
+                          ...onboardingData,
+                          street: e.target.value,
+                        })
                       }
-                    );
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="Ex: 123 rue de la République"
+                      required={!usedGeolocation}
+                      disabled={usedGeolocation}
+                    />
+                  </div>
 
-                    if (updateError) {
-                      console.error(
-                        '❌ Erreur RPC update_merchant_location:',
-                        updateError
-                      );
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Ville {usedGeolocation ? '' : '*'}
+                      </label>
+                      <input
+                        type="text"
+                        value={onboardingData.city}
+                        onChange={(e) =>
+                          setOnboardingData({
+                            ...onboardingData,
+                            city: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="Ex: Paris"
+                        required={!usedGeolocation}
+                        disabled={usedGeolocation}
+                      />
+                    </div>
+
+                    <div className="w-full md:w-1/3">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Code postal {usedGeolocation ? '' : '*'}
+                      </label>
+                      <input
+                        type="text"
+                        value={onboardingData.postal_code}
+                        onChange={(e) =>
+                          setOnboardingData({
+                            ...onboardingData,
+                            postal_code: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="Ex: 75001"
+                        required={!usedGeolocation}
+                        disabled={usedGeolocation}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative my-6 text-center">
+                  <span className="absolute left-0 right-0 top-1/2 h-px bg-gray-200"></span>
+                  <span className="relative bg-gray-50 px-3 text-sm text-gray-500">
+                    ou
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isSubmittingOnboarding}
+                  onClick={async () => {
+                    if (!merchantId) {
                       setToast({
-                        message:
-                          '❌ Erreur lors de la mise à jour de la position.',
+                        message: '⚠️ Profil marchand introuvable.',
                         type: 'error',
                       });
-                    } else {
-                      console.log('✅ Position mise à jour avec succès');
-                      setToast({
-                        message: '✅ Position mise à jour avec succès !',
-                        type: 'success',
-                      });
-
-                      // on marque que la géoloc a été utilisée → les champs adresse deviennent non obligatoires
-                      setUsedGeolocation(true);
-                      setOnboardingData({
-                        ...onboardingData,
-                        street: 'Position détectée automatiquement',
-                        city: 'Localisation GPS',
-                        postal_code: '00000',
-                        latitude: latitude,      // ⭐ AJOUT
-                        longitude: longitude,    // ⭐ AJOUT
-                      });
+                      return;
                     }
-                  } catch (err) {
-                    console.error('❌ Erreur RPC:', err);
+
+                    if (!navigator.geolocation) {
+                      setToast({
+                        message:
+                          'La géolocalisation n'est pas supportée par ce navigateur.',
+                        type: 'error',
+                      });
+                      return;
+                    }
+
+                    setIsSubmittingOnboarding(true);
                     setToast({
-                      message:
-                        '❌ Erreur lors de la détection de la position.',
-                      type: 'error',
+                      message: '📍 Détection de la position en cours...',
+                      type: 'success',
                     });
-                  } finally {
-                    setIsSubmittingOnboarding(false);
-                  }
-                },
-                (error) => {
-                  console.warn(
-                    '⚠️ Impossible de récupérer la position :',
-                    error.message
-                  );
-                  setToast({
-                    message: '⚠️ ' + error.message,
-                    type: 'error',
-                  });
-                  setIsSubmittingOnboarding(false);
-                },
-                {
-                  enableHighAccuracy: true,
-                  timeout: 10000,
-                  maximumAge: 0,
-                }
-              );
-            }}
-            className={`w-full flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors ${
-              isSubmittingOnboarding
-                ? 'bg-gray-200 text-gray-400 cursor-wait'
-                : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
-            }`}
-          >
-            {isSubmittingOnboarding ? (
-              <>
-                <div className="w-4 h-4 mr-2 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                Détection en cours...
-              </>
-            ) : (
-              <>
-                <span role="img" aria-label="pin">
-                  📍
-                </span>
-                <span className="ml-2">Me géolocaliser automatiquement</span>
-              </>
-            )}
-          </button>
 
-          {/* 📝 Note d'information */}
-          <p className="text-xs text-gray-500 mt-3 text-center">
-            Vous pourrez modifier ces informations plus tard depuis votre
-            tableau de bord marchand.
-          </p>
-        </div>
+                    navigator.geolocation.getCurrentPosition(
+                      async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        console.log('✅ Position détectée :', {
+                          latitude,
+                          longitude,
+                        });
 
-        {/* 🖼️ Logo */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Logo de l'entreprise *
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleLogoChange}
-            className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-sm text-gray-500 cursor-pointer hover:border-green-400"
-            required={!onboardingData.logo_url}
-          />
-          {onboardingData.logo_url && (
-            <div className="mt-3 flex justify-center">
-              <img
-                src={onboardingData.logo_url}
-                alt="Logo prévisualisé"
-                className="h-16 rounded-md shadow-sm"
-              />
-            </div>
-          )}
-        </div>
+                        try {
+                          const { error: updateError } = await supabase.rpc(
+                            'update_merchant_location',
+                            {
+                              p_merchant_id: merchantId,
+                              p_latitude: latitude,
+                              p_longitude: longitude,
+                            }
+                          );
 
-        {/* ✅ Boutons conditionnels selon isFromSettings */}
-        {isFromSettings ? (
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 mt-4">
-            <button
-              type="button"
-              onClick={() => setShowOnboardingModal(false)}
-              className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition-colors"
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmittingOnboarding}
-              className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors"
-            >
-              {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
-            </button>
+                          if (updateError) {
+                            console.error(
+                              '❌ Erreur RPC update_merchant_location:',
+                              updateError
+                            );
+                            setToast({
+                              message:
+                                '❌ Erreur lors de la mise à jour de la position.',
+                              type: 'error',
+                            });
+                          } else {
+                            console.log('✅ Position mise à jour avec succès');
+                            setToast({
+                              message: '✅ Position mise à jour avec succès !',
+                              type: 'success',
+                            });
+
+                            setUsedGeolocation(true);
+                            setOnboardingData({
+                              ...onboardingData,
+                              street: 'Position détectée automatiquement',
+                              city: 'Localisation GPS',
+                              postal_code: '00000',
+                              latitude: latitude,
+                              longitude: longitude,
+                            });
+                          }
+                        } catch (err) {
+                          console.error('❌ Erreur RPC:', err);
+                          setToast({
+                            message:
+                              '❌ Erreur lors de la détection de la position.',
+                            type: 'error',
+                          });
+                        } finally {
+                          setIsSubmittingOnboarding(false);
+                        }
+                      },
+                      (error) => {
+                        console.warn(
+                          '⚠️ Impossible de récupérer la position :',
+                          error.message
+                        );
+                        setToast({
+                          message: '⚠️ ' + error.message,
+                          type: 'error',
+                        });
+                        setIsSubmittingOnboarding(false);
+                      },
+                      {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0,
+                      }
+                    );
+                  }}
+                  className={`w-full flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors ${
+                    isSubmittingOnboarding
+                      ? 'bg-gray-200 text-gray-400 cursor-wait'
+                      : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
+                  }`}
+                >
+                  {isSubmittingOnboarding ? (
+                    <>
+                      <div className="w-4 h-4 mr-2 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                      Détection en cours...
+                    </>
+                  ) : (
+                    <>
+                      <span role="img" aria-label="pin">
+                        📍
+                      </span>
+                      <span className="ml-2">Me géolocaliser automatiquement</span>
+                    </>
+                  )}
+                </button>
+
+                <p className="text-xs text-gray-500 mt-3 text-center">
+                  Vous pourrez modifier ces informations plus tard depuis votre
+                  tableau de bord marchand.
+                </p>
+              </div>
+
+              {/* 🌍 Mini-carte interactive Mapbox */}
+              {onboardingData.latitude && onboardingData.longitude && (
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Localisation précise sur la carte
+                  </label>
+
+                  <div
+                    id="merchant-map"
+                    className="w-full h-64 rounded-lg border border-gray-300"
+                  ></div>
+
+                  <p className="text-xs text-gray-500 mt-2">
+                    🧭 Déplacez le marqueur si nécessaire pour corriger votre position exacte.
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Logo de l'entreprise *
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-sm text-gray-500 cursor-pointer hover:border-green-400"
+                  required={!onboardingData.logo_url}
+                />
+                {onboardingData.logo_url && (
+                  <div className="mt-3 flex justify-center">
+                    <img
+                      src={onboardingData.logo_url}
+                      alt="Logo prévisualisé"
+                      className="h-16 rounded-md shadow-sm"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {isFromSettings ? (
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowOnboardingModal(false)}
+                    className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingOnboarding}
+                    className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors"
+                  >
+                    {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={isSubmittingOnboarding}
+                  className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+                >
+                  {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
+                </button>
+              )}
+            </form>
           </div>
-        ) : (
-          <button
-            type="submit"
-            disabled={isSubmittingOnboarding}
-            className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
-          >
-            {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
-          </button>
-        )}
-      </form>
-    </div>
-  </div>
-)}
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">My Products</h2>
@@ -1028,7 +1063,6 @@ const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           </div>
         </div>
 
-        {/* Notifications Section */}
         <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
@@ -1233,7 +1267,6 @@ const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           </div>
         )}
       </div>
-
 
       {showAddProductModal && (
         <OfferForm
