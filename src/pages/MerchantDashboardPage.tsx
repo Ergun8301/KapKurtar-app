@@ -732,7 +732,8 @@ const MerchantDashboardPage = () => {
 
                 <div
                   ref={mapContainerRef}
-                  className={`w-full h-[300px] rounded-lg border border-gray-300 mb-4 ${!mapLoaded ? 'hidden' : 'block'}`}
+                  className={`w-full h-[300px] rounded-lg border border-gray-300 mb-4 relative ${!mapLoaded ? 'hidden' : 'block'}`}
+                  style={{ position: 'relative' }}
                 ></div>
 
                 <p className="text-xs text-gray-500 mb-3">💡 Recherchez une adresse, déplacez le marqueur ou utilisez la géolocalisation</p>
