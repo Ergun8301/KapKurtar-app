@@ -92,6 +92,7 @@ useEffect(() => {
     try {
       console.log('🔍 Recherche du profil pour auth_id:', user.id);
 
+      // 1️⃣ Récupération du profil lié à l’utilisateur
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -104,6 +105,7 @@ useEffect(() => {
         return;
       }
 
+      // 2️⃣ Récupération du marchand lié à ce profil
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
         .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed')
@@ -117,6 +119,7 @@ useEffect(() => {
         setMerchantId(merchantData.id);
         setMerchantProfile(merchantData);
 
+        // 3️⃣ Vérifie si le profil est incomplet
         const isProfileIncomplete =
           !merchantData.onboarding_completed ||
           !merchantData.company_name ||
@@ -147,8 +150,10 @@ useEffect(() => {
     }
   };
 
-  fetchMerchantIdAndGeolocate(); // ✅ appel ici à la fonction async
-}, [user]); // ✅ fin correcte
+  // 4️⃣ Exécution de la fonction asynchrone
+  fetchMerchantIdAndGeolocate();
+}, [user]); // ✅ ne rien mettre après cette ligne !
+
 
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
