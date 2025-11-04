@@ -84,12 +84,12 @@ const MerchantDashboardPage = () => {
   const [isSubmittingOnboarding, setIsSubmittingOnboarding] = useState(false);
   const [usedGeolocation, setUsedGeolocation] = useState(false);
   const [isFromSettings, setIsFromSettings] = useState(false);
-  const [mapInstance, setMapInstance] = useState<any>(null);
 
   // 🗺️ Refs pour la carte Mapbox
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
+  const geocoderRef = useRef<MapboxGeocoder | null>(null);
 
   // Configure Mapbox token
   mapboxgl.accessToken = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA';
@@ -189,9 +189,24 @@ const MerchantDashboardPage = () => {
   useEffect(() => {
     if (!showOnboardingModal || !mapContainerRef.current) return;
 
+    // Nettoyer toute carte existante
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+    }
+    if (markerRef.current) {
+      markerRef.current.remove();
+      markerRef.current = null;
+    }
+    if (geocoderRef.current) {
+      geocoderRef.current = null;
+    }
+
     // Coordonnées par défaut (Paris) ou du marchand
     const defaultLat = onboardingData.latitude || 48.8566;
     const defaultLng = onboardingData.longitude || 2.3522;
+
+    console.log('🗺️ Initialisation de la carte Mapbox:', { defaultLat, defaultLng });
 
     // Créer la carte
     const map = new mapboxgl.Map({
@@ -232,31 +247,187 @@ const MerchantDashboardPage = () => {
       placeholder: 'Rechercher une adresse...',
       language: 'fr',
       countries: 'fr',
+      proximity: [defaultLng, defaultLat],
     });
 
     map.addControl(geocoder, 'top-left');
+    geocoderRef.current = geocoder;
 
     // Quand une adresse est sélectionnée dans le geocoder
     geocoder.on('result', (e) => {
-      const { center } = e.result;
-      marker.setLngLat(center);
+      const { center, place_name } = e.result;
+      console.log('🔍 Adresse sélectionnée:', place_name, center);
+      
+      if (markerRef.current) {
+        markerRef.current.setLngLat(center);
+      }
+      
       setOnboardingData((prev) => ({
         ...prev,
         latitude: center[1],
         longitude: center[0],
       }));
-      console.log('🔍 Adresse sélectionnée:', { lat: center[1], lng: center[0] });
+
+      // Extraire l'adresse pour remplir les champs
+      const addressParts = place_name.split(',');
+      if (addressParts.length >= 2) {
+        const street = addressParts[0]?.trim() || '';
+        const cityPostal = addressParts[1]?.trim() || '';
+        
+        // Essayer d'extraire le code postal et la ville
+        const postalMatch = cityPostal.match(/(\d{5})?\s*(.+)/);
+        const postalCode = postalMatch?.[1] || '';
+        const city = postalMatch?.[2]?.trim() || cityPostal;
+
+        setOnboardingData(prev => ({
+          ...prev,
+          street: street || prev.street,
+          city: city || prev.city,
+          postal_code: postalCode || prev.postal_code,
+        }));
+      }
+    });
+
+    // Gérer les erreurs du geocoder
+    geocoder.on('error', (e) => {
+      console.error('❌ Erreur du geocoder:', e.error);
     });
 
     // Nettoyage
     return () => {
+      if (geocoderRef.current) {
+        geocoderRef.current.onRemove();
+        geocoderRef.current = null;
+      }
+      if (markerRef.current) {
+        markerRef.current.remove();
+        markerRef.current = null;
+      }
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
-      markerRef.current = null;
     };
   }, [showOnboardingModal]);
+
+  // Fonction de géolocalisation améliorée
+  const handleGeolocation = () => {
+    if (!navigator.geolocation) {
+      setToast({
+        message: "La géolocalisation n'est pas supportée par ce navigateur.",
+        type: 'error',
+      });
+      return;
+    }
+
+    setIsSubmittingOnboarding(true);
+    setToast({
+      message: '📍 Détection de la position en cours...',
+      type: 'success',
+    });
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        console.log('✅ Position détectée :', { latitude, longitude });
+
+        // Mettre à jour les coordonnées dans le state
+        setOnboardingData((prev) => ({
+          ...prev,
+          latitude,
+          longitude,
+        }));
+
+        // Centrer la carte et déplacer le marqueur
+        if (mapRef.current && markerRef.current) {
+          mapRef.current.flyTo({ 
+            center: [longitude, latitude], 
+            zoom: 15,
+            essential: true
+          });
+          markerRef.current.setLngLat([longitude, latitude]);
+          
+          // Reverse geocoding pour obtenir l'adresse
+          fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxgl.accessToken}&language=fr&types=address`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.features && data.features.length > 0) {
+                const place = data.features[0];
+                console.log('📍 Reverse geocoding result:', place);
+                
+                // Extraire les informations d'adresse
+                let street = '';
+                let city = '';
+                let postalCode = '';
+                
+                // Trouver les différentes parties de l'adresse
+                place.context?.forEach((context: any) => {
+                  if (context.id.startsWith('postcode.')) {
+                    postalCode = context.text;
+                  }
+                  if (context.id.startsWith('place.')) {
+                    city = context.text;
+                  }
+                  if (context.id.startsWith('address.')) {
+                    street = context.text;
+                  }
+                });
+
+                // Si on n'a pas trouvé via context, utiliser place_name
+                if (!street && place.place_name) {
+                  const parts = place.place_name.split(',');
+                  street = parts[0]?.trim() || '';
+                }
+
+                setOnboardingData(prev => ({
+                  ...prev,
+                  street: street || prev.street,
+                  city: city || prev.city,
+                  postal_code: postalCode || prev.postal_code,
+                }));
+              }
+            })
+            .catch(error => {
+              console.warn('Reverse geocoding failed:', error);
+            });
+        }
+
+        setToast({
+          message: '✅ Position détectée avec succès !',
+          type: 'success',
+        });
+        setIsSubmittingOnboarding(false);
+        setUsedGeolocation(true);
+      },
+      (error) => {
+        console.warn('⚠️ Impossible de récupérer la position :', error);
+        let errorMessage = 'Erreur de géolocalisation';
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Permission de géolocalisation refusée. Autorisez la géolocalisation dans les paramètres de votre navigateur.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Position indisponible. Vérifiez votre connexion internet.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Timeout de la géolocalisation. Réessayez.';
+            break;
+        }
+        
+        setToast({
+          message: '⚠️ ' + errorMessage,
+          type: 'error',
+        });
+        setIsSubmittingOnboarding(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      }
+    );
+  };
 
   useEffect(() => {
     const checkExpiredOffers = async () => {
@@ -308,59 +479,6 @@ const MerchantDashboardPage = () => {
       return () => clearTimeout(timer);
     }
   }, [toast]);
-
-  // 🗺️ Mini-carte Mapbox : affiche et permet de déplacer le marqueur
-  useEffect(() => {
-    if (typeof window === 'undefined' || !(window as any).mapboxgl) return;
-    if (!showOnboardingModal) return;
-    if (!onboardingData.latitude || !onboardingData.longitude) return;
-
-    const mapboxgl = (window as any).mapboxgl;
-    mapboxgl.accessToken = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA';
-
-    const mapContainer = document.getElementById('merchant-map');
-    if (!mapContainer) return;
-
-    // Vérifier si une carte existe déjà
-    if (mapInstance) {
-      mapInstance.remove();
-    }
-
-    console.log('🗺️ Carte Mapbox affichée');
-
-    // Création de la carte centrée sur la position actuelle
-    const map = new mapboxgl.Map({
-      container: 'merchant-map',
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: [onboardingData.longitude, onboardingData.latitude],
-      zoom: 14,
-    });
-
-    // Création du marqueur déplaçable
-    const marker = new mapboxgl.Marker({ draggable: true })
-      .setLngLat([onboardingData.longitude, onboardingData.latitude])
-      .addTo(map);
-
-    // Mise à jour de la position lorsqu'on déplace le marqueur
-    marker.on('dragend', () => {
-      const lngLat = marker.getLngLat();
-      setOnboardingData((prev) => ({
-        ...prev,
-        latitude: lngLat.lat,
-        longitude: lngLat.lng,
-      }));
-      console.log('📍 Nouvelle position :', lngLat);
-    });
-
-    setMapInstance(map);
-
-    // Nettoyage à la fin
-    return () => {
-      if (map) {
-        map.remove();
-      }
-    };
-  }, [showOnboardingModal, onboardingData.latitude, onboardingData.longitude]);
 
   const loadOffers = async () => {
     if (!merchantId) return;
@@ -814,6 +932,14 @@ const MerchantDashboardPage = () => {
                     </p>
                   </div>
                 </div>
+                {isFromSettings && (
+                  <button
+                    onClick={() => setShowOnboardingModal(false)}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-500" />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -856,16 +982,74 @@ const MerchantDashboardPage = () => {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Rue *
+                  </label>
+                  <input
+                    type="text"
+                    value={onboardingData.street}
+                    onChange={(e) =>
+                      setOnboardingData({
+                        ...onboardingData,
+                        street: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Ex: 123 Avenue de la République"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ville *
+                  </label>
+                  <input
+                    type="text"
+                    value={onboardingData.city}
+                    onChange={(e) =>
+                      setOnboardingData({
+                        ...onboardingData,
+                        city: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Ex: Paris"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Code postal *
+                </label>
+                <input
+                  type="text"
+                  value={onboardingData.postal_code}
+                  onChange={(e) =>
+                    setOnboardingData({
+                      ...onboardingData,
+                      postal_code: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Ex: 75001"
+                  required
+                />
+              </div>
+
               <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
                 <p className="text-sm font-medium text-gray-700 mb-3">
                   Définissez votre position sur la carte :
                 </p>
 
-                {/* 🗺️ Carte Mapbox interactive */}
+                {/* 🗺️ Carte Mapbox interactive - UNE SEULE CARTE */}
                 <div
                   ref={mapContainerRef}
-                  id="merchant-map"
-                  className="w-full h-[220px] rounded-lg border border-gray-300 mb-4"
+                  className="w-full h-[300px] rounded-lg border border-gray-300 mb-4"
                 ></div>
 
                 <p className="text-xs text-gray-500 mb-4">
@@ -875,61 +1059,7 @@ const MerchantDashboardPage = () => {
                 <button
                   type="button"
                   disabled={isSubmittingOnboarding}
-                  onClick={() => {
-                    if (!navigator.geolocation) {
-                      setToast({
-                        message:
-                          "La géolocalisation n'est pas supportée par ce navigateur.",
-                        type: 'error',
-                      });
-                      return;
-                    }
-
-                    setIsSubmittingOnboarding(true);
-                    setToast({
-                      message: '📍 Détection de la position en cours...',
-                      type: 'success',
-                    });
-
-                    navigator.geolocation.getCurrentPosition(
-                      (position) => {
-                        const { latitude, longitude } = position.coords;
-                        console.log('✅ Position détectée :', { latitude, longitude });
-
-                        // Mettre à jour les coordonnées dans le state
-                        setOnboardingData((prev) => ({
-                          ...prev,
-                          latitude,
-                          longitude,
-                        }));
-
-                        // Centrer la carte et déplacer le marqueur
-                        if (mapRef.current && markerRef.current) {
-                          mapRef.current.flyTo({ center: [longitude, latitude], zoom: 15 });
-                          markerRef.current.setLngLat([longitude, latitude]);
-                        }
-
-                        setToast({
-                          message: '✅ Position détectée avec succès !',
-                          type: 'success',
-                        });
-                        setIsSubmittingOnboarding(false);
-                      },
-                      (error) => {
-                        console.warn('⚠️ Impossible de récupérer la position :', error.message);
-                        setToast({
-                          message: '⚠️ ' + error.message,
-                          type: 'error',
-                        });
-                        setIsSubmittingOnboarding(false);
-                      },
-                      {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0,
-                      }
-                    );
-                  }}
+                  onClick={handleGeolocation}
                   className={`w-full flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors ${
                     isSubmittingOnboarding
                       ? 'bg-gray-200 text-gray-400 cursor-wait'
@@ -943,37 +1073,33 @@ const MerchantDashboardPage = () => {
                     </>
                   ) : (
                     <>
-                      <span role="img" aria-label="pin">
-                        📍
-                      </span>
+                      <span role="img" aria-label="pin">📍</span>
                       <span className="ml-2">Me géolocaliser automatiquement</span>
                     </>
                   )}
                 </button>
+
+                {/* Affichage des coordonnées actuelles */}
+                {onboardingData.latitude && onboardingData.longitude && (
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <p className="text-xs text-green-700 font-medium">
+                      📍 Position actuelle :
+                    </p>
+                    <p className="text-xs text-green-600 mt-1">
+                      Lat: {onboardingData.latitude.toFixed(6)}, Lng: {onboardingData.longitude.toFixed(6)}
+                    </p>
+                    <p className="text-xs text-green-600">
+                      {onboardingData.street && `${onboardingData.street}, `}
+                      {onboardingData.postal_code} {onboardingData.city}
+                    </p>
+                  </div>
+                )}
 
                 <p className="text-xs text-gray-500 mt-3 text-center">
                   Vous pourrez modifier ces informations plus tard depuis votre
                   tableau de bord marchand.
                 </p>
               </div>
-
-              {/* 🌍 Mini-carte interactive Mapbox */}
-              {onboardingData.latitude && onboardingData.longitude && (
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Localisation précise sur la carte
-                  </label>
-
-                  <div
-                    id="merchant-map"
-                    className="w-full h-64 rounded-lg border border-gray-300"
-                  ></div>
-
-                  <p className="text-xs text-gray-500 mt-2">
-                    🧭 Déplacez le marqueur si nécessaire pour corriger votre position exacte.
-                  </p>
-                </div>
-              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
