@@ -686,17 +686,19 @@ const MerchantDashboardPage = () => {
               <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                 <p className="text-sm font-medium text-gray-700 mb-3">Définissez votre position :</p>
 
-                <div
-                  ref={mapContainerRef}
-                  className="w-full h-[300px] rounded-lg border border-gray-300 mb-4 bg-gray-100 flex items-center justify-center"
-                >
-                  {!mapLoaded && (
+                {!mapLoaded && (
+                  <div className="w-full h-[300px] rounded-lg border border-gray-300 mb-4 bg-gray-100 flex items-center justify-center">
                     <div className="text-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-2"></div>
                       <p className="text-sm text-gray-500">Chargement de la carte...</p>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
+
+                <div
+                  ref={mapContainerRef}
+                  className={`w-full h-[300px] rounded-lg border border-gray-300 mb-4 ${!mapLoaded ? 'hidden' : 'block'}`}
+                ></div>
 
                 <p className="text-xs text-gray-500 mb-3">💡 Recherchez une adresse, déplacez le marqueur ou utilisez la géolocalisation</p>
 
