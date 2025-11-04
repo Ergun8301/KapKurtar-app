@@ -146,9 +146,8 @@ const MerchantDashboardPage = () => {
       }
     };
 
-    fetchMerchantIdAndGeolocate();
-  }, [user]);
-};
+        fetchMerchantIdAndGeolocate();
+  }, [user]); // ✅ on garde juste cette fermeture, pas d’accolade en plus à la fin
 
 
       const { data: merchantData, error: merchantError } = await supabase
