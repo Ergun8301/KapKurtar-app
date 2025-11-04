@@ -861,7 +861,7 @@ const MerchantDashboardPage = () => {
                     if (!navigator.geolocation) {
                       setToast({
                         message:
-                          'La géolocalisation n'est pas supportée par ce navigateur.',
+                          "La géolocalisation n'est pas supportée par ce navigateur.",
                         type: 'error',
                       });
                       return;
