@@ -16,7 +16,7 @@ interface Offer {
   image_url: string | null;
   price_before: number;
   price_after: number;
-  discount_percent: number | null; // GENERATED column in DB (read-only, computed from price_before/price_after)
+  discount_percent: number | null; // GENERATED column in DB
   available_from: string;
   available_until: string;
   is_active: boolean;
@@ -39,7 +39,7 @@ interface MerchantProfile {
 }
 
 const MerchantDashboardPage = () => {
-    useEffect(() => {
+  useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
@@ -58,49 +58,98 @@ const MerchantDashboardPage = () => {
   const { notifications, unreadCount } = useRealtimeNotifications(user?.id || null);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [onboardingData, setOnboardingData] = useState<{
-  company_name: string;
-  phone: string;
-  street: string;
-  city: string;
-  postal_code: string;
-  logo_url: string;
-  latitude?: number | null;   // ⭐ AJOUT
-  longitude?: number | null;  // ⭐ AJOUT
-}>({
-  company_name: '',
-  phone: '',
-  street: '',
-  city: '',
-  postal_code: '',
-  logo_url: ''
-});
+    company_name: string;
+    phone: string;
+    street: string;
+    city: string;
+    postal_code: string;
+    logo_url: string;
+    latitude?: number | null;   // ⭐ AJOUT
+    longitude?: number | null;  // ⭐ AJOUT
+  }>({
+    company_name: '',
+    phone: '',
+    street: '',
+    city: '',
+    postal_code: '',
+    logo_url: ''
+  });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isSubmittingOnboarding, setIsSubmittingOnboarding] = useState(false);
   const [usedGeolocation, setUsedGeolocation] = useState(false);
 
+  // 🆕 AJOUT ici — savoir si la modale vient du bouton Settings
+  const [isFromSettings, setIsFromSettings] = useState(false);
 
-// Fetch merchant ID from user and auto-geolocate
-useEffect(() => {
-  const fetchMerchantIdAndGeolocate = async () => {
-    if (!user) {
-      setMerchantId(null);
-      return;
-    }
-
-    try {
-      console.log('🔍 Recherche du profil pour auth_id:', user.id);
-
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('auth_id', user.id)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-      if (!profileData) {
-        console.warn('⚠️ Aucun profil trouvé pour cet utilisateur');
+  // Fetch merchant ID from user and auto-geolocate
+  useEffect(() => {
+    const fetchMerchantIdAndGeolocate = async () => {
+      if (!user) {
+        setMerchantId(null);
         return;
       }
+
+      try {
+        console.log('🔍 Recherche du profil pour auth_id:', user.id);
+
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('auth_id', user.id)
+          .maybeSingle();
+
+        if (profileError) throw profileError;
+        if (!profileData) {
+          console.warn('⚠️ Aucun profil trouvé pour cet utilisateur');
+          return;
+        }
+
+        const { data: merchantData, error: merchantError } = await supabase
+          .from('merchants')
+          .select('id, profile_id, company_name, phone, street, city, postal_code, logo_url, onboarding_completed')
+          .eq('profile_id', profileData.id)
+          .maybeSingle();
+
+        if (merchantError) throw merchantError;
+        if (merchantData) {
+          console.log('✅ Marchand trouvé, ID:', merchantData.id);
+          setMerchantId(merchantData.id);
+          setMerchantProfile(merchantData);
+
+          const isProfileIncomplete =
+            !merchantData.onboarding_completed ||
+            !merchantData.company_name ||
+            !merchantData.phone ||
+            !merchantData.street ||
+            !merchantData.city ||
+            !merchantData.postal_code ||
+            !merchantData.logo_url;
+
+          if (isProfileIncomplete) {
+            console.log('⚠️ Profil marchand incomplet, affichage de la modale');
+            setIsFromSettings(false); // 🚫 Inscription → pas fermable
+            setShowOnboardingModal(true);
+            setOnboardingData({
+              company_name: merchantData.company_name || '',
+              phone: merchantData.phone || '',
+              street: merchantData.street || '',
+              city: merchantData.city || '',
+              postal_code: merchantData.postal_code || '',
+              logo_url: merchantData.logo_url || ''
+            });
+          }
+        } else {
+          console.warn('⚠️ Aucun marchand trouvé pour ce profil');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération du merchant ID:', error);
+      }
+    };
+
+    fetchMerchantIdAndGeolocate();
+  }, [user]);
+};
+
 
       const { data: merchantData, error: merchantError } = await supabase
         .from('merchants')
