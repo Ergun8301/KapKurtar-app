@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp, X, Building2, Upload } from 'lucide-react';
+import mapboxgl from 'mapbox-gl';
+import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
+import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useAddProduct } from '../contexts/AddProductContext';
@@ -81,6 +85,14 @@ const MerchantDashboardPage = () => {
   const [usedGeolocation, setUsedGeolocation] = useState(false);
   const [isFromSettings, setIsFromSettings] = useState(false);
   const [mapInstance, setMapInstance] = useState<any>(null);
+
+  // 🗺️ Refs pour la carte Mapbox
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markerRef = useRef<mapboxgl.Marker | null>(null);
+
+  // Configure Mapbox token
+  mapboxgl.accessToken = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA';
 
   // Fetch merchant ID from user and auto-geolocate
   useEffect(() => {
@@ -172,6 +184,79 @@ const MerchantDashboardPage = () => {
     window.addEventListener('openMerchantProfileModal', handleOpenProfileModal);
     return () => window.removeEventListener('openMerchantProfileModal', handleOpenProfileModal);
   }, [merchantProfile]);
+
+  // 🗺️ Initialiser la carte Mapbox quand la modale s'ouvre
+  useEffect(() => {
+    if (!showOnboardingModal || !mapContainerRef.current) return;
+
+    // Coordonnées par défaut (Paris) ou du marchand
+    const defaultLat = onboardingData.latitude || 48.8566;
+    const defaultLng = onboardingData.longitude || 2.3522;
+
+    // Créer la carte
+    const map = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [defaultLng, defaultLat],
+      zoom: 13,
+    });
+
+    mapRef.current = map;
+
+    // Créer un marqueur déplaçable
+    const marker = new mapboxgl.Marker({
+      draggable: true,
+      color: '#16a34a',
+    })
+      .setLngLat([defaultLng, defaultLat])
+      .addTo(map);
+
+    markerRef.current = marker;
+
+    // Mise à jour des coordonnées quand le marqueur est déplacé
+    marker.on('dragend', () => {
+      const lngLat = marker.getLngLat();
+      setOnboardingData((prev) => ({
+        ...prev,
+        latitude: lngLat.lat,
+        longitude: lngLat.lng,
+      }));
+      console.log('📍 Marqueur déplacé:', { lat: lngLat.lat, lng: lngLat.lng });
+    });
+
+    // Ajouter le geocoder
+    const geocoder = new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      mapboxgl: mapboxgl,
+      marker: false,
+      placeholder: 'Rechercher une adresse...',
+      language: 'fr',
+      countries: 'fr',
+    });
+
+    map.addControl(geocoder, 'top-left');
+
+    // Quand une adresse est sélectionnée dans le geocoder
+    geocoder.on('result', (e) => {
+      const { center } = e.result;
+      marker.setLngLat(center);
+      setOnboardingData((prev) => ({
+        ...prev,
+        latitude: center[1],
+        longitude: center[0],
+      }));
+      console.log('🔍 Adresse sélectionnée:', { lat: center[1], lng: center[0] });
+    });
+
+    // Nettoyage
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      markerRef.current = null;
+    };
+  }, [showOnboardingModal]);
 
   useEffect(() => {
     const checkExpiredOffers = async () => {
@@ -773,91 +858,24 @@ const MerchantDashboardPage = () => {
 
               <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
                 <p className="text-sm font-medium text-gray-700 mb-3">
-                  Choisissez une méthode pour définir votre position :
+                  Définissez votre position sur la carte :
                 </p>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Adresse {usedGeolocation ? '' : '*'}
-                    </label>
-                    <input
-                      type="text"
-                      value={onboardingData.street}
-                      onChange={(e) =>
-                        setOnboardingData({
-                          ...onboardingData,
-                          street: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Ex: 123 rue de la République"
-                      required={!usedGeolocation}
-                      disabled={usedGeolocation}
-                    />
-                  </div>
 
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Ville {usedGeolocation ? '' : '*'}
-                      </label>
-                      <input
-                        type="text"
-                        value={onboardingData.city}
-                        onChange={(e) =>
-                          setOnboardingData({
-                            ...onboardingData,
-                            city: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="Ex: Paris"
-                        required={!usedGeolocation}
-                        disabled={usedGeolocation}
-                      />
-                    </div>
+                {/* 🗺️ Carte Mapbox interactive */}
+                <div
+                  ref={mapContainerRef}
+                  id="merchant-map"
+                  className="w-full h-[220px] rounded-lg border border-gray-300 mb-4"
+                ></div>
 
-                    <div className="w-full md:w-1/3">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Code postal {usedGeolocation ? '' : '*'}
-                      </label>
-                      <input
-                        type="text"
-                        value={onboardingData.postal_code}
-                        onChange={(e) =>
-                          setOnboardingData({
-                            ...onboardingData,
-                            postal_code: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="Ex: 75001"
-                        required={!usedGeolocation}
-                        disabled={usedGeolocation}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="relative my-6 text-center">
-                  <span className="absolute left-0 right-0 top-1/2 h-px bg-gray-200"></span>
-                  <span className="relative bg-gray-50 px-3 text-sm text-gray-500">
-                    ou
-                  </span>
-                </div>
+                <p className="text-xs text-gray-500 mb-4">
+                  💡 Recherchez une adresse, déplacez le marqueur ou utilisez la géolocalisation ci-dessous
+                </p>
 
                 <button
                   type="button"
                   disabled={isSubmittingOnboarding}
-                  onClick={async () => {
-                    if (!merchantId) {
-                      setToast({
-                        message: '⚠️ Profil marchand introuvable.',
-                        type: 'error',
-                      });
-                      return;
-                    }
-
+                  onClick={() => {
                     if (!navigator.geolocation) {
                       setToast({
                         message:
@@ -874,66 +892,31 @@ const MerchantDashboardPage = () => {
                     });
 
                     navigator.geolocation.getCurrentPosition(
-                      async (position) => {
+                      (position) => {
                         const { latitude, longitude } = position.coords;
-                        console.log('✅ Position détectée :', {
+                        console.log('✅ Position détectée :', { latitude, longitude });
+
+                        // Mettre à jour les coordonnées dans le state
+                        setOnboardingData((prev) => ({
+                          ...prev,
                           latitude,
                           longitude,
-                        });
+                        }));
 
-                        try {
-                          const { error: updateError } = await supabase.rpc(
-                            'update_merchant_location',
-                            {
-                              p_merchant_id: merchantId,
-                              p_latitude: latitude,
-                              p_longitude: longitude,
-                            }
-                          );
-
-                          if (updateError) {
-                            console.error(
-                              '❌ Erreur RPC update_merchant_location:',
-                              updateError
-                            );
-                            setToast({
-                              message:
-                                '❌ Erreur lors de la mise à jour de la position.',
-                              type: 'error',
-                            });
-                          } else {
-                            console.log('✅ Position mise à jour avec succès');
-                            setToast({
-                              message: '✅ Position mise à jour avec succès !',
-                              type: 'success',
-                            });
-
-                            setUsedGeolocation(true);
-                            setOnboardingData({
-                              ...onboardingData,
-                              street: 'Position détectée automatiquement',
-                              city: 'Localisation GPS',
-                              postal_code: '00000',
-                              latitude: latitude,
-                              longitude: longitude,
-                            });
-                          }
-                        } catch (err) {
-                          console.error('❌ Erreur RPC:', err);
-                          setToast({
-                            message:
-                              '❌ Erreur lors de la détection de la position.',
-                            type: 'error',
-                          });
-                        } finally {
-                          setIsSubmittingOnboarding(false);
+                        // Centrer la carte et déplacer le marqueur
+                        if (mapRef.current && markerRef.current) {
+                          mapRef.current.flyTo({ center: [longitude, latitude], zoom: 15 });
+                          markerRef.current.setLngLat([longitude, latitude]);
                         }
+
+                        setToast({
+                          message: '✅ Position détectée avec succès !',
+                          type: 'success',
+                        });
+                        setIsSubmittingOnboarding(false);
                       },
                       (error) => {
-                        console.warn(
-                          '⚠️ Impossible de récupérer la position :',
-                          error.message
-                        );
+                        console.warn('⚠️ Impossible de récupérer la position :', error.message);
                         setToast({
                           message: '⚠️ ' + error.message,
                           type: 'error',
