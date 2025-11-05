@@ -794,51 +794,52 @@ const MerchantDashboardPage = () => {
               </div>
 
               {isFromSettings ? (
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={() => setShowOnboardingModal(false)}
-                    className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmittingOnboarding}
-                    className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium"
-                  >
-                    {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={isSubmittingOnboarding}
-                  className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg"
-                >
-                  {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
-                </button>
-              )}
-            </form>
-          </div>
-        </div>
-      )}
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6 flex items-center justify-between">
-  <div>
-    <h2 className="text-2xl font-bold text-gray-900">My Products</h2>
-    <p className="text-gray-600 mt-1">{offers.length} total products</p>
-  </div>
-
-  <div className="flex items-center gap-4">
+  <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
     <button
-      onClick={openAddProductModal}
-      className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium shadow-sm"
+      type="button"
+      onClick={() => setShowOnboardingModal(false)}
+      className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"
     >
-      <Plus className="w-5 h-5 mr-2" />
-      Add Product
+      Annuler
     </button>
+    <button
+      type="submit"
+      disabled={isSubmittingOnboarding}
+      className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium"
+    >
+      {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
+    </button>
+  </div>
+) : (
+  <button
+    type="submit"
+    disabled={isSubmittingOnboarding}
+    className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg"
+  >
+    {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
+  </button>
+)}
+</form>
+</div>
+</div>
+)}
+
+<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div className="mb-6 flex items-center justify-between">
+    <div>
+      <h2 className="text-2xl font-bold text-gray-900">My Products</h2>
+      <p className="text-gray-600 mt-1">{offers.length} total products</p>
+    </div>
+
+    <div className="flex items-center gap-4">
+      <button
+        onClick={openAddProductModal}
+        className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium shadow-sm"
+      >
+        <Plus className="w-5 h-5 mr-2" />
+        Add Product
+      </button>
+    </div>
   </div>
 </div>
 
