@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
-import { NotificationBell } from './NotificationBell';
+import NotificationBell from "../components/NotificationBell";
 import { logoutUser } from '../lib/logout';
 import { useAddProduct } from '../contexts/AddProductContext';
 
