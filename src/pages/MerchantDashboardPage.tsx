@@ -8,7 +8,6 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useAddProduct } from '../contexts/AddProductContext';
 import { uploadImageToSupabase } from '../lib/uploadImage';
-import NotificationBell from "../components/NotificationBell";
 import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
 import { type Notification } from '../api/notifications';
 import { OfferForm } from '../components/OfferForm';
@@ -827,21 +826,21 @@ const MerchantDashboardPage = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">My Products</h2>
-            <p className="text-gray-600 mt-1">{offers.length} total products</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <NotificationBell />
-            <button
-              onClick={openAddProductModal}
-              className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium shadow-sm"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add Product
-            </button>
-          </div>
-        </div>
+  <div>
+    <h2 className="text-2xl font-bold text-gray-900">My Products</h2>
+    <p className="text-gray-600 mt-1">{offers.length} total products</p>
+  </div>
+
+  <div className="flex items-center gap-4">
+    <button
+      onClick={openAddProductModal}
+      className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium shadow-sm"
+    >
+      <Plus className="w-5 h-5 mr-2" />
+      Add Product
+    </button>
+  </div>
+</div>
 
         <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <button
