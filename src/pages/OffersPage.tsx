@@ -43,6 +43,19 @@ const customMapboxCSS = `
     box-shadow: none !important;
   }
 
+  /* 🎯 Bouton géolocalisation agrandi pour Xiaomi */
+  .mapboxgl-ctrl-geolocate {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 8px !important;
+    background-color: white !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+  }
+
+  .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon {
+    transform: scale(1.4);
+  }
+
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
     right: 10px !important;
@@ -493,16 +506,28 @@ export default function OffersPage() {
         return;
       }
 
-      // Élément HTML du marqueur vert
+      // 🏪 Élément HTML du marqueur avec LOGO du marchand
       const el = document.createElement("div");
       el.className = "offer-marker";
-      el.style.background = "#22c55e";
-      el.style.width = "20px";
-      el.style.height = "20px";
+      el.style.width = "42px";
+      el.style.height = "42px";
       el.style.borderRadius = "50%";
-      el.style.border = "2px solid #fff";
+      el.style.border = "3px solid #fff";
       el.style.cursor = "pointer";
-      el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+      el.style.boxShadow = "0 3px 8px rgba(0,0,0,0.3)";
+      el.style.overflow = "hidden";
+      el.style.backgroundColor = "#f5f5f5";
+      el.style.display = "flex";
+      el.style.alignItems = "center";
+      el.style.justifyContent = "center";
+
+      // Afficher le logo du marchand ou fallback TILKAPP
+      if (offer.merchant_logo_url) {
+        el.innerHTML = `<img src="${offer.merchant_logo_url}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null; this.src='/logo-tilkapp.png' || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏪</text></svg>';" />`;
+      } else {
+        // Fallback : Logo TILKAPP ou emoji
+        el.innerHTML = `<img src="/logo-tilkapp.png" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=font-size:24px>🏪</span>';" />`;
+      }
 
       // 🧮 Calculs dynamiques pour le popup
       const discount = Math.round(
@@ -799,23 +824,16 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* Slider de rayon - Dynamiquement positionné au-dessus du panneau */}
+        {/* Slider de rayon - DESKTOP SEULEMENT (zoom auto sur mobile) */}
         {viewMode === "nearby" && (
-          <div 
-            className="absolute left-1/2 -translate-x-1/2 z-[1600] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-green-500/20 transition-all duration-300"
-            style={{
-              bottom: typeof window !== 'undefined' && window.innerWidth < 768
-                ? (isMobilePanelOpen ? 'calc(70vh + 16px)' : 'calc(20vh + 16px)')
-                : '16px'
-            }}
-          >
+          <div className="hidden md:flex absolute bottom-4 left-1/2 -translate-x-1/2 z-[1600] bg-white rounded-full shadow-lg px-4 py-2.5 items-center space-x-3 border-2 border-green-500/20">
             <input
               type="range"
               min={1}
               max={30}
               value={radiusKm}
               onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
-              className="w-32 md:w-36 accent-green-500 cursor-pointer focus:outline-none"
+              className="w-36 accent-green-500 cursor-pointer focus:outline-none"
             />
             <span className="text-sm text-gray-900 font-bold whitespace-nowrap">{radiusKm} km</span>
           </div>
