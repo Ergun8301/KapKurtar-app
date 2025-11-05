@@ -5,14 +5,14 @@ import {
   getNotifications,
   markAllNotificationsAsRead,
   subscribeToNotifications,
-} from "@/api/notifications";
+} from "../api/notifications";
 
 export default function NotificationBell({ userId }: { userId: string }) {
   const [open, setOpen] = useState(false);
   const [list, setList] = useState<any[]>([]);
   const [unread, setUnread] = useState(0);
 
-  // Initial fetch
+  // 🔹 Initial fetch
   useEffect(() => {
     if (!userId) return;
     getNotifications(userId).then((res) => {
@@ -23,7 +23,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
     });
   }, [userId]);
 
-  // Realtime
+  // ⚡ Realtime subscription
   useEffect(() => {
     if (!userId) return;
     const unsub = subscribeToNotifications(userId, (notif) => {
@@ -33,6 +33,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
     return () => unsub();
   }, [userId]);
 
+  // 🔔 Toggle + mark all read
   const handleOpen = async () => {
     setOpen(!open);
     if (!open && unread > 0) {
@@ -46,7 +47,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
     <div className="relative">
       <button
         onClick={handleOpen}
-        className="relative p-2 rounded-full hover:bg-gray-100"
+        className="relative p-2 rounded-full hover:bg-gray-100 transition"
       >
         <Bell className="w-6 h-6 text-gray-700" />
         {unread > 0 && (
