@@ -272,40 +272,48 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
             </div>
           </div>
 
-      {/* RÉSERVER */}
+     {/* RÉSERVER */}
 <button
   onClick={async () => {
     try {
-      // récupère l'UID Supabase du user (auth.uid())
+      // récupérer auth.uid()
       const { data: authData } = await supabase.auth.getUser();
-      const clientAuthUid = authData?.user?.id;
-      if (!clientAuthUid) {
+      const authUid = authData?.user?.id;
+      if (!authUid) {
         alert("Connectez-vous pour réserver une offre.");
         return;
       }
 
-      // debug console
-      console.log("➡️ offer_id envoyé :", offer.offer_id);
-      console.log("➡️ client auth uid :", clientAuthUid);
+      // récupérer profiles.id correspondant à cet auth_id
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_id", authUid)
+        .single();
 
-      // Appel RPC : on envoie p_client_id = auth.uid()
+      if (profileError || !profile) {
+        alert("Profil introuvable. Veuillez vérifier votre compte.");
+        return;
+      }
+
+      console.log("➡️ offer_id envoyé :", offer.offer_id);
+      console.log("➡️ p_client_id envoyé (profiles.id) :", profile.id);
+
+      // Appel RPC avec le bon id du profil client
       const { data, error } = await supabase.rpc("create_reservation_dynamic", {
-        p_client_id: clientAuthUid, // <-- auth.uid()
-        p_offer_id: offer.offer_id?.toString(),
+        p_client_id: profile.id, // ✅ profiles.id et non auth.uid()
+        p_offer_id: offer.offer_id,
         p_quantity: 1,
       });
 
-      if (error) {
-        console.error("Erreur Supabase :", error);
-        throw error;
-      }
+      if (error) throw error;
 
       console.log("✅ Réservation créée :", data);
       alert("✅ Réservation effectuée avec succès !");
       onClose();
     } catch (err: any) {
       console.error("Erreur réservation :", err.message || err);
-      alert("❌ Impossible de réserver l’offre. Vérifie la console.");
+      alert("❌ Impossible de réserver l’offre.");
     }
   }}
   disabled={!offer.offer_id || offer.quantity === 0}
