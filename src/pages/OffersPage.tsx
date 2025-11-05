@@ -771,20 +771,27 @@ export default function OffersPage() {
         )}
 
         {/* Nom marchand */}
-        <p className={`font-semibold text-gray-900 ${isMobile ? "text-[10px]" : "text-xs"} line-clamp-2 mb-1 w-full px-1`}>
+        <p className={`font-semibold text-gray-900 ${isMobile ? "text-[10px]" : "text-xs"} line-clamp-1 mb-1 w-full px-1`}>
           {offer.merchant_name}
         </p>
 
         {/* Ville */}
         {offer.merchant_city && offer.merchant_city !== "À définir" && (
-          <p className={`text-gray-600 ${isMobile ? "text-[9px]" : "text-[10px]"} line-clamp-1 w-full px-1 mb-1`}>
+          <p className={`text-gray-600 ${isMobile ? "text-[9px]" : "text-[10px]"} line-clamp-1 w-full px-1`}>
             📍 {offer.merchant_city}
+          </p>
+        )}
+
+        {/* Téléphone */}
+        {offer.merchant_phone && (
+          <p className={`text-gray-600 ${isMobile ? "text-[9px]" : "text-[10px]"} line-clamp-1 w-full px-1`}>
+            📞 {offer.merchant_phone}
           </p>
         )}
 
         {/* Distance (mode proximité uniquement) */}
         {viewMode === "nearby" && offer.distance_meters > 0 && (
-          <p className={`text-green-600 font-semibold ${isMobile ? "text-[10px]" : "text-xs"}`}>
+          <p className={`text-green-600 font-semibold ${isMobile ? "text-[9px]" : "text-[10px]"} mt-1`}>
             {(offer.distance_meters / 1000).toFixed(1)} km
           </p>
         )}
@@ -857,18 +864,18 @@ export default function OffersPage() {
         )}
       </div>
 
-      {/* 📱 PANNEAU MOBILE COULISSANT - Plus discret */}
+      {/* 📱 PANNEAU MOBILE COULISSANT */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg z-[1500] transition-all duration-300">
         {/* Poignée de glissement */}
         <div 
           className="flex justify-center pt-2 pb-1 cursor-pointer"
           onClick={() => setIsMobilePanelOpen(!isMobilePanelOpen)}
         >
-          <div className="w-12 h-1.5 bg-gray-400 rounded-full"></div>
+          <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
         </div>
 
         {/* Toggle modes de vue */}
-        <div className="flex justify-center px-4 pb-2">
+        <div className="flex justify-center px-4 pb-3">
           <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
             <button
               className={`px-4 py-2 text-xs font-semibold transition-all duration-200 ${
@@ -893,10 +900,10 @@ export default function OffersPage() {
           </div>
         </div>
 
-        {/* Liste des offres - Plus discrète par défaut */}
+        {/* Liste des offres */}
         <div 
-          className={`overflow-y-auto px-4 pb-safe transition-all duration-300 ${
-            isMobilePanelOpen ? "max-h-[65vh]" : "max-h-[18vh]"
+          className={`overflow-y-auto px-4 pb-4 transition-all duration-300 ${
+            isMobilePanelOpen ? "max-h-[60vh]" : "max-h-[30vh]"
           }`}
         >
           {offers.length === 0 ? (
@@ -906,18 +913,10 @@ export default function OffersPage() {
                 : "Aucune offre disponible"}
             </p>
           ) : (
-            <div className="space-y-2">
-              {/* Affiche seulement 2 offres quand fermé, toutes quand ouvert */}
-              {(isMobilePanelOpen ? offers : offers.slice(0, 2)).map((o) => (
+            <div className="space-y-3">
+              {offers.map((o) => (
                 <OfferCard key={o.offer_id} offer={o} isMobile />
               ))}
-              
-              {/* Indicateur "plus d'offres" si fermé et qu'il y en a plus */}
-              {!isMobilePanelOpen && offers.length > 2 && (
-                <div className="text-center py-2 text-xs text-gray-500">
-                  +{offers.length - 2} autre{offers.length - 2 > 1 ? 's' : ''} offre{offers.length - 2 > 1 ? 's' : ''} • Glissez vers le haut
-                </div>
-              )}
             </div>
           )}
         </div>
