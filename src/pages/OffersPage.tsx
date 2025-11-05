@@ -742,14 +742,14 @@ export default function OffersPage() {
         )}
       </div>
 
-      {/* 🏪 Colonne 3: Zone droite - Logo + Infos marchand */}
-      <div className={`${isMobile ? "w-24 p-2" : "w-32 p-3"} border-l border-gray-100 flex flex-col items-center justify-center text-center bg-gray-50`}>
+      {/* 🏪 Colonne 3: Zone droite - Logo + Infos marchand (fond foncé) */}
+      <div className={`${isMobile ? "w-24 p-2" : "w-32 p-3"} border-l border-gray-700 flex flex-col items-center justify-center text-center bg-gray-800`}>
         {/* Logo marchand */}
         {offer.merchant_logo_url ? (
           <img
             src={offer.merchant_logo_url}
             alt={offer.merchant_name}
-            className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full object-cover mb-1 border-2 border-white shadow-sm`}
+            className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full object-cover mb-2 border-2 border-gray-600 shadow-sm`}
             crossOrigin="anonymous"
             referrerPolicy="no-referrer"
             onError={(e) => {
@@ -758,40 +758,33 @@ export default function OffersPage() {
               const parent = target.parentElement;
               if (parent) {
                 const fallback = document.createElement("div");
-                fallback.className = `${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full bg-gray-200 flex items-center justify-center mb-1`;
+                fallback.className = `${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full bg-gray-600 flex items-center justify-center mb-2`;
                 fallback.innerHTML = '<span class="text-lg">🏪</span>';
                 parent.insertBefore(fallback, parent.firstChild);
               }
             }}
           />
         ) : (
-          <div className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full bg-gray-200 flex items-center justify-center mb-1`}>
+          <div className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full bg-gray-600 flex items-center justify-center mb-2`}>
             <span className={isMobile ? "text-base" : "text-lg"}>🏪</span>
           </div>
         )}
 
         {/* Nom marchand */}
-        <p className={`font-semibold text-gray-900 ${isMobile ? "text-[10px]" : "text-xs"} line-clamp-1 mb-1 w-full px-1`}>
+        <p className={`font-semibold text-white ${isMobile ? "text-[10px]" : "text-xs"} line-clamp-2 mb-1 w-full px-1`}>
           {offer.merchant_name}
         </p>
 
         {/* Ville */}
         {offer.merchant_city && offer.merchant_city !== "À définir" && (
-          <p className={`text-gray-600 ${isMobile ? "text-[9px]" : "text-[10px]"} line-clamp-1 w-full px-1`}>
+          <p className={`text-gray-300 ${isMobile ? "text-[9px]" : "text-[10px]"} line-clamp-1 w-full px-1`}>
             📍 {offer.merchant_city}
-          </p>
-        )}
-
-        {/* Téléphone */}
-        {offer.merchant_phone && (
-          <p className={`text-gray-600 ${isMobile ? "text-[9px]" : "text-[10px]"} line-clamp-1 w-full px-1`}>
-            📞 {offer.merchant_phone}
           </p>
         )}
 
         {/* Distance (mode proximité uniquement) */}
         {viewMode === "nearby" && offer.distance_meters > 0 && (
-          <p className={`text-green-600 font-semibold ${isMobile ? "text-[9px]" : "text-[10px]"} mt-1`}>
+          <p className={`text-green-400 font-semibold ${isMobile ? "text-[9px]" : "text-[10px]"} mt-1`}>
             {(offer.distance_meters / 1000).toFixed(1)} km
           </p>
         )}
@@ -805,9 +798,9 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* Slider de rayon (visible uniquement en mode proximité) */}
+        {/* Slider de rayon (visible uniquement en mode proximité) - Positionné au-dessus du panneau mobile */}
         {viewMode === "nearby" && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
+          <div className="absolute bottom-4 md:bottom-4 left-1/2 -translate-x-1/2 z-[1600] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
             <input
               type="range"
               min={1}
@@ -900,10 +893,10 @@ export default function OffersPage() {
           </div>
         </div>
 
-        {/* Liste des offres */}
+        {/* Liste des offres - Plus discrète par défaut */}
         <div 
           className={`overflow-y-auto px-4 pb-4 transition-all duration-300 ${
-            isMobilePanelOpen ? "max-h-[60vh]" : "max-h-[30vh]"
+            isMobilePanelOpen ? "max-h-[60vh]" : "max-h-[15vh]"
           }`}
         >
           {offers.length === 0 ? (
@@ -914,7 +907,7 @@ export default function OffersPage() {
             </p>
           ) : (
             <div className="space-y-3">
-              {offers.map((o) => (
+              {(isMobilePanelOpen ? offers : offers.slice(0, 2)).map((o) => (
                 <OfferCard key={o.offer_id} offer={o} isMobile />
               ))}
             </div>
