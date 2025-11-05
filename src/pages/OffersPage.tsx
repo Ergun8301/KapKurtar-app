@@ -7,7 +7,7 @@ import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { OfferDetailsModal } from "../components/OfferDetailsModal";
 
-// 🧱 Type Offer complet
+// 🧱 Type Offer mis à jour avec toutes les données marchands
 type Offer = {
   offer_id: string;
   merchant_id?: string;
@@ -33,21 +33,6 @@ type Offer = {
   is_active?: boolean;
 };
 
-// 📦 Type pour regrouper les offres par marchand
-type MerchantGroup = {
-  merchant_id: string;
-  merchant_name: string;
-  merchant_logo_url?: string;
-  merchant_phone?: string;
-  merchant_street?: string;
-  merchant_city?: string;
-  merchant_postal_code?: string;
-  merchant_lat: number;
-  merchant_lng: number;
-  distance_meters: number;
-  offers: Offer[];
-};
-
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
 const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
 
@@ -58,29 +43,37 @@ const customMapboxCSS = `
     box-shadow: none !important;
   }
 
-  .mapboxgl-ctrl-top-left {
-    top: 10px !important;
-    left: 10px !important;
-  }
-
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
     right: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0px !important;
+    transform: translateX(-55%) !important;
   }
 
   .mapboxgl-ctrl-geocoder {
     width: 280px !important;
-    max-width: calc(100vw - 100px) !important;
-    border-radius: 12px !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
-    height: 40px !important;
+    max-width: 80% !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    height: 32px !important;
     font-size: 14px !important;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 640px) {
+    .mapboxgl-ctrl-top-right {
+      top: 8px !important;
+      right: 50% !important;
+      transform: translateX(50%) !important;
+      flex-direction: row !important;
+      justify-content: center !important;
+      gap: 6px !important;
+    }
+
     .mapboxgl-ctrl-geocoder {
-      width: calc(100vw - 80px) !important;
-      height: 40px !important;
+      width: 80% !important;
+      height: 36px !important;
     }
   }
 
@@ -90,8 +83,20 @@ const customMapboxCSS = `
     display: none !important;
   }
 
+  /* ✅ Popup Mapbox toujours au-dessus */
   .mapboxgl-popup {
-    display: none !important;
+    z-index: 2000 !important;
+  }
+
+  .mapboxgl-popup-content {
+    border-radius: 14px !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+    padding: 0 !important;
+  }
+
+  .mapboxgl-popup-close-button {
+    top: 4px !important;
+    right: 6px !important;
   }
 `;
 
@@ -100,7 +105,6 @@ export default function OffersPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [merchantGroups, setMerchantGroups] = useState<MerchantGroup[]>([]);
   const [userLocation, setUserLocation] = useState<[number, number]>(DEFAULT_LOCATION);
   const [center, setCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   const [radiusKm, setRadiusKm] = useState<number>(
@@ -110,11 +114,9 @@ export default function OffersPage() {
   const [clientIdFetched, setClientIdFetched] = useState(false);
   const [isGeolocating, setIsGeolocating] = useState(false);
   const [hasGeolocated, setHasGeolocated] = useState(false);
-  const [viewMode, setViewMode] = useState<"map" | "list">("map");
+  const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
-  const [selectedMerchant, setSelectedMerchant] = useState<MerchantGroup | null>(null);
-  const [showMerchantSheet, setShowMerchantSheet] = useState(false);
-  const [showMerchantPage, setShowMerchantPage] = useState(false);
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
 
   // 🧮 Calcul de la réduction en pourcentage
   const getDiscountPercent = (before: number, after: number) => {
@@ -126,16 +128,10 @@ export default function OffersPage() {
   const getTimeRemaining = (until?: string) => {
     if (!until) return "";
     const diff = new Date(until).getTime() - Date.now();
-    if (diff <= 0) return "Expirée";
+    if (diff <= 0) return "⏰ Expirée";
     const h = Math.floor(diff / 1000 / 60 / 60);
     const m = Math.floor((diff / 1000 / 60) % 60);
-    return h > 0 ? `${h}h ${m}min` : `${m}min`;
-  };
-
-  // 📍 Formater la distance
-  const formatDistance = (meters: number) => {
-    if (meters < 1000) return `${Math.round(meters)}m`;
-    return `${(meters / 1000).toFixed(1)}km`;
+    return h > 0 ? `⏰ ${h}h ${m}min` : `⏰ ${m} min restantes`;
   };
 
   // 💉 Injection CSS personnalisé
@@ -166,12 +162,14 @@ export default function OffersPage() {
           .maybeSingle();
 
         if (error) {
-          console.error("Erreur profil client:", error);
+          console.error("Erreur lors de la récupération du profil client :", error);
         } else if (profile) {
           setClientId(profile.id);
+        } else {
+          console.warn("Aucun profil client trouvé pour cet utilisateur.");
         }
       } catch (error) {
-        console.error("Erreur profil client:", error);
+        console.error("Erreur lors de la récupération du profil client :", error);
       } finally {
         setClientIdFetched(true);
       }
@@ -206,26 +204,26 @@ export default function OffersPage() {
             if (mapRef.current && Number.isFinite(longitude) && Number.isFinite(latitude)) {
               mapRef.current.flyTo({
                 center: [longitude, latitude],
-                zoom: 13,
+                zoom: 12,
                 essential: true,
               });
             }
           } catch (error) {
-            console.error("Erreur mise à jour position:", error);
+            console.error("Erreur lors de la mise à jour de la position:", error);
           } finally {
             setIsGeolocating(false);
             setHasGeolocated(true);
           }
         },
         (error) => {
-          console.warn("Géolocalisation refusée:", error);
+          console.warn("Géolocalisation refusée ou impossible:", error);
           setUserLocation(DEFAULT_LOCATION);
           setCenter(DEFAULT_LOCATION);
 
-          if (mapRef.current) {
+          if (mapRef.current && Number.isFinite(DEFAULT_LOCATION[0]) && Number.isFinite(DEFAULT_LOCATION[1])) {
             mapRef.current.flyTo({
               center: DEFAULT_LOCATION,
-              zoom: 10,
+              zoom: 6,
               essential: true,
             });
           }
@@ -255,7 +253,7 @@ export default function OffersPage() {
       container: mapContainerRef.current,
       style: MAP_STYLE,
       center: safeCenter,
-      zoom: 11,
+      zoom: 7,
     });
 
     mapRef.current = map;
@@ -274,7 +272,11 @@ export default function OffersPage() {
       if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
       setUserLocation([lng, lat]);
       setCenter([lng, lat]);
-      map.flyTo({ center: [lng, lat], zoom: 13, essential: true });
+      setViewMode("nearby");
+      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
+      
+      const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+      if (input) input.value = "";
     });
 
     // Barre de recherche
@@ -282,152 +284,351 @@ export default function OffersPage() {
       accessToken: mapboxgl.accessToken,
       mapboxgl,
       marker: false,
-      placeholder: "Rechercher un commerce ou une offre…",
+      placeholder: "Rechercher une adresse ou un lieu...",
       language: "fr",
     });
-    map.addControl(geocoder, "top-left");
+    map.addControl(geocoder);
 
     geocoder.on("result", (e) => {
       const [lng, lat] = e.result.center;
       if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
       setCenter([lng, lat]);
-      map.flyTo({ center: [lng, lat], zoom: 13, essential: true });
+      setViewMode("nearby");
+      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
     });
 
     return () => map.remove();
   }, []);
 
+  // ⭕ Gestion du cercle de rayon (seulement en mode "nearby")
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const updateRadius = () => {
+      if (viewMode === "nearby") {
+        drawRadius(map, center, radiusKm);
+      } else {
+        removeRadius(map);
+      }
+    };
+
+    if (!map.isStyleLoaded()) {
+      map.once("load", updateRadius);
+    } else {
+      updateRadius();
+    }
+  }, [center, radiusKm, viewMode]);
+
+  function drawRadius(map: Map, center: [number, number], radiusKm: number) {
+    try {
+      removeRadius(map);
+
+      const circle = createGeoJSONCircle(center, radiusKm * 1000);
+      
+      map.addSource("radius", { type: "geojson", data: circle });
+      map.addLayer({
+        id: "radius",
+        type: "fill",
+        source: "radius",
+        paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
+      });
+
+      const outerPolygon = {
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [-180, -90],
+              [180, -90],
+              [180, 90],
+              [-180, 90],
+              [-180, -90],
+            ],
+            circle.geometry.coordinates[0],
+          ],
+        },
+      };
+
+      map.addSource("outside-mask", { type: "geojson", data: outerPolygon });
+      map.addLayer({
+        id: "outside-mask",
+        type: "fill",
+        source: "outside-mask",
+        paint: { "fill-color": "rgba(0,0,0,0.35)", "fill-opacity": 0.35 },
+      });
+
+      const bounds = new mapboxgl.LngLatBounds();
+      circle.geometry.coordinates[0].forEach(([lng, lat]) => bounds.extend([lng, lat]));
+      map.fitBounds(bounds, { padding: 50, duration: 800 });
+    } catch (err) {
+      console.warn("Erreur drawRadius :", err);
+    }
+  }
+
+  function removeRadius(map: Map) {
+    try {
+      if (map.getLayer("radius")) map.removeLayer("radius");
+      if (map.getSource("radius")) map.removeSource("radius");
+      if (map.getLayer("outside-mask")) map.removeLayer("outside-mask");
+      if (map.getSource("outside-mask")) map.removeSource("outside-mask");
+    } catch (err) {
+      console.warn("Erreur removeRadius :", err);
+    }
+  }
+
   // 📦 Chargement des offres depuis Supabase
   useEffect(() => {
     const fetchOffers = async () => {
       if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
+        console.warn("🧭 fetchOffers skipped: invalid center", center);
         return;
       }
 
       try {
         let data, error;
 
-        if (clientId) {
-          const result = await supabase.rpc("get_offers_nearby_dynamic_secure", {
-            client_id: clientId,
-            radius_meters: radiusKm * 1000,
-          });
-          data = result.data;
-          error = result.error;
-        } else {
+        if (viewMode === "all") {
           const [lng, lat] = center;
           const result = await supabase.rpc("get_offers_nearby_public", {
             user_lng: lng,
             user_lat: lat,
-            radius_meters: radiusKm * 1000,
+            radius_meters: 2000000,
           });
           data = result.data;
           error = result.error;
+        } else {
+          if (clientId) {
+            const result = await supabase.rpc("get_offers_nearby_dynamic_secure", {
+              client_id: clientId,
+              radius_meters: radiusKm * 1000,
+            });
+            data = result.data;
+            error = result.error;
+          } else {
+            const [lng, lat] = center;
+            const result = await supabase.rpc("get_offers_nearby_public", {
+              user_lng: lng,
+              user_lat: lat,
+              radius_meters: radiusKm * 1000,
+            });
+            data = result.data;
+            error = result.error;
+          }
         }
 
         if (error) {
-          console.error("Erreur Supabase:", error.message);
-          setOffers([]);
+          console.error("❌ Erreur Supabase:", error.message);
         } else {
-          setOffers(data || []);
-          groupOffersByMerchant(data || []);
+          console.log("✅ Données reçues depuis Supabase:", data);
         }
+
+        setOffers(data || []);
       } catch (error) {
-        console.error("Erreur récupération offres:", error);
+        console.error("❌ Erreur lors de la récupération des offres:", error);
         setOffers([]);
       }
     };
 
     fetchOffers();
-  }, [center, clientId, radiusKm]);
+  }, [center, clientId, viewMode, radiusKm]);
 
-  // 🏪 Regroupement des offres par marchand
-  const groupOffersByMerchant = (offersList: Offer[]) => {
-    const groups = new Map<string, MerchantGroup>();
-
-    offersList.forEach((offer) => {
-      const merchantId = offer.merchant_id || offer.merchant_name;
-      
-      if (!groups.has(merchantId)) {
-        groups.set(merchantId, {
-          merchant_id: merchantId,
-          merchant_name: offer.merchant_name,
-          merchant_logo_url: offer.merchant_logo_url,
-          merchant_phone: offer.merchant_phone,
-          merchant_street: offer.merchant_street,
-          merchant_city: offer.merchant_city,
-          merchant_postal_code: offer.merchant_postal_code,
-          merchant_lat: offer.offer_lat,
-          merchant_lng: offer.offer_lng,
-          distance_meters: offer.distance_meters,
-          offers: [],
-        });
-      }
-
-      groups.get(merchantId)!.offers.push(offer);
-    });
-
-    setMerchantGroups(Array.from(groups.values()));
-  };
-
-  // 📍 Ajout des marqueurs marchands sur la carte
+  // 📍 Ajout des marqueurs sur la carte avec popup enrichi
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || viewMode !== "map") return;
+    if (!map) return;
 
     // Nettoyage des anciens marqueurs
     (map as any)._markers?.forEach((m: Marker) => m.remove());
     (map as any)._markers = [];
 
-    merchantGroups.forEach((merchant) => {
+    offers.forEach((offer) => {
       if (
-        !Number.isFinite(merchant.merchant_lng) ||
-        !Number.isFinite(merchant.merchant_lat)
+        !Number.isFinite(offer.offer_lng) ||
+        !Number.isFinite(offer.offer_lat)
       ) {
         return;
       }
 
-      // 🎨 Création du marqueur avec logo
+      // Élément HTML du marqueur vert
       const el = document.createElement("div");
-      el.className = "merchant-marker";
-      el.style.width = "48px";
-      el.style.height = "48px";
+      el.className = "offer-marker";
+      el.style.background = "#22c55e";
+      el.style.width = "20px";
+      el.style.height = "20px";
       el.style.borderRadius = "50%";
-      el.style.border = "3px solid #fff";
+      el.style.border = "2px solid #fff";
       el.style.cursor = "pointer";
-      el.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
-      el.style.overflow = "hidden";
-      el.style.backgroundColor = "#f5f5f5";
-      el.style.display = "flex";
-      el.style.alignItems = "center";
-      el.style.justifyContent = "center";
+      el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
 
-      if (merchant.merchant_logo_url) {
-        const img = document.createElement("img");
-        img.src = merchant.merchant_logo_url;
-        img.style.width = "100%";
-        img.style.height = "100%";
-        img.style.objectFit = "cover";
-        img.crossOrigin = "anonymous";
-        el.appendChild(img);
-      } else {
-        el.innerHTML = `<span style="font-size:24px;">🏪</span>`;
-      }
+      // 🧮 Calculs dynamiques pour le popup
+      const discount = Math.round(
+        ((offer.price_before - offer.price_after) / offer.price_before) * 100
+      );
 
-      // Clic sur le marqueur → ouvre la bande coulissante
-      el.addEventListener("click", () => {
-        setSelectedMerchant(merchant);
-        setShowMerchantSheet(true);
-      });
+      const now = new Date();
+      const until = new Date(offer.available_until || now);
+      const from = new Date(offer.available_from || now);
+
+      const total = until.getTime() - from.getTime();
+      const remaining = until.getTime() - now.getTime();
+
+      const progressPercent = total > 0
+        ? Math.max(0, Math.min(100, (remaining / total) * 100))
+        : 0;
+
+      let progressColor = "#16a34a";
+      if (progressPercent < 60) progressColor = "#facc15";
+      if (progressPercent < 30) progressColor = "#ef4444";
+
+      const minutesLeft = Math.max(0, Math.floor(remaining / 60000));
+      const hours = Math.floor(minutesLeft / 60);
+      const mins = minutesLeft % 60;
+      const timeLeft = hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
+
+      // 📦 POPUP HTML enrichi avec logo marchand
+      const popupHTML = `
+        <div style="width:210px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border-radius:12px;overflow:hidden;">
+          
+          <!-- 📸 Image + badge réduction -->
+          <div style="position:relative;width:100%;height:120px;overflow:hidden;">
+            <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;">
+            <div style="position:absolute;top:8px;right:8px;background:#dc2626;color:#fff;font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;">
+              -${discount}%
+            </div>
+          </div>
+
+          <!-- 🕒 Infos produit + marchand -->
+          <div style="padding:10px;">
+            <!-- 🏪 Bloc marchand -->
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+              ${
+                offer.merchant_logo_url
+                  ? `<img src="${offer.merchant_logo_url}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" />`
+                  : `<div style="width:28px;height:28px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;">🏪</div>`
+              }
+              <div style="font-size:13px;font-weight:500;color:#111;">${offer.merchant_name}</div>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <div style="font-size:14px;font-weight:600;color:#111;">
+                ${offer.title || "Offre locale"}
+              </div>
+              <div style="display:flex;align-items:center;gap:3px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:600;padding:2px 5px;border-radius:6px;">
+                ⏰ ${timeLeft || "Bientôt expirée"}
+              </div>
+            </div>
+
+            <!-- 🔋 Barre de progression -->
+            <div style="width:100%;height:4px;background:#f3f4f6;border-radius:4px;margin-bottom:8px;">
+              <div style="
+                width:${progressPercent}%;
+                height:100%;
+                background:${progressColor};
+                border-radius:4px;
+                transition:width 0.3s ease;
+              "></div>
+            </div>
+
+            <!-- 💶 Prix -->
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+              <span style="color:#16a34a;font-weight:700;">
+                ${offer.price_after.toFixed(2)} €
+              </span>
+              <span style="
+                text-decoration:line-through;
+                text-decoration-color:#ef4444;
+                color:#444;
+                font-size:12px;
+              ">
+                ${offer.price_before.toFixed(2)} €
+              </span>
+            </div>
+
+            <!-- 🟢 Bouton -->
+            <button
+              class="offer-details-btn"
+              data-offer-id="${offer.offer_id}"
+              style="
+                width:100%;
+                background:#22c55e;
+                color:#fff;
+                border:none;
+                border-radius:8px;
+                padding:7px 0;
+                font-size:13px;
+                font-weight:600;
+                cursor:pointer;
+              "
+            >
+              Voir détails / Réserver
+            </button>
+          </div>
+        </div>
+      `;
+
+      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
 
       const marker = new mapboxgl.Marker(el)
-        .setLngLat([merchant.merchant_lng, merchant.merchant_lat])
+        .setLngLat([offer.offer_lng, offer.offer_lat])
+        .setPopup(popup)
         .addTo(map);
 
-      (map as any)._markers = (map as any)._markers || [];
+      popup.on('open', () => {
+        setTimeout(() => {
+          const button = document.querySelector(`[data-offer-id="${offer.offer_id}"]`) as HTMLButtonElement;
+          if (button && !button.dataset.listenerAdded) {
+            const handleClick = () => setSelectedOffer(offer);
+            button.addEventListener('click', handleClick);
+            button.dataset.listenerAdded = 'true';
+
+            popup.on('close', () => {
+              button.removeEventListener('click', handleClick);
+              delete button.dataset.listenerAdded;
+            });
+          }
+        }, 10);
+      });
+
       (map as any)._markers.push(marker);
     });
-  }, [merchantGroups, viewMode]);
+  }, [offers]);
+
+  // 🌍 Ajustement de la vue carte en mode "all"
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (viewMode === "all" && offers.length > 0) {
+      const valid = offers.filter(
+        (o) => Number.isFinite(o.offer_lng) && Number.isFinite(o.offer_lat)
+      );
+
+      if (valid.length > 0) {
+        const bounds = new mapboxgl.LngLatBounds();
+        valid.forEach((o) => bounds.extend([o.offer_lng, o.offer_lat]));
+        map.fitBounds(bounds, { padding: 80, duration: 800 });
+      }
+    }
+  }, [offers, viewMode]);
+
+  // 🔄 Gestion du changement de mode de vue
+  const handleViewModeChange = (mode: "nearby" | "all") => {
+    setViewMode(mode);
+    
+    if (mode === "nearby" && mapRef.current && Number.isFinite(userLocation[0]) && Number.isFinite(userLocation[1])) {
+      mapRef.current.flyTo({
+        center: userLocation,
+        zoom: 12,
+        essential: true,
+      });
+    }
+
+    if (mode === "all") {
+      setCenter(DEFAULT_LOCATION);
+    }
+  };
 
   // 📏 Gestion du changement de rayon
   const handleRadiusChange = (val: number) => {
@@ -437,8 +638,9 @@ export default function OffersPage() {
 
   // 🚨 Protection contre les coordonnées invalides
   if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
+    console.warn("🧭 Map skipped render: invalid center", center);
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="flex items-center justify-center h-[calc(100vh-100px)] bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement de la carte...</p>
@@ -447,269 +649,209 @@ export default function OffersPage() {
     );
   }
 
-  return (
-    <div className="relative h-screen overflow-hidden bg-gray-50">
-      {/* 🔘 Toggle Carte / Liste (sticky sur mobile) */}
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1100] bg-white rounded-full shadow-lg px-1 py-1 flex gap-1">
-        <button
-          className={`px-4 py-2 text-sm font-semibold rounded-full transition-all ${
-            viewMode === "map"
-              ? "bg-green-500 text-white"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-          onClick={() => setViewMode("map")}
-        >
-          🗺️ Carte
-        </button>
-        <button
-          className={`px-4 py-2 text-sm font-semibold rounded-full transition-all ${
-            viewMode === "list"
-              ? "bg-green-500 text-white"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-          onClick={() => setViewMode("list")}
-        >
-          📋 Liste
-        </button>
-      </div>
+  // 🎨 Composant carte d'offre réutilisable
+  const OfferCard = ({ offer, isMobile = false }: { offer: Offer; isMobile?: boolean }) => (
+    <div
+      key={offer.offer_id}
+      className={`flex bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer ${
+        isMobile ? "h-auto" : ""
+      }`}
+      onClick={() => setSelectedOffer(offer)}
+    >
+      {/* 🏷️ Image du produit */}
+      {offer.image_url && (
+        <img
+          src={offer.image_url}
+          alt={offer.title}
+          className={`${isMobile ? "w-20 h-20" : "w-24 h-24"} object-cover flex-shrink-0`}
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).style.display = "none";
+          }}
+        />
+      )}
 
-      {/* 🗺️ VUE CARTE */}
-      {viewMode === "map" && (
-        <div className="relative w-full h-full">
-          <div ref={mapContainerRef} className="w-full h-full" />
-
-          {/* Slider de rayon */}
-          <div className="absolute bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow-lg px-4 py-2 flex items-center gap-3">
-            <input
-              type="range"
-              min={1}
-              max={50}
-              value={radiusKm}
-              onChange={(e) => handleRadiusChange(Number(e.target.value))}
-              className="w-32 md:w-40 accent-green-500 cursor-pointer"
+      {/* 📋 Infos produit + marchand */}
+      <div className={`flex-1 ${isMobile ? "p-2" : "p-3"}`}>
+        {/* Logo + nom du marchand */}
+        <div className="flex items-center gap-2 mb-1">
+          {offer.merchant_logo_url ? (
+            <img
+              src={offer.merchant_logo_url}
+              alt={offer.merchant_name}
+              className="w-6 h-6 rounded-full object-cover"
+              crossOrigin="anonymous"
+              referrerPolicy="no-referrer"
             />
-            <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-              {radiusKm} km
+          ) : (
+            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+              🏪
+            </div>
+          )}
+          <h3 className={`font-semibold text-gray-800 ${isMobile ? "text-xs" : "text-sm"}`}>
+            {offer.merchant_name}
+          </h3>
+        </div>
+
+        <p className={`font-medium text-gray-700 ${isMobile ? "text-sm" : "text-base"}`}>
+          {offer.title}
+        </p>
+
+        {/* Prix et réduction */}
+        <div className="flex items-center justify-between mt-1">
+          <div className="flex items-center space-x-2">
+            <span className={`font-bold text-green-600 ${isMobile ? "text-sm" : "text-base"}`}>
+              {offer.price_after.toFixed(2)} €
+            </span>
+            <span className={`line-through text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
+              {offer.price_before.toFixed(2)} €
+            </span>
+            <span className="text-xs text-red-600 font-semibold bg-red-50 px-1.5 py-0.5 rounded">
+              -{getDiscountPercent(offer.price_before, offer.price_after)}%
             </span>
           </div>
         </div>
-      )}
 
-      {/* 📋 VUE LISTE */}
-      {viewMode === "list" && (
-        <div className="w-full h-full overflow-y-auto pt-16 pb-6 px-4 md:px-8">
+        {/* Détails secondaires */}
+        <div className={`mt-1 ${isMobile ? "text-[10px]" : "text-[11px]"} text-gray-600 font-medium space-y-0.5`}>
+          {offer.available_until && <div>{getTimeRemaining(offer.available_until)}</div>}
+          {viewMode === "nearby" && offer.distance_meters > 0 && (
+            <div className="text-green-600 font-semibold">
+              📍 {(offer.distance_meters / 1000).toFixed(2)} km
+            </div>
+          )}
+          {offer.merchant_city && offer.merchant_city !== "À définir" && (
+            <div>📍 {offer.merchant_city}</div>
+          )}
+          {offer.merchant_phone && <div>📞 {offer.merchant_phone}</div>}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
+      {/* 🗺️ CARTE */}
+      <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
+        <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
+
+        {/* Slider de rayon (visible uniquement en mode proximité) */}
+        {viewMode === "nearby" && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
+            <input
+              type="range"
+              min={1}
+              max={30}
+              value={radiusKm}
+              onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
+              className="w-36 accent-green-500 cursor-pointer focus:outline-none"
+            />
+            <span className="text-sm text-gray-700 font-medium">{radiusKm} km</span>
+          </div>
+        )}
+      </div>
+
+      {/* 📋 LISTE DES OFFRES - DESKTOP */}
+      <div className="hidden md:block md:w-1/2 overflow-y-auto bg-gray-50 p-4">
+        {/* 🔘 Toggle entre les modes de vue */}
+        <div className="flex justify-center mb-6">
+          <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
+            <button
+              className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                viewMode === "nearby"
+                  ? "bg-white text-green-700 shadow"
+                  : "text-gray-500 hover:text-green-600"
+              }`}
+              onClick={() => handleViewModeChange("nearby")}
+            >
+              📍 Offres à proximité
+            </button>
+            <button
+              className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                viewMode === "all"
+                  ? "bg-white text-green-700 shadow"
+                  : "text-gray-500 hover:text-green-600"
+              }`}
+              onClick={() => handleViewModeChange("all")}
+            >
+              🌍 Toutes les offres
+            </button>
+          </div>
+        </div>
+
+        {offers.length === 0 ? (
+          <p className="text-gray-500 text-center mt-10">
+            {viewMode === "nearby"
+              ? "Aucune offre disponible dans ce rayon. Essayez d'augmenter la distance !"
+              : "Aucune offre disponible pour le moment."}
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {offers.map((o) => (
+              <OfferCard key={o.offer_id} offer={o} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 📱 PANNEAU MOBILE COULISSANT */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg z-[1500] transition-all duration-300">
+        {/* Poignée de glissement */}
+        <div 
+          className="flex justify-center pt-2 pb-1 cursor-pointer"
+          onClick={() => setIsMobilePanelOpen(!isMobilePanelOpen)}
+        >
+          <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
+        </div>
+
+        {/* Toggle modes de vue */}
+        <div className="flex justify-center px-4 pb-3">
+          <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
+            <button
+              className={`px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+                viewMode === "nearby"
+                  ? "bg-white text-green-700 shadow"
+                  : "text-gray-500 hover:text-green-600"
+              }`}
+              onClick={() => handleViewModeChange("nearby")}
+            >
+              📍 Proximité
+            </button>
+            <button
+              className={`px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+                viewMode === "all"
+                  ? "bg-white text-green-700 shadow"
+                  : "text-gray-500 hover:text-green-600"
+              }`}
+              onClick={() => handleViewModeChange("all")}
+            >
+              🌍 Toutes
+            </button>
+          </div>
+        </div>
+
+        {/* Liste des offres */}
+        <div 
+          className={`overflow-y-auto px-4 pb-4 transition-all duration-300 ${
+            isMobilePanelOpen ? "max-h-[60vh]" : "max-h-[30vh]"
+          }`}
+        >
           {offers.length === 0 ? (
-            <p className="text-gray-500 text-center mt-20">
-              Aucune offre disponible dans ce rayon
+            <p className="text-gray-500 text-center text-sm py-6">
+              {viewMode === "nearby"
+                ? "Aucune offre à proximité"
+                : "Aucune offre disponible"}
             </p>
           ) : (
-            <div className="max-w-7xl mx-auto">
-              {/* Mobile: cartes verticales */}
-              <div className="md:hidden space-y-4">
-                {offers.map((offer) => (
-                  <OfferCardMobile key={offer.offer_id} offer={offer} onClick={() => setSelectedOffer(offer)} />
-                ))}
-              </div>
-
-              {/* Desktop: cartes horizontales */}
-              <div className="hidden md:block space-y-3">
-                {offers.map((offer) => (
-                  <OfferCardDesktop key={offer.offer_id} offer={offer} onClick={() => setSelectedOffer(offer)} />
-                ))}
-              </div>
+            <div className="space-y-3">
+              {offers.map((o) => (
+                <OfferCard key={o.offer_id} offer={o} isMobile />
+              ))}
             </div>
           )}
         </div>
-      )}
-
-      {/* 📱 BANDE COULISSANTE MARCHAND (Mobile style TooGoodToGo) */}
-      {showMerchantSheet && selectedMerchant && (
-        <div
-          className="fixed inset-0 z-[2000] bg-black/30 transition-opacity"
-          onClick={() => setShowMerchantSheet(false)}
-        >
-          <div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl max-h-[40vh] overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Poignée */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
-            </div>
-
-            {/* Contenu */}
-            <div className="px-6 pb-6">
-              <div className="flex items-start gap-4">
-                {/* Logo */}
-                {selectedMerchant.merchant_logo_url ? (
-                  <img
-                    src={selectedMerchant.merchant_logo_url}
-                    alt={selectedMerchant.merchant_name}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
-                    crossOrigin="anonymous"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-2xl">
-                    🏪
-                  </div>
-                )}
-
-                {/* Infos */}
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">
-                    {selectedMerchant.merchant_name}
-                  </h3>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                    <span className="font-semibold text-green-600">
-                      {formatDistance(selectedMerchant.distance_meters)}
-                    </span>
-                    <span>•</span>
-                    <span>
-                      {selectedMerchant.merchant_street}, {selectedMerchant.merchant_city}
-                    </span>
-                  </div>
-
-                  {/* Bouton */}
-                  <button
-                    className="w-full bg-green-500 text-white font-semibold py-3 rounded-xl hover:bg-green-600 transition"
-                    onClick={() => {
-                      setShowMerchantSheet(false);
-                      setShowMerchantPage(true);
-                    }}
-                  >
-                    Voir les offres ({selectedMerchant.offers.length})
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 🏪 PAGE MARCHAND COMPLÈTE */}
-      {showMerchantPage && selectedMerchant && (
-        <div className="fixed inset-0 z-[2100] bg-white overflow-y-auto">
-          {/* Header */}
-          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
-            <button
-              onClick={() => {
-                setShowMerchantPage(false);
-                setSelectedMerchant(null);
-              }}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              ← Retour
-            </button>
-          </div>
-
-          {/* Contenu */}
-          <div className="p-6 max-w-4xl mx-auto">
-            {/* Infos marchand */}
-            <div className="flex items-start gap-4 mb-6">
-              {selectedMerchant.merchant_logo_url ? (
-                <img
-                  src={selectedMerchant.merchant_logo_url}
-                  alt={selectedMerchant.merchant_name}
-                  className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
-                  crossOrigin="anonymous"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-3xl">
-                  🏪
-                </div>
-              )}
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  {selectedMerchant.merchant_name}
-                </h1>
-                <p className="text-gray-600 text-sm mb-1">
-                  📍 {selectedMerchant.merchant_street}, {selectedMerchant.merchant_city}
-                </p>
-                <p className="text-green-600 font-semibold">
-                  {formatDistance(selectedMerchant.distance_meters)}
-                </p>
-              </div>
-            </div>
-
-            {/* Les offres de ce commerce */}
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Les offres de ce commerce
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-              {selectedMerchant.offers.map((offer) => (
-                <div
-                  key={offer.offer_id}
-                  className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden cursor-pointer hover:shadow-md transition"
-                  onClick={() => {
-                    setShowMerchantPage(false);
-                    setSelectedOffer(offer);
-                  }}
-                >
-                  <img
-                    src={offer.image_url}
-                    alt={offer.title}
-                    className="w-full h-40 object-cover"
-                    crossOrigin="anonymous"
-                  />
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-2">{offer.title}</h3>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-green-600">
-                          {offer.price_after.toFixed(2)}€
-                        </span>
-                        <span className="text-sm text-gray-400 line-through">
-                          {offer.price_before.toFixed(2)}€
-                        </span>
-                      </div>
-                      <span className="bg-white text-red-600 font-bold text-xs px-2 py-1 rounded border border-red-200">
-                        -{getDiscountPercent(offer.price_before, offer.price_after)}%
-                      </span>
-                    </div>
-                    {offer.available_until && (
-                      <p className="text-xs text-gray-500">
-                        ⏱ {getTimeRemaining(offer.available_until)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Section anti-gaspillage */}
-            <div className="bg-green-50 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
-                🌱 Acteur de la lutte anti-gaspillage
-              </h3>
-              <p className="text-gray-700">
-                +{selectedMerchant.offers.reduce((acc, o) => acc + (o.quantity || 1), 0)} produits sauvés
-              </p>
-            </div>
-
-            {/* Carte du commerce */}
-            <div className="h-64 rounded-xl overflow-hidden border border-gray-200">
-              <div
-                ref={(el) => {
-                  if (el && !el.dataset.initialized) {
-                    el.dataset.initialized = "true";
-                    const miniMap = new mapboxgl.Map({
-                      container: el,
-                      style: MAP_STYLE,
-                      center: [selectedMerchant.merchant_lng, selectedMerchant.merchant_lat],
-                      zoom: 15,
-                      interactive: false,
-                    });
-                    new mapboxgl.Marker({ color: "#22c55e" })
-                      .setLngLat([selectedMerchant.merchant_lng, selectedMerchant.merchant_lat])
-                      .addTo(miniMap);
-                  }
-                }}
-                className="w-full h-full"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* 🔍 MODALE DÉTAILS OFFRE */}
       <OfferDetailsModal
@@ -720,168 +862,33 @@ export default function OffersPage() {
   );
 }
 
-// 📱 CARTE OFFRE MOBILE (style TooGoodToGo)
-const OfferCardMobile = ({ offer, onClick }: { offer: Offer; onClick: () => void }) => {
-  const getDiscountPercent = (before: number, after: number) => {
-    if (!before || before === 0) return 0;
-    return Math.round(((before - after) / before) * 100);
+// 🧮 Fonction utilitaire : créer un cercle GeoJSON
+export function createGeoJSONCircle(
+  center: [number, number],
+  radiusInMeters: number,
+  points = 64
+) {
+  const coords = { latitude: center[1], longitude: center[0] };
+  const km = radiusInMeters / 1000;
+  const ret: [number, number][] = [];
+
+  const distanceX = km / (111.32 * Math.cos((coords.latitude * Math.PI) / 180));
+  const distanceY = km / 110.574;
+
+  for (let i = 0; i < points; i++) {
+    const theta = (i / points) * (2 * Math.PI);
+    const x = distanceX * Math.cos(theta);
+    const y = distanceY * Math.sin(theta);
+    ret.push([coords.longitude + x, coords.latitude + y]);
+  }
+
+  ret.push(ret[0]);
+
+  return {
+    type: "Feature",
+    geometry: {
+      type: "Polygon",
+      coordinates: [ret],
+    },
   };
-
-  const getTimeRemaining = (until?: string) => {
-    if (!until) return "";
-    const diff = new Date(until).getTime() - Date.now();
-    if (diff <= 0) return "Expirée";
-    const h = Math.floor(diff / 1000 / 60 / 60);
-    const m = Math.floor((diff / 1000 / 60) % 60);
-    return h > 0 ? `${h}h ${m}min` : `${m}min`;
-  };
-
-  return (
-    <div
-      className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition"
-      onClick={onClick}
-    >
-      <div className="relative">
-        <img
-          src={offer.image_url}
-          alt={offer.title}
-          className="w-full h-48 object-cover"
-          crossOrigin="anonymous"
-        />
-        <div className="absolute top-3 right-3 bg-white text-red-600 font-bold text-sm px-3 py-1 rounded-lg border border-red-200">
-          -{getDiscountPercent(offer.price_before, offer.price_after)}%
-        </div>
-      </div>
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-2">
-          {offer.merchant_logo_url ? (
-            <img
-              src={offer.merchant_logo_url}
-              alt={offer.merchant_name}
-              className="w-8 h-8 rounded-full object-cover"
-              crossOrigin="anonymous"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm">
-              🏪
-            </div>
-          )}
-          <span className="font-semibold text-gray-900">{offer.merchant_name}</span>
-        </div>
-        <h3 className="font-bold text-lg text-gray-900 mb-2">{offer.title}</h3>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-green-600">
-              {offer.price_after.toFixed(2)}€
-            </span>
-            <span className="text-sm text-gray-400 line-through">
-              {offer.price_before.toFixed(2)}€
-            </span>
-          </div>
-          {offer.available_until && (
-            <span className="text-xs text-gray-500">
-              ⏱ {getTimeRemaining(offer.available_until)}
-            </span>
-          )}
-        </div>
-        {offer.distance_meters > 0 && (
-          <p className="text-sm text-gray-600">
-            📍 {(offer.distance_meters / 1000).toFixed(1)} km
-          </p>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// 💻 CARTE OFFRE DESKTOP (3 lignes max)
-const OfferCardDesktop = ({ offer, onClick }: { offer: Offer; onClick: () => void }) => {
-  const getDiscountPercent = (before: number, after: number) => {
-    if (!before || before === 0) return 0;
-    return Math.round(((before - after) / before) * 100);
-  };
-
-  const getTimeRemaining = (until?: string) => {
-    if (!until) return "";
-    const diff = new Date(until).getTime() - Date.now();
-    if (diff <= 0) return "Expirée";
-    const h = Math.floor(diff / 1000 / 60 / 60);
-    const m = Math.floor((diff / 1000 / 60) % 60);
-    return h > 0 ? `${h}h ${m}min` : `${m}min`;
-  };
-
-  return (
-    <div
-      className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer flex items-center"
-      onClick={onClick}
-    >
-      {/* Photo produit */}
-      <img
-        src={offer.image_url}
-        alt={offer.title}
-        className="w-32 h-32 object-cover flex-shrink-0"
-        crossOrigin="anonymous"
-      />
-
-      {/* Zone centrale */}
-      <div className="flex-1 p-4">
-        {/* Ligne 1: Logo + Nom commerce */}
-        <div className="flex items-center gap-2 mb-2">
-          {offer.merchant_logo_url ? (
-            <img
-              src={offer.merchant_logo_url}
-              alt={offer.merchant_name}
-              className="w-7 h-7 rounded-full object-cover"
-              crossOrigin="anonymous"
-            />
-          ) : (
-            <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs">
-              🏪
-            </div>
-          )}
-          <span className="font-semibold text-gray-900 text-sm">
-            {offer.merchant_name}
-          </span>
-        </div>
-
-        {/* Ligne 2: Nom produit + Prix + Réduction */}
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-bold text-gray-900">{offer.title}</h3>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-green-600">
-                {offer.price_after.toFixed(2)}€
-              </span>
-              <span className="text-sm text-gray-400 line-through">
-                {offer.price_before.toFixed(2)}€
-              </span>
-            </div>
-            <span className="bg-white text-red-600 font-bold text-xs px-2 py-1 rounded border border-red-200">
-              -{getDiscountPercent(offer.price_before, offer.price_after)}%
-            </span>
-          </div>
-        </div>
-
-        {/* Ligne 3: Timer + Distance + Téléphone */}
-        <div className="flex items-center gap-4 text-sm text-gray-600">
-          {offer.available_until && (
-            <span>⏱ {getTimeRemaining(offer.available_until)}</span>
-          )}
-          {offer.distance_meters > 0 && (
-            <span>📍 {(offer.distance_meters / 1000).toFixed(1)} km</span>
-          )}
-          {offer.merchant_phone && <span>📞 {offer.merchant_phone}</span>}
-        </div>
-      </div>
-
-      {/* Adresse à droite */}
-      <div className="px-4 text-right">
-        <p className="text-sm text-gray-600">
-          {offer.merchant_street}
-          <br />
-          {offer.merchant_city}
-        </p>
-      </div>
-    </div>
-  );
-};
+}
