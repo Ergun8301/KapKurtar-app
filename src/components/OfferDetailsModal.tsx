@@ -276,9 +276,11 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
     {/* RÉSERVER */}
 
 <button
-  onClick={async () => {
-    if (loading) return;            // ✅ empêche le double clic
-    setLoading(true);               // ✅ verrouille le bouton
+  onClick={async (e) => {
+    e.stopPropagation(); // ✅ empêche double événement de propagation
+    if (loading) return; // ✅ empêche double clic
+    setLoading(true);
+
     try {
       const { data: authData } = await supabase.auth.getUser();
       const authUid = authData?.user?.id;
@@ -294,12 +296,9 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
         .single();
 
       if (profileError || !profile) {
-        alert("Profil introuvable. Veuillez vérifier votre compte.");
+        alert("Profil introuvable.");
         return;
       }
-
-      console.log("➡️ offer_id envoyé :", offer.offer_id);
-      console.log("➡️ p_client_id envoyé (profiles.id) :", profile.id);
 
       const { data, error } = await supabase.rpc("create_reservation_dynamic", {
         p_client_id: profile.id,
@@ -310,13 +309,13 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
       if (error) throw error;
 
       console.log("✅ Réservation créée :", data);
-      alert("✅ Réservation effectuée avec succès !");
+      alert("✅ Réservation effectuée !");
       onClose();
     } catch (err: any) {
       console.error("Erreur réservation :", err.message || err);
       alert("❌ Impossible de réserver l’offre.");
     } finally {
-      setLoading(false);            // ✅ réactive le bouton
+      setLoading(false);
     }
   }}
   disabled={loading || !offer.offer_id || offer.quantity === 0}
@@ -324,6 +323,7 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
 >
   {loading ? "Réservation..." : "Réserver maintenant"}
 </button>
+
 
           {/* AUTRES PRODUITS */}
           {merchantOffers.length > 0 && (
