@@ -301,7 +301,7 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
       // ✅ Appel RPC vers la fonction Supabase
       const { data, error } = await supabase.rpc("create_reservation_dynamic", {
         p_client_id: profile.id,
-        p_offer_id: offer.offer_id,
+        p_offer_id: offer.offer_id?.toString(),
         p_quantity: 1,
       });
 
