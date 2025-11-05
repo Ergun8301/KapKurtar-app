@@ -44,7 +44,13 @@ export const createReservation = async (offerId: string, merchantId: string, qua
       return { success: false, error: 'Quantity must be at least 1' };
     }
 
-    const { data, error } = await supabase.rpc('create_reservation_dynamic', { ... });
+    // 🔇 Désactivé car déjà appelé dans OfferDetailsModal
+// const { data, error } = await supabase.rpc('create_reservation_dynamic', {
+//   p_client_id: userId,
+//   p_offer_id: offerId,
+//   p_quantity: 1,
+// });
+
       p_client_id: userId,
       p_offer_id: offerId,
       p_quantity: quantity
