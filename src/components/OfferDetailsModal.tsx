@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, MapPin, Navigation, Clock, Star } from 'lucide-react';
 import { getPublicImageUrl } from '../lib/supabasePublic';
 import { supabase } from '../lib/supabaseClient';
@@ -40,6 +40,9 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
   const [averageRating] = useState<number>(4.6);
   const [totalReviews] = useState<number>(32);
   const [loading, setLoading] = useState(false);
+  
+  // 🛡️ PROTECTION ANTI-DOUBLE-APPEL
+  const isReservingRef = useRef(false);
 
   useEffect(() => {
     if (!offer) return;
@@ -69,6 +72,73 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
 
     fetchMerchantOffers();
   }, [offer?.merchant_id, offer?.offer_id]);
+
+  // 🔒 HANDLER DE RÉSERVATION EXTRAIT ET PROTÉGÉ
+  const handleReservation = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // ✅ DOUBLE PROTECTION : useRef (immédiat) + useState (visuel)
+    if (isReservingRef.current || loading) {
+      console.warn('⚠️ Réservation déjà en cours, clic ignoré');
+      return;
+    }
+
+    // 🔒 VERROUILLER IMMÉDIATEMENT
+    isReservingRef.current = true;
+    setLoading(true);
+    
+    console.log('🔵 [DÉBUT RÉSERVATION]', Date.now());
+
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      const authUid = authData?.user?.id;
+      if (!authUid) {
+        alert("Connectez-vous pour réserver une offre.");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_id", authUid)
+        .single();
+
+      if (profileError || !profile) {
+        alert("Profil introuvable.");
+        return;
+      }
+
+      console.log('🔵 [APPEL RPC]', {
+        client_id: profile.id,
+        offer_id: offer.offer_id,
+        quantity: 1,
+        timestamp: Date.now()
+      });
+
+      const { data, error } = await supabase.rpc("create_reservation_dynamic", {
+        p_client_id: profile.id,
+        p_offer_id: offer.offer_id,
+        p_quantity: 1,
+      });
+
+      if (error) throw error;
+
+      console.log("✅ [RÉSERVATION CRÉÉE]", data);
+      alert("✅ Réservation effectuée !");
+      onClose();
+      
+    } catch (err: any) {
+      console.error("❌ [ERREUR RÉSERVATION]", err.message || err);
+      alert("❌ Impossible de réserver l'offre.");
+    } finally {
+      // 🔓 DÉVERROUILLER APRÈS UN DÉLAI DE SÉCURITÉ
+      setTimeout(() => {
+        isReservingRef.current = false;
+        setLoading(false);
+        console.log('🔓 [DÉVERROUILLÉ]', Date.now());
+      }, 500); // 500ms anti-spam
+    }
+  };
 
   if (!offer) return null;
 
@@ -273,57 +343,18 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
             </div>
           </div>
 
-    {/* RÉSERVER */}
-
-<button
-  onClick={async (e) => {
-    e.stopPropagation(); // ✅ empêche double événement de propagation
-    if (loading) return; // ✅ empêche double clic
-    setLoading(true);
-
-    try {
-      const { data: authData } = await supabase.auth.getUser();
-      const authUid = authData?.user?.id;
-      if (!authUid) {
-        alert("Connectez-vous pour réserver une offre.");
-        return;
-      }
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("auth_id", authUid)
-        .single();
-
-      if (profileError || !profile) {
-        alert("Profil introuvable.");
-        return;
-      }
-
-      const { data, error } = await supabase.rpc("create_reservation_dynamic", {
-        p_client_id: profile.id,
-        p_offer_id: offer.offer_id,
-        p_quantity: 1,
-      });
-
-      if (error) throw error;
-
-      console.log("✅ Réservation créée :", data);
-      alert("✅ Réservation effectuée !");
-      onClose();
-    } catch (err: any) {
-      console.error("Erreur réservation :", err.message || err);
-      alert("❌ Impossible de réserver l’offre.");
-    } finally {
-      setLoading(false);
-    }
-  }}
-  disabled={loading || !offer.offer_id || offer.quantity === 0}
-  className="w-full px-6 py-4 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl mb-6"
->
-  {loading ? "Réservation..." : "Réserver maintenant"}
-</button>
-
+          {/* ✅ BOUTON RÉSERVER CORRIGÉ */}
+          <button
+            onClick={handleReservation}
+            disabled={loading || !offer.offer_id || offer.quantity === 0}
+            className={`w-full px-6 py-4 rounded-xl font-semibold transition-all shadow-lg mb-6 ${
+              loading || !offer.offer_id || offer.quantity === 0
+                ? 'bg-gray-300 cursor-not-allowed'
+                : 'bg-green-500 text-white hover:bg-green-600 hover:shadow-xl'
+            }`}
+          >
+            {loading ? '⏳ Réservation en cours...' : '🎫 Réserver maintenant'}
+          </button>
 
           {/* AUTRES PRODUITS */}
           {merchantOffers.length > 0 && (
@@ -373,3 +404,32 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
 }
 
 export default OfferDetailsModal;
+```
+
+---
+
+## 🔧 **Ce qui a été corrigé**
+
+| Avant | Après |
+|-------|-------|
+| ❌ Fonction inline dans `onClick` | ✅ Handler extrait `handleReservation` |
+| ❌ Protection `useState` uniquement (lente) | ✅ Double protection `useRef` + `useState` |
+| ❌ Pas de délai anti-spam | ✅ 500ms de verrouillage après réservation |
+| ❌ Logs basiques | ✅ Logs détaillés avec timestamps |
+
+---
+
+## 🧪 **Test de validation**
+
+Après avoir appliqué le code :
+
+1. **Ouvre la console** (F12)
+2. **Clique rapidement 5 fois** sur "Réserver"
+3. **Tu dois voir** :
+```
+   🔵 [DÉBUT RÉSERVATION] 1699123456789
+   ⚠️ Réservation déjà en cours, clic ignoré
+   ⚠️ Réservation déjà en cours, clic ignoré
+   🔵 [APPEL RPC] { client_id: "...", offer_id: "...", ... }
+   ✅ [RÉSERVATION CRÉÉE] ...
+   🔓 [DÉVERROUILLÉ] 1699123457289
