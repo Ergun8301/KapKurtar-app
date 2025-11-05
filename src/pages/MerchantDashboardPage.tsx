@@ -807,7 +807,7 @@ const MerchantDashboardPage = () => {
       disabled={isSubmittingOnboarding}
       className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium"
     >
-      {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
+      {isSubmittingOnboarding ? "Enregistrement..." : "Enregistrer"}
     </button>
   </div>
 ) : (
@@ -816,7 +816,7 @@ const MerchantDashboardPage = () => {
     disabled={isSubmittingOnboarding}
     className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg"
   >
-    {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
+    {isSubmittingOnboarding ? "Enregistrement..." : "Enregistrer"}
   </button>
 )}
 </form>
@@ -824,6 +824,7 @@ const MerchantDashboardPage = () => {
 </div>
 )}
 
+{/* --- DÉBUT DU TABLEAU DE BORD --- */}
 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <div className="mb-6 flex items-center justify-between">
     <div>
@@ -842,6 +843,7 @@ const MerchantDashboardPage = () => {
     </div>
   </div>
 </div>
+{/* --- FIN DU TABLEAU DE BORD --- */}
 
         <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <button
