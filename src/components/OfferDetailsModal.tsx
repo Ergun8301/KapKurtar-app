@@ -272,14 +272,41 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
             </div>
           </div>
 
-          {/* RÉSERVER */}
-          <button
-            onClick={onClose}
-            disabled={offer.quantity === 0}
-            className="w-full px-6 py-4 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl mb-6"
-          >
-            Réserver maintenant
-          </button>
+      {/* RÉSERVER */}
+<button
+  onClick={async () => {
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_id", (await supabase.auth.getUser()).data.user?.id)
+        .maybeSingle();
+
+      if (!profile) {
+        alert("Connectez-vous pour réserver une offre.");
+        return;
+      }
+
+      const { data, error } = await supabase.rpc("create_reservation_dynamic", {
+        p_client_id: profile.id,
+        p_offer_id: offer.offer_id,
+        p_quantity: 1,
+      });
+
+      if (error) throw error;
+
+      alert("✅ Réservation effectuée avec succès !");
+      onClose();
+    } catch (err: any) {
+      console.error("Erreur réservation :", err.message || err);
+      alert("❌ Impossible de réserver l’offre.");
+    }
+  }}
+  disabled={offer.quantity === 0}
+  className="w-full px-6 py-4 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl mb-6"
+>
+  Réserver maintenant
+</button>
 
           {/* AUTRES PRODUITS */}
           {merchantOffers.length > 0 && (
