@@ -40,8 +40,6 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
   const [averageRating] = useState<number>(4.6);
   const [totalReviews] = useState<number>(32);
   const [loading, setLoading] = useState(false);
-  
-  // 🛡️ PROTECTION ANTI-DOUBLE-APPEL
   const isReservingRef = useRef(false);
 
   useEffect(() => {
@@ -73,17 +71,14 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
     fetchMerchantOffers();
   }, [offer?.merchant_id, offer?.offer_id]);
 
-  // 🔒 HANDLER DE RÉSERVATION EXTRAIT ET PROTÉGÉ
   const handleReservation = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // ✅ DOUBLE PROTECTION : useRef (immédiat) + useState (visuel)
     if (isReservingRef.current || loading) {
       console.warn('⚠️ Réservation déjà en cours, clic ignoré');
       return;
     }
 
-    // 🔒 VERROUILLER IMMÉDIATEMENT
     isReservingRef.current = true;
     setLoading(true);
     
@@ -131,12 +126,11 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
       console.error("❌ [ERREUR RÉSERVATION]", err.message || err);
       alert("❌ Impossible de réserver l'offre.");
     } finally {
-      // 🔓 DÉVERROUILLER APRÈS UN DÉLAI DE SÉCURITÉ
       setTimeout(() => {
         isReservingRef.current = false;
         setLoading(false);
         console.log('🔓 [DÉVERROUILLÉ]', Date.now());
-      }, 500); // 500ms anti-spam
+      }, 500);
     }
   };
 
@@ -219,7 +213,6 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
         className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* IMAGE PRINCIPALE */}
         <div className="relative">
           <img
             src={getPublicImageUrl(offer.image_url)}
@@ -245,7 +238,6 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
             -{discount}%
           </div>
 
-          {/* INFO MARCHAND */}
           <div className="absolute bottom-4 left-4 bg-white bg-opacity-95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-md">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-lg">
@@ -263,7 +255,6 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
           </div>
         </div>
 
-        {/* CONTENU PRINCIPAL */}
         <div className="p-6">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">{offer.title}</h2>
 
@@ -271,7 +262,6 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
             <p className="text-gray-600 text-base leading-relaxed mb-6">{offer.description}</p>
           )}
 
-          {/* TEMPS RESTANT */}
           <div className="bg-gray-50 rounded-xl p-4 mb-6">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2 text-gray-700">
@@ -293,7 +283,6 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
             </div>
           </div>
 
-          {/* ADRESSE ET GPS */}
           <div className="space-y-3 mb-6">
             {offer.distance_meters !== undefined && (
               <div className="flex items-center text-gray-700">
@@ -322,7 +311,6 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
             </button>
           </div>
 
-          {/* PRIX & QUANTITÉ */}
           <div className="border-t border-gray-200 pt-6 mb-6">
             <div className="flex items-end justify-between">
               <div>
@@ -343,7 +331,6 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
             </div>
           </div>
 
-          {/* ✅ BOUTON RÉSERVER CORRIGÉ */}
           <button
             onClick={handleReservation}
             disabled={loading || !offer.offer_id || offer.quantity === 0}
@@ -356,7 +343,6 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
             {loading ? '⏳ Réservation en cours...' : '🎫 Réserver maintenant'}
           </button>
 
-          {/* AUTRES PRODUITS */}
           {merchantOffers.length > 0 && (
             <div className="border-t border-gray-200 pt-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">
@@ -404,32 +390,3 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
 }
 
 export default OfferDetailsModal;
-```
-
----
-
-## 🔧 **Ce qui a été corrigé**
-
-| Avant | Après |
-|-------|-------|
-| ❌ Fonction inline dans `onClick` | ✅ Handler extrait `handleReservation` |
-| ❌ Protection `useState` uniquement (lente) | ✅ Double protection `useRef` + `useState` |
-| ❌ Pas de délai anti-spam | ✅ 500ms de verrouillage après réservation |
-| ❌ Logs basiques | ✅ Logs détaillés avec timestamps |
-
----
-
-## 🧪 **Test de validation**
-
-Après avoir appliqué le code :
-
-1. **Ouvre la console** (F12)
-2. **Clique rapidement 5 fois** sur "Réserver"
-3. **Tu dois voir** :
-```
-   🔵 [DÉBUT RÉSERVATION] 1699123456789
-   ⚠️ Réservation déjà en cours, clic ignoré
-   ⚠️ Réservation déjà en cours, clic ignoré
-   🔵 [APPEL RPC] { client_id: "...", offer_id: "...", ... }
-   ✅ [RÉSERVATION CRÉÉE] ...
-   🔓 [DÉVERROUILLÉ] 1699123457289
