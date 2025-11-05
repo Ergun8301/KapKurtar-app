@@ -8,7 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useAddProduct } from '../contexts/AddProductContext';
 import { uploadImageToSupabase } from '../lib/uploadImage';
-import NotificationBell from "../components/NotificationBell";
+import { NotificationBell } from '../components/NotificationBell';
 import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
 import { type Notification } from '../api/notifications';
 import { OfferForm } from '../components/OfferForm';
