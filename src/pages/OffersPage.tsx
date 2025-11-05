@@ -178,15 +178,22 @@ export default function OffersPage() {
     fetchClientId();
   }, [user, clientIdFetched]);
 
-  // 🧭 Géolocalisation automatique pour clients connectés
+  // 🧭 Géolocalisation automatique pour clients connectés (optimisée pour Xiaomi)
   useEffect(() => {
     if (!clientId || isGeolocating || hasGeolocated) return;
 
     const geolocateClient = async () => {
-      if (!navigator.geolocation) return;
+      if (!navigator.geolocation) {
+        console.warn("Géolocalisation non disponible sur cet appareil");
+        setUserLocation(DEFAULT_LOCATION);
+        setCenter(DEFAULT_LOCATION);
+        setHasGeolocated(true);
+        return;
+      }
 
       setIsGeolocating(true);
 
+      // Tentative 1 : haute précision
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
@@ -216,21 +223,56 @@ export default function OffersPage() {
           }
         },
         (error) => {
-          console.warn("Géolocalisation refusée ou impossible:", error);
-          setUserLocation(DEFAULT_LOCATION);
-          setCenter(DEFAULT_LOCATION);
+          console.warn("Géolocalisation haute précision échouée, tentative en mode économique...", error);
+          
+          // Tentative 2 : mode économique (pour Xiaomi et appareils avec restrictions)
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const { latitude, longitude } = position.coords;
 
-          if (mapRef.current && Number.isFinite(DEFAULT_LOCATION[0]) && Number.isFinite(DEFAULT_LOCATION[1])) {
-            mapRef.current.flyTo({
-              center: DEFAULT_LOCATION,
-              zoom: 6,
-              essential: true,
-            });
-          }
-          setIsGeolocating(false);
-          setHasGeolocated(true);
+              try {
+                await supabase.rpc("update_client_location", {
+                  p_client_id: clientId,
+                  p_lat: latitude,
+                  p_lng: longitude,
+                });
+
+                setUserLocation([longitude, latitude]);
+                setCenter([longitude, latitude]);
+
+                if (mapRef.current && Number.isFinite(longitude) && Number.isFinite(latitude)) {
+                  mapRef.current.flyTo({
+                    center: [longitude, latitude],
+                    zoom: 12,
+                    essential: true,
+                  });
+                }
+              } catch (error) {
+                console.error("Erreur lors de la mise à jour de la position:", error);
+              } finally {
+                setIsGeolocating(false);
+                setHasGeolocated(true);
+              }
+            },
+            (fallbackError) => {
+              console.warn("Géolocalisation impossible:", fallbackError);
+              setUserLocation(DEFAULT_LOCATION);
+              setCenter(DEFAULT_LOCATION);
+
+              if (mapRef.current) {
+                mapRef.current.flyTo({
+                  center: DEFAULT_LOCATION,
+                  zoom: 6,
+                  essential: true,
+                });
+              }
+              setIsGeolocating(false);
+              setHasGeolocated(true);
+            },
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+          );
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
       );
     };
 
@@ -649,21 +691,21 @@ export default function OffersPage() {
     );
   }
 
-  // 🎨 Composant carte d'offre réutilisable
+  // 🎨 Composant carte d'offre réutilisable - Layout restructuré (3 colonnes)
   const OfferCard = ({ offer, isMobile = false }: { offer: Offer; isMobile?: boolean }) => (
     <div
       key={offer.offer_id}
       className={`flex bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer ${
-        isMobile ? "h-auto" : ""
+        isMobile ? "h-24" : "h-28"
       }`}
       onClick={() => setSelectedOffer(offer)}
     >
-      {/* 🏷️ Image du produit */}
+      {/* 🏷️ Colonne 1: Image du produit - Taille fixe */}
       {offer.image_url && (
         <img
           src={offer.image_url}
           alt={offer.title}
-          className={`${isMobile ? "w-20 h-20" : "w-24 h-24"} object-cover flex-shrink-0`}
+          className={`${isMobile ? "w-24 h-24" : "w-28 h-28"} object-cover flex-shrink-0`}
           crossOrigin="anonymous"
           referrerPolicy="no-referrer"
           onError={(e) => {
@@ -672,60 +714,87 @@ export default function OffersPage() {
         />
       )}
 
-      {/* 📋 Infos produit + marchand */}
-      <div className={`flex-1 ${isMobile ? "p-2" : "p-3"}`}>
-        {/* Logo + nom du marchand */}
-        <div className="flex items-center gap-2 mb-1">
-          {offer.merchant_logo_url ? (
-            <img
-              src={offer.merchant_logo_url}
-              alt={offer.merchant_name}
-              className="w-6 h-6 rounded-full object-cover"
-              crossOrigin="anonymous"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
-              🏪
-            </div>
-          )}
-          <h3 className={`font-semibold text-gray-800 ${isMobile ? "text-xs" : "text-sm"}`}>
-            {offer.merchant_name}
-          </h3>
+      {/* 📋 Colonne 2: Zone centrale - Infos produit (3 lignes max) */}
+      <div className={`flex-1 ${isMobile ? "p-2" : "p-3"} flex flex-col justify-between`}>
+        {/* Ligne 1: Titre produit */}
+        <h3 className={`font-bold text-gray-900 ${isMobile ? "text-sm" : "text-base"} line-clamp-1`}>
+          {offer.title}
+        </h3>
+
+        {/* Ligne 2: Prix et réduction */}
+        <div className="flex items-center gap-2">
+          <span className={`font-bold text-green-600 ${isMobile ? "text-base" : "text-lg"}`}>
+            {offer.price_after.toFixed(2)} €
+          </span>
+          <span className={`line-through text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
+            {offer.price_before.toFixed(2)} €
+          </span>
+          <span className="text-xs text-red-600 font-semibold bg-red-50 px-1.5 py-0.5 rounded">
+            -{getDiscountPercent(offer.price_before, offer.price_after)}%
+          </span>
         </div>
 
-        <p className={`font-medium text-gray-700 ${isMobile ? "text-sm" : "text-base"}`}>
-          {offer.title}
+        {/* Ligne 3: Timer */}
+        {offer.available_until && (
+          <div className={`${isMobile ? "text-[10px]" : "text-xs"} text-gray-600 font-medium`}>
+            ⏰ {getTimeRemaining(offer.available_until)}
+          </div>
+        )}
+      </div>
+
+      {/* 🏪 Colonne 3: Zone droite - Logo + Infos marchand */}
+      <div className={`${isMobile ? "w-24 p-2" : "w-32 p-3"} border-l border-gray-100 flex flex-col items-center justify-center text-center bg-gray-50`}>
+        {/* Logo marchand */}
+        {offer.merchant_logo_url ? (
+          <img
+            src={offer.merchant_logo_url}
+            alt={offer.merchant_name}
+            className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full object-cover mb-1 border-2 border-white shadow-sm`}
+            crossOrigin="anonymous"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              const target = e.currentTarget as HTMLImageElement;
+              target.style.display = "none";
+              const parent = target.parentElement;
+              if (parent) {
+                const fallback = document.createElement("div");
+                fallback.className = `${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full bg-gray-200 flex items-center justify-center mb-1`;
+                fallback.innerHTML = '<span class="text-lg">🏪</span>';
+                parent.insertBefore(fallback, parent.firstChild);
+              }
+            }}
+          />
+        ) : (
+          <div className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full bg-gray-200 flex items-center justify-center mb-1`}>
+            <span className={isMobile ? "text-base" : "text-lg"}>🏪</span>
+          </div>
+        )}
+
+        {/* Nom marchand */}
+        <p className={`font-semibold text-gray-900 ${isMobile ? "text-[10px]" : "text-xs"} line-clamp-1 mb-1 w-full px-1`}>
+          {offer.merchant_name}
         </p>
 
-        {/* Prix et réduction */}
-        <div className="flex items-center justify-between mt-1">
-          <div className="flex items-center space-x-2">
-            <span className={`font-bold text-green-600 ${isMobile ? "text-sm" : "text-base"}`}>
-              {offer.price_after.toFixed(2)} €
-            </span>
-            <span className={`line-through text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
-              {offer.price_before.toFixed(2)} €
-            </span>
-            <span className="text-xs text-red-600 font-semibold bg-red-50 px-1.5 py-0.5 rounded">
-              -{getDiscountPercent(offer.price_before, offer.price_after)}%
-            </span>
-          </div>
-        </div>
+        {/* Ville */}
+        {offer.merchant_city && offer.merchant_city !== "À définir" && (
+          <p className={`text-gray-600 ${isMobile ? "text-[9px]" : "text-[10px]"} line-clamp-1 w-full px-1`}>
+            📍 {offer.merchant_city}
+          </p>
+        )}
 
-        {/* Détails secondaires */}
-        <div className={`mt-1 ${isMobile ? "text-[10px]" : "text-[11px]"} text-gray-600 font-medium space-y-0.5`}>
-          {offer.available_until && <div>{getTimeRemaining(offer.available_until)}</div>}
-          {viewMode === "nearby" && offer.distance_meters > 0 && (
-            <div className="text-green-600 font-semibold">
-              📍 {(offer.distance_meters / 1000).toFixed(2)} km
-            </div>
-          )}
-          {offer.merchant_city && offer.merchant_city !== "À définir" && (
-            <div>📍 {offer.merchant_city}</div>
-          )}
-          {offer.merchant_phone && <div>📞 {offer.merchant_phone}</div>}
-        </div>
+        {/* Téléphone */}
+        {offer.merchant_phone && (
+          <p className={`text-gray-600 ${isMobile ? "text-[9px]" : "text-[10px]"} line-clamp-1 w-full px-1`}>
+            📞 {offer.merchant_phone}
+          </p>
+        )}
+
+        {/* Distance (mode proximité uniquement) */}
+        {viewMode === "nearby" && offer.distance_meters > 0 && (
+          <p className={`text-green-600 font-semibold ${isMobile ? "text-[9px]" : "text-[10px]"} mt-1`}>
+            {(offer.distance_meters / 1000).toFixed(1)} km
+          </p>
+        )}
       </div>
     </div>
   );
