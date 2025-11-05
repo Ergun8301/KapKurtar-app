@@ -8,17 +8,17 @@ import { markNotificationAsRead, markAllNotificationsAsRead, Notification } from
 const NotificationsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { notifications, unreadCount, refetch } = useRealtimeNotifications(user?.id || null);
+  const { notifications, unreadCount, markAsRead } = useRealtimeNotifications(user?.id || null);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
   const handleMarkAsRead = async (notificationId: string) => {
+    markAsRead(notificationId);
     await markNotificationAsRead(notificationId);
-    refetch();
   };
 
   const handleMarkAllAsRead = async () => {
+    notifications.forEach((n) => markAsRead(n.id));
     await markAllNotificationsAsRead();
-    refetch();
   };
 
   const getTypeStyles = (type: string) => {

@@ -35,23 +35,26 @@ export const NotificationBell: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [toast, setToast] = useState<Notification | null>(null);
 
-  // --- Toast nouvelle notification ---
+  const [lastToastId, setLastToastId] = React.useRef<string | null>(null);
+
   useEffect(() => {
     if (notifications.length > 0 && !notifications[0].is_read) {
       const latest = notifications[0];
-      setToast(latest);
+      if (lastToastId.current !== latest.id) {
+        setToast(latest);
+        lastToastId.current = latest.id;
 
-      const timer = setTimeout(() => setToast(null), 5000);
-      return () => clearTimeout(timer);
+        const timer = setTimeout(() => setToast(null), 5000);
+        return () => clearTimeout(timer);
+      }
     }
   }, [notifications]);
 
   // --- Gestion marquage ---
   const handleMarkAsRead = useCallback(
     async (id: string) => {
+      markAsRead(id);
       await markNotificationAsRead(id);
-      markAsRead(id); // met à jour localement
-      // on n'appelle PAS refetch() ici -> évite les requêtes inutiles
     },
     [markAsRead]
   );

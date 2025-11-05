@@ -129,9 +129,13 @@ export const markAllNotificationsAsRead = async (userId?: string) => {
 // 🔔 ABONNEMENT EN TEMPS RÉEL
 // ---------------------------------------------------------------------------
 
+let activeChannel: ReturnType<typeof supabase.channel> | null = null;
+let currentUserId: string | null = null;
+
 /**
- * S’abonne au canal notifications en temps réel (INSERT uniquement).
+ * S'abonne au canal notifications en temps réel (INSERT uniquement).
  * Nettoie automatiquement la connexion.
+ * Throttle : max 1 notification traitée toutes les 300ms.
  */
 export const subscribeToNotifications = (
   userId: string,
@@ -142,7 +146,20 @@ export const subscribeToNotifications = (
     return () => {};
   }
 
-  // on crée un canal unique par user
+  if (activeChannel && currentUserId === userId) {
+    console.log(`⚠️ Canal déjà actif pour ${userId}, réutilisation`);
+    return () => {};
+  }
+
+  if (activeChannel) {
+    supabase.removeChannel(activeChannel);
+    activeChannel = null;
+  }
+
+  currentUserId = userId;
+  let lastNotifTime = 0;
+  const THROTTLE_MS = 300;
+
   const channelName = `notifications-${userId}`;
   const channel = supabase
     .channel(channelName, { config: { broadcast: { ack: true } } })
@@ -155,6 +172,13 @@ export const subscribeToNotifications = (
         filter: `recipient_id=eq.${userId}`,
       },
       (payload) => {
+        const now = Date.now();
+        if (now - lastNotifTime < THROTTLE_MS) {
+          console.debug("⏱️ Notification throttled");
+          return;
+        }
+        lastNotifTime = now;
+
         const notif = payload.new as Notification;
         console.debug("Realtime notification:", notif);
         onNotification(notif);
@@ -166,10 +190,15 @@ export const subscribeToNotifications = (
       }
     });
 
-  // nettoyage complet quand on quitte la page ou qu’on se déconnecte
+  activeChannel = channel;
+
   const unsubscribe = () => {
-    supabase.removeChannel(channel);
-    console.log(`🧹 Unsubscribed from notifications (${channelName})`);
+    if (activeChannel === channel) {
+      supabase.removeChannel(channel);
+      activeChannel = null;
+      currentUserId = null;
+      console.log(`🧹 Unsubscribed from notifications (${channelName})`);
+    }
   };
 
   return unsubscribe;

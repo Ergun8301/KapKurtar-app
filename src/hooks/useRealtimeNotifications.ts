@@ -52,16 +52,16 @@ export function useRealtimeNotifications(userId: string | null) {
 
     const unsubscribe = subscribeToNotifications(userId, (newNotification: Notification) => {
       setNotifications((prev) => {
-        // éviter les doublons en cas de rafraîchissement
         if (prev.some((n) => n.id === newNotification.id)) return prev;
-        return [newNotification, ...prev];
+        const updated = [newNotification, ...prev];
+        return updated.length > 200 ? updated.slice(0, 200) : updated;
       });
     });
 
     return () => {
       unsubscribe?.();
     };
-  }, [userId, fetchNotifications]);
+  }, [userId]);
 
   // --- Mettre à jour le compteur de non-lus dynamiquement ---
   useEffect(() => {
