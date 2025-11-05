@@ -721,23 +721,24 @@ export default function OffersPage() {
           {offer.title}
         </h3>
 
-        {/* Ligne 2: Prix et réduction */}
-        <div className="flex items-center gap-2">
+        {/* Ligne 2: Prix et réduction - Layout horizontal propre */}
+        <div className="flex items-center gap-2 flex-wrap">
           <span className={`font-bold text-green-600 ${isMobile ? "text-base" : "text-lg"}`}>
-            {offer.price_after.toFixed(2)} €
+            {offer.price_after.toFixed(2)}€
           </span>
           <span className={`line-through text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
-            {offer.price_before.toFixed(2)} €
+            {offer.price_before.toFixed(2)}€
           </span>
-          <span className="text-xs text-red-600 font-semibold bg-red-50 px-1.5 py-0.5 rounded">
+          <span className="text-xs text-red-600 font-semibold bg-red-50 px-1.5 py-0.5 rounded whitespace-nowrap">
             -{getDiscountPercent(offer.price_before, offer.price_after)}%
           </span>
         </div>
 
-        {/* Ligne 3: Timer */}
+        {/* Ligne 3: Timer - Simple */}
         {offer.available_until && (
-          <div className={`${isMobile ? "text-[10px]" : "text-xs"} text-gray-600 font-medium`}>
-            ⏰ {getTimeRemaining(offer.available_until)}
+          <div className={`${isMobile ? "text-[10px]" : "text-xs"} text-gray-600 font-medium flex items-center gap-1`}>
+            <span>⏰</span>
+            <span>{getTimeRemaining(offer.available_until)}</span>
           </div>
         )}
       </div>
@@ -798,18 +799,25 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* Slider de rayon (visible uniquement en mode proximité) */}
+        {/* Slider de rayon - Dynamiquement positionné au-dessus du panneau */}
         {viewMode === "nearby" && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
+          <div 
+            className="absolute left-1/2 -translate-x-1/2 z-[1600] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-green-500/20 transition-all duration-300"
+            style={{
+              bottom: typeof window !== 'undefined' && window.innerWidth < 768
+                ? (isMobilePanelOpen ? 'calc(70vh + 16px)' : 'calc(20vh + 16px)')
+                : '16px'
+            }}
+          >
             <input
               type="range"
               min={1}
               max={30}
               value={radiusKm}
               onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
-              className="w-36 accent-green-500 cursor-pointer focus:outline-none"
+              className="w-32 md:w-36 accent-green-500 cursor-pointer focus:outline-none"
             />
-            <span className="text-sm text-gray-700 font-medium">{radiusKm} km</span>
+            <span className="text-sm text-gray-900 font-bold whitespace-nowrap">{radiusKm} km</span>
           </div>
         )}
       </div>
@@ -857,34 +865,34 @@ export default function OffersPage() {
         )}
       </div>
 
-      {/* 📱 PANNEAU MOBILE COULISSANT - Plus discret */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg z-[1500] transition-all duration-300">
+      {/* 📱 PANNEAU MOBILE COULISSANT - Fixe, ne scroll pas avec la carte */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-[1500] pointer-events-auto">
         {/* Poignée de glissement */}
         <div 
-          className="flex justify-center pt-2 pb-1 cursor-pointer"
+          className="flex justify-center pt-3 pb-2 cursor-pointer"
           onClick={() => setIsMobilePanelOpen(!isMobilePanelOpen)}
         >
-          <div className="w-12 h-1.5 bg-gray-400 rounded-full"></div>
+          <div className="w-14 h-1.5 bg-gray-400 rounded-full"></div>
         </div>
 
         {/* Toggle modes de vue */}
-        <div className="flex justify-center px-4 pb-2">
-          <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
+        <div className="flex justify-center px-4 pb-3">
+          <div className="flex bg-gray-100 rounded-xl overflow-hidden shadow-sm">
             <button
-              className={`px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+              className={`px-5 py-2.5 text-xs font-semibold transition-all duration-200 ${
                 viewMode === "nearby"
-                  ? "bg-white text-green-700 shadow"
-                  : "text-gray-500 hover:text-green-600"
+                  ? "bg-white text-green-600 shadow"
+                  : "text-gray-500"
               }`}
               onClick={() => handleViewModeChange("nearby")}
             >
               📍 Proximité
             </button>
             <button
-              className={`px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+              className={`px-5 py-2.5 text-xs font-semibold transition-all duration-200 ${
                 viewMode === "all"
-                  ? "bg-white text-green-700 shadow"
-                  : "text-gray-500 hover:text-green-600"
+                  ? "bg-white text-green-600 shadow"
+                  : "text-gray-500"
               }`}
               onClick={() => handleViewModeChange("all")}
             >
@@ -893,30 +901,37 @@ export default function OffersPage() {
           </div>
         </div>
 
-        {/* Liste des offres - Plus discrète par défaut */}
+        {/* Liste des offres - Scroll seulement ICI, pas sur la carte */}
         <div 
-          className={`overflow-y-auto px-4 pb-safe transition-all duration-300 ${
-            isMobilePanelOpen ? "max-h-[65vh]" : "max-h-[18vh]"
+          className={`overflow-y-auto px-4 pb-6 transition-all duration-300 ${
+            isMobilePanelOpen ? "max-h-[70vh]" : "max-h-[20vh]"
           }`}
+          style={{ 
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain'
+          }}
         >
           {offers.length === 0 ? (
-            <p className="text-gray-500 text-center text-sm py-6">
+            <p className="text-gray-500 text-center text-sm py-8">
               {viewMode === "nearby"
                 ? "Aucune offre à proximité"
                 : "Aucune offre disponible"}
             </p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {/* Affiche seulement 2 offres quand fermé, toutes quand ouvert */}
               {(isMobilePanelOpen ? offers : offers.slice(0, 2)).map((o) => (
                 <OfferCard key={o.offer_id} offer={o} isMobile />
               ))}
               
-              {/* Indicateur "plus d'offres" si fermé et qu'il y en a plus */}
+              {/* Indicateur "plus d'offres" si fermé */}
               {!isMobilePanelOpen && offers.length > 2 && (
-                <div className="text-center py-2 text-xs text-gray-500">
-                  +{offers.length - 2} autre{offers.length - 2 > 1 ? 's' : ''} offre{offers.length - 2 > 1 ? 's' : ''} • Glissez vers le haut
-                </div>
+                <button
+                  onClick={() => setIsMobilePanelOpen(true)}
+                  className="w-full text-center py-3 text-sm text-green-600 font-semibold bg-green-50 rounded-xl hover:bg-green-100 transition"
+                >
+                  Voir {offers.length - 2} autre{offers.length - 2 > 1 ? 's' : ''} offre{offers.length - 2 > 1 ? 's' : ''} ↑
+                </button>
               )}
             </div>
           )}
