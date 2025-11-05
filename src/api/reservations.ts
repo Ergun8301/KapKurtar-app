@@ -45,33 +45,28 @@ export const createReservation = async (offerId: string, merchantId: string, qua
     }
 
     // 🔇 Désactivé car déjà appelé dans OfferDetailsModal
-// const { data, error } = await supabase.rpc('create_reservation_dynamic', {
-//   p_client_id: userId,
-//   p_offer_id: offerId,
-//   p_quantity: 1,
-// });
+    // const { data, error } = await supabase.rpc('create_reservation_dynamic', {
+    //   p_client_id: userId,
+    //   p_offer_id: offerId,
+    //   p_quantity: quantity,
+    // });
 
-      p_client_id: userId,
-      p_offer_id: offerId,
-      p_quantity: quantity
-    });
-
-    if (error) {
-      return { success: false, error: 'Impossible de réserver ❌' };
-    }
-
-    if (!data || !Array.isArray(data) || data.length === 0) {
-      return { success: false, error: 'Impossible de réserver ❌' };
-    }
-
-    const reservationData = data[0] as CreateReservationDynamicResponse;
+    // Simulation de succès pour ne pas casser la logique du front
+    const reservationData = {
+      reservation_id: 'fake',
+      offer_title: 'simulation',
+      merchant_id: merchantId,
+      new_quantity: 0,
+    };
 
     return { success: true, data: reservationData };
+
   } catch (err) {
     const error = err as Error;
     return { success: false, error: error.message || 'An unexpected error occurred' };
   }
 };
+
 
 export const getClientReservations = async () => {
   try {
