@@ -742,14 +742,14 @@ export default function OffersPage() {
         )}
       </div>
 
-      {/* 🏪 Colonne 3: Zone droite - Logo + Infos marchand (fond foncé) */}
-      <div className={`${isMobile ? "w-24 p-2" : "w-32 p-3"} border-l border-gray-700 flex flex-col items-center justify-center text-center bg-gray-800`}>
+      {/* 🏪 Colonne 3: Zone droite - Logo + Infos marchand */}
+      <div className={`${isMobile ? "w-24 p-2" : "w-32 p-3"} border-l border-gray-100 flex flex-col items-center justify-center text-center bg-gray-50`}>
         {/* Logo marchand */}
         {offer.merchant_logo_url ? (
           <img
             src={offer.merchant_logo_url}
             alt={offer.merchant_name}
-            className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full object-cover mb-2 border-2 border-gray-600 shadow-sm`}
+            className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full object-cover mb-1 border-2 border-white shadow-sm`}
             crossOrigin="anonymous"
             referrerPolicy="no-referrer"
             onError={(e) => {
@@ -758,33 +758,33 @@ export default function OffersPage() {
               const parent = target.parentElement;
               if (parent) {
                 const fallback = document.createElement("div");
-                fallback.className = `${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full bg-gray-600 flex items-center justify-center mb-2`;
+                fallback.className = `${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full bg-gray-200 flex items-center justify-center mb-1`;
                 fallback.innerHTML = '<span class="text-lg">🏪</span>';
                 parent.insertBefore(fallback, parent.firstChild);
               }
             }}
           />
         ) : (
-          <div className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full bg-gray-600 flex items-center justify-center mb-2`}>
+          <div className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full bg-gray-200 flex items-center justify-center mb-1`}>
             <span className={isMobile ? "text-base" : "text-lg"}>🏪</span>
           </div>
         )}
 
         {/* Nom marchand */}
-        <p className={`font-semibold text-white ${isMobile ? "text-[10px]" : "text-xs"} line-clamp-2 mb-1 w-full px-1`}>
+        <p className={`font-semibold text-gray-900 ${isMobile ? "text-[10px]" : "text-xs"} line-clamp-2 mb-1 w-full px-1`}>
           {offer.merchant_name}
         </p>
 
         {/* Ville */}
         {offer.merchant_city && offer.merchant_city !== "À définir" && (
-          <p className={`text-gray-300 ${isMobile ? "text-[9px]" : "text-[10px]"} line-clamp-1 w-full px-1`}>
+          <p className={`text-gray-600 ${isMobile ? "text-[9px]" : "text-[10px]"} line-clamp-1 w-full px-1 mb-1`}>
             📍 {offer.merchant_city}
           </p>
         )}
 
         {/* Distance (mode proximité uniquement) */}
         {viewMode === "nearby" && offer.distance_meters > 0 && (
-          <p className={`text-green-400 font-semibold ${isMobile ? "text-[9px]" : "text-[10px]"} mt-1`}>
+          <p className={`text-green-600 font-semibold ${isMobile ? "text-[10px]" : "text-xs"}`}>
             {(offer.distance_meters / 1000).toFixed(1)} km
           </p>
         )}
@@ -798,9 +798,9 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* Slider de rayon (visible uniquement en mode proximité) - Positionné au-dessus du panneau mobile */}
+        {/* Slider de rayon (visible uniquement en mode proximité) */}
         {viewMode === "nearby" && (
-          <div className="absolute bottom-4 md:bottom-4 left-1/2 -translate-x-1/2 z-[1600] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-full shadow px-3 py-1 flex items-center space-x-2 border border-gray-200">
             <input
               type="range"
               min={1}
@@ -857,18 +857,18 @@ export default function OffersPage() {
         )}
       </div>
 
-      {/* 📱 PANNEAU MOBILE COULISSANT */}
+      {/* 📱 PANNEAU MOBILE COULISSANT - Plus discret */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg z-[1500] transition-all duration-300">
         {/* Poignée de glissement */}
         <div 
           className="flex justify-center pt-2 pb-1 cursor-pointer"
           onClick={() => setIsMobilePanelOpen(!isMobilePanelOpen)}
         >
-          <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
+          <div className="w-12 h-1.5 bg-gray-400 rounded-full"></div>
         </div>
 
         {/* Toggle modes de vue */}
-        <div className="flex justify-center px-4 pb-3">
+        <div className="flex justify-center px-4 pb-2">
           <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
             <button
               className={`px-4 py-2 text-xs font-semibold transition-all duration-200 ${
@@ -895,8 +895,8 @@ export default function OffersPage() {
 
         {/* Liste des offres - Plus discrète par défaut */}
         <div 
-          className={`overflow-y-auto px-4 pb-4 transition-all duration-300 ${
-            isMobilePanelOpen ? "max-h-[60vh]" : "max-h-[15vh]"
+          className={`overflow-y-auto px-4 pb-safe transition-all duration-300 ${
+            isMobilePanelOpen ? "max-h-[65vh]" : "max-h-[18vh]"
           }`}
         >
           {offers.length === 0 ? (
@@ -906,10 +906,18 @@ export default function OffersPage() {
                 : "Aucune offre disponible"}
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
+              {/* Affiche seulement 2 offres quand fermé, toutes quand ouvert */}
               {(isMobilePanelOpen ? offers : offers.slice(0, 2)).map((o) => (
                 <OfferCard key={o.offer_id} offer={o} isMobile />
               ))}
+              
+              {/* Indicateur "plus d'offres" si fermé et qu'il y en a plus */}
+              {!isMobilePanelOpen && offers.length > 2 && (
+                <div className="text-center py-2 text-xs text-gray-500">
+                  +{offers.length - 2} autre{offers.length - 2 > 1 ? 's' : ''} offre{offers.length - 2 > 1 ? 's' : ''} • Glissez vers le haut
+                </div>
+              )}
             </div>
           )}
         </div>
