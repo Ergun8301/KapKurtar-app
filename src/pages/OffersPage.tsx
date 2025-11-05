@@ -34,7 +34,8 @@ type Offer = {
 };
 
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
-const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
+const DEFAULT_LOCATION: [number, number] = [35.0, 39.0]; // Centre Turquie
+const DEFAULT_ZOOM = 6; // Vue large de toute la Turquie
 
 const customMapboxCSS = `
   .mapboxgl-ctrl-geolocate:focus,
@@ -114,11 +115,8 @@ export default function OffersPage() {
   const [clientIdFetched, setClientIdFetched] = useState(false);
   const [isGeolocating, setIsGeolocating] = useState(false);
   const [hasGeolocated, setHasGeolocated] = useState(false);
-  const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
+  const [viewMode, setViewMode] = useState<"map" | "list">("map");
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
-  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
-  const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
-  const [merchantOffers, setMerchantOffers] = useState<Offer[]>([]);
 
   // 🧮 Calcul de la réduction en pourcentage
   const getDiscountPercent = (before: number, after: number) => {
@@ -344,13 +342,13 @@ export default function OffersPage() {
     return () => map.remove();
   }, []);
 
-  // ⭕ Gestion du cercle de rayon (seulement en mode "nearby")
+  // ⭕ Gestion du cercle de rayon (visible en mode carte)
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
     const updateRadius = () => {
-      if (viewMode === "nearby") {
+      if (viewMode === "map") {
         drawRadius(map, center, radiusKm);
       } else {
         removeRadius(map);
@@ -433,33 +431,23 @@ export default function OffersPage() {
       try {
         let data, error;
 
-        if (viewMode === "all") {
-          const [lng, lat] = center;
-          const result = await supabase.rpc("get_offers_nearby_public", {
-            user_lng: lng,
-            user_lat: lat,
-            radius_meters: 2000000,
+        // Charger toutes les offres dans le rayon
+        if (clientId) {
+          const result = await supabase.rpc("get_offers_nearby_dynamic_secure", {
+            client_id: clientId,
+            radius_meters: radiusKm * 1000,
           });
           data = result.data;
           error = result.error;
         } else {
-          if (clientId) {
-            const result = await supabase.rpc("get_offers_nearby_dynamic_secure", {
-              client_id: clientId,
-              radius_meters: radiusKm * 1000,
-            });
-            data = result.data;
-            error = result.error;
-          } else {
-            const [lng, lat] = center;
-            const result = await supabase.rpc("get_offers_nearby_public", {
-              user_lng: lng,
-              user_lat: lat,
-              radius_meters: radiusKm * 1000,
-            });
-            data = result.data;
-            error = result.error;
-          }
+          const [lng, lat] = center;
+          const result = await supabase.rpc("get_offers_nearby_public", {
+            user_lng: lng,
+            user_lat: lat,
+            radius_meters: radiusKm * 1000,
+          });
+          data = result.data;
+          error = result.error;
         }
 
         if (error) {
@@ -476,7 +464,7 @@ export default function OffersPage() {
     };
 
     fetchOffers();
-  }, [center, clientId, viewMode, radiusKm]);
+  }, [center, clientId, radiusKm]);
 
   // 📍 Ajout des marqueurs sur la carte avec popup enrichi
   useEffect(() => {
@@ -517,19 +505,6 @@ export default function OffersPage() {
         // Fallback : Logo TILKAPP ou emoji
         el.innerHTML = `<img src="/logo-tilkapp.png" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=font-size:24px>🏪</span>';" />`;
       }
-
-      // 🎯 Clic sur le marqueur → Affiche les produits du marchand
-      el.addEventListener('click', () => {
-        const merchantId = offer.merchant_id || offer.merchant_name;
-        setSelectedMerchantId(merchantId);
-        
-        // Filtrer toutes les offres de ce marchand
-        const merchantProducts = offers.filter(o => 
-          (o.merchant_id || o.merchant_name) === merchantId
-        );
-        setMerchantOffers(merchantProducts);
-        setIsMobilePanelOpen(true);
-      });
 
       // 🧮 Calculs dynamiques pour le popup
       const discount = Math.round(
@@ -821,136 +796,83 @@ export default function OffersPage() {
   );
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
-      {/* 🗺️ CARTE */}
-      <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
-        <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
+    <div className="flex flex-col h-[calc(100vh-100px)]">
+      {/* 🎯 TOGGLE CARTE / LISTE - Sticky en haut */}
+      <div className="sticky top-0 z-[2000] bg-white border-b border-gray-200 shadow-sm">
+        <div className="flex justify-center py-3 px-4">
+          <div className="flex bg-gray-100 rounded-xl overflow-hidden shadow-sm">
+            <button
+              className={`px-6 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
+                viewMode === "map"
+                  ? "bg-green-500 text-white shadow-md"
+                  : "text-gray-600 hover:text-green-600"
+              }`}
+              onClick={() => setViewMode("map")}
+            >
+              <span className="text-lg">🗺️</span>
+              <span>Carte</span>
+            </button>
+            <button
+              className={`px-6 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
+                viewMode === "list"
+                  ? "bg-green-500 text-white shadow-md"
+                  : "text-gray-600 hover:text-green-600"
+              }`}
+              onClick={() => setViewMode("list")}
+            >
+              <span className="text-lg">📋</span>
+              <span>Liste</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
-        {/* Slider de rayon - Visible partout (mobile + desktop) */}
-        {viewMode === "nearby" && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1600] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-green-500/20">
+      {/* MODE CARTE */}
+      {viewMode === "map" && (
+        <div className="relative flex-1">
+          <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
+
+          {/* Slider de rayon */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1600] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-green-500/20">
             <input
               type="range"
               min={1}
               max={30}
               value={radiusKm}
-              onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
+              onChange={(e) => {
+                const newRadius = Number(e.target.value);
+                setRadiusKm(newRadius);
+                localStorage.setItem("radiusKm", newRadius.toString());
+              }}
               className="w-32 md:w-36 accent-green-500 cursor-pointer focus:outline-none"
             />
             <span className="text-sm text-gray-900 font-bold whitespace-nowrap">{radiusKm} km</span>
           </div>
-        )}
-      </div>
-
-      {/* 📋 LISTE DES OFFRES - DESKTOP */}
-      <div className="hidden md:block md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-        {/* 🔘 Toggle entre les modes de vue */}
-        <div className="flex justify-center mb-6">
-          <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
-            <button
-              className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
-                viewMode === "nearby"
-                  ? "bg-white text-green-700 shadow"
-                  : "text-gray-500 hover:text-green-600"
-              }`}
-              onClick={() => handleViewModeChange("nearby")}
-            >
-              📍 Offres à proximité
-            </button>
-            <button
-              className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
-                viewMode === "all"
-                  ? "bg-white text-green-700 shadow"
-                  : "text-gray-500 hover:text-green-600"
-              }`}
-              onClick={() => handleViewModeChange("all")}
-            >
-              🌍 Toutes les offres
-            </button>
-          </div>
         </div>
+      )}
 
-        {offers.length === 0 ? (
-          <p className="text-gray-500 text-center mt-10">
-            {viewMode === "nearby"
-              ? "Aucune offre disponible dans ce rayon. Essayez d'augmenter la distance !"
-              : "Aucune offre disponible pour le moment."}
-          </p>
-        ) : (
-          <div className="space-y-4">
-            {offers.map((o) => (
-              <OfferCard key={o.offer_id} offer={o} />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* 📱 PANNEAU MOBILE - Caché par défaut, apparaît au clic sur marchand */}
-      {selectedMerchantId && isMobilePanelOpen && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-[1500]">
-          {/* Poignée de glissement */}
-          <div 
-            className="flex justify-center pt-3 pb-2 cursor-pointer"
-            onClick={() => {
-              setIsMobilePanelOpen(false);
-              setSelectedMerchantId(null);
-            }}
-          >
-            <div className="w-14 h-1.5 bg-gray-400 rounded-full"></div>
-          </div>
-
-          {/* Nom du marchand sélectionné */}
-          {merchantOffers.length > 0 && (
-            <div className="px-4 pb-3">
-              <div className="flex items-center gap-3">
-                {merchantOffers[0].merchant_logo_url ? (
-                  <img
-                    src={merchantOffers[0].merchant_logo_url}
-                    alt={merchantOffers[0].merchant_name}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-white shadow"
-                    crossOrigin="anonymous"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-xl">
-                    🏪
-                  </div>
-                )}
-                <div>
-                  <h3 className="font-bold text-gray-900">
-                    {merchantOffers[0].merchant_name}
-                  </h3>
-                  <p className="text-xs text-gray-600">
-                    {merchantOffers.length} offre{merchantOffers.length > 1 ? 's' : ''} disponible{merchantOffers.length > 1 ? 's' : ''}
-                  </p>
-                </div>
-              </div>
+      {/* MODE LISTE */}
+      {viewMode === "list" && (
+        <div 
+          className="flex-1 overflow-y-auto bg-gray-50 p-4"
+          style={{ 
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain'
+          }}
+          onTouchMove={(e) => e.stopPropagation()}
+          onWheel={(e) => e.stopPropagation()}
+        >
+          {offers.length === 0 ? (
+            <p className="text-gray-500 text-center mt-10 text-sm">
+              Aucune offre disponible pour le moment.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto">
+              {offers.map((o) => (
+                <OfferCard key={o.offer_id} offer={o} />
+              ))}
             </div>
           )}
-
-          {/* Liste des offres - Scroll isolé */}
-          <div 
-            className="overflow-y-auto px-4 pb-6 max-h-[70vh]"
-            style={{ 
-              WebkitOverflowScrolling: 'touch',
-              overscrollBehavior: 'contain'
-            }}
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchMove={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
-          >
-            {merchantOffers.length === 0 ? (
-              <p className="text-gray-500 text-center text-sm py-8">
-                Aucune offre disponible pour ce marchand
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {merchantOffers.map((o) => (
-                  <OfferCard key={o.offer_id} offer={o} isMobile />
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       )}
 
@@ -968,11 +890,14 @@ export function createGeoJSONCircle(
   center: [number, number],
   radiusInMeters: number,
   points = 64
-) {
-  const coords = { latitude: center[1], longitude: center[0] };
-  const km = radiusInMeters / 1000;
-  const ret: [number, number][] = [];
+): GeoJSON.Feature<GeoJSON.Polygon> {
+  const coords = {
+    latitude: center[1],
+    longitude: center[0],
+  };
 
+  const km = radiusInMeters / 1000;
+  const ret = [];
   const distanceX = km / (111.32 * Math.cos((coords.latitude * Math.PI) / 180));
   const distanceY = km / 110.574;
 
@@ -980,9 +905,9 @@ export function createGeoJSONCircle(
     const theta = (i / points) * (2 * Math.PI);
     const x = distanceX * Math.cos(theta);
     const y = distanceY * Math.sin(theta);
+
     ret.push([coords.longitude + x, coords.latitude + y]);
   }
-
   ret.push(ret[0]);
 
   return {
@@ -991,5 +916,6 @@ export function createGeoJSONCircle(
       type: "Polygon",
       coordinates: [ret],
     },
+    properties: {},
   };
 }
