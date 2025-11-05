@@ -40,6 +40,7 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
   const [merchantOffers, setMerchantOffers] = useState<MerchantOffer[]>([]);
   const [averageRating] = useState<number>(4.6);
   const [totalReviews] = useState<number>(32);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!offer) return;
@@ -274,7 +275,6 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
           </div>
 
     {/* RÉSERVER */}
-const [loading, setLoading] = useState(false); // ✅ à mettre tout en haut du composant (avant le return)
 
 <button
   onClick={async () => {
