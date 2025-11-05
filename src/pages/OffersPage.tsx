@@ -43,19 +43,6 @@ const customMapboxCSS = `
     box-shadow: none !important;
   }
 
-  /* 🎯 Bouton géolocalisation agrandi pour Xiaomi */
-  .mapboxgl-ctrl-geolocate {
-    width: 44px !important;
-    height: 44px !important;
-    border-radius: 8px !important;
-    background-color: white !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
-  }
-
-  .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon {
-    transform: scale(1.4);
-  }
-
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
     right: 10px !important;
@@ -130,6 +117,8 @@ export default function OffersPage() {
   const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
+  const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
+  const [merchantOffers, setMerchantOffers] = useState<Offer[]>([]);
 
   // 🧮 Calcul de la réduction en pourcentage
   const getDiscountPercent = (before: number, after: number) => {
@@ -529,6 +518,19 @@ export default function OffersPage() {
         el.innerHTML = `<img src="/logo-tilkapp.png" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=font-size:24px>🏪</span>';" />`;
       }
 
+      // 🎯 Clic sur le marqueur → Affiche les produits du marchand
+      el.addEventListener('click', () => {
+        const merchantId = offer.merchant_id || offer.merchant_name;
+        setSelectedMerchantId(merchantId);
+        
+        // Filtrer toutes les offres de ce marchand
+        const merchantProducts = offers.filter(o => 
+          (o.merchant_id || o.merchant_name) === merchantId
+        );
+        setMerchantOffers(merchantProducts);
+        setIsMobilePanelOpen(true);
+      });
+
       // 🧮 Calculs dynamiques pour le popup
       const discount = Math.round(
         ((offer.price_before - offer.price_after) / offer.price_before) * 100
@@ -824,16 +826,16 @@ export default function OffersPage() {
       <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* Slider de rayon - DESKTOP SEULEMENT (zoom auto sur mobile) */}
+        {/* Slider de rayon - Visible partout (mobile + desktop) */}
         {viewMode === "nearby" && (
-          <div className="hidden md:flex absolute bottom-4 left-1/2 -translate-x-1/2 z-[1600] bg-white rounded-full shadow-lg px-4 py-2.5 items-center space-x-3 border-2 border-green-500/20">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1600] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-green-500/20">
             <input
               type="range"
               min={1}
               max={30}
               value={radiusKm}
               onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
-              className="w-36 accent-green-500 cursor-pointer focus:outline-none"
+              className="w-32 md:w-36 accent-green-500 cursor-pointer focus:outline-none"
             />
             <span className="text-sm text-gray-900 font-bold whitespace-nowrap">{radiusKm} km</span>
           </div>
@@ -883,78 +885,74 @@ export default function OffersPage() {
         )}
       </div>
 
-      {/* 📱 PANNEAU MOBILE COULISSANT - Fixe, ne scroll pas avec la carte */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-[1500] pointer-events-auto">
-        {/* Poignée de glissement */}
-        <div 
-          className="flex justify-center pt-3 pb-2 cursor-pointer"
-          onClick={() => setIsMobilePanelOpen(!isMobilePanelOpen)}
-        >
-          <div className="w-14 h-1.5 bg-gray-400 rounded-full"></div>
-        </div>
-
-        {/* Toggle modes de vue */}
-        <div className="flex justify-center px-4 pb-3">
-          <div className="flex bg-gray-100 rounded-xl overflow-hidden shadow-sm">
-            <button
-              className={`px-5 py-2.5 text-xs font-semibold transition-all duration-200 ${
-                viewMode === "nearby"
-                  ? "bg-white text-green-600 shadow"
-                  : "text-gray-500"
-              }`}
-              onClick={() => handleViewModeChange("nearby")}
-            >
-              📍 Proximité
-            </button>
-            <button
-              className={`px-5 py-2.5 text-xs font-semibold transition-all duration-200 ${
-                viewMode === "all"
-                  ? "bg-white text-green-600 shadow"
-                  : "text-gray-500"
-              }`}
-              onClick={() => handleViewModeChange("all")}
-            >
-              🌍 Toutes
-            </button>
+      {/* 📱 PANNEAU MOBILE - Caché par défaut, apparaît au clic sur marchand */}
+      {selectedMerchantId && isMobilePanelOpen && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-[1500]">
+          {/* Poignée de glissement */}
+          <div 
+            className="flex justify-center pt-3 pb-2 cursor-pointer"
+            onClick={() => {
+              setIsMobilePanelOpen(false);
+              setSelectedMerchantId(null);
+            }}
+          >
+            <div className="w-14 h-1.5 bg-gray-400 rounded-full"></div>
           </div>
-        </div>
 
-        {/* Liste des offres - Scroll seulement ICI, pas sur la carte */}
-        <div 
-          className={`overflow-y-auto px-4 pb-6 transition-all duration-300 ${
-            isMobilePanelOpen ? "max-h-[70vh]" : "max-h-[20vh]"
-          }`}
-          style={{ 
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'contain'
-          }}
-        >
-          {offers.length === 0 ? (
-            <p className="text-gray-500 text-center text-sm py-8">
-              {viewMode === "nearby"
-                ? "Aucune offre à proximité"
-                : "Aucune offre disponible"}
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {/* Affiche seulement 2 offres quand fermé, toutes quand ouvert */}
-              {(isMobilePanelOpen ? offers : offers.slice(0, 2)).map((o) => (
-                <OfferCard key={o.offer_id} offer={o} isMobile />
-              ))}
-              
-              {/* Indicateur "plus d'offres" si fermé */}
-              {!isMobilePanelOpen && offers.length > 2 && (
-                <button
-                  onClick={() => setIsMobilePanelOpen(true)}
-                  className="w-full text-center py-3 text-sm text-green-600 font-semibold bg-green-50 rounded-xl hover:bg-green-100 transition"
-                >
-                  Voir {offers.length - 2} autre{offers.length - 2 > 1 ? 's' : ''} offre{offers.length - 2 > 1 ? 's' : ''} ↑
-                </button>
-              )}
+          {/* Nom du marchand sélectionné */}
+          {merchantOffers.length > 0 && (
+            <div className="px-4 pb-3">
+              <div className="flex items-center gap-3">
+                {merchantOffers[0].merchant_logo_url ? (
+                  <img
+                    src={merchantOffers[0].merchant_logo_url}
+                    alt={merchantOffers[0].merchant_name}
+                    className="w-12 h-12 rounded-full object-cover border-2 border-white shadow"
+                    crossOrigin="anonymous"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-xl">
+                    🏪
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-bold text-gray-900">
+                    {merchantOffers[0].merchant_name}
+                  </h3>
+                  <p className="text-xs text-gray-600">
+                    {merchantOffers.length} offre{merchantOffers.length > 1 ? 's' : ''} disponible{merchantOffers.length > 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
+
+          {/* Liste des offres - Scroll isolé */}
+          <div 
+            className="overflow-y-auto px-4 pb-6 max-h-[70vh]"
+            style={{ 
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'contain'
+            }}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+          >
+            {merchantOffers.length === 0 ? (
+              <p className="text-gray-500 text-center text-sm py-8">
+                Aucune offre disponible pour ce marchand
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {merchantOffers.map((o) => (
+                  <OfferCard key={o.offer_id} offer={o} isMobile />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 🔍 MODALE DÉTAILS OFFRE */}
       <OfferDetailsModal
