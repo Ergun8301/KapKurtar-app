@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, MapPin, Navigation, Clock, Star } from 'lucide-react';
 import { getPublicImageUrl } from '../lib/supabasePublic';
 import { supabase } from '../lib/supabaseClient';
+import React, { useState } from "react";
 
 interface OfferDetailsModalProps {
   offer: {
@@ -272,11 +273,14 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
             </div>
           </div>
 
-     {/* RÉSERVER */}
+    {/* RÉSERVER */}
+const [loading, setLoading] = useState(false); // ✅ à mettre tout en haut du composant (avant le return)
+
 <button
   onClick={async () => {
+    if (loading) return;            // ✅ empêche le double clic
+    setLoading(true);               // ✅ verrouille le bouton
     try {
-      // récupérer auth.uid()
       const { data: authData } = await supabase.auth.getUser();
       const authUid = authData?.user?.id;
       if (!authUid) {
@@ -284,7 +288,6 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
         return;
       }
 
-      // récupérer profiles.id correspondant à cet auth_id
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("id")
@@ -299,9 +302,8 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
       console.log("➡️ offer_id envoyé :", offer.offer_id);
       console.log("➡️ p_client_id envoyé (profiles.id) :", profile.id);
 
-      // Appel RPC avec le bon id du profil client
       const { data, error } = await supabase.rpc("create_reservation_dynamic", {
-        p_client_id: profile.id, // ✅ profiles.id et non auth.uid()
+        p_client_id: profile.id,
         p_offer_id: offer.offer_id,
         p_quantity: 1,
       });
@@ -314,12 +316,14 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
     } catch (err: any) {
       console.error("Erreur réservation :", err.message || err);
       alert("❌ Impossible de réserver l’offre.");
+    } finally {
+      setLoading(false);            // ✅ réactive le bouton
     }
   }}
-  disabled={!offer.offer_id || offer.quantity === 0}
+  disabled={loading || !offer.offer_id || offer.quantity === 0}
   className="w-full px-6 py-4 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl mb-6"
 >
-  Réserver maintenant
+  {loading ? "Réservation..." : "Réserver maintenant"}
 </button>
 
           {/* AUTRES PRODUITS */}
