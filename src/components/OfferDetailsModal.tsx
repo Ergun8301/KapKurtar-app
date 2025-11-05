@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { X, MapPin, Navigation, Clock, Star } from 'lucide-react';
 import { getPublicImageUrl } from '../lib/supabasePublic';
 import { supabase } from '../lib/supabaseClient';
-import React, { useState } from "react";
 
 interface OfferDetailsModalProps {
   offer: {
