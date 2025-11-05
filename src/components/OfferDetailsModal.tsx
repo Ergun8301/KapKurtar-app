@@ -276,31 +276,21 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
 <button
   onClick={async () => {
     try {
-      // 🔍 Vérifie quel ID d'offre part dans la requête
-      console.log("➡️ offer_id envoyé :", offer.offer_id);
-
-      // Récupération du client connecté
-      const { data: authUser } = await supabase.auth.getUser();
-      if (!authUser?.user) {
+      // récupère l'UID Supabase du user (auth.uid())
+      const { data: authData } = await supabase.auth.getUser();
+      const clientAuthUid = authData?.user?.id;
+      if (!clientAuthUid) {
         alert("Connectez-vous pour réserver une offre.");
         return;
       }
 
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("auth_id", authUser.user.id)
-        .maybeSingle();
+      // debug console
+      console.log("➡️ offer_id envoyé :", offer.offer_id);
+      console.log("➡️ client auth uid :", clientAuthUid);
 
-      if (profileError || !profile) {
-        console.error("Erreur profil client :", profileError);
-        alert("Impossible de récupérer le profil client.");
-        return;
-      }
-
-      // ✅ Appel RPC vers la fonction Supabase
+      // Appel RPC : on envoie p_client_id = auth.uid()
       const { data, error } = await supabase.rpc("create_reservation_dynamic", {
-        p_client_id: profile.id,
+        p_client_id: clientAuthUid, // <-- auth.uid()
         p_offer_id: offer.offer_id?.toString(),
         p_quantity: 1,
       });
@@ -315,7 +305,7 @@ export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
       onClose();
     } catch (err: any) {
       console.error("Erreur réservation :", err.message || err);
-      alert("❌ Impossible de réserver l’offre. Vérifiez la console.");
+      alert("❌ Impossible de réserver l’offre. Vérifie la console.");
     }
   }}
   disabled={!offer.offer_id || offer.quantity === 0}
