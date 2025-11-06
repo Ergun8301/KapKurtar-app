@@ -55,12 +55,14 @@ export function useRealtimeNotifications() {
 
               // 🎵 Son à la réception (fonctionne onglet actif)
               try {
-                const audio = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_37a938c87d.mp3')
-                audio.volume = 0.5
-                audio.play().catch(err => console.warn('🔇 Lecture audio bloquée:', err))
-              } catch (err) {
-                console.warn('Erreur audio:', err)
-              }
+  // ✅ nouvelle URL stable
+  const audio = new Audio('https://cdn.jsdelivr.net/gh/naptha/talkify-tts-voices@master/sounds/notification.mp3');
+  audio.volume = 0.5;
+  await audio.play();
+  console.log('🔊 Son joué avec succès');
+} catch (err) {
+  console.warn('🔇 Lecture audio bloquée ou refusée:', err);
+}
             }
           }
         )
