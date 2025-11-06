@@ -35,7 +35,7 @@ export const NotificationBell: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [toast, setToast] = useState<Notification | null>(null);
 
-  const [lastToastId, setLastToastId] = React.useRef<string | null>(null);
+  const lastToastId = React.useRef<string | null>(null);
 
   useEffect(() => {
     if (notifications.length > 0 && !notifications[0].is_read) {

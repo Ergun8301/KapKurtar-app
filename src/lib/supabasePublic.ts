@@ -1,24 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing Supabase environment variables. Please check your .env file.'
-  );
-}
-
-export const supabasePublic = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-    detectSessionInUrl: false,
-  },
-  global: {
-    headers: {},
-  },
-});
+import { supabase } from './supabaseClient';
 
 export function getPublicImageUrl(imageUrl: string | null | undefined): string {
   if (!imageUrl || imageUrl.trim() === '') {
@@ -32,7 +12,7 @@ export function getPublicImageUrl(imageUrl: string | null | undefined): string {
   }
 
   console.log('🔄 getPublicImageUrl: Generating public URL for path:', imageUrl);
-  const { data } = supabasePublic.storage
+  const { data } = supabase.storage
     .from('product-images')
     .getPublicUrl(imageUrl);
 
