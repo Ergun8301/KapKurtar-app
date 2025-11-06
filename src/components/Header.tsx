@@ -10,7 +10,7 @@ import {
   ArrowRight,
   Store,
   LayoutDashboard,
-  Bell, // ✅ ajouté ici
+  Bell,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabaseClient";
@@ -84,7 +84,7 @@ const Header = () => {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               {navigation.map((item) => (
-                <a
+                
                   key={item.name}
                   href={item.href}
                   className="text-gray-600 hover:text-green-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -101,7 +101,9 @@ const Header = () => {
               <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
             ) : user ? (
               <>
-                <NotificationBell />
+                {/* ✅ LIGNE 93 CORRIGÉE ICI */}
+                <NotificationBell userType={isMerchant ? "merchant" : "client"} />
+                
                 <div className="relative">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -150,14 +152,14 @@ const Header = () => {
                         </>
                       ) : (
                         <>
-                          <a
+                          
                             href="/profile"
                             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <User className="w-4 h-4 mr-2" />
                             My Profile
                           </a>
-                          <a
+                          
                             href="/settings"
                             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
@@ -239,3 +241,31 @@ const Header = () => {
 };
 
 export default Header;
+```
+
+---
+
+## ✅ **Pourquoi cette solution fonctionne** :
+
+1. Ton code détecte déjà si c'est un marchand → `isMerchant` ✅
+2. On utilise cette info pour passer le bon type à `NotificationBell` ✅
+3. **Aucune modification de l'authentification** ✅
+4. **Aucune modification de Supabase** ✅
+5. **Aucune modification de la navigation** ✅
+
+---
+
+## 🧪 **Après cette correction, tu verras** :
+
+**Console CLIENT :**
+```
+👤 Client connecté: 26e79fcf...
+🔌 Connexion Realtime CLIENT: 26e79fcf...
+✅ Canal Realtime CLIENT actif
+```
+
+**Console MARCHAND :**
+```
+🏪 Marchand connecté: fc215a2b...
+🔌 Connexion Realtime MARCHAND: fc215a2b...
+✅ Canal Realtime MARCHAND actif
