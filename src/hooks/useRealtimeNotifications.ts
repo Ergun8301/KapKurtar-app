@@ -1,123 +1,150 @@
-import { useEffect, useRef, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
-import type { RealtimeChannel } from '@supabase/supabase-js'
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface Notification {
-  id: string
-  recipient_id: string
-  message: string
-  type?: string
-  created_at: string
+  id: string;
+  recipient_id: string;
+  type: "offer" | "offer_nearby" | "reservation" | "system" | "offer_expired" | "stock_empty";
+  title: string;
+  message: string;
+  data?: { offer_id?: string; merchant_id?: string; [key: string]: any };
+  is_read: boolean;
+  created_at: string;
 }
 
 export function useRealtimeNotifications() {
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [hasNewNotification, setHasNewNotification] = useState(false)
-  const [isConnected, setIsConnected] = useState(false)
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // 🔒 Références pour éviter les boucles et conserver le même canal
-  const channelRef = useRef<RealtimeChannel | null>(null)
-  const reconnectAttempts = useRef(0)
-  const reconnectTimeout = useRef<NodeJS.Timeout | null>(null)
-  const MAX_RECONNECT_ATTEMPTS = 5
-
+  // 🔐 Récupérer l'utilisateur UNE SEULE FOIS
   useEffect(() => {
-    const setupRealtime = async () => {
-      // 🧹 Évite de créer plusieurs canaux simultanément
-      if (channelRef.current) {
-        console.warn('⚠️ Canal déjà actif, on annule la recréation.')
-        return
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        console.log("🏪 Marchand connecté:", user.id);
+        setUserId(user.id);
       }
+    };
+    getUser();
+  }, []);
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        console.log('⚠️ Aucun utilisateur connecté')
-        return
+  // 🧠 Charger les notifications initiales
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchInitial = async () => {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("recipient_id", userId)
+        .in("type", ["reservation", "offer_expired", "stock_empty", "system"])
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (error) {
+        console.error("❌ Erreur chargement notifications:", error);
+      } else if (data) {
+        console.log(`✅ Notifications chargées: ${data.length}`);
+        setNotifications(data);
+        setUnreadCount(data.filter((n) => !n.is_read).length);
       }
+      setIsLoading(false);
+    };
 
-      console.log('🔌 Connexion Realtime pour auth_id:', user.id)
+    fetchInitial();
+  }, [userId]);
 
-      const channel = supabase
-        .channel(`notifications:${user.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'notifications'
-          },
-          async (payload) => {
-            const newNotif = payload.new as Notification
+  // 🔔 Écoute Realtime (Supabase gère la reconnexion automatiquement)
+  useEffect(() => {
+    if (!userId) return;
 
-            if (newNotif.recipient_id === user.id) {
-              console.log('🔔 Nouvelle notification reçue:', payload)
-              setNotifications(prev => [newNotif, ...prev])
-              setHasNewNotification(true)
+    console.log("🔌 Connexion Realtime MARCHAND:", userId);
 
-              // 🎵 Lecture du son
-              try {
-                // ✅ URL stable (aucune restriction CORS, HTTPS ok)
-                const audio = new Audio('https://cdn.jsdelivr.net/gh/naptha/talkify-tts-voices@master/sounds/notification.mp3')
-                audio.volume = 0.5
-                await audio.play()
-                console.log('🔊 Son joué avec succès')
-              } catch (err) {
-                console.warn('🔇 Lecture audio bloquée ou refusée:', err)
-              }
-            }
+    const channel: RealtimeChannel = supabase
+      .channel(`merchant_notifications_${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${userId}`,
+        },
+        async (payload) => {
+          const newNotif = payload.new as Notification;
+          const merchantTypes = ["reservation", "offer_expired", "stock_empty", "system"];
+          
+          if (!merchantTypes.includes(newNotif.type)) {
+            console.log("⚠️ Type ignoré:", newNotif.type);
+            return;
           }
-        )
-        .subscribe((status) => {
-          console.log('📡 Statut canal:', status)
 
-          if (status === 'SUBSCRIBED') {
-            console.log('✅ Canal Realtime connecté')
-            setIsConnected(true)
-            reconnectAttempts.current = 0
-          } 
-          else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-            console.warn('⚠️ Connexion perdue')
-            setIsConnected(false)
+          console.log("🟢 Nouvelle notification:", newNotif.title);
+          setNotifications((prev) => [newNotif, ...prev]);
+          if (!newNotif.is_read) setUnreadCount((count) => count + 1);
 
-            // 🔄 Reconnexion avec "exponential backoff"
-            if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
-              const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000)
-              reconnectAttempts.current++
-              console.log(`🔄 Reconnexion dans ${delay / 1000}s... (tentative ${reconnectAttempts.current}/${MAX_RECONNECT_ATTEMPTS})`)
-
-              reconnectTimeout.current = setTimeout(() => {
-                if (channelRef.current) {
-                  supabase.removeChannel(channelRef.current)
-                  channelRef.current = null
-                }
-                setupRealtime()
-              }, delay)
-            } else {
-              console.error('❌ Trop de tentatives de reconnexion échouées')
-            }
+          // 🔊 Son de notification
+          try {
+            const audio = new Audio('https://cdn.jsdelivr.net/gh/naptha/talkify-tts-voices@master/sounds/notification.mp3');
+            audio.volume = 0.5;
+            await audio.play();
+            console.log('🔊 Son joué');
+          } catch (err) {
+            console.warn('🔇 Son bloqué par le navigateur');
           }
-        })
+        }
+      )
+      .subscribe((status) => {
+        // ✅ Ne loguer que les changements importants
+        if (status === "SUBSCRIBED") {
+          console.log("✅ Canal Realtime MARCHAND actif");
+        } else if (status === "CHANNEL_ERROR") {
+          console.error("❌ Erreur canal Realtime");
+        }
+        // ⚠️ Ne PAS réagir à CLOSED (Supabase reconnecte automatiquement)
+      });
 
-      channelRef.current = channel
-    }
-
-    setupRealtime()
-
-    // 🧹 Nettoyage propre au démontage du composant
+    // ✅ Cleanup propre (appelé UNE SEULE FOIS au démontage)
     return () => {
-      if (channelRef.current) {
-        console.log('🧹 Nettoyage: suppression du canal')
-        supabase.removeChannel(channelRef.current)
-        channelRef.current = null
-      }
-      if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current)
-    }
-  }, [])
+      console.log("🔌 Déconnexion canal MARCHAND");
+      supabase.removeChannel(channel);
+    };
+  }, [userId]); // ✅ Se déclenche UNE FOIS quand userId est défini
 
-  return { 
-    notifications,
-    hasNewNotification,
-    setHasNewNotification,
-    isConnected
-  }
+  const markAsRead = async (id: string) => {
+    if (!userId) return;
+    
+    const { error } = await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("id", id)
+      .eq("recipient_id", userId);
+
+    if (!error) {
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+      );
+      setUnreadCount((count) => Math.max(0, count - 1));
+    }
+  };
+
+  const markAllAsRead = async () => {
+    if (!userId) return;
+    
+    const { error } = await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("recipient_id", userId)
+      .eq("is_read", false);
+
+    if (!error) {
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      setUnreadCount(0);
+    }
+  };
+
+  return { notifications, unreadCount, isLoading, markAsRead, markAllAsRead };
 }
