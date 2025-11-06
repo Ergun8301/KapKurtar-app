@@ -10,7 +10,7 @@ import {
   ArrowRight,
   Store,
   LayoutDashboard,
-  Bell,
+  Bell, // ✅ ajouté ici
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabaseClient";
@@ -84,7 +84,7 @@ const Header = () => {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               {navigation.map((item) => (
-                
+                <a
                   key={item.name}
                   href={item.href}
                   className="text-gray-600 hover:text-green-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -101,9 +101,7 @@ const Header = () => {
               <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
             ) : user ? (
               <>
-                {/* ✅ LIGNE 93 CORRIGÉE ICI */}
-                <NotificationBell userType={isMerchant ? "merchant" : "client"} />
-                
+                <NotificationBell />
                 <div className="relative">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -152,14 +150,14 @@ const Header = () => {
                         </>
                       ) : (
                         <>
-                          
+                          <a
                             href="/profile"
                             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <User className="w-4 h-4 mr-2" />
                             My Profile
                           </a>
-                          
+                          <a
                             href="/settings"
                             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
