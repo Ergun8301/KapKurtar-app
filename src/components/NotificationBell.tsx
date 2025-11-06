@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Bell } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
-import { supabase } from '../lib/supabaseClient';
+import React, { useState, useEffect, useRef } from "react";
+import { Bell } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+import { useRealtimeNotifications } from "../hooks/useRealtimeNotifications";
+import { useClientNotifications } from "../hooks/useClientNotifications";
+import { supabase } from "../lib/supabaseClient";
 
 interface Notification {
   id: string;
@@ -14,10 +15,23 @@ interface Notification {
   created_at: string;
 }
 
-export function NotificationBell() {
+interface NotificationBellProps {
+  userType?: "merchant" | "client";
+}
+
+export function NotificationBell({ userType = "merchant" }: NotificationBellProps) {
   const { user } = useAuth();
-  const { notifications: realtimeNotifs, hasNewNotification, setHasNewNotification } = useRealtimeNotifications();
-  
+
+  // 🧩 Choisir le bon hook selon le type d’utilisateur
+  const {
+    notifications: realtimeNotifs,
+    unreadCount: hookUnreadCount,
+    markAsRead: hookMarkAsRead,
+  } =
+    userType === "client"
+      ? useClientNotifications(user?.id)
+      : useRealtimeNotifications(user?.id);
+
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -25,52 +39,21 @@ export function NotificationBell() {
   const bellRef = useRef<HTMLDivElement>(null);
   const shakeIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 🔄 Charger les notifications existantes
-  useEffect(() => {
-    if (!user) return;
-
-    const loadNotifications = async () => {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('recipient_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (!error && data) {
-        setNotifications(data);
-        setUnreadCount(data.filter(n => !n.is_read).length);
-      }
-    };
-
-    loadNotifications();
-  }, [user]);
-
-  // 🔔 Ajouter les nouvelles notifications en temps réel
+  // 🧠 Synchroniser les notifs du hook Realtime
   useEffect(() => {
     if (realtimeNotifs.length > 0) {
-      const latestNotif = realtimeNotifs[0];
-      
-      // Ajoute seulement si elle n'existe pas déjà
-      setNotifications(prev => {
-        const exists = prev.some(n => n.id === latestNotif.id);
-        if (exists) return prev;
-        return [{ ...latestNotif, is_read: false } as Notification, ...prev];
-      });
-      
-      setUnreadCount(prev => prev + 1);
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
+      setNotifications(realtimeNotifs);
+      setUnreadCount(hookUnreadCount);
     }
-  }, [realtimeNotifs]);
+  }, [realtimeNotifs, hookUnreadCount]);
 
-  // 📳 Animation de vibration toutes les 3 secondes si non lu
+  // 📳 Animation de vibration régulière si non lu
   useEffect(() => {
     if (unreadCount > 0 && !open) {
       shakeIntervalRef.current = setInterval(() => {
         setShake(true);
         setTimeout(() => setShake(false), 500);
-      }, 3000);
+      }, 4000);
     } else {
       if (shakeIntervalRef.current) {
         clearInterval(shakeIntervalRef.current);
@@ -79,72 +62,74 @@ export function NotificationBell() {
     }
 
     return () => {
-      if (shakeIntervalRef.current) {
-        clearInterval(shakeIntervalRef.current);
-      }
+      if (shakeIntervalRef.current) clearInterval(shakeIntervalRef.current);
     };
   }, [unreadCount, open]);
 
-  // ✅ Fermer le popup si on clique à l'extérieur
+  // ✅ Fermer le popup si on clique à l’extérieur
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (bellRef.current && !bellRef.current.contains(event.target as Node)) {
         setOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 📝 Marquer comme lu
-  const markAsRead = async (notificationId: string) => {
-    await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('id', notificationId);
+  if (!user) return null;
 
-    setNotifications(prev =>
-      prev.map(n => (n.id === notificationId ? { ...n, is_read: true } : n))
+  // 📝 Marquer comme lu via hook ou fallback direct
+  const markAsRead = async (id: string) => {
+    if (hookMarkAsRead) {
+      await hookMarkAsRead(id);
+    } else {
+      await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+    }
+
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
-    setUnreadCount(prev => Math.max(0, prev - 1));
+    setUnreadCount((prev) => Math.max(0, prev - 1));
   };
 
   // 📝 Tout marquer comme lu
   const markAllAsRead = async () => {
     if (!user) return;
-
     await supabase
-      .from('notifications')
+      .from("notifications")
       .update({ is_read: true })
-      .eq('recipient_id', user.id)
-      .eq('is_read', false);
+      .eq("recipient_id", user.id)
+      .eq("is_read", false);
 
-    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     setUnreadCount(0);
   };
 
-  if (!user) return null;
-
   return (
     <div ref={bellRef} className="relative select-none">
-      {/* 🔔 Cloche principale avec animation */}
+      {/* 🔔 Cloche principale */}
       <button
         onClick={() => setOpen(!open)}
         className={`relative p-2 rounded-full hover:bg-gray-100 transition-all ${
-          shake ? 'animate-shake' : ''
+          shake ? "animate-shake" : ""
         }`}
       >
-        <Bell className={`w-6 h-6 ${unreadCount > 0 ? 'text-green-600' : 'text-gray-700'}`} />
-        
-        {/* 🔴 Badge avec nombre */}
+        <Bell
+          className={`w-6 h-6 ${
+            unreadCount > 0 ? "text-green-600" : "text-gray-700"
+          }`}
+        />
+
+        {/* 🔴 Badge */}
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1.5 border-2 border-white animate-pulse">
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
 
-      {/* 📋 Menu déroulant */}
+      {/* 📋 Popup des notifications */}
       {open && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
           <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50">
@@ -160,7 +145,7 @@ export function NotificationBell() {
               </button>
             )}
           </div>
-          
+
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="text-center py-8">
@@ -173,21 +158,25 @@ export function NotificationBell() {
                   key={n.id}
                   onClick={() => markAsRead(n.id)}
                   className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition-all hover:bg-gray-50 ${
-                    !n.is_read ? 'bg-green-50 border-l-4 border-l-green-500' : 'bg-white'
+                    !n.is_read
+                      ? "bg-green-50 border-l-4 border-l-green-500"
+                      : "bg-white"
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       {n.title && (
-                        <p className="text-sm font-semibold text-gray-800 mb-1">{n.title}</p>
+                        <p className="text-sm font-semibold text-gray-800 mb-1">
+                          {n.title}
+                        </p>
                       )}
                       <p className="text-sm text-gray-700">{n.message}</p>
                       <p className="text-xs text-gray-400 mt-1">
-                        {new Date(n.created_at).toLocaleString('fr-FR', {
-                          day: '2-digit',
-                          month: 'short',
-                          hour: '2-digit',
-                          minute: '2-digit'
+                        {new Date(n.created_at).toLocaleString("fr-FR", {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </p>
                     </div>
@@ -202,7 +191,7 @@ export function NotificationBell() {
         </div>
       )}
 
-      {/* 🎨 Styles CSS pour l'animation */}
+      {/* 🎨 Animation shake */}
       <style>{`
         @keyframes shake {
           0%, 100% { transform: rotate(0deg); }
