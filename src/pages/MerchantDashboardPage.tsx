@@ -832,7 +832,6 @@ const MerchantDashboardPage = () => {
             <p className="text-gray-600 mt-1">{offers.length} total products</p>
           </div>
           <div className="flex items-center gap-4">
-            <NotificationBell />
             <button
               onClick={openAddProductModal}
               className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium shadow-sm"
