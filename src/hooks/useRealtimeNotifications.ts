@@ -49,7 +49,7 @@ export function useRealtimeNotifications() {
               setHasNewNotification(true)
               
               try {
-                const audio = new Audio('/notification.mp3')
+                const audio = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_37a938c87d.mp3');
                 audio.volume = 0.5
                 audio.play().catch(() => {})
               } catch {}
