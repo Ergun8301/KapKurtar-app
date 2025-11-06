@@ -10,7 +10,7 @@ import {
   ArrowRight,
   Store,
   LayoutDashboard,
-  Bell, // ✅ ajouté ici
+  Bell,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabaseClient";
@@ -25,7 +25,8 @@ const Header = () => {
   const { openAddProductModal } = useAddProduct();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isMerchant, setIsMerchant] = useState(false);
+  // ✅ Correction ici (avant c’était false)
+  const [isMerchant, setIsMerchant] = useState<boolean | null>(null);
 
   useEffect(() => {
     const checkUserType = async () => {
@@ -68,6 +69,9 @@ const Header = () => {
     { name: "Download App", href: "/download" },
   ];
 
+  // ✅ Ajout important : attendre la détection du rôle avant d’afficher
+  if (user && isMerchant === null) return null;
+
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-40">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -98,29 +102,29 @@ const Header = () => {
           {/* User menu */}
           <div className="flex items-center space-x-4">
             {loading ? (
-  <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
-) : user ? (
-  <>
-    {/* ✅ Correction ici */}
-    <NotificationBell userType={isMerchant ? "merchant" : "client"} />
-    
-    <div className="relative">
-      <button
-        onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-        className="flex items-center space-x-2 text-gray-700 hover:text-green-500 transition-colors"
-      >
-        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-          {isMerchant ? (
-            <Store className="w-4 h-4 text-green-600" />
-          ) : (
-            <User className="w-4 h-4 text-green-600" />
-          )}
-        </div>
-        <span className="hidden sm:block font-medium">
-          {getUserDisplayName()}
-        </span>
-        <ChevronDown className="w-4 h-4" />
-      </button>
+              <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+            ) : user ? (
+              <>
+                {/* ✅ La cloche reçoit le bon type */}
+                <NotificationBell userType={isMerchant ? "merchant" : "client"} />
+                
+                <div className="relative">
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center space-x-2 text-gray-700 hover:text-green-500 transition-colors"
+                  >
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      {isMerchant ? (
+                        <Store className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <User className="w-4 h-4 text-green-600" />
+                      )}
+                    </div>
+                    <span className="hidden sm:block font-medium">
+                      {getUserDisplayName()}
+                    </span>
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
 
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
@@ -139,9 +143,7 @@ const Header = () => {
                           <button
                             onClick={() => {
                               setIsUserMenuOpen(false);
-                              const event = new CustomEvent(
-                                "openMerchantProfileModal"
-                              );
+                              const event = new CustomEvent("openMerchantProfileModal");
                               window.dispatchEvent(event);
                             }}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
