@@ -20,6 +20,7 @@ export function useRealtimeNotifications() {
 
     const setupRealtime = async () => {
       const { data: { user } } = await supabase.auth.getUser()
+      
       if (!user) {
         console.log('⚠️ Pas d\'utilisateur authentifié')
         return
@@ -27,7 +28,6 @@ export function useRealtimeNotifications() {
 
       console.log('🔌 Connexion Realtime pour auth_id:', user.id)
 
-      // ✅ Canal Realtime avec filtre sécurisé
       channel = supabase
         .channel(`notifications:${user.id}`)
         .on(
@@ -35,29 +35,32 @@ export function useRealtimeNotifications() {
           {
             event: 'INSERT',
             schema: 'public',
-            table: 'notifications',
-            filter: `recipient_id=eq.${user.id}`
+            table: 'notifications'
           },
           (payload) => {
-            console.log('🔔 Nouvelle notification reçue:', payload)
             const newNotif = payload.new as Notification
-            setNotifications(prev => [newNotif, ...prev])
-            setHasNewNotification(true)
-
-            try {
-              const audio = new Audio('/notification.mp3')
-              audio.volume = 0.5
-              audio.play().catch(() => {})
-            } catch {}
+            
+            if (newNotif.recipient_id === user.id) {
+              console.log('🔔 Nouvelle notification reçue:', payload)
+              setNotifications(prev => [newNotif, ...prev])
+              setHasNewNotification(true)
+              
+              try {
+                const audio = new Audio('/notification.mp3')
+                audio.volume = 0.5
+                audio.play().catch(() => {})
+              } catch {}
+            }
           }
         )
         .subscribe((status) => {
           console.log('📡 Statut canal:', status)
+          
           if (status === 'SUBSCRIBED') {
             console.log('✅ Canal Realtime connecté')
             setIsConnected(true)
           } else if (status === 'CHANNEL_ERROR') {
-            console.error('❌ CHANNEL_ERROR - vérifier RLS')
+            console.error('❌ CHANNEL_ERROR')
             setIsConnected(false)
           } else if (status === 'CLOSED') {
             console.warn('⚠️ Canal fermé')
@@ -76,5 +79,28 @@ export function useRealtimeNotifications() {
     }
   }, [])
 
-  return { notifications, hasNewNotification, setHasNewNotification, isConnected }
+  return { 
+    notifications, 
+    hasNewNotification, 
+    setHasNewNotification,
+    isConnected 
+  }
 }
+```
+
+---
+
+## ⚠️ Important
+
+**NE copie PAS** les lignes comme "Tu devrais voir", "Connexion Realtime", etc. - ce sont juste des **exemples** de ce que tu verras dans la console **après** avoir rechargé.
+
+---
+
+## 🧪 Après avoir collé le code
+
+1. **Sauvegarde**
+2. **Recharge** la page : `Ctrl + Shift + R`
+3. **Console** → Tu verras :
+```
+   📡 Statut canal: SUBSCRIBED
+   ✅ Canal Realtime connecté
