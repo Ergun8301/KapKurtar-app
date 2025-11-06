@@ -15,6 +15,7 @@ export function useRealtimeNotifications() {
   const [hasNewNotification, setHasNewNotification] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
 
+  // 🔒 Références pour éviter les boucles et conserver le même canal
   const channelRef = useRef<RealtimeChannel | null>(null)
   const reconnectAttempts = useRef(0)
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null)
@@ -22,7 +23,7 @@ export function useRealtimeNotifications() {
 
   useEffect(() => {
     const setupRealtime = async () => {
-      // 🧹 Empêche double abonnement
+      // 🧹 Évite de créer plusieurs canaux simultanément
       if (channelRef.current) {
         console.warn('⚠️ Canal déjà actif, on annule la recréation.')
         return
@@ -30,7 +31,7 @@ export function useRealtimeNotifications() {
 
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        console.log('⚠️ Pas d’utilisateur authentifié')
+        console.log('⚠️ Aucun utilisateur connecté')
         return
       }
 
@@ -45,7 +46,7 @@ export function useRealtimeNotifications() {
             schema: 'public',
             table: 'notifications'
           },
-          (payload) => {
+          async (payload) => {
             const newNotif = payload.new as Notification
 
             if (newNotif.recipient_id === user.id) {
@@ -53,16 +54,16 @@ export function useRealtimeNotifications() {
               setNotifications(prev => [newNotif, ...prev])
               setHasNewNotification(true)
 
-              // 🎵 Son à la réception (fonctionne onglet actif)
+              // 🎵 Lecture du son
               try {
-  // ✅ nouvelle URL stable
-  const audio = new Audio('https://cdn.jsdelivr.net/gh/naptha/talkify-tts-voices@master/sounds/notification.mp3');
-  audio.volume = 0.5;
-  await audio.play();
-  console.log('🔊 Son joué avec succès');
-} catch (err) {
-  console.warn('🔇 Lecture audio bloquée ou refusée:', err);
-}
+                // ✅ URL stable (aucune restriction CORS, HTTPS ok)
+                const audio = new Audio('https://cdn.jsdelivr.net/gh/naptha/talkify-tts-voices@master/sounds/notification.mp3')
+                audio.volume = 0.5
+                await audio.play()
+                console.log('🔊 Son joué avec succès')
+              } catch (err) {
+                console.warn('🔇 Lecture audio bloquée ou refusée:', err)
+              }
             }
           }
         )
@@ -78,6 +79,7 @@ export function useRealtimeNotifications() {
             console.warn('⚠️ Connexion perdue')
             setIsConnected(false)
 
+            // 🔄 Reconnexion avec "exponential backoff"
             if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
               const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000)
               reconnectAttempts.current++
@@ -101,6 +103,7 @@ export function useRealtimeNotifications() {
 
     setupRealtime()
 
+    // 🧹 Nettoyage propre au démontage du composant
     return () => {
       if (channelRef.current) {
         console.log('🧹 Nettoyage: suppression du canal')
