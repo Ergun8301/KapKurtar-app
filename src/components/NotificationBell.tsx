@@ -85,18 +85,6 @@ export function NotificationBell() {
     };
   }, [unreadCount, open]);
 
-  // 🔊 Jouer le son quand nouvelle notification
-  useEffect(() => {
-    if (hasNewNotification) {
-      try {
-        const audio = new Audio('/notification.mp3');
-        audio.volume = 0.5;
-        audio.play().catch(() => {});
-      } catch {}
-      setHasNewNotification(false);
-    }
-  }, [hasNewNotification, setHasNewNotification]);
-
   // ✅ Fermer le popup si on clique à l'extérieur
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
