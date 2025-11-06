@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
@@ -15,23 +15,28 @@ export function useRealtimeNotifications() {
   const [hasNewNotification, setHasNewNotification] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
 
-  useEffect(() => {
-    let channel: RealtimeChannel | null = null
-    let reconnectTimeout: NodeJS.Timeout | null = null
-    let reconnectAttempts = 0
-    const MAX_RECONNECT_ATTEMPTS = 5
+  const channelRef = useRef<RealtimeChannel | null>(null)
+  const reconnectAttempts = useRef(0)
+  const reconnectTimeout = useRef<NodeJS.Timeout | null>(null)
+  const MAX_RECONNECT_ATTEMPTS = 5
 
+  useEffect(() => {
     const setupRealtime = async () => {
+      // 🧹 Empêche double abonnement
+      if (channelRef.current) {
+        console.warn('⚠️ Canal déjà actif, on annule la recréation.')
+        return
+      }
+
       const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) {
-        console.log('⚠️ Pas d\'utilisateur authentifié')
+        console.log('⚠️ Pas d’utilisateur authentifié')
         return
       }
 
       console.log('🔌 Connexion Realtime pour auth_id:', user.id)
 
-      channel = supabase
+      const channel = supabase
         .channel(`notifications:${user.id}`)
         .on(
           'postgres_changes',
@@ -42,39 +47,45 @@ export function useRealtimeNotifications() {
           },
           (payload) => {
             const newNotif = payload.new as Notification
-            
+
             if (newNotif.recipient_id === user.id) {
               console.log('🔔 Nouvelle notification reçue:', payload)
               setNotifications(prev => [newNotif, ...prev])
               setHasNewNotification(true)
-              
+
+              // 🎵 Son à la réception (fonctionne onglet actif)
               try {
-                const audio = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_37a938c87d.mp3');
+                const audio = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_37a938c87d.mp3')
                 audio.volume = 0.5
-                audio.play().catch(() => {})
-              } catch {}
+                audio.play().catch(err => console.warn('🔇 Lecture audio bloquée:', err))
+              } catch (err) {
+                console.warn('Erreur audio:', err)
+              }
             }
           }
         )
         .subscribe((status) => {
           console.log('📡 Statut canal:', status)
-          
+
           if (status === 'SUBSCRIBED') {
             console.log('✅ Canal Realtime connecté')
             setIsConnected(true)
-            reconnectAttempts = 0 // Reset compteur
-          } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+            reconnectAttempts.current = 0
+          } 
+          else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
             console.warn('⚠️ Connexion perdue')
             setIsConnected(false)
-            
-            // 🔄 Reconnexion automatique avec backoff
-            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-              const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000) // Max 30s
-              console.log(`🔄 Reconnexion dans ${delay/1000}s... (tentative ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`)
-              
-              reconnectTimeout = setTimeout(() => {
-                reconnectAttempts++
-                if (channel) supabase.removeChannel(channel)
+
+            if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
+              const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000)
+              reconnectAttempts.current++
+              console.log(`🔄 Reconnexion dans ${delay / 1000}s... (tentative ${reconnectAttempts.current}/${MAX_RECONNECT_ATTEMPTS})`)
+
+              reconnectTimeout.current = setTimeout(() => {
+                if (channelRef.current) {
+                  supabase.removeChannel(channelRef.current)
+                  channelRef.current = null
+                }
                 setupRealtime()
               }, delay)
             } else {
@@ -82,25 +93,26 @@ export function useRealtimeNotifications() {
             }
           }
         })
+
+      channelRef.current = channel
     }
 
     setupRealtime()
 
     return () => {
-      if (channel) {
-        console.log('🔌 Déconnexion du canal')
-        supabase.removeChannel(channel)
+      if (channelRef.current) {
+        console.log('🧹 Nettoyage: suppression du canal')
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
       }
-      if (reconnectTimeout) {
-        clearTimeout(reconnectTimeout)
-      }
+      if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current)
     }
   }, [])
 
   return { 
-    notifications, 
-    hasNewNotification, 
+    notifications,
+    hasNewNotification,
     setHasNewNotification,
-    isConnected 
+    isConnected
   }
 }
