@@ -26,6 +26,7 @@ export function NotificationBell({ userType = "merchant" }: NotificationBellProp
   const navigate = useNavigate();
 
 
+
   // 🧩 Choisir le bon hook selon le type d'utilisateur
   const {
     notifications: realtimeNotifs,
