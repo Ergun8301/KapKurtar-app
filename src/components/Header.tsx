@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Store,
   LayoutDashboard,
+  Bell, // ✅ ajouté ici
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabaseClient";
@@ -26,12 +27,10 @@ const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMerchant, setIsMerchant] = useState(false);
 
-  // 🧠 Déterminer le type d’utilisateur connecté
   useEffect(() => {
     const checkUserType = async () => {
       if (!user) return setIsMerchant(false);
 
-      // Vérifie s’il a un profil client
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("id")
@@ -39,12 +38,10 @@ const Header = () => {
         .maybeSingle();
 
       if (profileError || !profileData) {
-        console.warn("⚠️ Aucun profil trouvé pour cet utilisateur");
         setIsMerchant(false);
         return;
       }
 
-      // Vérifie si le profil correspond à un marchand
       const { data: merchantData } = await supabase
         .from("merchants")
         .select("id")
@@ -52,19 +49,18 @@ const Header = () => {
         .maybeSingle();
 
       setIsMerchant(!!merchantData);
-      console.log("✅ Type détecté :", merchantData ? "Marchand" : "Client");
     };
 
     checkUserType();
   }, [user]);
 
-  // 🚪 Déconnexion
   const handleSignOut = async () => {
     await logoutUser(navigate);
     setIsUserMenuOpen(false);
   };
 
-  const getUserDisplayName = () => user?.email?.split("@")[0] || "User";
+  const getUserDisplayName = () =>
+    user?.email?.split("@")[0] || "User";
 
   const navigation = [
     { name: "Explore Offers", href: "/offers" },
@@ -84,16 +80,14 @@ const Header = () => {
             <span className="font-bold text-xl text-gray-900">ResQ Food</span>
           </a>
 
-          {/* Liens principaux */}
+          {/* Nav links */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               {navigation.map((item) => (
                 <a
                   key={item.name}
                   href={item.href}
-                  className={`text-gray-600 hover:text-green-500 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    location.pathname === item.href ? "text-green-600" : ""
-                  }`}
+                  className="text-gray-600 hover:text-green-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   {item.name}
                 </a>
@@ -101,16 +95,13 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Section utilisateur */}
+          {/* User menu */}
           <div className="flex items-center space-x-4">
             {loading ? (
               <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
             ) : user ? (
               <>
-                {/* 🔔 Cloche dynamique selon le type */}
-                <NotificationBell userType={isMerchant ? "merchant" : "client"} />
-
-                {/* Avatar + menu utilisateur */}
+                <NotificationBell />
                 <div className="relative">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -129,12 +120,10 @@ const Header = () => {
                     <ChevronDown className="w-4 h-4" />
                   </button>
 
-                  {/* 🔽 Menu déroulant */}
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                       {isMerchant ? (
                         <>
-                          {/* Dashboard marchand */}
                           <button
                             onClick={() => {
                               setIsUserMenuOpen(false);
@@ -145,12 +134,12 @@ const Header = () => {
                             <LayoutDashboard className="w-4 h-4 mr-2" />
                             Dashboard
                           </button>
-
-                          {/* Paramètres marchand */}
                           <button
                             onClick={() => {
                               setIsUserMenuOpen(false);
-                              const event = new CustomEvent("openMerchantProfileModal");
+                              const event = new CustomEvent(
+                                "openMerchantProfileModal"
+                              );
                               window.dispatchEvent(event);
                             }}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -161,20 +150,12 @@ const Header = () => {
                         </>
                       ) : (
                         <>
-                          {/* Menu client */}
                           <a
                             href="/profile"
                             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <User className="w-4 h-4 mr-2" />
                             My Profile
-                          </a>
-                          <a
-                            href="/notifications"
-                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Bell className="w-4 h-4 mr-2" />
-                            Notifications
                           </a>
                           <a
                             href="/settings"
@@ -188,7 +169,6 @@ const Header = () => {
 
                       <hr className="my-1" />
 
-                      {/* Déconnexion */}
                       <button
                         onClick={handleSignOut}
                         className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -201,7 +181,6 @@ const Header = () => {
                 </div>
               </>
             ) : (
-              // 🔐 Si non connecté
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -242,7 +221,6 @@ const Header = () => {
               </div>
             )}
 
-            {/* 📱 Menu mobile */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
