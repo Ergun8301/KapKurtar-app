@@ -22,8 +22,8 @@ interface NotificationBellProps {
 }
 
 export function NotificationBell({ userType }: NotificationBellProps) {
-  // ⛔ Ne rien afficher tant qu'on ne connaît pas le type d'utilisateur
-  if (!userType) return null;
+  // ⛔ Bloquer si on ne connaît pas encore le rôle OU si le type est invalide
+  if (!userType || (userType !== "merchant" && userType !== "client")) return null;
 
   const { user } = useAuth();
   const navigate = useNavigate();
