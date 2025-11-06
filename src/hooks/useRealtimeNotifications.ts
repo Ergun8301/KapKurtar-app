@@ -20,50 +20,44 @@ export function useRealtimeNotifications() {
 
     const setupRealtime = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) {
         console.log('⚠️ Pas d\'utilisateur authentifié')
         return
       }
 
-      console.log('🔌 TEST SANS FILTRE pour auth_id:', user.id)
+      console.log('🔌 Connexion Realtime pour auth_id:', user.id)
 
+      // ✅ Canal Realtime avec filtre sécurisé
       channel = supabase
-        .channel(`notifications-test-${Date.now()}`)
+        .channel(`notifications:${user.id}`)
         .on(
           'postgres_changes',
           {
             event: 'INSERT',
             schema: 'public',
-            table: 'notifications'
+            table: 'notifications',
+            filter: `recipient_id=eq.${user.id}`
           },
           (payload) => {
-            console.log('🔔 Notification reçue (SANS FILTRE):', payload)
+            console.log('🔔 Nouvelle notification reçue:', payload)
             const newNotif = payload.new as Notification
-            
-            if (newNotif.recipient_id === user.id) {
-              console.log('✅ Notification pour moi!')
-              setNotifications(prev => [newNotif, ...prev])
-              setHasNewNotification(true)
-              
-              try {
-                const audio = new Audio('/notification.mp3')
-                audio.volume = 0.5
-                audio.play().catch(() => {})
-              } catch {}
-            } else {
-              console.log('⚠️ Notification pour quelqu\'un d\'autre:', newNotif.recipient_id)
-            }
+            setNotifications(prev => [newNotif, ...prev])
+            setHasNewNotification(true)
+
+            try {
+              const audio = new Audio('/notification.mp3')
+              audio.volume = 0.5
+              audio.play().catch(() => {})
+            } catch {}
           }
         )
         .subscribe((status) => {
-          console.log('📡 Statut canal (SANS FILTRE):', status)
-          
+          console.log('📡 Statut canal:', status)
           if (status === 'SUBSCRIBED') {
-            console.log('✅✅✅ Canal CONNECTÉ SANS FILTRE!')
+            console.log('✅ Canal Realtime connecté')
             setIsConnected(true)
           } else if (status === 'CHANNEL_ERROR') {
-            console.error('❌ CHANNEL_ERROR même sans filtre')
+            console.error('❌ CHANNEL_ERROR - vérifier RLS')
             setIsConnected(false)
           } else if (status === 'CLOSED') {
             console.warn('⚠️ Canal fermé')
@@ -82,10 +76,5 @@ export function useRealtimeNotifications() {
     }
   }, [])
 
-  return { 
-    notifications, 
-    hasNewNotification, 
-    setHasNewNotification,
-    isConnected 
-  }
+  return { notifications, hasNewNotification, setHasNewNotification, isConnected }
 }
