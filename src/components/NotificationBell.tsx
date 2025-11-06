@@ -8,7 +8,7 @@ import {
   TrendingUp,
   Package,
 } from "lucide-react";
-import { useRealtimeNotifications } from "../hooks/useRealtimeNotifications";
+import { useMerchantNotifications } from "../hooks/useMerchantNotifications"; // ✅ hook marchand
 import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
@@ -17,26 +17,29 @@ import {
 import { useAuth } from "../hooks/useAuth";
 
 /**
- * Composant NotificationBell
+ * Composant NotificationBell (marchand)
  * - Affiche la cloche + compteur
  * - Menu déroulant stylé
  * - Toast pour nouvelles notifications
- * - Aucune boucle de requêtes Supabase (optimisé)
+ * - Connecté en temps réel via Supabase
  */
 export const NotificationBell: React.FC = () => {
   const { user } = useAuth();
+
   const {
     notifications,
     unreadCount,
-    refetch,
     markAsRead,
-  } = useRealtimeNotifications(user?.id || null);
+    markAllAsRead,
+  } = useMerchantNotifications({
+    merchantId: user?.id || null,
+  });
 
   const [isOpen, setIsOpen] = useState(false);
   const [toast, setToast] = useState<Notification | null>(null);
-
   const lastToastId = React.useRef<string | null>(null);
 
+  // ✅ Toast pour nouvelle notification
   useEffect(() => {
     if (notifications.length > 0 && !notifications[0].is_read) {
       const latest = notifications[0];
@@ -50,7 +53,7 @@ export const NotificationBell: React.FC = () => {
     }
   }, [notifications]);
 
-  // --- Gestion marquage ---
+  // ✅ Gestion du marquage "lu"
   const handleMarkAsRead = useCallback(
     async (id: string) => {
       markAsRead(id);
@@ -60,10 +63,10 @@ export const NotificationBell: React.FC = () => {
   );
 
   const handleMarkAllAsRead = useCallback(async () => {
-    await markAllNotificationsAsRead();
-    notifications.forEach((n) => markAsRead(n.id));
-  }, [notifications, markAsRead]);
+    await markAllAsRead();
+  }, [markAllAsRead]);
 
+  // ✅ Styles selon le type
   const getTypeStyles = (type: string) => {
     switch (type) {
       case "reservation":
@@ -113,6 +116,7 @@ export const NotificationBell: React.FC = () => {
 
   if (!user) return null;
 
+  // ✅ Rendu
   return (
     <div className="relative select-none">
       {/* --- Icône principale --- */}
