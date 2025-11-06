@@ -28,22 +28,19 @@ export function useRealtimeNotifications() {
 
       console.log('🔌 TEST SANS FILTRE pour auth_id:', user.id)
 
-      // 🧪 TEST : Sans filtre côté serveur
       channel = supabase
-        .channel(`notifications-test-${Date.now()}`) // Nom unique
+        .channel(`notifications-test-${Date.now()}`)
         .on(
           'postgres_changes',
           {
             event: 'INSERT',
             schema: 'public',
             table: 'notifications'
-            // ⚠️ PAS de filter pour ce test
           },
           (payload) => {
             console.log('🔔 Notification reçue (SANS FILTRE):', payload)
             const newNotif = payload.new as Notification
             
-            // Filtre côté client seulement
             if (newNotif.recipient_id === user.id) {
               console.log('✅ Notification pour moi!')
               setNotifications(prev => [newNotif, ...prev])
@@ -92,18 +89,3 @@ export function useRealtimeNotifications() {
     isConnected 
   }
 }
-```
-
----
-
-## 🧪 Teste maintenant
-
-1. **Sauvegarde le fichier**
-2. **Recharge la page** (Ctrl+Shift+R)
-3. **Ouvre la console** (F12)
-
-**Tu devrais voir :**
-```
-🔌 TEST SANS FILTRE pour auth_id: fc215a2b-...
-📡 Statut canal (SANS FILTRE): SUBSCRIBED
-✅✅✅ Canal CONNECTÉ SANS FILTRE!
