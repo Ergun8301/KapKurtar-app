@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import mapboxgl, { Map, Marker } from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -119,6 +120,10 @@ export default function OffersPage() {
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
   const [merchantOffers, setMerchantOffers] = useState<Offer[]>([]);
+
+  // 🔔 Détection d'arrivée via notification
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [targetOfferId, setTargetOfferId] = useState<string | null>(null);
 
   // 🧮 Calcul de la réduction en pourcentage
   const getDiscountPercent = (before: number, after: number) => {
@@ -477,6 +482,55 @@ export default function OffersPage() {
 
     fetchOffers();
   }, [center, clientId, viewMode, radiusKm]);
+
+  // 🎯 Centrage automatique sur l'offre ciblée (arrivée via notification)
+  useEffect(() => {
+    const offerId = searchParams.get('offer_id');
+    
+    if (!offerId || !mapRef.current || offers.length === 0) return;
+
+    // Trouver l'offre ciblée
+    const targetOffer = offers.find(o => o.offer_id === offerId);
+    
+    if (!targetOffer) {
+      console.warn('🔍 Offre non trouvée:', offerId);
+      return;
+    }
+
+    console.log('🎯 Centrage sur offre via notification:', targetOffer.title);
+
+    // 🗺️ Centrer la carte sur l'offre
+    if (Number.isFinite(targetOffer.offer_lng) && Number.isFinite(targetOffer.offer_lat)) {
+      mapRef.current.flyTo({
+        center: [targetOffer.offer_lng, targetOffer.offer_lat],
+        zoom: 15,
+        essential: true,
+        duration: 1500
+      });
+
+      // 🔔 Ouvrir automatiquement le popup après l'animation
+      setTimeout(() => {
+        // Trouver le marqueur correspondant et ouvrir son popup
+        const markers = (mapRef.current as any)._markers || [];
+        const marker = markers.find((m: any) => {
+          const lngLat = m.getLngLat();
+          return (
+            Math.abs(lngLat.lng - targetOffer.offer_lng) < 0.0001 &&
+            Math.abs(lngLat.lat - targetOffer.offer_lat) < 0.0001
+          );
+        });
+
+        if (marker) {
+          marker.togglePopup();
+        }
+
+        // 🧹 Nettoyer l'URL après le centrage
+        setSearchParams({}, { replace: true });
+      }, 1600);
+    }
+
+    setTargetOfferId(offerId);
+  }, [searchParams, offers]);
 
   // 📍 Ajout des marqueurs sur la carte avec popup enrichi
   useEffect(() => {
