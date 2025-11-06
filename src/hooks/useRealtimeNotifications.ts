@@ -17,6 +17,9 @@ export function useRealtimeNotifications() {
 
   useEffect(() => {
     let channel: RealtimeChannel | null = null
+    let reconnectTimeout: NodeJS.Timeout | null = null
+    let reconnectAttempts = 0
+    const MAX_RECONNECT_ATTEMPTS = 5
 
     const setupRealtime = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -59,12 +62,24 @@ export function useRealtimeNotifications() {
           if (status === 'SUBSCRIBED') {
             console.log('✅ Canal Realtime connecté')
             setIsConnected(true)
-          } else if (status === 'CHANNEL_ERROR') {
-            console.error('❌ CHANNEL_ERROR')
+            reconnectAttempts = 0 // Reset compteur
+          } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+            console.warn('⚠️ Connexion perdue')
             setIsConnected(false)
-          } else if (status === 'CLOSED') {
-            console.warn('⚠️ Canal fermé')
-            setIsConnected(false)
+            
+            // 🔄 Reconnexion automatique avec backoff
+            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+              const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000) // Max 30s
+              console.log(`🔄 Reconnexion dans ${delay/1000}s... (tentative ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`)
+              
+              reconnectTimeout = setTimeout(() => {
+                reconnectAttempts++
+                if (channel) supabase.removeChannel(channel)
+                setupRealtime()
+              }, delay)
+            } else {
+              console.error('❌ Trop de tentatives de reconnexion échouées')
+            }
           }
         })
     }
@@ -75,6 +90,9 @@ export function useRealtimeNotifications() {
       if (channel) {
         console.log('🔌 Déconnexion du canal')
         supabase.removeChannel(channel)
+      }
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout)
       }
     }
   }, [])
