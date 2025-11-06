@@ -241,31 +241,3 @@ const Header = () => {
 };
 
 export default Header;
-```
-
----
-
-## ✅ **Pourquoi cette solution fonctionne** :
-
-1. Ton code détecte déjà si c'est un marchand → `isMerchant` ✅
-2. On utilise cette info pour passer le bon type à `NotificationBell` ✅
-3. **Aucune modification de l'authentification** ✅
-4. **Aucune modification de Supabase** ✅
-5. **Aucune modification de la navigation** ✅
-
----
-
-## 🧪 **Après cette correction, tu verras** :
-
-**Console CLIENT :**
-```
-👤 Client connecté: 26e79fcf...
-🔌 Connexion Realtime CLIENT: 26e79fcf...
-✅ Canal Realtime CLIENT actif
-```
-
-**Console MARCHAND :**
-```
-🏪 Marchand connecté: fc215a2b...
-🔌 Connexion Realtime MARCHAND: fc215a2b...
-✅ Canal Realtime MARCHAND actif
