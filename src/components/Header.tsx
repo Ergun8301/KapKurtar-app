@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Menu,
   X,
@@ -10,13 +10,12 @@ import {
   ArrowRight,
   Store,
   LayoutDashboard,
-  Bell,
-} from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../lib/supabaseClient';
-import { NotificationBell } from './NotificationBell';
-import { logoutUser } from '../lib/logout';
-import { useAddProduct } from '../contexts/AddProductContext';
+} from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+import { supabase } from "../lib/supabaseClient";
+import { NotificationBell } from "./NotificationBell";
+import { logoutUser } from "../lib/logout";
+import { useAddProduct } from "../contexts/AddProductContext";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -27,49 +26,50 @@ const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMerchant, setIsMerchant] = useState(false);
 
-    useEffect(() => {
+  // 🧠 Déterminer le type d’utilisateur connecté
+  useEffect(() => {
     const checkUserType = async () => {
       if (!user) return setIsMerchant(false);
 
-      // 🔍 Étape 1 : récupérer le profil lié à ce user
+      // Vérifie s’il a un profil client
       const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('auth_id', user.id)
+        .from("profiles")
+        .select("id")
+        .eq("auth_id", user.id)
         .maybeSingle();
 
       if (profileError || !profileData) {
-        console.warn('⚠️ Aucun profil trouvé pour cet utilisateur');
+        console.warn("⚠️ Aucun profil trouvé pour cet utilisateur");
         setIsMerchant(false);
         return;
       }
 
-      // 🔍 Étape 2 : vérifier si ce profil est un marchand
+      // Vérifie si le profil correspond à un marchand
       const { data: merchantData } = await supabase
-        .from('merchants')
-        .select('id')
-        .eq('profile_id', profileData.id)
+        .from("merchants")
+        .select("id")
+        .eq("profile_id", profileData.id)
         .maybeSingle();
 
       setIsMerchant(!!merchantData);
-      console.log('✅ Type détecté :', merchantData ? 'Marchand' : 'Client');
+      console.log("✅ Type détecté :", merchantData ? "Marchand" : "Client");
     };
 
     checkUserType();
   }, [user]);
 
+  // 🚪 Déconnexion
   const handleSignOut = async () => {
     await logoutUser(navigate);
     setIsUserMenuOpen(false);
   };
 
-  const getUserDisplayName = () =>
-    user?.email?.split('@')[0] || 'User';
+  const getUserDisplayName = () => user?.email?.split("@")[0] || "User";
 
   const navigation = [
-    { name: 'Explore Offers', href: '/offers' },
-    { name: 'For Merchants', href: '/merchant/info' },
-    { name: 'Download App', href: '/download' },
+    { name: "Explore Offers", href: "/offers" },
+    { name: "For Merchants", href: "/merchant/info" },
+    { name: "Download App", href: "/download" },
   ];
 
   return (
@@ -81,19 +81,19 @@ const Header = () => {
             <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-2">
               <span className="text-white font-bold text-lg">R</span>
             </div>
-            <span className="font-bold text-xl text-gray-900">
-              ResQ Food
-            </span>
+            <span className="font-bold text-xl text-gray-900">ResQ Food</span>
           </a>
 
-          {/* Nav links */}
+          {/* Liens principaux */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               {navigation.map((item) => (
                 <a
                   key={item.name}
                   href={item.href}
-                  className="text-gray-600 hover:text-green-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  className={`text-gray-600 hover:text-green-500 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    location.pathname === item.href ? "text-green-600" : ""
+                  }`}
                 >
                   {item.name}
                 </a>
@@ -101,13 +101,16 @@ const Header = () => {
             </div>
           </div>
 
-          {/* User menu */}
+          {/* Section utilisateur */}
           <div className="flex items-center space-x-4">
             {loading ? (
               <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
             ) : user ? (
               <>
-                <NotificationBell />
+                {/* 🔔 Cloche dynamique selon le type */}
+                <NotificationBell userType={isMerchant ? "merchant" : "client"} />
+
+                {/* Avatar + menu utilisateur */}
                 <div className="relative">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -126,15 +129,16 @@ const Header = () => {
                     <ChevronDown className="w-4 h-4" />
                   </button>
 
+                  {/* 🔽 Menu déroulant */}
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                       {isMerchant ? (
                         <>
-                          {/* 🔹 Dashboard */}
+                          {/* Dashboard marchand */}
                           <button
                             onClick={() => {
                               setIsUserMenuOpen(false);
-                              navigate('/merchant/dashboard');
+                              navigate("/merchant/dashboard");
                             }}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
@@ -142,11 +146,11 @@ const Header = () => {
                             Dashboard
                           </button>
 
-                          {/* 🔹 Settings */}
+                          {/* Paramètres marchand */}
                           <button
                             onClick={() => {
                               setIsUserMenuOpen(false);
-                              const event = new CustomEvent('openMerchantProfileModal');
+                              const event = new CustomEvent("openMerchantProfileModal");
                               window.dispatchEvent(event);
                             }}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -157,13 +161,20 @@ const Header = () => {
                         </>
                       ) : (
                         <>
-                          {/* 🔸 CLIENT MENU */}
+                          {/* Menu client */}
                           <a
                             href="/profile"
                             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <User className="w-4 h-4 mr-2" />
                             My Profile
+                          </a>
+                          <a
+                            href="/notifications"
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Bell className="w-4 h-4 mr-2" />
+                            Notifications
                           </a>
                           <a
                             href="/settings"
@@ -177,7 +188,7 @@ const Header = () => {
 
                       <hr className="my-1" />
 
-                      {/* 🚪 Sign Out */}
+                      {/* Déconnexion */}
                       <button
                         onClick={handleSignOut}
                         className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -190,7 +201,7 @@ const Header = () => {
                 </div>
               </>
             ) : (
-              // Non connecté
+              // 🔐 Si non connecté
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -207,7 +218,7 @@ const Header = () => {
                     <button
                       onClick={() => {
                         setIsUserMenuOpen(false);
-                        navigate('/customer/auth');
+                        navigate("/customer/auth");
                       }}
                       className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100"
                     >
@@ -218,7 +229,7 @@ const Header = () => {
                     <button
                       onClick={() => {
                         setIsUserMenuOpen(false);
-                        navigate('/merchant/auth');
+                        navigate("/merchant/auth");
                       }}
                       className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100"
                     >
@@ -231,7 +242,7 @@ const Header = () => {
               </div>
             )}
 
-            {/* Menu mobile */}
+            {/* 📱 Menu mobile */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
