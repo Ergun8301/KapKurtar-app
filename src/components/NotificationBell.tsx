@@ -1,17 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bell } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
 
 export function NotificationBell() {
   const { user } = useAuth();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useRealtimeNotifications(user?.id || null);
+  const { notifications, unreadCount, markAsRead, markAllAsRead } =
+    useRealtimeNotifications(user?.id || null);
   const [open, setOpen] = useState(false);
+  const bellRef = useRef<HTMLDivElement>(null);
+
+  // ✅ Fermer le popup si on clique à l'extérieur
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (bellRef.current && !bellRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (!user) return null;
 
   return (
-    <div className="relative">
+    <div ref={bellRef} className="relative select-none">
       {/* 🔔 Cloche principale */}
       <button
         onClick={() => setOpen(!open)}
@@ -30,7 +43,10 @@ export function NotificationBell() {
             <h3 className="text-sm font-semibold text-gray-800">Notifications</h3>
             {notifications.length > 0 && (
               <button
-                onClick={markAllAsRead}
+                onClick={() => {
+                  markAllAsRead();
+                  setOpen(false); // ✅ ferme après "tout lu"
+                }}
                 className="text-xs text-green-600 hover:underline"
               >
                 Tout lu
@@ -40,7 +56,9 @@ export function NotificationBell() {
 
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">Aucune notification 📭</p>
+              <p className="text-sm text-gray-500 text-center py-4">
+                Aucune notification 📭
+              </p>
             ) : (
               notifications.map((n) => (
                 <div
