@@ -21,7 +21,10 @@ interface NotificationBellProps {
   userType?: "merchant" | "client";
 }
 
-export function NotificationBell({ userType = "merchant" }: NotificationBellProps) {
+export function NotificationBell({ userType }: NotificationBellProps) {
+  // ⛔ Ne rien afficher tant qu'on ne connaît pas le type d'utilisateur
+  if (!userType) return null;
+
   const { user } = useAuth();
   const navigate = useNavigate();
 
