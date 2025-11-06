@@ -20,18 +20,22 @@ export function useClientNotifications() {
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // 🔐 Récupérer l'utilisateur connecté
+  // 🔐 Récupérer l'utilisateur connecté UNE SEULE FOIS
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) setUserId(user.id);
+      if (user) {
+        console.log("👤 Client connecté:", user.id);
+        setUserId(user.id);
+      }
     };
     getUser();
-  }, []);
+  }, []); // ✅ Pas de dépendances = exécuté UNE SEULE FOIS
 
   // 🧠 Charger les notifications initiales
   useEffect(() => {
     if (!userId) return;
+
     const fetchInitial = async () => {
       const { data, error } = await supabase
         .from("notifications")
@@ -41,21 +45,24 @@ export function useClientNotifications() {
         .order("created_at", { ascending: false })
         .limit(50);
 
-      if (error) console.error("❌ Erreur chargement notifications:", error);
-      else if (data) {
+      if (error) {
+        console.error("❌ Erreur chargement notifications:", error);
+      } else if (data) {
         console.log(`✅ Notifications chargées: ${data.length}`);
         setNotifications(data);
         setUnreadCount(data.filter((n) => !n.is_read).length);
       }
       setIsLoading(false);
     };
-    fetchInitial();
-  }, [userId]);
 
-  // 🔔 Écoute Realtime
+    fetchInitial();
+  }, [userId]); // ✅ Se déclenche UNE FOIS quand userId est défini
+
+  // 🔔 Écoute Realtime (sans reconnexion automatique)
   useEffect(() => {
     if (!userId) return;
-    console.log("🔌 Connexion au canal Realtime pour client:", userId);
+
+    console.log("🔌 Connexion Realtime CLIENT:", userId);
 
     const channel: RealtimeChannel = supabase
       .channel(`client_notifications_${userId}`)
@@ -70,35 +77,39 @@ export function useClientNotifications() {
         (payload) => {
           const newNotif = payload.new as Notification;
           const clientTypes = ["offer", "offer_nearby", "system"];
-          if (!clientTypes.includes(newNotif.type)) return;
+          
+          if (!clientTypes.includes(newNotif.type)) {
+            console.log("⚠️ Type ignoré:", newNotif.type);
+            return;
+          }
 
-          console.log("🟢 Nouvelle notification reçue:", newNotif);
+          console.log("🟢 Nouvelle notification:", newNotif.title);
           setNotifications((prev) => [newNotif, ...prev]);
           if (!newNotif.is_read) setUnreadCount((count) => count + 1);
 
+          // Notification navigateur
           if ("Notification" in window && Notification.permission === "granted") {
             new Notification(newNotif.title || "Nouvelle offre près de vous !", {
               body: newNotif.message,
               icon: "/logo-tilkapp.png",
-              badge: "/logo-tilkapp.png",
             });
           }
         }
       )
-      .subscribe((status, err) => {
-        if (status === "SUBSCRIBED") console.log("✅ Canal Realtime client actif");
-        if (err) console.error("❌ Erreur canal Realtime:", err);
+      .subscribe((status) => {
+        console.log("📡 Statut canal CLIENT:", status);
       });
 
+    // ✅ Cleanup propre
     return () => {
-      console.log("🔌 Déconnexion du canal Realtime");
+      console.log("🔌 Déconnexion canal CLIENT");
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId]); // ✅ Se déclenche UNE FOIS quand userId est défini
 
-  // ✅ Marquer comme lu
   const markAsRead = async (id: string) => {
     if (!userId) return;
+    
     const { error } = await supabase
       .from("notifications")
       .update({ is_read: true })
@@ -113,9 +124,9 @@ export function useClientNotifications() {
     }
   };
 
-  // ✅ Tout marquer lu
   const markAllAsRead = async () => {
     if (!userId) return;
+    
     const { error } = await supabase
       .from("notifications")
       .update({ is_read: true })
