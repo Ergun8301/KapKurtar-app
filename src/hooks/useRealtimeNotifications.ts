@@ -26,7 +26,7 @@ export function useRealtimeNotifications(userId: string | null) {
 
     // ✅ Canal Realtime standard (plus fiable)
     const channel = supabase
-      .channel('realtime:public:notifications')
+  .channel('public:notifications') // ✅ canal standard sans "realtime:"
       .on(
         'postgres_changes',
         {
