@@ -98,27 +98,29 @@ const Header = () => {
           {/* User menu */}
           <div className="flex items-center space-x-4">
             {loading ? (
-              <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
-            ) : user ? (
-              <>
-                <NotificationBell />
-                <div className="relative">
-                  <button
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-green-500 transition-colors"
-                  >
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      {isMerchant ? (
-                        <Store className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <User className="w-4 h-4 text-green-600" />
-                      )}
-                    </div>
-                    <span className="hidden sm:block font-medium">
-                      {getUserDisplayName()}
-                    </span>
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
+  <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+) : user ? (
+  <>
+    {/* ✅ Correction ici */}
+    <NotificationBell userType={isMerchant ? "merchant" : "client"} />
+    
+    <div className="relative">
+      <button
+        onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+        className="flex items-center space-x-2 text-gray-700 hover:text-green-500 transition-colors"
+      >
+        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+          {isMerchant ? (
+            <Store className="w-4 h-4 text-green-600" />
+          ) : (
+            <User className="w-4 h-4 text-green-600" />
+          )}
+        </div>
+        <span className="hidden sm:block font-medium">
+          {getUserDisplayName()}
+        </span>
+        <ChevronDown className="w-4 h-4" />
+      </button>
 
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
