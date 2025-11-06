@@ -18,15 +18,15 @@ export function useRealtimeNotifications(userId: string | null) {
 
       if (!error && data) {
         setNotifications(data);
-        setUnreadCount(data.filter(n => !n.is_read).length);
+        setUnreadCount(data.filter((n) => !n.is_read).length);
       }
     };
 
     loadNotifications();
 
-    // 🔥 Écoute en temps réel : nouveau message → notification immédiate
+    // ✅ Canal Realtime standard (plus fiable)
     const channel = supabase
-      .channel(`realtime:notifications:${userId}`)
+      .channel('realtime:public:notifications')
       .on(
         'postgres_changes',
         {
@@ -35,38 +35,61 @@ export function useRealtimeNotifications(userId: string | null) {
           table: 'notifications',
           filter: `recipient_id=eq.${userId}`,
         },
-        payload => {
+        (payload) => {
+          console.log('✅ Nouvelle notification reçue:', payload);
           const newNotif = payload.new as Notification;
-          setNotifications(prev => [newNotif, ...prev]);
-          setUnreadCount(prev => prev + 1);
+          setNotifications((prev) => [newNotif, ...prev]);
+          setUnreadCount((prev) => prev + 1);
 
-          // 🔔 Son à la réception (désactivable)
+          // 🔔 Son à la réception (désactivable dans localStorage)
           if (window.localStorage.getItem('sound_enabled') === 'false') return;
-          const audio = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_37a938c87d.mp3');
+          const audio = new Audio(
+            'https://cdn.pixabay.com/audio/2022/03/15/audio_37a938c87d.mp3'
+          );
           audio.volume = 0.5;
           audio.play().catch(() => {});
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Canal Supabase notifications:', status);
+      });
+
+    // ✅ Canal Realtime pour les offres (mise à jour stock auto)
+    const offersChannel = supabase
+      .channel('realtime:public:offers')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'offers' },
+        (payload) => {
+          console.log('🔄 Offre mise à jour:', payload);
+          // ici on ne touche pas à la liste de notif,
+          // c’est juste pour que le dashboard réagisse sans reload
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(offersChannel);
     };
   }, [userId]);
 
   // ✅ Marquer une notif comme lue
   const markAsRead = async (id: string) => {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-    setNotifications(prev =>
-      prev.map(n => (n.id === id ? { ...n, is_read: true } : n))
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
-    setUnreadCount(prev => Math.max(prev - 1, 0));
+    setUnreadCount((prev) => Math.max(prev - 1, 0));
   };
 
   // ✅ Tout marquer lu
   const markAllAsRead = async () => {
-    await supabase.from('notifications').update({ is_read: true }).eq('recipient_id', userId);
-    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('recipient_id', userId);
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     setUnreadCount(0);
   };
 
