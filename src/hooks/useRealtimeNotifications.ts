@@ -86,21 +86,3 @@ export function useRealtimeNotifications() {
     isConnected 
   }
 }
-```
-
----
-
-## ⚠️ Important
-
-**NE copie PAS** les lignes comme "Tu devrais voir", "Connexion Realtime", etc. - ce sont juste des **exemples** de ce que tu verras dans la console **après** avoir rechargé.
-
----
-
-## 🧪 Après avoir collé le code
-
-1. **Sauvegarde**
-2. **Recharge** la page : `Ctrl + Shift + R`
-3. **Console** → Tu verras :
-```
-   📡 Statut canal: SUBSCRIBED
-   ✅ Canal Realtime connecté
