@@ -22,48 +22,51 @@ export function useRealtimeNotifications() {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
-        console.log('⚠️ Aucun utilisateur authentifié — pas de Realtime')
+        console.log('⚠️ Pas d\'utilisateur authentifié')
         return
       }
 
-      console.log('🔌 Connexion Realtime pour auth_id:', user.id)
+      console.log('🔌 TEST SANS FILTRE pour auth_id:', user.id)
 
-      // ✅ Syntaxe correcte avec parenthèses
+      // 🧪 TEST : Sans filtre côté serveur
       channel = supabase
-        .channel(`notifications:${user.id}`) // ⚡ Parenthèses, pas backticks seuls
+        .channel(`notifications-test-${Date.now()}`) // Nom unique
         .on(
           'postgres_changes',
           {
             event: 'INSERT',
             schema: 'public',
-            table: 'notifications',
-            filter: `recipient_id=eq.${user.id}`,
+            table: 'notifications'
+            // ⚠️ PAS de filter pour ce test
           },
           (payload) => {
-            console.log('🔔 Nouvelle notification reçue:', payload)
+            console.log('🔔 Notification reçue (SANS FILTRE):', payload)
             const newNotif = payload.new as Notification
             
-            setNotifications(prev => [newNotif, ...prev])
-            setHasNewNotification(true) // ⚡ Active le point rouge
-            
-            // Son de notification (local ou externe)
-            try {
-              const audio = new Audio('/notification.mp3') // Ou ton URL préférée
-              audio.volume = 0.5
-              audio.play().catch(err => console.warn('Son non joué:', err))
-            } catch (e) {
-              console.warn('Erreur audio:', e)
+            // Filtre côté client seulement
+            if (newNotif.recipient_id === user.id) {
+              console.log('✅ Notification pour moi!')
+              setNotifications(prev => [newNotif, ...prev])
+              setHasNewNotification(true)
+              
+              try {
+                const audio = new Audio('/notification.mp3')
+                audio.volume = 0.5
+                audio.play().catch(() => {})
+              } catch {}
+            } else {
+              console.log('⚠️ Notification pour quelqu\'un d\'autre:', newNotif.recipient_id)
             }
           }
         )
         .subscribe((status) => {
-          console.log('📡 Statut canal:', status)
+          console.log('📡 Statut canal (SANS FILTRE):', status)
           
           if (status === 'SUBSCRIBED') {
-            console.log('✅ Canal Realtime CONNECTÉ')
+            console.log('✅✅✅ Canal CONNECTÉ SANS FILTRE!')
             setIsConnected(true)
           } else if (status === 'CHANNEL_ERROR') {
-            console.error('❌ CHANNEL_ERROR — Vérifier RLS policies')
+            console.error('❌ CHANNEL_ERROR même sans filtre')
             setIsConnected(false)
           } else if (status === 'CLOSED') {
             console.warn('⚠️ Canal fermé')
@@ -76,7 +79,7 @@ export function useRealtimeNotifications() {
 
     return () => {
       if (channel) {
-        console.log('🔌 Déconnexion du canal Realtime')
+        console.log('🔌 Déconnexion du canal')
         supabase.removeChannel(channel)
       }
     }
@@ -85,7 +88,22 @@ export function useRealtimeNotifications() {
   return { 
     notifications, 
     hasNewNotification, 
-    setHasNewNotification, // Pour réinitialiser le point rouge
+    setHasNewNotification,
     isConnected 
   }
 }
+```
+
+---
+
+## 🧪 Teste maintenant
+
+1. **Sauvegarde le fichier**
+2. **Recharge la page** (Ctrl+Shift+R)
+3. **Ouvre la console** (F12)
+
+**Tu devrais voir :**
+```
+🔌 TEST SANS FILTRE pour auth_id: fc215a2b-...
+📡 Statut canal (SANS FILTRE): SUBSCRIBED
+✅✅✅ Canal CONNECTÉ SANS FILTRE!
