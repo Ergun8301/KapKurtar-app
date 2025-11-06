@@ -1,61 +1,71 @@
-import React, { useState } from 'react';
-import { Bell } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { type Notification } from '../api/notifications';
 
-export function NotificationBell() {
-  const { user } = useAuth();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useRealtimeNotifications(user?.id || null);
-  const [open, setOpen] = useState(false);
+export function useRealtimeNotifications(userId: string | null) {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const toggleDropdown = () => setOpen(!open);
+  useEffect(() => {
+    if (!userId) return;
 
-  return (
-    <div className="relative">
-      <button
-        onClick={toggleDropdown}
-        className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
-      >
-        <Bell className="w-6 h-6 text-gray-700" />
-        {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
-        )}
-      </button>
+    const loadNotifications = async () => {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('recipient_id', userId)
+        .order('created_at', { ascending: false });
 
-      {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
-          <div className="flex justify-between items-center px-4 py-2 border-b border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-800">Notifications</h3>
-            {notifications.length > 0 && (
-              <button
-                onClick={markAllAsRead}
-                className="text-xs text-green-600 hover:underline"
-              >
-                Tout lu
-              </button>
-            )}
-          </div>
+      if (!error && data) {
+        setNotifications(data);
+        setUnreadCount(data.filter(n => !n.is_read).length);
+      }
+    };
 
-          <div className="max-h-80 overflow-y-auto">
-            {notifications.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">Aucune notification 📭</p>
-            ) : (
-              notifications.map((n) => (
-                <div
-                  key={n.id}
-                  onClick={() => markAsRead(n.id)}
-                  className={`px-4 py-3 cursor-pointer hover:bg-gray-50 ${
-                    !n.is_read ? 'bg-green-50' : 'bg-white'
-                  }`}
-                >
-                  <p className="text-sm font-medium text-gray-800">{n.title}</p>
-                  <p className="text-xs text-gray-600">{n.message}</p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    loadNotifications();
+
+    const channel = supabase
+      .channel(`realtime:notifications:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_id=eq.${userId}`,
+        },
+        payload => {
+          const newNotif = payload.new as Notification;
+          setNotifications(prev => [newNotif, ...prev]);
+          setUnreadCount(prev => prev + 1);
+
+          // 🔔 Petit son à la réception (avec option désactivation)
+          if (window.localStorage.getItem('sound_enabled') === 'false') return;
+          const audio = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_37a938c87d.mp3');
+          audio.volume = 0.5;
+          audio.play().catch(() => {});
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
+  const markAsRead = async (id: string) => {
+    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    setNotifications(prev =>
+      prev.map(n => (n.id === id ? { ...n, is_read: true } : n))
+    );
+    setUnreadCount(prev => Math.max(prev - 1, 0));
+  };
+
+  const markAllAsRead = async () => {
+    await supabase.from('notifications').update({ is_read: true }).eq('recipient_id', userId);
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    setUnreadCount(0);
+  };
+
+  return { notifications, unreadCount, markAsRead, markAllAsRead };
 }
