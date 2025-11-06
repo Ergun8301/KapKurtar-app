@@ -24,6 +24,7 @@ export function useRealtimeNotifications(userId: string | null) {
 
     loadNotifications();
 
+    // 🔥 Écoute en temps réel : nouveau message → notification immédiate
     const channel = supabase
       .channel(`realtime:notifications:${userId}`)
       .on(
@@ -39,7 +40,7 @@ export function useRealtimeNotifications(userId: string | null) {
           setNotifications(prev => [newNotif, ...prev]);
           setUnreadCount(prev => prev + 1);
 
-          // 🔔 Petit son à la réception (avec option désactivation)
+          // 🔔 Son à la réception (désactivable)
           if (window.localStorage.getItem('sound_enabled') === 'false') return;
           const audio = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_37a938c87d.mp3');
           audio.volume = 0.5;
@@ -53,6 +54,7 @@ export function useRealtimeNotifications(userId: string | null) {
     };
   }, [userId]);
 
+  // ✅ Marquer une notif comme lue
   const markAsRead = async (id: string) => {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
     setNotifications(prev =>
@@ -61,6 +63,7 @@ export function useRealtimeNotifications(userId: string | null) {
     setUnreadCount(prev => Math.max(prev - 1, 0));
   };
 
+  // ✅ Tout marquer lu
   const markAllAsRead = async () => {
     await supabase.from('notifications').update({ is_read: true }).eq('recipient_id', userId);
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
