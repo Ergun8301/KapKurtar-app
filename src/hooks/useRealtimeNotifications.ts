@@ -1,97 +1,91 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { type Notification } from '../api/notifications';
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabaseClient'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
-export function useRealtimeNotifications(userId: string | null) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+interface Notification {
+  id: string
+  recipient_id: string
+  message: string
+  type?: string
+  created_at: string
+}
+
+export function useRealtimeNotifications() {
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [hasNewNotification, setHasNewNotification] = useState(false)
+  const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
-    if (!userId) return;
+    let channel: RealtimeChannel | null = null
 
-    const loadNotifications = async () => {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('recipient_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (!error && data) {
-        setNotifications(data);
-        setUnreadCount(data.filter((n) => !n.is_read).length);
+    const setupRealtime = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        console.log('⚠️ Aucun utilisateur authentifié — pas de Realtime')
+        return
       }
-    };
 
-    loadNotifications();
+      console.log('🔌 Connexion Realtime pour auth_id:', user.id)
 
-    // ✅ Canal Realtime standard (plus fiable)
-    const channel = supabase
-  .channel('public:notifications') // ✅ canal standard sans "realtime:"
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `recipient_id=eq.${userId}`,
-        },
-        (payload) => {
-          console.log('✅ Nouvelle notification reçue:', payload);
-          const newNotif = payload.new as Notification;
-          setNotifications((prev) => [newNotif, ...prev]);
-          setUnreadCount((prev) => prev + 1);
+      // ✅ Syntaxe correcte avec parenthèses
+      channel = supabase
+        .channel(`notifications:${user.id}`) // ⚡ Parenthèses, pas backticks seuls
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `recipient_id=eq.${user.id}`,
+          },
+          (payload) => {
+            console.log('🔔 Nouvelle notification reçue:', payload)
+            const newNotif = payload.new as Notification
+            
+            setNotifications(prev => [newNotif, ...prev])
+            setHasNewNotification(true) // ⚡ Active le point rouge
+            
+            // Son de notification (local ou externe)
+            try {
+              const audio = new Audio('/notification.mp3') // Ou ton URL préférée
+              audio.volume = 0.5
+              audio.play().catch(err => console.warn('Son non joué:', err))
+            } catch (e) {
+              console.warn('Erreur audio:', e)
+            }
+          }
+        )
+        .subscribe((status) => {
+          console.log('📡 Statut canal:', status)
+          
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Canal Realtime CONNECTÉ')
+            setIsConnected(true)
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('❌ CHANNEL_ERROR — Vérifier RLS policies')
+            setIsConnected(false)
+          } else if (status === 'CLOSED') {
+            console.warn('⚠️ Canal fermé')
+            setIsConnected(false)
+          }
+        })
+    }
 
-          // 🔔 Son à la réception (désactivable dans localStorage)
-          if (window.localStorage.getItem('sound_enabled') === 'false') return;
-          const audio = new Audio(
-            'https://cdn.pixabay.com/audio/2022/03/15/audio_37a938c87d.mp3'
-          );
-          audio.volume = 0.5;
-          audio.play().catch(() => {});
-        }
-      )
-      .subscribe((status) => {
-        console.log('📡 Canal Supabase notifications:', status);
-      });
-
-    // ✅ Canal Realtime pour les offres (mise à jour stock auto)
-    const offersChannel = supabase
-      .channel('realtime:public:offers')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'offers' },
-        (payload) => {
-          console.log('🔄 Offre mise à jour:', payload);
-          // ici on ne touche pas à la liste de notif,
-          // c’est juste pour que le dashboard réagisse sans reload
-        }
-      )
-      .subscribe();
+    setupRealtime()
 
     return () => {
-      supabase.removeChannel(channel);
-      supabase.removeChannel(offersChannel);
-    };
-  }, [userId]);
+      if (channel) {
+        console.log('🔌 Déconnexion du canal Realtime')
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [])
 
-  // ✅ Marquer une notif comme lue
-  const markAsRead = async (id: string) => {
-    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
-    );
-    setUnreadCount((prev) => Math.max(prev - 1, 0));
-  };
-
-  // ✅ Tout marquer lu
-  const markAllAsRead = async () => {
-    await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('recipient_id', userId);
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    setUnreadCount(0);
-  };
-
-  return { notifications, unreadCount, markAsRead, markAllAsRead };
+  return { 
+    notifications, 
+    hasNewNotification, 
+    setHasNewNotification, // Pour réinitialiser le point rouge
+    isConnected 
+  }
 }
