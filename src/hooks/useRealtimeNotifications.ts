@@ -1,3 +1,4 @@
+// src/hooks/useRealtimeNotifications.ts
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -57,7 +58,7 @@ export function useRealtimeNotifications() {
     fetchInitial();
   }, [userId]);
 
-  // 🔔 Écoute Realtime (Supabase gère la reconnexion automatiquement)
+  // 🔔 Écoute Realtime
   useEffect(() => {
     if (!userId) return;
 
@@ -93,26 +94,23 @@ export function useRealtimeNotifications() {
             await audio.play();
             console.log('🔊 Son joué');
           } catch (err) {
-            console.warn('🔇 Son bloqué par le navigateur');
+            console.warn('🔇 Son bloqué');
           }
         }
       )
       .subscribe((status) => {
-        // ✅ Ne loguer que les changements importants
         if (status === "SUBSCRIBED") {
           console.log("✅ Canal Realtime MARCHAND actif");
         } else if (status === "CHANNEL_ERROR") {
           console.error("❌ Erreur canal Realtime");
         }
-        // ⚠️ Ne PAS réagir à CLOSED (Supabase reconnecte automatiquement)
       });
 
-    // ✅ Cleanup propre (appelé UNE SEULE FOIS au démontage)
     return () => {
       console.log("🔌 Déconnexion canal MARCHAND");
       supabase.removeChannel(channel);
     };
-  }, [userId]); // ✅ Se déclenche UNE FOIS quand userId est défini
+  }, [userId]);
 
   const markAsRead = async (id: string) => {
     if (!userId) return;
