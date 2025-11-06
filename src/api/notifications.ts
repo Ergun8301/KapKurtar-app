@@ -34,14 +34,11 @@ async function getCurrentUserId(): Promise<string | null> {
 // 📬 RÉCUPÉRATION
 // ---------------------------------------------------------------------------
 
-/**
- * Récupère les 50 dernières notifications du user connecté.
- * Une seule requête par session.
- */
 export const getNotifications = async (userId?: string) => {
   try {
     const uid = userId || (await getCurrentUserId());
-    if (!uid) return { success: false, error: "Utilisateur non authentifié", data: [] };
+    if (!uid)
+      return { success: false, error: "Utilisateur non authentifié", data: [] };
 
     const { data, error } = await supabase
       .from("notifications")
@@ -58,13 +55,11 @@ export const getNotifications = async (userId?: string) => {
   }
 };
 
-/**
- * Récupère uniquement les notifications non lues.
- */
 export const getUnreadNotifications = async (userId?: string) => {
   try {
     const uid = userId || (await getCurrentUserId());
-    if (!uid) return { success: false, error: "Utilisateur non authentifié", data: [] };
+    if (!uid)
+      return { success: false, error: "Utilisateur non authentifié", data: [] };
 
     const { data, error } = await supabase
       .from("notifications")
@@ -86,30 +81,30 @@ export const getUnreadNotifications = async (userId?: string) => {
 // ---------------------------------------------------------------------------
 
 /**
- * Marque une notification comme lue.
+ * ✅ Version sécurisée via RPC
  */
 export const markNotificationAsRead = async (notificationId: string) => {
   try {
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("id", notificationId);
+    const { error } = await supabase.rpc("mark_notification_as_read", {
+      p_id: notificationId,
+    });
 
     if (error) throw error;
     return { success: true };
   } catch (err: any) {
-    console.error("markNotificationAsRead error:", err);
+    console.error("markNotificationAsRead RPC error:", err);
     return { success: false, error: err.message };
   }
 };
 
 /**
- * Marque toutes les notifications comme lues pour l'utilisateur connecté.
+ * Marque toutes les notifications comme lues (classique)
  */
 export const markAllNotificationsAsRead = async (userId?: string) => {
   try {
     const uid = userId || (await getCurrentUserId());
-    if (!uid) return { success: false, error: "Utilisateur non authentifié" };
+    if (!uid)
+      return { success: false, error: "Utilisateur non authentifié" };
 
     const { error } = await supabase
       .from("notifications")
@@ -133,9 +128,8 @@ let activeChannel: ReturnType<typeof supabase.channel> | null = null;
 let currentUserId: string | null = null;
 
 /**
- * S'abonne au canal notifications en temps réel (INSERT uniquement).
- * Nettoie automatiquement la connexion.
- * Throttle : max 1 notification traitée toutes les 300ms.
+ * S'abonne au canal notifications en temps réel (INSERT uniquement)
+ * Throttle : max 1 notification toutes les 300ms
  */
 export const subscribeToNotifications = (
   userId: string,
