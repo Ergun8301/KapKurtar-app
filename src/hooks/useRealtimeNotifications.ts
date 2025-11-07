@@ -1,4 +1,3 @@
-// src/hooks/useRealtimeNotifications.ts
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -20,7 +19,6 @@ export function useRealtimeNotifications() {
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // 🔐 Récupérer l'utilisateur UNE SEULE FOIS
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -32,7 +30,6 @@ export function useRealtimeNotifications() {
     getUser();
   }, []);
 
-  // 🧠 Charger les notifications initiales
   useEffect(() => {
     if (!userId) return;
 
@@ -58,7 +55,6 @@ export function useRealtimeNotifications() {
     fetchInitial();
   }, [userId]);
 
-  // 🔔 Écoute Realtime
   useEffect(() => {
     if (!userId) return;
 
@@ -87,7 +83,6 @@ export function useRealtimeNotifications() {
           setNotifications((prev) => [newNotif, ...prev]);
           if (!newNotif.is_read) setUnreadCount((count) => count + 1);
 
-          // 🔊 Son de notification
           try {
             const audio = new Audio('https://cdn.jsdelivr.net/gh/naptha/talkify-tts-voices@master/sounds/notification.mp3');
             audio.volume = 0.5;

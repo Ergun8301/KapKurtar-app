@@ -22,13 +22,11 @@ interface NotificationBellProps {
 }
 
 export function NotificationBell({ userType }: NotificationBellProps) {
-  // ⛔ Bloquer si on ne connaît pas encore le rôle OU si le type est invalide
   if (!userType || (userType !== "merchant" && userType !== "client")) return null;
 
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // 🧩 Choisir le bon hook selon le type d'utilisateur
   const {
     notifications: realtimeNotifs,
     unreadCount: hookUnreadCount,
@@ -46,7 +44,6 @@ export function NotificationBell({ userType }: NotificationBellProps) {
   const bellRef = useRef<HTMLDivElement>(null);
   const shakeIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 🧠 Synchroniser les notifs du hook Realtime
   useEffect(() => {
     if (realtimeNotifs.length > 0) {
       setNotifications(realtimeNotifs);
@@ -54,7 +51,6 @@ export function NotificationBell({ userType }: NotificationBellProps) {
     }
   }, [realtimeNotifs, hookUnreadCount]);
 
-  // 📳 Animation de vibration régulière si non lu
   useEffect(() => {
     if (unreadCount > 0 && !open) {
       shakeIntervalRef.current = setInterval(() => {
@@ -73,7 +69,6 @@ export function NotificationBell({ userType }: NotificationBellProps) {
     };
   }, [unreadCount, open]);
 
-  // ✅ Fermer le popup si on clique à l'extérieur
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (bellRef.current && !bellRef.current.contains(event.target as Node)) {
@@ -86,16 +81,12 @@ export function NotificationBell({ userType }: NotificationBellProps) {
 
   if (!user) return null;
 
-  // 🎯 Gestion du clic sur une notification
   const handleNotificationClick = async (notification: Notification) => {
-    // Marquer comme lue
     if (!notification.is_read) {
       await markAsRead(notification.id);
     }
 
-    // Redirection selon le type de notification
     if (userType === "client") {
-      // 🛒 CLIENT : Rediriger vers la carte avec l'offre ciblée
       if (
         (notification.type === "offer" || notification.type === "offer_nearby") &&
         notification.data?.offer_id
@@ -104,7 +95,6 @@ export function NotificationBell({ userType }: NotificationBellProps) {
         navigate(`/offers?offer_id=${notification.data.offer_id}`);
       }
     } else {
-      // 🏪 MARCHAND : Rediriger vers la gestion des offres ou réservations
       if (notification.type === "reservation" && notification.data?.offer_id) {
         setOpen(false);
         navigate(`/merchant/reservations`);
@@ -118,7 +108,6 @@ export function NotificationBell({ userType }: NotificationBellProps) {
     }
   };
 
-  // 📝 Marquer comme lu
   const markAsRead = async (id: string) => {
     if (hookMarkAsRead) {
       await hookMarkAsRead(id);
@@ -132,7 +121,6 @@ export function NotificationBell({ userType }: NotificationBellProps) {
     setUnreadCount((prev) => Math.max(0, prev - 1));
   };
 
-  // 📝 Tout marquer comme lu
   const markAllAsRead = async () => {
     if (hookMarkAllAsRead) {
       await hookMarkAllAsRead();
@@ -149,7 +137,6 @@ export function NotificationBell({ userType }: NotificationBellProps) {
     setUnreadCount(0);
   };
 
-  // 🎨 Icône selon le type de notification
   const getNotificationIcon = (type?: string) => {
     switch (type) {
       case "offer":
@@ -168,7 +155,6 @@ export function NotificationBell({ userType }: NotificationBellProps) {
     }
   };
 
-  // 🎨 Couleur de bordure selon le type
   const getNotificationBorderColor = (type?: string) => {
     switch (type) {
       case "offer":
@@ -189,7 +175,6 @@ export function NotificationBell({ userType }: NotificationBellProps) {
 
   return (
     <div ref={bellRef} className="relative select-none">
-      {/* 🔔 Cloche principale */}
       <button
         onClick={() => setOpen(!open)}
         className={`relative p-2 rounded-full hover:bg-gray-100 transition-all ${
@@ -203,7 +188,6 @@ export function NotificationBell({ userType }: NotificationBellProps) {
           }`}
         />
 
-        {/* 🔴 Badge rouge avec compteur */}
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1.5 border-2 border-white animate-pulse shadow-lg">
             {unreadCount > 99 ? "99+" : unreadCount}
@@ -211,10 +195,8 @@ export function NotificationBell({ userType }: NotificationBellProps) {
         )}
       </button>
 
-      {/* 📋 Popup des notifications */}
       {open && (
         <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-[9999] overflow-hidden">
-          {/* 🎨 Header du popup */}
           <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50">
             <h3 className="text-sm font-bold text-gray-800">
               Notifications {unreadCount > 0 && `(${unreadCount})`}
@@ -229,7 +211,6 @@ export function NotificationBell({ userType }: NotificationBellProps) {
             )}
           </div>
 
-          {/* 📜 Liste des notifications */}
           <div className="max-h-[500px] overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="text-center py-12">
@@ -251,12 +232,10 @@ export function NotificationBell({ userType }: NotificationBellProps) {
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    {/* 🎨 Icône de type */}
                     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-lg shadow-sm">
                       {getNotificationIcon(n.type)}
                     </div>
 
-                    {/* 📋 Contenu */}
                     <div className="flex-1 min-w-0">
                       {n.title && (
                         <p className="text-sm font-semibold text-gray-800 mb-1 line-clamp-1">
@@ -275,7 +254,6 @@ export function NotificationBell({ userType }: NotificationBellProps) {
                       </p>
                     </div>
 
-                    {/* 🔴 Point non lu */}
                     {!n.is_read && (
                       <div className="flex-shrink-0 w-2.5 h-2.5 bg-green-500 rounded-full mt-1 shadow-sm"></div>
                     )}
@@ -287,7 +265,6 @@ export function NotificationBell({ userType }: NotificationBellProps) {
         </div>
       )}
 
-      {/* 🎨 Animation shake */}
       <style>{`
         @keyframes shake {
           0%, 100% { transform: rotate(0deg); }
