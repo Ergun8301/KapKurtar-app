@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import { useNotificationSound } from "./useNotificationSound"; // ✅ ajout
+import { useNotificationSound } from "./useNotificationSound";
 
 interface Notification {
   id: string;
@@ -23,7 +23,7 @@ export function useClientNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
-  const { play } = useNotificationSound(); // ✅ hook son
+  const { play } = useNotificationSound();
 
   // 🧩 Étape 1 – Récupérer l'utilisateur connecté
   useEffect(() => {
@@ -65,11 +65,11 @@ export function useClientNotifications() {
   useEffect(() => {
     if (!userId) return;
 
-    console.log("🔌 Connexion Realtime CLIENT:", userId);
+    console.log("⚡ Initialisation canal Realtime client:", userId);
 
-    // ✅ Correction ici : nom du canal sans "realtime:"
+    // ✅ Canal unique par client — évite toute collision
     const channel: RealtimeChannel = supabase
-      .channel("public:notifications")
+      .channel(`notifications:client:${userId}`)
       .on(
         "postgres_changes",
         {
@@ -94,13 +94,15 @@ export function useClientNotifications() {
       )
       .subscribe((status) => {
         console.log("📡 Statut canal CLIENT:", status);
+        if (status === "CHANNEL_ERROR") console.error("❌ Erreur Realtime CLIENT");
+        if (status === "CLOSED") console.warn("⚠️ Canal CLIENT fermé");
       });
 
     return () => {
       console.log("🔌 Déconnexion canal CLIENT");
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId]); // ✅ ne surtout pas ajouter 'play' ici
 
   return { notifications, unreadCount };
 }
