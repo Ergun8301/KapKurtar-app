@@ -8,7 +8,6 @@ interface Notification {
   type: "offer" | "offer_nearby" | "reservation" | "system" | "offer_expired" | "stock_empty";
   title: string;
   message: string;
-  data?: { offer_id?: string; merchant_id?: string; [key: string]: any };
   is_read: boolean;
   created_at: string;
 }
@@ -16,24 +15,23 @@ interface Notification {
 export function useClientNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
+  // 🔹 Récupère l'utilisateur
   useEffect(() => {
-    const getUser = async () => {
+    (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         console.log("👤 Client connecté:", user.id);
         setUserId(user.id);
       }
-    };
-    getUser();
+    })();
   }, []);
 
+  // 🔹 Récupère les notifs existantes
   useEffect(() => {
     if (!userId) return;
-
-    const fetchInitial = async () => {
+    (async () => {
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -41,20 +39,16 @@ export function useClientNotifications() {
         .in("type", ["offer", "offer_nearby", "system"])
         .order("created_at", { ascending: false })
         .limit(50);
-
-      if (error) {
-        console.error("❌ Erreur chargement notifications:", error);
-      } else if (data) {
-        console.log(`✅ Notifications chargées: ${data.length}`);
+      if (error) console.error("❌ Erreur chargement notifications:", error);
+      else {
+        console.log(`✅ Notifications client chargées: ${data.length}`);
         setNotifications(data);
         setUnreadCount(data.filter((n) => !n.is_read).length);
       }
-      setIsLoading(false);
-    };
-
-    fetchInitial();
+    })();
   }, [userId]);
 
+  // 🔹 Realtime : écoute des nouvelles notifications
   useEffect(() => {
     if (!userId) return;
 
@@ -70,29 +64,30 @@ export function useClientNotifications() {
           table: "notifications",
           filter: `recipient_id=eq.${userId}`,
         },
-        (payload) => {
+        async (payload) => {
           const newNotif = payload.new as Notification;
           const clientTypes = ["offer", "offer_nearby", "system"];
-          
-          if (!clientTypes.includes(newNotif.type)) {
-            console.log("⚠️ Type ignoré:", newNotif.type);
-            return;
-          }
+          if (!clientTypes.includes(newNotif.type)) return;
 
-          console.log("🟢 Nouvelle notification:", newNotif.title);
+          console.log("🟢 Nouvelle notification CLIENT:", newNotif.title);
           setNotifications((prev) => [newNotif, ...prev]);
-          if (!newNotif.is_read) setUnreadCount((count) => count + 1);
+          if (!newNotif.is_read) setUnreadCount((c) => c + 1);
 
-          if ("Notification" in window && Notification.permission === "granted") {
-            new Notification(newNotif.title || "Nouvelle offre près de vous !", {
-              body: newNotif.message,
-              icon: "/logo-tilkapp.png",
-            });
+          try {
+            const audio = new Audio("https://cdn.jsdelivr.net/gh/naptha/talkify-tts-voices@master/sounds/notification.mp3");
+            audio.volume = 0.5;
+            await audio.play();
+          } catch {
+            console.warn("🔇 Son bloqué");
           }
         }
       )
       .subscribe((status) => {
         console.log("📡 Statut canal CLIENT:", status);
+        if (status === "CHANNEL_ERROR" || status === "CLOSED") {
+          console.warn("⚠️ Reconnexion Realtime...");
+          setTimeout(() => supabase.realtime.connect(), 2000);
+        }
       });
 
     return () => {
@@ -101,37 +96,5 @@ export function useClientNotifications() {
     };
   }, [userId]);
 
-  const markAsRead = async (id: string) => {
-    if (!userId) return;
-    
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("id", id)
-      .eq("recipient_id", userId);
-
-    if (!error) {
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
-      );
-      setUnreadCount((count) => Math.max(0, count - 1));
-    }
-  };
-
-  const markAllAsRead = async () => {
-    if (!userId) return;
-    
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("recipient_id", userId)
-      .eq("is_read", false);
-
-    if (!error) {
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      setUnreadCount(0);
-    }
-  };
-
-  return { notifications, unreadCount, isLoading, markAsRead, markAllAsRead };
+  return { notifications, unreadCount };
 }
