@@ -25,15 +25,36 @@ export function useClientNotifications() {
   const [userId, setUserId] = useState<string | null>(null);
   const { play } = useNotificationSound();
 
-  // 🧩 Étape 1 – Récupérer l'utilisateur connecté
+  // 🧩 Étape 1 – Récupérer le vrai profile.id du client connecté
   useEffect(() => {
     (async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (user) {
-        console.log("👤 Client connecté:", user.id);
-        setUserId(user.id);
+
+      if (!user) {
+        setUserId(null);
+        return;
+      }
+
+      // 🔥 CORRECTION : on cherche le profil lié à ce user.auth_id
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_id", user.id)
+        .eq("role", "client")
+        .maybeSingle();
+
+      if (error) {
+        console.error("❌ Erreur récupération profil:", error);
+        return;
+      }
+
+      if (profile) {
+        console.log("👤 Client connecté (profile.id):", profile.id);
+        setUserId(profile.id);
+      } else {
+        console.warn("⚠️ Aucun profil client trouvé pour cet utilisateur.");
       }
     })();
   }, []);
@@ -67,7 +88,6 @@ export function useClientNotifications() {
 
     console.log("⚡ Initialisation canal Realtime client:", userId);
 
-    // ✅ Canal unique par client — évite toute collision
     const channel: RealtimeChannel = supabase
       .channel(`notifications:client:${userId}`)
       .on(
@@ -86,7 +106,7 @@ export function useClientNotifications() {
           if (!clientTypes.includes(newNotif.type)) return;
 
           console.log("🟢 Nouvelle notification CLIENT:", newNotif.title);
-          play(); // 🔊 lecture du son
+          play();
 
           setNotifications((prev) => [newNotif, ...prev]);
           if (!newNotif.is_read) setUnreadCount((c) => c + 1);
@@ -102,7 +122,7 @@ export function useClientNotifications() {
       console.log("🔌 Déconnexion canal CLIENT");
       supabase.removeChannel(channel);
     };
-  }, [userId]); // ✅ ne surtout pas ajouter 'play' ici
+  }, [userId]);
 
   return { notifications, unreadCount };
 }
