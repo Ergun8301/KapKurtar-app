@@ -84,8 +84,7 @@ const Header = () => {
             <span className="font-bold text-xl text-gray-900">ResQ Food</span>
           </a>
 
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
+          <div className="ml-10 flex items-baseline space-x-8">
               {navigation.map((item) => (
                 
                   key={item.name}
@@ -96,7 +95,6 @@ const Header = () => {
                 </a>
               ))}
             </div>
-          </div>
 
           <div className="flex items-center space-x-4">
             {loading ? (
