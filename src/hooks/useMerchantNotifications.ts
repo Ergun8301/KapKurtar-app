@@ -1,16 +1,20 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import type { Notification } from '../api/notifications';
+import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabaseClient";
+import type { Notification } from "../api/notifications";
+import { useNotificationSound } from "./useNotificationSound"; // ✅ ajout
 
 interface UseMerchantNotificationsOptions {
   merchantId: string | null;
 }
 
-export function useMerchantNotifications({ merchantId }: UseMerchantNotificationsOptions) {
+export function useMerchantNotifications({
+  merchantId,
+}: UseMerchantNotificationsOptions) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { play } = useNotificationSound(); // ✅ ajout du hook pour le son
 
   useEffect(() => {
     if (!merchantId) {
@@ -26,10 +30,10 @@ export function useMerchantNotifications({ merchantId }: UseMerchantNotification
         setError(null);
 
         const { data, error: fetchError } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('recipient_id', merchantId)
-          .order('created_at', { ascending: false })
+          .from("notifications")
+          .select("*")
+          .eq("recipient_id", merchantId)
+          .order("created_at", { ascending: false })
           .limit(50);
 
         if (fetchError) throw fetchError;
@@ -53,22 +57,26 @@ export function useMerchantNotifications({ merchantId }: UseMerchantNotification
 
     fetchNotifications();
 
+    // 🧩 Realtime : écoute les nouvelles notifications
     const channel = supabase
       .channel(`notifications:merchant:${merchantId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `recipient_id=eq.${merchantId}`
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${merchantId}`,
         },
         (payload) => {
-          if (mounted) {
-            const newNotification = payload.new as Notification;
-            setNotifications((prev) => [newNotification, ...prev]);
-            setUnreadCount((prev) => prev + 1);
-          }
+          if (!mounted) return;
+          const newNotification = payload.new as Notification;
+
+          // ✅ Joue le son à chaque nouvelle notification Realtime
+          play();
+
+          setNotifications((prev) => [newNotification, ...prev]);
+          setUnreadCount((prev) => prev + 1);
         }
       )
       .subscribe();
@@ -77,14 +85,15 @@ export function useMerchantNotifications({ merchantId }: UseMerchantNotification
       mounted = false;
       supabase.removeChannel(channel);
     };
-  }, [merchantId]);
+  }, [merchantId, play]);
 
+  // 🟩 Marquer une notification comme lue
   const markAsRead = async (notificationId: string) => {
     try {
       const { error } = await supabase
-        .from('notifications')
+        .from("notifications")
         .update({ is_read: true })
-        .eq('id', notificationId);
+        .eq("id", notificationId);
 
       if (error) throw error;
 
@@ -98,15 +107,16 @@ export function useMerchantNotifications({ merchantId }: UseMerchantNotification
     }
   };
 
+  // 🟩 Marquer toutes les notifications comme lues
   const markAllAsRead = async () => {
     if (!merchantId) return;
 
     try {
       const { error } = await supabase
-        .from('notifications')
+        .from("notifications")
         .update({ is_read: true })
-        .eq('recipient_id', merchantId)
-        .eq('is_read', false);
+        .eq("recipient_id", merchantId)
+        .eq("is_read", false);
 
       if (error) throw error;
 
@@ -124,6 +134,6 @@ export function useMerchantNotifications({ merchantId }: UseMerchantNotification
     loading,
     error,
     markAsRead,
-    markAllAsRead
+    markAllAsRead,
   };
 }
