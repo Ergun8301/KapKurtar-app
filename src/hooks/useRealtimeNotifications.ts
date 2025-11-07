@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 interface Notification {
   id: string;
@@ -13,25 +13,25 @@ interface Notification {
   created_at: string;
 }
 
-export function useRealtimeNotifications() {
+export function useClientNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // ✅ Étape 1 — Auth utilisateur
+  // ✅ Auth
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        console.log("🏪 Marchand connecté:", user.id);
+        console.log("👤 Client connecté:", user.id);
         setUserId(user.id);
       }
     };
     getUser();
   }, []);
 
-  // ✅ Étape 2 — Reconnexion Realtime compatible V2
+  // ✅ Realtime reconnexion automatique
   useEffect(() => {
     const reconnectRealtime = async () => {
       try {
@@ -39,17 +39,16 @@ export function useRealtimeNotifications() {
         const token = session?.access_token || "";
         supabase.realtime.setAuth(token);
         supabase.realtime.connect();
-        console.log("📡 Realtime initialisé avec succès");
+        console.log("📡 Realtime client initialisé");
       } catch (err) {
-        console.warn("⚠️ Erreur initialisation Realtime:", err);
+        console.warn("⚠️ Erreur Realtime client:", err);
       }
     };
     reconnectRealtime();
 
-    // 🔁 petite boucle de sécurité : reconnexion toutes les 60s si jamais déconnecté
     const interval = setInterval(() => {
       if (!supabase.realtime.isConnected()) {
-        console.warn("🔁 Reconnexion forcée Realtime...");
+        console.warn("🔁 Reconnexion forcée Realtime client...");
         supabase.realtime.connect();
       }
     }, 60000);
@@ -57,7 +56,7 @@ export function useRealtimeNotifications() {
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ Étape 3 — Chargement initial
+  // ✅ Récupération initiale
   useEffect(() => {
     if (!userId) return;
 
@@ -66,13 +65,14 @@ export function useRealtimeNotifications() {
         .from("notifications")
         .select("*")
         .eq("recipient_id", userId)
-        .in("type", ["reservation", "offer_expired", "stock_empty", "system"])
+        .in("type", ["offer_nearby", "system", "offer", "reservation"])
         .order("created_at", { ascending: false })
         .limit(50);
 
-      if (error) console.error("❌ Erreur chargement notifications:", error);
-      else if (data) {
-        console.log(`✅ Notifications chargées: ${data.length}`);
+      if (error) {
+        console.error("❌ Erreur chargement notifications client:", error);
+      } else if (data) {
+        console.log(`✅ Notifications client chargées: ${data.length}`);
         setNotifications(data);
         setUnreadCount(data.filter((n) => !n.is_read).length);
       }
@@ -82,14 +82,14 @@ export function useRealtimeNotifications() {
     fetchInitial();
   }, [userId]);
 
-  // ✅ Étape 4 — Abonnement Realtime
+  // ✅ Abonnement Realtime
   useEffect(() => {
     if (!userId) return;
 
-    console.log("🔌 Connexion Realtime MARCHAND:", userId);
+    console.log("🔌 Connexion Realtime CLIENT:", userId);
 
     const channel: RealtimeChannel = supabase
-      .channel(`merchant_notifications_${userId}`)
+      .channel(`client_notifications_${userId}`)
       .on(
         "postgres_changes",
         {
@@ -100,10 +100,12 @@ export function useRealtimeNotifications() {
         },
         async (payload) => {
           const newNotif = payload.new as Notification;
-          const merchantTypes = ["reservation", "offer_expired", "stock_empty", "system"];
-          if (!merchantTypes.includes(newNotif.type)) return;
 
-          console.log("🟢 Nouvelle notification:", newNotif.title);
+          // 🔎 On filtre les types client
+          const clientTypes = ["offer_nearby", "system", "offer", "reservation"];
+          if (!clientTypes.includes(newNotif.type)) return;
+
+          console.log("🟢 Nouvelle notification CLIENT:", newNotif.title);
           setNotifications((prev) => [newNotif, ...prev]);
           if (!newNotif.is_read) setUnreadCount((count) => count + 1);
 
@@ -119,16 +121,15 @@ export function useRealtimeNotifications() {
         }
       )
       .subscribe((status) => {
-        console.log("📡 Statut canal MARCHAND:", status);
+        console.log("📡 Statut canal CLIENT:", status);
       });
 
     return () => {
-      console.log("🔌 Déconnexion canal MARCHAND");
+      console.log("🔌 Déconnexion canal CLIENT");
       supabase.removeChannel(channel);
     };
   }, [userId]);
 
-  // ✅ Étape 5 — Fonctions utilitaires
   const markAsRead = async (id: string) => {
     if (!userId) return;
     const { error } = await supabase
@@ -136,6 +137,7 @@ export function useRealtimeNotifications() {
       .update({ is_read: true })
       .eq("id", id)
       .eq("recipient_id", userId);
+
     if (!error) {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
@@ -151,6 +153,7 @@ export function useRealtimeNotifications() {
       .update({ is_read: true })
       .eq("recipient_id", userId)
       .eq("is_read", false);
+
     if (!error) {
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
       setUnreadCount(0);
