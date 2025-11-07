@@ -1,3 +1,4 @@
+// src/hooks/useClientNotifications.ts
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import type { RealtimeChannel } from "@supabase/supabase-js";
@@ -19,6 +20,7 @@ export function useClientNotifications() {
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
+  // 🔐 Récupérer l'utilisateur connecté UNE SEULE FOIS
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -28,8 +30,9 @@ export function useClientNotifications() {
       }
     };
     getUser();
-  }, []);
+  }, []); // ✅ Pas de dépendances = exécuté UNE SEULE FOIS
 
+  // 🧠 Charger les notifications initiales
   useEffect(() => {
     if (!userId) return;
 
@@ -53,8 +56,9 @@ export function useClientNotifications() {
     };
 
     fetchInitial();
-  }, [userId]);
+  }, [userId]); // ✅ Se déclenche UNE FOIS quand userId est défini
 
+  // 🔔 Écoute Realtime (sans reconnexion automatique)
   useEffect(() => {
     if (!userId) return;
 
@@ -83,6 +87,7 @@ export function useClientNotifications() {
           setNotifications((prev) => [newNotif, ...prev]);
           if (!newNotif.is_read) setUnreadCount((count) => count + 1);
 
+          // Notification navigateur
           if ("Notification" in window && Notification.permission === "granted") {
             new Notification(newNotif.title || "Nouvelle offre près de vous !", {
               body: newNotif.message,
@@ -95,11 +100,12 @@ export function useClientNotifications() {
         console.log("📡 Statut canal CLIENT:", status);
       });
 
+    // ✅ Cleanup propre
     return () => {
       console.log("🔌 Déconnexion canal CLIENT");
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId]); // ✅ Se déclenche UNE FOIS quand userId est défini
 
   const markAsRead = async (id: string) => {
     if (!userId) return;
