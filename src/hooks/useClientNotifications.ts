@@ -22,10 +22,10 @@ interface Notification {
 export function useClientNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [profileId, setProfileId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const { play } = useNotificationSound();
 
-  // 🧩 Étape 1 – récupérer le vrai profile.id (et pas auth.id)
+  // 🧩 Étape 1 – Récupérer le vrai profile.id du client connecté
   useEffect(() => {
     (async () => {
       const {
@@ -33,10 +33,11 @@ export function useClientNotifications() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setProfileId(null);
+        setUserId(null);
         return;
       }
 
+      // 🔥 CORRECTION : on cherche le profil lié à ce user.auth_id
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("id")
@@ -51,7 +52,7 @@ export function useClientNotifications() {
 
       if (profile) {
         console.log("👤 Client connecté (profile.id):", profile.id);
-        setProfileId(profile.id);
+        setUserId(profile.id);
       } else {
         console.warn("⚠️ Aucun profil client trouvé pour cet utilisateur.");
       }
@@ -60,13 +61,13 @@ export function useClientNotifications() {
 
   // 🧩 Étape 2 – Charger les notifications existantes
   useEffect(() => {
-    if (!profileId) return;
+    if (!userId) return;
 
     (async () => {
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
-        .eq("recipient_id", profileId)
+        .eq("recipient_id", userId)
         .in("type", ["offer", "offer_nearby", "system"])
         .order("created_at", { ascending: false })
         .limit(50);
@@ -79,44 +80,49 @@ export function useClientNotifications() {
         setUnreadCount(data.filter((n) => !n.is_read).length);
       }
     })();
-  }, [profileId]);
+  }, [userId]);
 
-  // 🧩 Étape 3 – Écoute Realtime
+  // 🧩 Étape 3 – Realtime : écouter les nouvelles notifications
   useEffect(() => {
-    if (!profileId) return;
+    if (!userId) return;
 
-    console.log("⚡ Initialisation canal Realtime client:", profileId);
+    console.log("⚡ Initialisation canal Realtime client:", userId);
 
     const channel: RealtimeChannel = supabase
-      .channel(`realtime:client:${profileId}`, {
-        config: { broadcast: { ack: false } },
-      })
+      .channel(`notifications:client:${userId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "notifications",
-          filter: `recipient_id=eq.${profileId}`,
+          filter: `recipient_id=eq.${userId}`,
         },
         (payload) => {
-          console.log("📨 Nouvelle notification Realtime:", payload.new);
-          const newNotif = payload.new as Notification;
-          const allowedTypes = ["offer", "offer_nearby", "system"];
-          if (!allowedTypes.includes(newNotif.type)) return;
+          console.log("📨 Nouvelle donnée reçue:", payload);
 
+          const newNotif = payload.new as Notification;
+          const clientTypes = ["offer", "offer_nearby", "system"];
+          if (!clientTypes.includes(newNotif.type)) return;
+
+          console.log("🟢 Nouvelle notification CLIENT:", newNotif.title);
           play();
+
           setNotifications((prev) => [newNotif, ...prev]);
           if (!newNotif.is_read) setUnreadCount((c) => c + 1);
         }
       )
-      .subscribe((status) => console.log("📡 Statut canal CLIENT:", status));
+      .subscribe((status) => {
+        console.log("📡 Statut canal CLIENT:", status);
+        if (status === "CHANNEL_ERROR") console.error("❌ Erreur Realtime CLIENT");
+        if (status === "CLOSED") console.warn("⚠️ Canal CLIENT fermé");
+      });
 
     return () => {
       console.log("🔌 Déconnexion canal CLIENT");
       supabase.removeChannel(channel);
     };
-  }, [profileId]);
+  }, [userId]);
 
   return { notifications, unreadCount };
 }

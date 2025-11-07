@@ -27,9 +27,6 @@ import ReviewsPage from "./pages/ReviewsPage";
 import DownloadPage from "./pages/DownloadPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
-// ✅ Page de test notifications
-import TestNotificationsPage from "./pages/TestNotificationsPage";
-
 /* 🔁 Vérifie la session et redirige selon le rôle */
 function SessionRedirect() {
   const nav = useNavigate();
@@ -96,19 +93,10 @@ function App() {
               <Route path="/profile/complete" element={<ProfileCompletePage />} />
 
               {/* 🏪 Tableau de bord marchand */}
-              <Route
-                path="/merchant/dashboard"
-                element={<MerchantDashboardPage />}
-              />
+              <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
 
               {/* 📱 Téléchargement */}
               <Route path="/download" element={<DownloadPage />} />
-
-              {/* 🔔 Page de test notifications */}
-              <Route
-                path="/test-notifications"
-                element={<TestNotificationsPage />}
-              />
 
               {/* 🚫 Redirections anciennes */}
               <Route
