@@ -19,7 +19,7 @@ export function useClientNotifications() {
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // ✅ Auth
+  // ✅ Récupère l'utilisateur connecté
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -31,32 +31,7 @@ export function useClientNotifications() {
     getUser();
   }, []);
 
-  // ✅ Realtime reconnexion automatique
-  useEffect(() => {
-    const reconnectRealtime = async () => {
-      try {
-        const session = (await supabase.auth.getSession()).data.session;
-        const token = session?.access_token || "";
-        supabase.realtime.setAuth(token);
-        supabase.realtime.connect();
-        console.log("📡 Realtime client initialisé");
-      } catch (err) {
-        console.warn("⚠️ Erreur Realtime client:", err);
-      }
-    };
-    reconnectRealtime();
-
-    const interval = setInterval(() => {
-      if (!supabase.realtime.isConnected()) {
-        console.warn("🔁 Reconnexion forcée Realtime client...");
-        supabase.realtime.connect();
-      }
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // ✅ Récupération initiale
+  // ✅ Charge les notifications existantes
   useEffect(() => {
     if (!userId) return;
 
@@ -65,7 +40,7 @@ export function useClientNotifications() {
         .from("notifications")
         .select("*")
         .eq("recipient_id", userId)
-        .in("type", ["offer_nearby", "system", "offer", "reservation"])
+        .in("type", ["offer", "offer_nearby", "system", "reservation"])
         .order("created_at", { ascending: false })
         .limit(50);
 
@@ -82,14 +57,14 @@ export function useClientNotifications() {
     fetchInitial();
   }, [userId]);
 
-  // ✅ Abonnement Realtime
+  // ✅ Souscription Realtime aux notifications du client
   useEffect(() => {
     if (!userId) return;
 
     console.log("🔌 Connexion Realtime CLIENT:", userId);
 
     const channel: RealtimeChannel = supabase
-      .channel(`client_notifications_${userId}`)
+      .channel(`realtime_client_${userId}`)
       .on(
         "postgres_changes",
         {
@@ -101,22 +76,19 @@ export function useClientNotifications() {
         async (payload) => {
           const newNotif = payload.new as Notification;
 
-          // 🔎 On filtre les types client
-          const clientTypes = ["offer_nearby", "system", "offer", "reservation"];
-          if (!clientTypes.includes(newNotif.type)) return;
+          // 🔎 On ne garde que les types de notification du client
+          if (!["offer", "offer_nearby"].includes(newNotif.type)) return;
 
           console.log("🟢 Nouvelle notification CLIENT:", newNotif.title);
           setNotifications((prev) => [newNotif, ...prev]);
           if (!newNotif.is_read) setUnreadCount((count) => count + 1);
 
           try {
-            const audio = new Audio(
-              "https://cdn.jsdelivr.net/gh/naptha/talkify-tts-voices@master/sounds/notification.mp3"
-            );
+            const audio = new Audio("https://cdn.jsdelivr.net/gh/naptha/talkify-tts-voices@master/sounds/notification.mp3");
             audio.volume = 0.5;
             await audio.play();
           } catch {
-            console.warn("🔇 Son bloqué");
+            console.warn("🔇 Son bloqué (interaction requise)");
           }
         }
       )
@@ -130,6 +102,7 @@ export function useClientNotifications() {
     };
   }, [userId]);
 
+  // ✅ Lecture des notifications
   const markAsRead = async (id: string) => {
     if (!userId) return;
     const { error } = await supabase
