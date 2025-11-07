@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useNotificationSound } from "./useNotificationSound"; // ✅ ajout
 
 interface Notification {
   id: string;
   recipient_id: string;
-  type: "offer" | "offer_nearby" | "reservation" | "system" | "offer_expired" | "stock_empty";
+  type:
+    | "offer"
+    | "offer_nearby"
+    | "reservation"
+    | "system"
+    | "offer_expired"
+    | "stock_empty";
   title: string;
   message: string;
   is_read: boolean;
@@ -16,11 +23,14 @@ export function useClientNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
+  const { play } = useNotificationSound(); // ✅ ajout du hook son
 
-  // 🧩 Étape 1 – Récupérer l'utilisateur
+  // 🧩 Étape 1 – Récupérer l'utilisateur connecté
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         console.log("👤 Client connecté:", user.id);
         setUserId(user.id);
@@ -57,7 +67,6 @@ export function useClientNotifications() {
 
     console.log("🔌 Connexion Realtime CLIENT:", userId);
 
-    // ⚠️ Canal corrigé (le vrai canal Realtime Supabase)
     const channel: RealtimeChannel = supabase
       .channel("realtime:public:notifications")
       .on(
@@ -68,7 +77,7 @@ export function useClientNotifications() {
           table: "notifications",
           filter: `recipient_id=eq.${userId}`,
         },
-        async (payload) => {
+        (payload) => {
           console.log("📨 Nouvelle donnée reçue:", payload);
 
           const newNotif = payload.new as Notification;
@@ -76,20 +85,12 @@ export function useClientNotifications() {
           if (!clientTypes.includes(newNotif.type)) return;
 
           console.log("🟢 Nouvelle notification CLIENT:", newNotif.title);
+
+          // ✅ Joue le son ici (au lieu du bloc audio manuel)
+          play();
+
           setNotifications((prev) => [newNotif, ...prev]);
           if (!newNotif.is_read) setUnreadCount((c) => c + 1);
-
-          // 🔊 Lecture du son (optionnelle)
-          try {
-            const audio = new Audio(
-              "https://cdn.jsdelivr.net/gh/naptha/talkify-tts-voices@master/sounds/notification.mp3"
-            );
-            audio.volume = 0.5;
-            await audio.play();
-            console.log("🔊 Son joué");
-          } catch {
-            console.warn("🔇 Son bloqué");
-          }
         }
       )
       .subscribe((status) => {
@@ -100,7 +101,7 @@ export function useClientNotifications() {
       console.log("🔌 Déconnexion canal CLIENT");
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, play]);
 
   return { notifications, unreadCount };
 }
