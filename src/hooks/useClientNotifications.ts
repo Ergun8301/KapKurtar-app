@@ -23,7 +23,7 @@ export function useClientNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
-  const { play } = useNotificationSound(); // ✅ ajout du hook son
+  const { play } = useNotificationSound(); // ✅ hook son
 
   // 🧩 Étape 1 – Récupérer l'utilisateur connecté
   useEffect(() => {
@@ -67,8 +67,9 @@ export function useClientNotifications() {
 
     console.log("🔌 Connexion Realtime CLIENT:", userId);
 
+    // ✅ Correction ici : nom du canal sans "realtime:"
     const channel: RealtimeChannel = supabase
-      .channel("realtime:public:notifications")
+      .channel("public:notifications")
       .on(
         "postgres_changes",
         {
@@ -85,9 +86,7 @@ export function useClientNotifications() {
           if (!clientTypes.includes(newNotif.type)) return;
 
           console.log("🟢 Nouvelle notification CLIENT:", newNotif.title);
-
-          // ✅ Joue le son ici (au lieu du bloc audio manuel)
-          play();
+          play(); // 🔊 lecture du son
 
           setNotifications((prev) => [newNotif, ...prev]);
           if (!newNotif.is_read) setUnreadCount((c) => c + 1);
