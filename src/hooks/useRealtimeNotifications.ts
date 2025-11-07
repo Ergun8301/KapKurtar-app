@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface Notification {
   id: string;
@@ -13,25 +13,23 @@ interface Notification {
   created_at: string;
 }
 
-export function useClientNotifications() {
+export function useRealtimeNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // ✅ Récupère l'utilisateur connecté
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        console.log("👤 Client connecté:", user.id);
+        console.log("🏪 Marchand connecté:", user.id);
         setUserId(user.id);
       }
     };
     getUser();
   }, []);
 
-  // ✅ Charge les notifications existantes
   useEffect(() => {
     if (!userId) return;
 
@@ -40,14 +38,14 @@ export function useClientNotifications() {
         .from("notifications")
         .select("*")
         .eq("recipient_id", userId)
-        .in("type", ["offer", "offer_nearby", "system", "reservation"])
+        .in("type", ["reservation", "offer_expired", "stock_empty", "system"])
         .order("created_at", { ascending: false })
         .limit(50);
 
       if (error) {
-        console.error("❌ Erreur chargement notifications client:", error);
+        console.error("❌ Erreur chargement notifications:", error);
       } else if (data) {
-        console.log(`✅ Notifications client chargées: ${data.length}`);
+        console.log(`✅ Notifications chargées: ${data.length}`);
         setNotifications(data);
         setUnreadCount(data.filter((n) => !n.is_read).length);
       }
@@ -57,14 +55,13 @@ export function useClientNotifications() {
     fetchInitial();
   }, [userId]);
 
-  // ✅ Souscription Realtime aux notifications du client
   useEffect(() => {
     if (!userId) return;
 
-    console.log("🔌 Connexion Realtime CLIENT:", userId);
+    console.log("🔌 Connexion Realtime MARCHAND:", userId);
 
     const channel: RealtimeChannel = supabase
-      .channel(`realtime_client_${userId}`)
+      .channel(`merchant_notifications_${userId}`)
       .on(
         "postgres_changes",
         {
@@ -75,36 +72,44 @@ export function useClientNotifications() {
         },
         async (payload) => {
           const newNotif = payload.new as Notification;
+          const merchantTypes = ["reservation", "offer_expired", "stock_empty", "system"];
+          
+          if (!merchantTypes.includes(newNotif.type)) {
+            console.log("⚠️ Type ignoré:", newNotif.type);
+            return;
+          }
 
-          // 🔎 On ne garde que les types de notification du client
-          if (!["offer", "offer_nearby"].includes(newNotif.type)) return;
-
-          console.log("🟢 Nouvelle notification CLIENT:", newNotif.title);
+          console.log("🟢 Nouvelle notification:", newNotif.title);
           setNotifications((prev) => [newNotif, ...prev]);
           if (!newNotif.is_read) setUnreadCount((count) => count + 1);
 
           try {
-            const audio = new Audio("https://cdn.jsdelivr.net/gh/naptha/talkify-tts-voices@master/sounds/notification.mp3");
+            const audio = new Audio('https://cdn.jsdelivr.net/gh/naptha/talkify-tts-voices@master/sounds/notification.mp3');
             audio.volume = 0.5;
             await audio.play();
-          } catch {
-            console.warn("🔇 Son bloqué (interaction requise)");
+            console.log('🔊 Son joué');
+          } catch (err) {
+            console.warn('🔇 Son bloqué');
           }
         }
       )
       .subscribe((status) => {
-        console.log("📡 Statut canal CLIENT:", status);
+        if (status === "SUBSCRIBED") {
+          console.log("✅ Canal Realtime MARCHAND actif");
+        } else if (status === "CHANNEL_ERROR") {
+          console.error("❌ Erreur canal Realtime");
+        }
       });
 
     return () => {
-      console.log("🔌 Déconnexion canal CLIENT");
+      console.log("🔌 Déconnexion canal MARCHAND");
       supabase.removeChannel(channel);
     };
   }, [userId]);
 
-  // ✅ Lecture des notifications
   const markAsRead = async (id: string) => {
     if (!userId) return;
+    
     const { error } = await supabase
       .from("notifications")
       .update({ is_read: true })
@@ -121,6 +126,7 @@ export function useClientNotifications() {
 
   const markAllAsRead = async () => {
     if (!userId) return;
+    
     const { error } = await supabase
       .from("notifications")
       .update({ is_read: true })
