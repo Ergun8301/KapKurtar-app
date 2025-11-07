@@ -19,6 +19,7 @@ export function useRealtimeNotifications() {
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
+  // ✅ Étape 1 - Authentification utilisateur
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -30,6 +31,26 @@ export function useRealtimeNotifications() {
     getUser();
   }, []);
 
+  // ✅ Étape 2 - Patch Realtime (auto-reconnexion)
+  useEffect(() => {
+    const reconnectRealtime = async () => {
+      const session = (await supabase.auth.getSession()).data.session;
+      const token = session?.access_token || "";
+      supabase.realtime.setAuth(token);
+      supabase.realtime.connect();
+
+      supabase.realtime.onConnectionStateChange((state) => {
+        console.log("📡 État Realtime:", state);
+        if (state === "CLOSED" || state === "CHANNEL_ERROR") {
+          console.warn("⚠️ Reconnexion Realtime...");
+          setTimeout(() => supabase.realtime.connect(), 2000);
+        }
+      });
+    };
+    reconnectRealtime();
+  }, []);
+
+  // ✅ Étape 3 - Chargement initial des notifications
   useEffect(() => {
     if (!userId) return;
 
@@ -55,6 +76,7 @@ export function useRealtimeNotifications() {
     fetchInitial();
   }, [userId]);
 
+  // ✅ Étape 4 - Abonnement Realtime aux notifications
   useEffect(() => {
     if (!userId) return;
 
@@ -73,7 +95,7 @@ export function useRealtimeNotifications() {
         async (payload) => {
           const newNotif = payload.new as Notification;
           const merchantTypes = ["reservation", "offer_expired", "stock_empty", "system"];
-          
+
           if (!merchantTypes.includes(newNotif.type)) {
             console.log("⚠️ Type ignoré:", newNotif.type);
             return;
@@ -88,7 +110,7 @@ export function useRealtimeNotifications() {
             audio.volume = 0.5;
             await audio.play();
             console.log('🔊 Son joué');
-          } catch (err) {
+          } catch {
             console.warn('🔇 Son bloqué');
           }
         }
@@ -107,15 +129,14 @@ export function useRealtimeNotifications() {
     };
   }, [userId]);
 
+  // ✅ Étape 5 - Fonctions utilitaires
   const markAsRead = async (id: string) => {
     if (!userId) return;
-    
     const { error } = await supabase
       .from("notifications")
       .update({ is_read: true })
       .eq("id", id)
       .eq("recipient_id", userId);
-
     if (!error) {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
@@ -126,18 +147,17 @@ export function useRealtimeNotifications() {
 
   const markAllAsRead = async () => {
     if (!userId) return;
-    
     const { error } = await supabase
       .from("notifications")
       .update({ is_read: true })
       .eq("recipient_id", userId)
       .eq("is_read", false);
-
     if (!error) {
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
       setUnreadCount(0);
     }
   };
 
+  // ✅ Étape 6 - Retour du hook
   return { notifications, unreadCount, isLoading, markAsRead, markAllAsRead };
 }
