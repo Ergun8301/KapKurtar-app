@@ -1,24 +1,25 @@
-// src/hooks/useNotificationSound.ts
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 
 export function useNotificationSound() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const play = () => {
+  const play = useCallback(() => {
     try {
       if (!audioRef.current) {
-        // On lit le son depuis une URL publique (pas besoin de fichier local)
-        audioRef.current = new Audio(
-          "https://cdn.jsdelivr.net/gh/free-sounds-library/mixkit-correct-answer-tone-2870.wav"
-        );
+        audioRef.current = new Audio("/sounds/mixkit-correct-answer-tone-2870.wav");
+        audioRef.current.volume = 0.7;
       }
-      audioRef.current.play().catch(() => {
-        console.warn("🔇 Son bloqué par le navigateur jusqu'à un clic utilisateur");
-      });
+      
+      audioRef.current.play()
+        .then(() => console.log("🔊 Son joué avec succès"))
+        .catch((err) => {
+          console.error("🔇 Erreur lecture son:", err);
+          console.error("Message:", err.message);
+        });
     } catch (e) {
-      console.warn("Erreur de lecture audio:", e);
+      console.error("❌ Erreur critique audio:", e);
     }
-  };
+  }, []);
 
   return { play };
 }
