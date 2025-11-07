@@ -100,7 +100,7 @@ export function useClientNotifications() {
       console.log("🔌 Déconnexion canal CLIENT");
       supabase.removeChannel(channel);
     };
-  }, [userId, play]);
+  }, [userId]);
 
   return { notifications, unreadCount };
 }
