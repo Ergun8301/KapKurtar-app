@@ -9,6 +9,7 @@ interface Notification {
   type: "offer" | "offer_nearby" | "reservation" | "system" | "offer_expired" | "stock_empty";
   title: string;
   message: string;
+  data?: { offer_id?: string; merchant_id?: string; [key: string]: any };
   is_read: boolean;
   created_at: string;
 }
@@ -19,30 +20,33 @@ export function useClientNotifications() {
   const [userId, setUserId] = useState<string | null>(null);
   const { play } = useNotificationSound();
 
-  // ✅ CORRECTION : Utiliser directement user.id (qui est auth.uid())
+  // ✅ Récupérer auth.uid() directement
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (!user) {
+        console.log("❌ Aucun utilisateur connecté");
         setUserId(null);
         return;
       }
 
-      // ✅ user.id = auth.uid() = profiles.auth_id (ce que les RLS attendent)
       console.log("👤 Client connecté (auth.uid()):", user.id);
       setUserId(user.id);
     })();
   }, []);
 
-  // Charger les notifications existantes
+  // ✅ Charger les notifications existantes
   useEffect(() => {
     if (!userId) return;
 
     (async () => {
+      console.log("📥 Chargement des notifications pour:", userId);
+      
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
-        .eq("recipient_id", userId)  // ✅ Maintenant userId = auth.uid()
+        .eq("recipient_id", userId)
         .in("type", ["offer", "offer_nearby", "system"])
         .order("created_at", { ascending: false })
         .limit(50);
@@ -57,7 +61,7 @@ export function useClientNotifications() {
     })();
   }, [userId]);
 
-  // Realtime : écouter les nouvelles notifications
+  // ✅ Realtime : écouter les nouvelles notifications
   useEffect(() => {
     if (!userId) return;
 
@@ -71,7 +75,7 @@ export function useClientNotifications() {
           event: "INSERT",
           schema: "public",
           table: "notifications",
-          filter: `recipient_id=eq.${userId}`,  // ✅ Maintenant userId = auth.uid()
+          filter: `recipient_id=eq.${userId}`,
         },
         (payload) => {
           const newNotif = payload.new as Notification;
@@ -83,17 +87,33 @@ export function useClientNotifications() {
           }
 
           console.log("🟢 Nouvelle notification CLIENT:", newNotif.title);
-          play();
+          console.log("📦 Payload complet:", newNotif);
+          
+          // 🔊 Jouer le son
+          try {
+            play();
+          } catch (err) {
+            console.warn("🔇 Son bloqué:", err);
+          }
+          
+          // 📝 Ajouter à la liste
           setNotifications((prev) => [newNotif, ...prev]);
-          if (!newNotif.is_read) setUnreadCount((c) => c + 1);
+          if (!newNotif.is_read) {
+            setUnreadCount((c) => c + 1);
+          }
         }
       )
       .subscribe((status) => {
         console.log("📡 Statut canal CLIENT:", status);
+        
         if (status === "SUBSCRIBED") {
           console.log("✅ Canal Realtime CLIENT actif");
         } else if (status === "CHANNEL_ERROR") {
           console.error("❌ Erreur Realtime CLIENT");
+        } else if (status === "CLOSED") {
+          console.warn("⚠️ Canal CLIENT fermé");
+        } else if (status === "TIMED_OUT") {
+          console.error("⏱️ Timeout canal CLIENT");
         }
       });
 
@@ -101,9 +121,9 @@ export function useClientNotifications() {
       console.log("🔌 Déconnexion canal CLIENT");
       supabase.removeChannel(channel);
     };
-  }, [userId, play]);
+  }, [userId]); // ✅ CORRECTION : Enlevé 'play' des dépendances
 
-  // Fonctions utilitaires
+  // ✅ Fonction pour marquer comme lu
   const markAsRead = async (id: string) => {
     if (!userId) return;
     
@@ -118,9 +138,12 @@ export function useClientNotifications() {
         prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
       );
       setUnreadCount((count) => Math.max(0, count - 1));
+    } else {
+      console.error("❌ Erreur markAsRead:", error);
     }
   };
 
+  // ✅ Fonction pour tout marquer comme lu
   const markAllAsRead = async () => {
     if (!userId) return;
     
@@ -133,8 +156,15 @@ export function useClientNotifications() {
     if (!error) {
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
       setUnreadCount(0);
+    } else {
+      console.error("❌ Erreur markAllAsRead:", error);
     }
   };
 
-  return { notifications, unreadCount, markAsRead, markAllAsRead };
+  return { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead 
+  };
 }
