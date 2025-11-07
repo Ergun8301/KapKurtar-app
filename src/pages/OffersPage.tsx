@@ -7,8 +7,8 @@ import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { OfferDetailsModal } from "../components/OfferDetailsModal";
+import { useClientNotifications } from "../hooks/useClientNotifications";
 
-// 🧱 Type Offer mis à jour avec toutes les données marchands
 type Offer = {
   offer_id: string;
   merchant_id?: string;
@@ -35,7 +35,7 @@ type Offer = {
 };
 
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
-const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082]; // Istanbul
+const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082];
 
 const customMapboxCSS = `
   .mapboxgl-ctrl-geolocate:focus,
@@ -84,7 +84,6 @@ const customMapboxCSS = `
     display: none !important;
   }
 
-  /* ✅ Popup Mapbox toujours au-dessus */
   .mapboxgl-popup {
     z-index: 2000 !important;
   }
@@ -102,6 +101,7 @@ const customMapboxCSS = `
 `;
 
 export default function OffersPage() {
+  useClientNotifications();
   const { user } = useAuth();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
@@ -120,18 +120,14 @@ export default function OffersPage() {
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
   const [merchantOffers, setMerchantOffers] = useState<Offer[]>([]);
-
-  // 🔔 Détection d'arrivée via notification
   const [searchParams, setSearchParams] = useSearchParams();
   const [targetOfferId, setTargetOfferId] = useState<string | null>(null);
 
-  // 🧮 Calcul de la réduction en pourcentage
   const getDiscountPercent = (before: number, after: number) => {
     if (!before || before === 0) return 0;
     return Math.round(((before - after) / before) * 100);
   };
 
-  // ⏰ Calcul du temps restant
   const getTimeRemaining = (until?: string) => {
     if (!until) return "";
     const diff = new Date(until).getTime() - Date.now();
@@ -141,7 +137,6 @@ export default function OffersPage() {
     return h > 0 ? `⏰ ${h}h ${m}min` : `⏰ ${m} min restantes`;
   };
 
-  // 💉 Injection CSS personnalisé
   useEffect(() => {
     const styleTag = document.createElement("style");
     styleTag.innerHTML = customMapboxCSS;
@@ -149,7 +144,6 @@ export default function OffersPage() {
     return () => document.head.removeChild(styleTag);
   }, []);
 
-  // 👤 Récupération du profil client connecté
   useEffect(() => {
     if (clientIdFetched) return;
 
