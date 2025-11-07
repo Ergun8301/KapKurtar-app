@@ -29,31 +29,34 @@ const Header = () => {
   const [isMerchant, setIsMerchant] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkUserType = async () => {
-      if (!user) return setIsMerchant(false);
+  let hasChecked = false; // 🔒 évite les boucles
 
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("auth_id", user.id)
-        .maybeSingle();
+  const checkUserType = async () => {
+    if (!user || hasChecked) return;
+    hasChecked = true;
 
-      if (profileError || !profileData) {
-        setIsMerchant(false);
-        return;
-      }
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("auth_id", user.id)
+      .maybeSingle();
 
-      const { data: merchantData } = await supabase
-        .from("merchants")
-        .select("id")
-        .eq("profile_id", profileData.id)
-        .maybeSingle();
+    if (profileError || !profileData) {
+      setIsMerchant(false);
+      return;
+    }
 
-      setIsMerchant(!!merchantData);
-    };
+    const { data: merchantData } = await supabase
+      .from("merchants")
+      .select("id")
+      .eq("profile_id", profileData.id)
+      .maybeSingle();
 
-    checkUserType();
-  }, [user]);
+    setIsMerchant(!!merchantData);
+  };
+
+  checkUserType();
+}, [user]);
 
   const handleSignOut = async () => {
     await logoutUser(navigate);
