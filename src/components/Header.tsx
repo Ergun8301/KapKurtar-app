@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Menu,
@@ -25,38 +25,37 @@ const Header = () => {
   const { openAddProductModal } = useAddProduct();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  // ✅ Correction ici (avant c’était false)
   const [isMerchant, setIsMerchant] = useState<boolean | null>(null);
+  const hasCheckedRef = useRef(false);
 
   useEffect(() => {
-  let hasChecked = false; // 🔒 évite les boucles
+    if (!user || hasCheckedRef.current) return;
+    
+    const checkUserType = async () => {
+      hasCheckedRef.current = true;
 
-  const checkUserType = async () => {
-    if (!user || hasChecked) return;
-    hasChecked = true;
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_id", user.id)
+        .maybeSingle();
 
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("auth_id", user.id)
-      .maybeSingle();
+      if (profileError || !profileData) {
+        setIsMerchant(false);
+        return;
+      }
 
-    if (profileError || !profileData) {
-      setIsMerchant(false);
-      return;
-    }
+      const { data: merchantData } = await supabase
+        .from("merchants")
+        .select("id")
+        .eq("profile_id", profileData.id)
+        .maybeSingle();
 
-    const { data: merchantData } = await supabase
-      .from("merchants")
-      .select("id")
-      .eq("profile_id", profileData.id)
-      .maybeSingle();
+      setIsMerchant(!!merchantData);
+    };
 
-    setIsMerchant(!!merchantData);
-  };
-
-  checkUserType();
-}, [user]);
+    checkUserType();
+  }, [user]);
 
   const handleSignOut = async () => {
     await logoutUser(navigate);
@@ -72,14 +71,12 @@ const Header = () => {
     { name: "Download App", href: "/download" },
   ];
 
-  // ✅ Ajout important : attendre la détection du rôle avant d’afficher
   if (user && isMerchant === null) return null;
 
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-40">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
           <a href="/" className="flex items-center">
             <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-2">
               <span className="text-white font-bold text-lg">R</span>
@@ -87,11 +84,10 @@ const Header = () => {
             <span className="font-bold text-xl text-gray-900">ResQ Food</span>
           </a>
 
-          {/* Nav links */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               {navigation.map((item) => (
-                <a
+                
                   key={item.name}
                   href={item.href}
                   className="text-gray-600 hover:text-green-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -102,13 +98,11 @@ const Header = () => {
             </div>
           </div>
 
-          {/* User menu */}
           <div className="flex items-center space-x-4">
             {loading ? (
               <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
             ) : user ? (
               <>
-                {/* ✅ La cloche reçoit le bon type */}
                 <NotificationBell userType={isMerchant ? "merchant" : "client"} />
                 
                 <div className="relative">
@@ -157,14 +151,14 @@ const Header = () => {
                         </>
                       ) : (
                         <>
-                          <a
+                          
                             href="/profile"
                             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <User className="w-4 h-4 mr-2" />
                             My Profile
                           </a>
-                          <a
+                          
                             href="/settings"
                             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
