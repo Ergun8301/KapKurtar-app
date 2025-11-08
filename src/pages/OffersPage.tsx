@@ -6,7 +6,8 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
-import { OfferDetailsModal } from "../components/OfferDetailsModal";
+import { OfferDetailsModal } from "../components/OfferDetailsModal_NEW";
+import { MerchantBottomSheet } from "../components/MerchantBottomSheet";
 import { useClientNotifications } from "../hooks/useClientNotifications";
 
 type Offer = {
@@ -117,11 +118,9 @@ export default function OffersPage() {
   const [hasGeolocated, setHasGeolocated] = useState(false);
   const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
-  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
   const [merchantOffers, setMerchantOffers] = useState<Offer[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [targetOfferId, setTargetOfferId] = useState<string | null>(null);
 
   const getDiscountPercent = (before: number, after: number) => {
     if (!before || before === 0) return 0;
@@ -179,7 +178,6 @@ export default function OffersPage() {
     fetchClientId();
   }, [user, clientIdFetched]);
 
-  // 🧭 Géolocalisation automatique pour clients connectés (optimisée pour Xiaomi)
   useEffect(() => {
     if (!clientId || isGeolocating || hasGeolocated) return;
 
@@ -194,7 +192,6 @@ export default function OffersPage() {
 
       setIsGeolocating(true);
 
-      // Tentative 1 : haute précision
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
@@ -226,7 +223,6 @@ export default function OffersPage() {
         (error) => {
           console.warn("Géolocalisation haute précision échouée, tentative en mode économique...", error);
           
-          // Tentative 2 : mode économique (pour Xiaomi et appareils avec restrictions)
           navigator.geolocation.getCurrentPosition(
             async (position) => {
               const { latitude, longitude } = position.coords;
@@ -280,7 +276,6 @@ export default function OffersPage() {
     geolocateClient();
   }, [clientId]);
 
-  // 🗺️ Initialisation de la carte Mapbox
   useEffect(() => {
     mapboxgl.accessToken =
       "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueXgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g";
@@ -301,7 +296,6 @@ export default function OffersPage() {
 
     mapRef.current = map;
 
-    // Contrôle de géolocalisation
     const geolocate = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: false,
@@ -322,7 +316,6 @@ export default function OffersPage() {
       if (input) input.value = "";
     });
 
-    // Barre de recherche
     const geocoder = new MapboxGeocoder({
       accessToken: mapboxgl.accessToken,
       mapboxgl,
@@ -343,7 +336,6 @@ export default function OffersPage() {
     return () => map.remove();
   }, []);
 
-  // ⭕ Gestion du cercle de rayon (seulement en mode "nearby")
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -421,7 +413,6 @@ export default function OffersPage() {
     }
   }
 
-  // 📦 Chargement des offres depuis Supabase
   useEffect(() => {
     const fetchOffers = async () => {
       if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
@@ -477,13 +468,11 @@ export default function OffersPage() {
     fetchOffers();
   }, [center, clientId, viewMode, radiusKm]);
 
-  // 🎯 Centrage automatique sur l'offre ciblée (arrivée via notification)
   useEffect(() => {
     const offerId = searchParams.get('offer_id');
     
     if (!offerId || !mapRef.current || offers.length === 0) return;
 
-    // Trouver l'offre ciblée
     const targetOffer = offers.find(o => o.offer_id === offerId);
     
     if (!targetOffer) {
@@ -493,7 +482,6 @@ export default function OffersPage() {
 
     console.log('🎯 Centrage sur offre via notification:', targetOffer.title);
 
-    // 🗺️ Centrer la carte sur l'offre
     if (Number.isFinite(targetOffer.offer_lng) && Number.isFinite(targetOffer.offer_lat)) {
       mapRef.current.flyTo({
         center: [targetOffer.offer_lng, targetOffer.offer_lat],
@@ -502,36 +490,17 @@ export default function OffersPage() {
         duration: 1500
       });
 
-      // 🔔 Ouvrir automatiquement le popup après l'animation
       setTimeout(() => {
-        // Trouver le marqueur correspondant et ouvrir son popup
-        const markers = (mapRef.current as any)._markers || [];
-        const marker = markers.find((m: any) => {
-          const lngLat = m.getLngLat();
-          return (
-            Math.abs(lngLat.lng - targetOffer.offer_lng) < 0.0001 &&
-            Math.abs(lngLat.lat - targetOffer.offer_lat) < 0.0001
-          );
-        });
-
-        if (marker) {
-          marker.togglePopup();
-        }
-
-        // 🧹 Nettoyer l'URL après le centrage
+        setSelectedOffer(targetOffer);
         setSearchParams({}, { replace: true });
       }, 1600);
     }
-
-    setTargetOfferId(offerId);
   }, [searchParams, offers]);
 
-  // 📍 Ajout des marqueurs sur la carte avec popup enrichi
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    // Nettoyage des anciens marqueurs
     (map as any)._markers?.forEach((m: Marker) => m.remove());
     (map as any)._markers = [];
 
@@ -543,7 +512,6 @@ export default function OffersPage() {
         return;
       }
 
-      // 🏪 Élément HTML du marqueur avec LOGO du marchand
       const el = document.createElement("div");
       el.className = "offer-marker";
       el.style.width = "42px";
@@ -558,161 +526,30 @@ export default function OffersPage() {
       el.style.alignItems = "center";
       el.style.justifyContent = "center";
 
-      // Afficher le logo du marchand ou fallback TILKAPP
       if (offer.merchant_logo_url) {
         el.innerHTML = `<img src="${offer.merchant_logo_url}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null; this.src='/logo-tilkapp.png' || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏪</text></svg>';" />`;
       } else {
-        // Fallback : Logo TILKAPP ou emoji
         el.innerHTML = `<img src="/logo-tilkapp.png" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=font-size:24px>🏪</span>';" />`;
       }
 
-      // 🎯 Clic sur le marqueur → Affiche les produits du marchand
       el.addEventListener('click', () => {
         const merchantId = offer.merchant_id || offer.merchant_name;
         setSelectedMerchantId(merchantId);
         
-        // Filtrer toutes les offres de ce marchand
         const merchantProducts = offers.filter(o => 
           (o.merchant_id || o.merchant_name) === merchantId
         );
         setMerchantOffers(merchantProducts);
-        setIsMobilePanelOpen(true);
       });
-
-      // 🧮 Calculs dynamiques pour le popup
-      const discount = Math.round(
-        ((offer.price_before - offer.price_after) / offer.price_before) * 100
-      );
-
-      const now = new Date();
-      const until = new Date(offer.available_until || now);
-      const from = new Date(offer.available_from || now);
-
-      const total = until.getTime() - from.getTime();
-      const remaining = until.getTime() - now.getTime();
-
-      const progressPercent = total > 0
-        ? Math.max(0, Math.min(100, (remaining / total) * 100))
-        : 0;
-
-      let progressColor = "#16a34a";
-      if (progressPercent < 60) progressColor = "#facc15";
-      if (progressPercent < 30) progressColor = "#ef4444";
-
-      const minutesLeft = Math.max(0, Math.floor(remaining / 60000));
-      const hours = Math.floor(minutesLeft / 60);
-      const mins = minutesLeft % 60;
-      const timeLeft = hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
-
-      // 📦 POPUP HTML enrichi avec logo marchand
-      const popupHTML = `
-        <div style="width:210px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border-radius:12px;overflow:hidden;">
-          
-          <!-- 📸 Image + badge réduction -->
-          <div style="position:relative;width:100%;height:120px;overflow:hidden;">
-            <img src="${offer.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;">
-            <div style="position:absolute;top:8px;right:8px;background:#dc2626;color:#fff;font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;">
-              -${discount}%
-            </div>
-          </div>
-
-          <!-- 🕒 Infos produit + marchand -->
-          <div style="padding:10px;">
-            <!-- 🏪 Bloc marchand -->
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-              ${
-                offer.merchant_logo_url
-                  ? `<img src="${offer.merchant_logo_url}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" />`
-                  : `<div style="width:28px;height:28px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;">🏪</div>`
-              }
-              <div style="font-size:13px;font-weight:500;color:#111;">${offer.merchant_name}</div>
-            </div>
-
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-              <div style="font-size:14px;font-weight:600;color:#111;">
-                ${offer.title || "Offre locale"}
-              </div>
-              <div style="display:flex;align-items:center;gap:3px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:600;padding:2px 5px;border-radius:6px;">
-                ⏰ ${timeLeft || "Bientôt expirée"}
-              </div>
-            </div>
-
-            <!-- 🔋 Barre de progression -->
-            <div style="width:100%;height:4px;background:#f3f4f6;border-radius:4px;margin-bottom:8px;">
-              <div style="
-                width:${progressPercent}%;
-                height:100%;
-                background:${progressColor};
-                border-radius:4px;
-                transition:width 0.3s ease;
-              "></div>
-            </div>
-
-            <!-- 💶 Prix -->
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-              <span style="color:#16a34a;font-weight:700;">
-                ${offer.price_after.toFixed(2)} €
-              </span>
-              <span style="
-                text-decoration:line-through;
-                text-decoration-color:#ef4444;
-                color:#444;
-                font-size:12px;
-              ">
-                ${offer.price_before.toFixed(2)} €
-              </span>
-            </div>
-
-            <!-- 🟢 Bouton -->
-            <button
-              class="offer-details-btn"
-              data-offer-id="${offer.offer_id}"
-              style="
-                width:100%;
-                background:#22c55e;
-                color:#fff;
-                border:none;
-                border-radius:8px;
-                padding:7px 0;
-                font-size:13px;
-                font-weight:600;
-                cursor:pointer;
-              "
-            >
-              Voir détails / Réserver
-            </button>
-          </div>
-        </div>
-      `;
-
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHTML);
 
       const marker = new mapboxgl.Marker(el)
         .setLngLat([offer.offer_lng, offer.offer_lat])
-        .setPopup(popup)
         .addTo(map);
-
-      popup.on('open', () => {
-        setTimeout(() => {
-          const button = document.querySelector(`[data-offer-id="${offer.offer_id}"]`) as HTMLButtonElement;
-          if (button && !button.dataset.listenerAdded) {
-            const handleClick = () => setSelectedOffer(offer);
-            button.addEventListener('click', handleClick);
-            button.dataset.listenerAdded = 'true';
-
-            popup.on('close', () => {
-              button.removeEventListener('click', handleClick);
-              delete button.dataset.listenerAdded;
-            });
-          }
-        }, 10);
-      });
 
       (map as any)._markers.push(marker);
     });
   }, [offers]);
 
-  // 🌍 Ajustement de la vue carte en mode "all"
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -730,7 +567,6 @@ export default function OffersPage() {
     }
   }, [offers, viewMode]);
 
-  // 🔄 Gestion du changement de mode de vue
   const handleViewModeChange = (mode: "nearby" | "all") => {
     setViewMode(mode);
     
@@ -747,13 +583,11 @@ export default function OffersPage() {
     }
   };
 
-  // 📏 Gestion du changement de rayon
   const handleRadiusChange = (val: number) => {
     setRadiusKm(val);
     localStorage.setItem("radiusKm", String(val));
   };
 
-  // 🚨 Protection contre les coordonnées invalides
   if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
     console.warn("🧭 Map skipped render: invalid center", center);
     return (
@@ -766,7 +600,6 @@ export default function OffersPage() {
     );
   }
 
-  // 🎨 Composant carte d'offre réutilisable - Layout restructuré (3 colonnes)
   const OfferCard = ({ offer, isMobile = false }: { offer: Offer; isMobile?: boolean }) => (
     <div
       key={offer.offer_id}
@@ -775,7 +608,6 @@ export default function OffersPage() {
       }`}
       onClick={() => setSelectedOffer(offer)}
     >
-      {/* 🏷️ Colonne 1: Image du produit - Taille fixe */}
       {offer.image_url && (
         <img
           src={offer.image_url}
@@ -789,14 +621,11 @@ export default function OffersPage() {
         />
       )}
 
-      {/* 📋 Colonne 2: Zone centrale - Infos produit (3 lignes max) */}
       <div className={`flex-1 ${isMobile ? "p-2" : "p-3"} flex flex-col justify-between`}>
-        {/* Ligne 1: Titre produit */}
         <h3 className={`font-bold text-gray-900 ${isMobile ? "text-sm" : "text-base"} line-clamp-1`}>
           {offer.title}
         </h3>
 
-        {/* Ligne 2: Prix et réduction - Layout horizontal propre */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`font-bold text-green-600 ${isMobile ? "text-base" : "text-lg"}`}>
             {offer.price_after.toFixed(2)}€
@@ -809,7 +638,6 @@ export default function OffersPage() {
           </span>
         </div>
 
-        {/* Ligne 3: Timer - Simple */}
         {offer.available_until && (
           <div className={`${isMobile ? "text-[10px]" : "text-xs"} text-gray-600 font-medium flex items-center gap-1`}>
             <span>⏰</span>
@@ -818,9 +646,7 @@ export default function OffersPage() {
         )}
       </div>
 
-      {/* 🏪 Colonne 3: Zone droite - Logo + Infos marchand */}
       <div className={`${isMobile ? "w-24 p-2" : "w-32 p-3"} border-l border-gray-100 flex flex-col items-center justify-center text-center bg-gray-50`}>
-        {/* Logo marchand */}
         {offer.merchant_logo_url ? (
           <img
             src={offer.merchant_logo_url}
@@ -846,19 +672,16 @@ export default function OffersPage() {
           </div>
         )}
 
-        {/* Nom marchand */}
         <p className={`font-semibold text-gray-900 ${isMobile ? "text-[10px]" : "text-xs"} line-clamp-2 mb-1 w-full px-1`}>
           {offer.merchant_name}
         </p>
 
-        {/* Ville */}
         {offer.merchant_city && offer.merchant_city !== "À définir" && (
           <p className={`text-gray-600 ${isMobile ? "text-[9px]" : "text-[10px]"} line-clamp-1 w-full px-1 mb-1`}>
             📍 {offer.merchant_city}
           </p>
         )}
 
-        {/* Distance (mode proximité uniquement) */}
         {viewMode === "nearby" && offer.distance_meters > 0 && (
           <p className={`text-green-600 font-semibold ${isMobile ? "text-[10px]" : "text-xs"}`}>
             {(offer.distance_meters / 1000).toFixed(1)} km
@@ -870,11 +693,9 @@ export default function OffersPage() {
 
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
-      {/* 🗺️ CARTE */}
       <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* Slider de rayon - Visible partout (mobile + desktop) */}
         {viewMode === "nearby" && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1600] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-green-500/20">
             <input
@@ -890,9 +711,7 @@ export default function OffersPage() {
         )}
       </div>
 
-      {/* 📋 LISTE DES OFFRES - DESKTOP */}
       <div className="hidden md:block md:w-1/2 overflow-y-auto bg-gray-50 p-4">
-        {/* 🔘 Toggle entre les modes de vue */}
         <div className="flex justify-center mb-6">
           <div className="flex bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
             <button
@@ -933,76 +752,16 @@ export default function OffersPage() {
         )}
       </div>
 
-      {/* 📱 PANNEAU MOBILE - Caché par défaut, apparaît au clic sur marchand */}
-      {selectedMerchantId && isMobilePanelOpen && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-[1500]">
-          {/* Poignée de glissement */}
-          <div 
-            className="flex justify-center pt-3 pb-2 cursor-pointer"
-            onClick={() => {
-              setIsMobilePanelOpen(false);
-              setSelectedMerchantId(null);
-            }}
-          >
-            <div className="w-14 h-1.5 bg-gray-400 rounded-full"></div>
-          </div>
+      <MerchantBottomSheet
+        merchantId={selectedMerchantId}
+        offers={merchantOffers}
+        onClose={() => {
+          setSelectedMerchantId(null);
+          setMerchantOffers([]);
+        }}
+        onOfferClick={(offer) => setSelectedOffer(offer)}
+      />
 
-          {/* Nom du marchand sélectionné */}
-          {merchantOffers.length > 0 && (
-            <div className="px-4 pb-3">
-              <div className="flex items-center gap-3">
-                {merchantOffers[0].merchant_logo_url ? (
-                  <img
-                    src={merchantOffers[0].merchant_logo_url}
-                    alt={merchantOffers[0].merchant_name}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-white shadow"
-                    crossOrigin="anonymous"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-xl">
-                    🏪
-                  </div>
-                )}
-                <div>
-                  <h3 className="font-bold text-gray-900">
-                    {merchantOffers[0].merchant_name}
-                  </h3>
-                  <p className="text-xs text-gray-600">
-                    {merchantOffers.length} offre{merchantOffers.length > 1 ? 's' : ''} disponible{merchantOffers.length > 1 ? 's' : ''}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Liste des offres - Scroll isolé */}
-          <div 
-            className="overflow-y-auto px-4 pb-6 max-h-[70vh]"
-            style={{ 
-              WebkitOverflowScrolling: 'touch',
-              overscrollBehavior: 'contain'
-            }}
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchMove={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
-          >
-            {merchantOffers.length === 0 ? (
-              <p className="text-gray-500 text-center text-sm py-8">
-                Aucune offre disponible pour ce marchand
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {merchantOffers.map((o) => (
-                  <OfferCard key={o.offer_id} offer={o} isMobile />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 🔍 MODALE DÉTAILS OFFRE */}
       <OfferDetailsModal
         offer={selectedOffer}
         onClose={() => setSelectedOffer(null)}
@@ -1011,7 +770,6 @@ export default function OffersPage() {
   );
 }
 
-// 🧮 Fonction utilitaire : créer un cercle GeoJSON
 export function createGeoJSONCircle(
   center: [number, number],
   radiusInMeters: number,
