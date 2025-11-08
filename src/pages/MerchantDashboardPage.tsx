@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Package, Clock, Pause, Play, Trash2, Edit, Building2, TrendingUp } from 'lucide-react';
+import { Plus, Package, Clock, Pause, Play, Trash2, CreditCard as Edit, Bell, ChevronDown, ChevronUp, Building2 } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
@@ -53,11 +53,7 @@ const MerchantDashboardPage = () => {
   const { showAddProductModal, openAddProductModal, closeAddProductModal } = useAddProduct();
   const [merchantId, setMerchantId] = useState<string | null>(null);
   const [merchantProfile, setMerchantProfile] = useState<MerchantProfile | null>(null);
-  
-  // 🆕 Séparation en 2 catégories : Actives / Inactives
-  const [activeOffers, setActiveOffers] = useState<Offer[]>([]);
-  const [inactiveOffers, setInactiveOffers] = useState<Offer[]>([]);
-  
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -90,13 +86,12 @@ const MerchantDashboardPage = () => {
   const [isSubmittingOnboarding, setIsSubmittingOnboarding] = useState(false);
   const [isFromSettings, setIsFromSettings] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [modalReady, setModalReady] = useState(false);
+  const [modalReady, setModalReady] = useState(false); // 🆕 État pour contrôler l'initialisation
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
 
-  // Fetch merchant profile (code existant conservé)
   useEffect(() => {
     const fetchMerchantProfile = async () => {
       if (!user) {
@@ -142,7 +137,12 @@ const MerchantDashboardPage = () => {
             console.log('⚠️ Profil incomplet → ouverture modale');
             setIsFromSettings(false);
             setShowOnboardingModal(true);
-            setTimeout(() => setModalReady(true), 100);
+            
+            // 🆕 Attendre un instant avant de permettre l'initialisation de la carte
+            setTimeout(() => {
+              setModalReady(true);
+            }, 100);
+            
             setOnboardingData({
               company_name: merchantData.company_name || '',
               phone: merchantData.phone || '',
@@ -163,12 +163,11 @@ const MerchantDashboardPage = () => {
     fetchMerchantProfile();
   }, [user, showOnboardingModal]);
 
-  // Settings modal listener (code existant conservé)
   useEffect(() => {
     const handleOpenProfileModal = () => {
       setIsFromSettings(true);
       setShowOnboardingModal(true);
-      setModalReady(true);
+      setModalReady(true); // 🆕 Carte prête immédiatement depuis Settings
       if (merchantProfile) {
         setOnboardingData({
           company_name: merchantProfile.company_name || '',
@@ -186,21 +185,30 @@ const MerchantDashboardPage = () => {
     return () => window.removeEventListener('openMerchantProfileModal', handleOpenProfileModal);
   }, [merchantProfile]);
 
-  // Mapbox initialization (code existant conservé)
   useEffect(() => {
+    // 🔥 Attendre que la modale soit prête ET visible
     if (!showOnboardingModal || !modalReady || !mapContainerRef.current) {
+      console.log('⏳ En attente:', { showOnboardingModal, modalReady, hasContainer: !!mapContainerRef.current });
       return;
     }
 
+    // 🧹 Nettoyer la carte existante si elle existe
     if (mapRef.current) {
+      console.log('🧹 Nettoyage de la carte existante');
       mapRef.current.remove();
       mapRef.current = null;
       markerRef.current = null;
       setMapLoaded(false);
     }
 
+    // ⏱️ Attendre que le DOM soit prêt
     const timer = setTimeout(() => {
-      if (!mapContainerRef.current) return;
+      if (!mapContainerRef.current) {
+        console.log('❌ Container non disponible');
+        return;
+      }
+
+      console.log('🗺️ Initialisation Mapbox');
 
       try {
         const map = new mapboxgl.Map({
@@ -213,9 +221,15 @@ const MerchantDashboardPage = () => {
         mapRef.current = map;
 
         map.on('load', () => {
+          console.log('✅ Carte Mapbox chargée');
           setMapLoaded(true);
+
+          // 🪄 Forcer Mapbox à recalculer la taille du conteneur
           setTimeout(() => {
-            if (map) map.resize();
+            if (map) {
+              map.resize();
+              console.log('🧭 Mapbox redimensionné après ouverture de la modale');
+            }
           }, 300);
         });
 
@@ -240,6 +254,7 @@ const MerchantDashboardPage = () => {
             latitude: lngLat.lat,
             longitude: lngLat.lng,
           }));
+          console.log('📍 Marqueur déplacé:', lngLat);
         });
 
         const geocoder = new MapboxGeocoder({
@@ -254,19 +269,20 @@ const MerchantDashboardPage = () => {
         map.addControl(geocoder, 'top-left');
 
         geocoder.on('result', (e) => {
-          const { center } = e.result;
+          const { center, place_name } = e.result;
           marker.setLngLat(center);
           setOnboardingData((prev) => ({
             ...prev,
             latitude: center[1],
             longitude: center[0],
           }));
+          console.log('🔍 Adresse sélectionnée:', place_name, center);
         });
       } catch (error) {
         console.error('❌ Erreur initialisation Mapbox:', error);
         setMapLoaded(false);
       }
-    }, 500);
+    }, 500); // 🔥 Augmenté à 500ms pour être sûr
 
     return () => {
       clearTimeout(timer);
@@ -277,9 +293,8 @@ const MerchantDashboardPage = () => {
       markerRef.current = null;
       setMapLoaded(false);
     };
-  }, [showOnboardingModal, modalReady]);
+  }, [showOnboardingModal, modalReady]); // 🔥 Dépend maintenant de modalReady aussi
 
-  // 🆕 LOAD OFFERS - Tri intelligent avec séparation en 2 catégories
   useEffect(() => {
     const checkExpiredOffers = async () => {
       try {
@@ -314,6 +329,13 @@ const MerchantDashboardPage = () => {
     };
   }, [merchantId]);
 
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   const loadOffers = async () => {
     if (!merchantId) return;
 
@@ -326,34 +348,7 @@ const MerchantDashboardPage = () => {
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-
-      const offers = data || [];
-      const now = new Date();
-
-      // Séparer en 2 catégories
-      const active: Offer[] = [];
-      const inactive: Offer[] = [];
-
-      offers.forEach((offer) => {
-        const availableUntil = new Date(offer.available_until);
-        const isExpired = now > availableUntil || offer.quantity <= 0;
-
-        if (offer.is_active && !isExpired) {
-          active.push(offer);
-        } else {
-          inactive.push(offer);
-        }
-      });
-
-      // Tri des offres actives : nouvelles et réactivées en premier
-      active.sort((a, b) => {
-        const aUpdated = new Date(a.updated_at).getTime();
-        const bUpdated = new Date(b.updated_at).getTime();
-        return bUpdated - aUpdated; // Plus récent en premier
-      });
-
-      setActiveOffers(active);
-      setInactiveOffers(inactive);
+      setOffers(data || []);
     } catch (error: any) {
       console.error('Error loading offers:', error);
       setToast({ message: error.message || 'Failed to load offers', type: 'error' });
@@ -362,18 +357,10 @@ const MerchantDashboardPage = () => {
     }
   };
 
-  // Toast auto-hide
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-
   const getOfferStatus = (offer: Offer): 'active' | 'paused' | 'expired' => {
     const now = new Date();
     const availableUntil = new Date(offer.available_until);
-    if (now > availableUntil || offer.quantity <= 0) return 'expired';
+    if (now > availableUntil) return 'expired';
     if (!offer.is_active) return 'paused';
     return 'active';
   };
@@ -457,7 +444,7 @@ const MerchantDashboardPage = () => {
         offerData.location = merchantData.location;
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('offers')
         .insert([offerData])
         .select()
@@ -465,7 +452,7 @@ const MerchantDashboardPage = () => {
 
       if (error) throw error;
 
-      await loadOffers(); // Recharger les offres
+      setOffers([data, ...offers]);
       closeAddProductModal();
       setToast({ message: '✅ Offer added successfully', type: 'success' });
     } catch (error: any) {
@@ -519,7 +506,6 @@ const MerchantDashboardPage = () => {
     setEditingOffer(null);
   };
 
-  // 🔧 FIX : Ajouter updated_at lors de la mise à jour
   const handleUpdateOffer = async (formData: any) => {
     if (!user || !editingOffer) return;
 
@@ -546,7 +532,6 @@ const MerchantDashboardPage = () => {
         quantity: parseInt(formData.quantity),
         available_from: formData.available_from,
         available_until: formData.available_until,
-        updated_at: new Date().toISOString(), // 🔧 FIX : Mise à jour du timestamp
       };
 
       const { error } = await supabase
@@ -566,7 +551,7 @@ const MerchantDashboardPage = () => {
     }
   };
 
-  const handleOnboardingSubmit = async (e: React.FormEvent) => {
+    const handleOnboardingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!merchantId) return;
 
@@ -593,6 +578,9 @@ const MerchantDashboardPage = () => {
         location: `SRID=4326;POINT(${longitude} ${latitude})`
       };
 
+      console.log('📍 Payload envoyé:', updatePayload);
+      console.log('📍 Coordonnées exactes:', { latitude, longitude });
+
       const { error: updateError } = await supabase
         .from('merchants')
         .update(updatePayload)
@@ -602,7 +590,7 @@ const MerchantDashboardPage = () => {
 
       setToast({ message: '✅ Profil complété avec succès', type: 'success' });
       setShowOnboardingModal(false);
-      setModalReady(false);
+      setModalReady(false); // 🆕 Réinitialiser l'état
 
       const { data: updatedMerchant } = await supabase
         .from('merchants')
@@ -644,6 +632,8 @@ const MerchantDashboardPage = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
+        
+        console.log('✅ Position GPS détectée:', { latitude, longitude, accuracy: position.coords.accuracy });
 
         setOnboardingData((prev) => ({
           ...prev,
@@ -670,10 +660,12 @@ const MerchantDashboardPage = () => {
     );
   };
 
+  // 🪄 Redimensionner la carte quand la modale s'affiche
   useEffect(() => {
     if (showOnboardingModal && mapRef.current) {
       setTimeout(() => {
         mapRef.current?.resize();
+        console.log('📐 Redimensionnement de la carte après ouverture de la modale');
       }, 400);
     }
   }, [showOnboardingModal]);
@@ -695,99 +687,6 @@ const MerchantDashboardPage = () => {
     }
   };
 
-  // 🎨 Composant carte d'offre
-  const OfferCard = ({ offer, status }: { offer: Offer; status: 'active' | 'inactive' }) => {
-    const offerStatus = getOfferStatus(offer);
-    
-    return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-        <div className="relative h-48">
-          <img
-            src={offer.image_url || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400'}
-            alt={offer.title}
-            className="w-full h-full object-cover"
-          />
-          <div className={'absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium ' + getStatusColor(offerStatus)}>
-            {offerStatus === 'paused' ? '⏸️ En pause' : offerStatus === 'active' ? '✅ Active' : '⏰ Expirée'}
-          </div>
-        </div>
-
-        <div className="p-4">
-          <h3 className="font-semibold text-gray-900 mb-1">{offer.title}</h3>
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{offer.description}</p>
-
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="flex items-baseline space-x-2">
-                <span className="text-xs text-gray-500 line-through">{offer.price_before.toFixed(2)} €</span>
-                <span className="text-lg font-bold text-green-600">{offer.price_after.toFixed(2)} €</span>
-              </div>
-              {offer.discount_percent && (
-                <span className="text-xs font-medium text-green-600">
-                  -{offer.discount_percent}% off
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between text-sm mb-4">
-            <div className="flex items-center text-gray-600">
-              <Clock className="w-4 h-4 mr-1" />
-              <span>{calculateTimeLeft(offer.available_until)}</span>
-            </div>
-            <div className="text-gray-600">
-              <span className="font-medium">Stock: {offer.quantity}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => toggleOfferStatus(offer.id, offer.is_active)}
-              className={'flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ' +
-                (togglingOfferId === offer.id
-                  ? 'bg-gray-200 text-gray-500 cursor-wait opacity-60'
-                  : offer.is_active
-                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    : 'bg-green-100 text-green-700 hover:bg-green-200')}
-              disabled={togglingOfferId === offer.id}
-            >
-              {togglingOfferId === offer.id ? (
-                <>
-                  <div className="w-4 h-4 mr-1 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                  {offer.is_active ? 'Pausing...' : 'Activating...'}
-                </>
-              ) : offer.is_active ? (
-                <>
-                  <Pause className="w-4 h-4 mr-1" /> Pause
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 mr-1" /> Activate
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => openEditModal(offer)}
-              className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-              title="Edit"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={() => deleteOffer(offer.id)}
-              className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
-              title="Delete"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       {toast && (
@@ -796,7 +695,6 @@ const MerchantDashboardPage = () => {
         </div>
       )}
 
-      {/* ONBOARDING MODAL - Code existant conservé */}
       {showOnboardingModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9998] p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -840,6 +738,7 @@ const MerchantDashboardPage = () => {
               <div className="space-y-4">
                 <p className="text-sm font-medium text-gray-700">📍 Définissez votre position sur la carte</p>
 
+                {/* 🗺️ Carte en pleine largeur avec coins arrondis */}
                 <div className="relative">
                   {!mapLoaded && (
                     <div className="w-full h-[400px] rounded-xl bg-gray-100 flex items-center justify-center">
@@ -856,6 +755,7 @@ const MerchantDashboardPage = () => {
                     style={{ position: 'relative' }}
                   ></div>
 
+                  {/* 🎯 Bouton GPS style pro (en bas à droite) */}
                   {mapLoaded && (
                     <button
                       type="button"
@@ -871,6 +771,7 @@ const MerchantDashboardPage = () => {
                   )}
                 </div>
 
+                {/* 📝 Affichage des coordonnées */}
                 <div className="text-xs text-gray-400 text-center">
                   Position : {onboardingData.latitude.toFixed(6)}, {onboardingData.longitude.toFixed(6)}
                 </div>
@@ -923,12 +824,11 @@ const MerchantDashboardPage = () => {
         </div>
       )}
 
-      {/* DASHBOARD CONTENT */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">My Products</h2>
-            <p className="text-gray-600 mt-1">{activeOffers.length + inactiveOffers.length} total products</p>
+            <p className="text-gray-600 mt-1">{offers.length} total products</p>
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -941,66 +841,115 @@ const MerchantDashboardPage = () => {
           </div>
         </div>
 
-        {/* 🆕 SECTION 1 : OFFRES ACTIVES */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-green-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">✅ Active Offers</h3>
-            </div>
-            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
-              {activeOffers.length}
-            </span>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {offers.map(offer => {
+            const status = getOfferStatus(offer);
+            return (
+              <div key={offer.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                <div className="relative h-48">
+                  <img
+                    src={offer.image_url || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400'}
+                    alt={offer.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className={'absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium ' + getStatusColor(status)}>
+                    {status === 'paused' ? 'En pause' : status === 'active' ? 'Active' : 'Expirée'}
+                  </div>
+                </div>
 
-          {activeOffers.length === 0 ? (
-            <div className="bg-green-50 border-2 border-dashed border-green-200 rounded-lg p-8 text-center">
-              <Package className="w-12 h-12 text-green-400 mx-auto mb-3" />
-              <p className="text-gray-600 mb-4">No active offers yet</p>
-              <button
-                onClick={openAddProductModal}
-                className="inline-flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Create Your First Offer
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {activeOffers.map((offer) => (
-                <OfferCard key={offer.id} offer={offer} status="active" />
-              ))}
-            </div>
-          )}
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-900 mb-1">{offer.title}</h3>
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">{offer.description}</p>
+
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="flex items-baseline space-x-2">
+                        <span className="text-xs text-gray-500 line-through">{offer.price_before.toFixed(2)} €</span>
+                        <span className="text-lg font-bold text-green-600">{offer.price_after.toFixed(2)} €</span>
+                      </div>
+                      {offer.discount_percent && (
+                        <span className="text-xs font-medium text-green-600">
+                          -{offer.discount_percent}% off
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm mb-4">
+                    <div className="flex items-center text-gray-600">
+                      <Clock className="w-4 h-4 mr-1" />
+                      <span>{calculateTimeLeft(offer.available_until)}</span>
+                    </div>
+                    <div className="text-gray-600">
+                      <span className="font-medium">Stock: {offer.quantity}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => toggleOfferStatus(offer.id, offer.is_active)}
+                      className={'flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ' +
+                        (togglingOfferId === offer.id
+                          ? 'bg-gray-200 text-gray-500 cursor-wait opacity-60'
+                          : offer.is_active
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-green-100 text-green-700 hover:bg-green-200')}
+                      disabled={togglingOfferId === offer.id}
+                    >
+                      {togglingOfferId === offer.id ? (
+                        <>
+                          <div className="w-4 h-4 mr-1 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                          {offer.is_active ? 'Pausing...' : 'Activating...'}
+                        </>
+                      ) : offer.is_active ? (
+                        <>
+                          <Pause className="w-4 h-4 mr-1" /> Pause
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4 mr-1" /> Activate
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => openEditModal(offer)}
+                      className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                      title="Edit"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      onClick={() => deleteOffer(offer.id)}
+                      className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        {/* 🆕 SECTION 2 : OFFRES INACTIVES (Expirées + Désactivées) */}
-        {inactiveOffers.length > 0 && (
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-gray-600" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">⏸️ Inactive Offers</h3>
-              </div>
-              <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
-                {inactiveOffers.length}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-75">
-              {inactiveOffers.map((offer) => (
-                <OfferCard key={offer.id} offer={offer} status="inactive" />
-              ))}
-            </div>
+        {offers.length === 0 && (
+          <div className="text-center py-12">
+            <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
+            <p className="text-gray-600 mb-6">Get started by adding your first product</p>
+            <button
+              onClick={openAddProductModal}
+              className="inline-flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Add Your First Product
+            </button>
           </div>
         )}
       </div>
 
-      {/* MODALS */}
       {showAddProductModal && (
         <OfferForm
           mode="create"

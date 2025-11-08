@@ -1,453 +1,392 @@
-import React, { useState, useEffect } from 'react';
-import { X, MapPin, Phone, Navigation, Clock, Package, Star } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, MapPin, Navigation, Clock, Star } from 'lucide-react';
+import { getPublicImageUrl } from '../lib/supabasePublic';
 import { supabase } from '../lib/supabaseClient';
-import { useAuth } from '../hooks/useAuth';
-
-interface Offer {
-  offer_id: string;
-  merchant_id?: string;
-  title: string;
-  description?: string;
-  price_before: number;
-  price_after: number;
-  discount_percent?: number;
-  quantity?: number;
-  merchant_name: string;
-  merchant_logo_url?: string;
-  merchant_phone?: string;
-  merchant_street?: string;
-  merchant_city?: string;
-  merchant_postal_code?: string;
-  distance_meters: number;
-  offer_lat: number;
-  offer_lng: number;
-  image_url: string;
-  available_from?: string;
-  available_until?: string;
-  expired_at?: string | null;
-  is_active?: boolean;
-}
 
 interface OfferDetailsModalProps {
-  offer: Offer | null;
+  offer: {
+    offer_id: string;
+    merchant_id?: string;
+    merchant_name: string;
+    title: string;
+    description?: string;
+    image_url: string;
+    price_before: number;
+    price_after: number;
+    quantity?: number;
+    available_until?: string;
+    available_from?: string;
+    category?: string;
+    distance_meters?: number;
+    merchant_street?: string;
+    merchant_city?: string;
+    merchant_postal_code?: string;
+    offer_lat: number;
+    offer_lng: number;
+  } | null;
   onClose: () => void;
 }
 
-export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onClose }) => {
-  const { user } = useAuth();
-  const [isReserving, setIsReserving] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const [merchantOffers, setMerchantOffers] = useState<Offer[]>([]);
-  const [loadingOtherOffers, setLoadingOtherOffers] = useState(false);
+interface MerchantOffer {
+  offer_id: string;
+  title: string;
+  image_url: string;
+  price_after: number;
+  price_before: number;
+}
+
+export function OfferDetailsModal({ offer, onClose }: OfferDetailsModalProps) {
+  const [merchantOffers, setMerchantOffers] = useState<MerchantOffer[]>([]);
+  const [averageRating] = useState<number>(4.6);
+  const [totalReviews] = useState<number>(32);
+  const [loading, setLoading] = useState(false);
+  const isReservingRef = useRef(false);
 
   useEffect(() => {
-    if (offer && offer.merchant_id) {
-      loadMerchantOffers();
-    }
-  }, [offer]);
+    if (!offer) return;
+    const fetchMerchantOffers = async () => {
+      if (!offer.merchant_id) return;
 
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
+      const { data, error } = await supabase
+        .from('offers')
+        .select('id, title, image_url, price_after, price_before')
+        .eq('merchant_id', offer.merchant_id)
+        .eq('is_active', true)
+        .neq('id', offer.offer_id)
+        .limit(4);
 
-  if (!offer) return null;
+      if (!error && data) {
+        setMerchantOffers(
+          data.map((o) => ({
+            offer_id: o.id,
+            title: o.title,
+            image_url: o.image_url,
+            price_after: o.price_after,
+            price_before: o.price_before,
+          }))
+        );
+      }
+    };
 
-  const loadMerchantOffers = async () => {
-    if (!offer.merchant_id) return;
+    fetchMerchantOffers();
+  }, [offer?.merchant_id, offer?.offer_id]);
+
+  const handleReservation = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     
-    setLoadingOtherOffers(true);
+    if (isReservingRef.current || loading) {
+      console.warn('⚠️ Réservation déjà en cours, clic ignoré');
+      return;
+    }
+
+    isReservingRef.current = true;
+    setLoading(true);
+    
+    console.log('🔵 [DÉBUT RÉSERVATION]', Date.now());
+
     try {
-      const { data, error } = await supabase.rpc('get_offers_nearby_public', {
-        user_lng: offer.offer_lng,
-        user_lat: offer.offer_lat,
-        radius_meters: 100, // Very small radius to get only this merchant
+      const { data: authData } = await supabase.auth.getUser();
+      const authUid = authData?.user?.id;
+      if (!authUid) {
+        alert("Connectez-vous pour réserver une offre.");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_id", authUid)
+        .single();
+
+      if (profileError || !profile) {
+        alert("Profil introuvable.");
+        return;
+      }
+
+      console.log('🔵 [APPEL RPC]', {
+        client_id: profile.id,
+        offer_id: offer.offer_id,
+        quantity: 1,
+        timestamp: Date.now()
+      });
+
+      const { data, error } = await supabase.rpc("create_reservation_dynamic", {
+        p_client_id: profile.id,
+        p_offer_id: offer.offer_id,
+        p_quantity: 1,
       });
 
       if (error) throw error;
 
-      // Filter to get only this merchant's offers, excluding the current one
-      const otherOffers = (data || []).filter(
-        (o: Offer) => o.merchant_id === offer.merchant_id && o.offer_id !== offer.offer_id
-      );
-
-      setMerchantOffers(otherOffers);
-    } catch (error) {
-      console.error('Erreur chargement autres offres:', error);
+      console.log("✅ [RÉSERVATION CRÉÉE]", data);
+      alert("✅ Réservation effectuée !");
+      onClose();
+      
+    } catch (err: any) {
+      console.error("❌ [ERREUR RÉSERVATION]", err.message || err);
+      alert("❌ Impossible de réserver l'offre.");
     } finally {
-      setLoadingOtherOffers(false);
-    }
-  };
-
-  const getDiscountPercent = (before: number, after: number) => {
-    if (!before || before === 0) return 0;
-    return Math.round(((before - after) / before) * 100);
-  };
-
-  const getTimeRemaining = (until?: string) => {
-    if (!until) return '';
-    const diff = new Date(until).getTime() - Date.now();
-    if (diff <= 0) return 'Expirée';
-    const h = Math.floor(diff / 1000 / 60 / 60);
-    const m = Math.floor((diff / 1000 / 60) % 60);
-    return h > 0 ? `${h}h ${m}min restantes` : `${m} minutes restantes`;
-  };
-
-  const getProgressPercent = () => {
-    if (!offer.available_from || !offer.available_until) return 0;
-    
-    const now = new Date();
-    const start = new Date(offer.available_from);
-    const end = new Date(offer.available_until);
-    
-    const total = end.getTime() - start.getTime();
-    const remaining = end.getTime() - now.getTime();
-    
-    if (remaining <= 0) return 0;
-    if (remaining >= total) return 100;
-    
-    return Math.max(0, Math.min(100, (remaining / total) * 100));
-  };
-
-  const progressPercent = getProgressPercent();
-  
-  let progressColor = '#16a34a'; // green
-  if (progressPercent < 60) progressColor = '#facc15'; // yellow
-  if (progressPercent < 30) progressColor = '#ef4444'; // red
-
-  const handleGetDirections = () => {
-    if (offer.offer_lng && offer.offer_lat) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${offer.offer_lat},${offer.offer_lng}`;
-      window.open(url, '_blank');
-    }
-  };
-
-  const handleReserve = async () => {
-    if (!user) {
-      setToast({ message: '⚠️ Connectez-vous pour réserver', type: 'error' });
-      return;
-    }
-
-    setIsReserving(true);
-
-    try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('auth_id', user.id)
-        .eq('role', 'client')
-        .maybeSingle();
-
-      if (profileError || !profileData) {
-        setToast({ message: '❌ Profil client introuvable', type: 'error' });
-        setIsReserving(false);
-        return;
-      }
-
-      const { data: reservation, error: reservationError } = await supabase
-        .from('reservations')
-        .insert([
-          {
-            offer_id: offer.offer_id,
-            client_id: profileData.id,
-            status: 'pending',
-          },
-        ])
-        .select()
-        .single();
-
-      if (reservationError) throw reservationError;
-
-      setToast({ message: '✅ Réservation confirmée !', type: 'success' });
-
       setTimeout(() => {
-        onClose();
-      }, 1500);
-    } catch (error: any) {
-      console.error('❌ Erreur réservation:', error);
-      setToast({ message: error.message || '❌ Erreur lors de la réservation', type: 'error' });
-    } finally {
-      setIsReserving(false);
+        isReservingRef.current = false;
+        setLoading(false);
+        console.log('🔓 [DÉVERROUILLÉ]', Date.now());
+      }, 500);
     }
   };
+
+  if (!offer) return null;
+
+  const calculateDiscount = (priceBefore: number, priceAfter: number): number => {
+    return Math.round(100 * (1 - priceAfter / priceBefore));
+  };
+
+  const discount = calculateDiscount(offer.price_before, offer.price_after);
+
+  const openGPS = (lat: number, lng: number) => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    let url = '';
+
+    if (/iphone|ipad|ipod/.test(userAgent)) {
+      url = `http://maps.apple.com/?daddr=${lat},${lng}`;
+    } else {
+      url = `https://www.google.com/maps?q=${lat},${lng}`;
+    }
+
+    window.open(url, '_blank');
+  };
+
+  const formatDistance = (distanceMeters?: number): string => {
+    if (!distanceMeters) return '';
+    if (distanceMeters < 1000) return `${Math.round(distanceMeters)}m`;
+    return `${(distanceMeters / 1000).toFixed(1)}km`;
+  };
+
+  const formatAddress = (): string => {
+    const parts = [];
+    if (offer.merchant_street) parts.push(offer.merchant_street);
+    if (offer.merchant_city) parts.push(offer.merchant_city);
+    if (offer.merchant_postal_code) parts.push(offer.merchant_postal_code);
+    return parts.join(', ') || 'Adresse non disponible';
+  };
+
+  const formatTimeRemaining = (availableUntil?: string): { text: string; percent: number; color: string } => {
+    if (!availableUntil) return { text: 'Non spécifié', percent: 0, color: '#9ca3af' };
+
+    const now = new Date();
+    const until = new Date(availableUntil);
+    const from = new Date(offer.available_from || now);
+
+    const total = until.getTime() - from.getTime();
+    const remaining = until.getTime() - now.getTime();
+    const diffHours = Math.floor(remaining / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+
+    const percent = total > 0 ? Math.max(0, Math.min(100, (remaining / total) * 100)) : 0;
+
+    let color = '#16a34a';
+    if (percent < 60) color = '#facc15';
+    if (percent < 30) color = '#ef4444';
+
+    let text = '';
+    if (remaining <= 0) {
+      text = 'Expirée';
+    } else if (diffHours > 24) {
+      const diffDays = Math.floor(diffHours / 24);
+      text = `${diffDays}j ${diffHours % 24}h`;
+    } else if (diffHours > 0) {
+      text = `${diffHours}h ${diffMinutes}min`;
+    } else {
+      text = `${diffMinutes}min`;
+    }
+
+    return { text, percent, color };
+  };
+
+  const timeData = formatTimeRemaining(offer.available_until);
 
   return (
-    <>
-      {/* Overlay */}
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-60"
+      onClick={onClose}
+    >
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-[2000] flex items-center justify-center p-4"
-        onClick={onClose}
+        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal */}
-        <div
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto relative"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Toast */}
-          {toast && (
-            <div
-              className={`fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg ${
-                toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-              } text-white`}
-            >
-              {toast.message}
-            </div>
-          )}
+        <div className="relative">
+          <img
+            src={getPublicImageUrl(offer.image_url)}
+            alt={offer.title}
+            className="w-full h-80 object-cover rounded-t-2xl bg-gray-100"
+            referrerPolicy="no-referrer"
+            crossOrigin="anonymous"
+            onError={(e) => {
+              console.error('Image load failed for:', offer.title);
+              (e.currentTarget as HTMLImageElement).src =
+                'https://via.placeholder.com/800x400?text=Image+non+disponible';
+            }}
+          />
 
-          {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+            className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-6 h-6 text-gray-600" />
           </button>
 
-          {/* ZONE 1 & 2 : Infos Marchand + Produit Principal */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 md:p-8">
-            {/* ZONE 1 : Infos Marchand (Gauche sur desktop, haut sur mobile) */}
-            <div className="space-y-4">
-              {/* Logo + Nom */}
-              <div className="flex items-center gap-4">
-                {offer.merchant_logo_url ? (
-                  <img
-                    src={offer.merchant_logo_url}
-                    alt={offer.merchant_name}
-                    className="w-20 h-20 rounded-full object-cover border-4 border-green-200 shadow-lg flex-shrink-0"
-                    crossOrigin="anonymous"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-3xl flex-shrink-0 shadow-lg">
-                    🏪
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-1">{offer.merchant_name}</h2>
-                  
-                  {/* 🆕 Emplacement Avis (Visuel uniquement) */}
-                  <div className="flex items-center gap-1 text-sm text-gray-500 mb-2">
-                    <div className="flex">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star key={star} className="w-4 h-4 fill-gray-300 text-gray-300" />
-                      ))}
-                    </div>
-                    <span className="ml-1">Bientôt disponible</span>
-                  </div>
+          <div className="absolute top-4 left-4 bg-red-500 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg">
+            -{discount}%
+          </div>
+
+          <div className="absolute bottom-4 left-4 bg-white bg-opacity-95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-md">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-lg">
+                {offer.merchant_name ? offer.merchant_name.charAt(0).toUpperCase() : "?"}
+              </div>
+              <div>
+                <div className="font-semibold text-gray-800">{offer.merchant_name}</div>
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <span className="font-medium">{averageRating}</span>
+                  <span className="text-gray-400">({totalReviews} avis)</span>
                 </div>
               </div>
-
-              {/* Adresse */}
-              {offer.merchant_street && (
-                <div className="flex items-start gap-3 text-gray-700 bg-gray-50 rounded-lg p-3">
-                  <MapPin className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{offer.merchant_street}</p>
-                    {offer.merchant_city && (
-                      <p className="text-sm text-gray-600">
-                        {offer.merchant_postal_code} {offer.merchant_city}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Téléphone */}
-              {offer.merchant_phone && (
-                <a
-                  href={`tel:${offer.merchant_phone}`}
-                  className="flex items-center gap-3 text-green-600 hover:text-green-700 bg-green-50 rounded-lg p-3 transition-colors"
-                >
-                  <Phone className="w-5 h-5 flex-shrink-0" />
-                  <span className="font-semibold">{offer.merchant_phone}</span>
-                </a>
-              )}
-
-              {/* Bouton Itinéraire */}
-              <button
-                onClick={handleGetDirections}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors shadow-md"
-              >
-                <Navigation className="w-5 h-5" />
-                Voir l'itinéraire
-              </button>
-
-              {/* Distance (si disponible) */}
-              {offer.distance_meters > 0 && (
-                <div className="text-center text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
-                  📍 À {(offer.distance_meters / 1000).toFixed(1)} km de vous
-                </div>
-              )}
             </div>
+          </div>
+        </div>
 
-            {/* ZONE 2 : Produit Principal (Droite sur desktop, bas sur mobile) */}
-            <div className="space-y-4">
-              {/* Image Produit */}
-              {offer.image_url && (
-                <div className="relative rounded-xl overflow-hidden shadow-lg">
-                  <img
-                    src={offer.image_url}
-                    alt={offer.title}
-                    className="w-full h-64 md:h-80 object-cover"
-                    crossOrigin="anonymous"
-                    referrerPolicy="no-referrer"
-                  />
-                  {/* Badge réduction */}
-                  <div className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg shadow-lg">
-                    -{getDiscountPercent(offer.price_before, offer.price_after)}%
-                  </div>
-                </div>
-              )}
+        <div className="p-6">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">{offer.title}</h2>
 
-              {/* Titre */}
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{offer.title}</h3>
+          {offer.description && (
+            <p className="text-gray-600 text-base leading-relaxed mb-6">{offer.description}</p>
+          )}
 
-              {/* Description */}
-              {offer.description && (
-                <p className="text-gray-600 text-sm md:text-base leading-relaxed">{offer.description}</p>
-              )}
-
-              {/* Prix */}
-              <div className="flex items-baseline gap-3 bg-green-50 rounded-lg p-4">
-                <span className="text-4xl font-bold text-green-600">
-                  {offer.price_after.toFixed(2)}€
-                </span>
-                <span className="text-xl text-gray-400 line-through">
-                  {offer.price_before.toFixed(2)}€
-                </span>
+          <div className="bg-gray-50 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 text-gray-700">
+                <Clock className="w-5 h-5 text-green-600" />
+                <span className="font-medium">Temps restant</span>
               </div>
-
-              {/* Timer + Barre de progression */}
-              {offer.available_until && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-gray-700">
-                      <Clock className="w-4 h-4" />
-                      <span className="font-semibold">{getTimeRemaining(offer.available_until)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-700">
-                      <Package className="w-4 h-4" />
-                      <span className="font-semibold">Stock: {offer.quantity}</span>
-                    </div>
-                  </div>
-
-                  {/* Barre de progression */}
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full transition-all duration-300 rounded-full"
-                      style={{
-                        width: `${progressPercent}%`,
-                        backgroundColor: progressColor,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Bouton Réserver */}
-              <button
-                onClick={handleReserve}
-                disabled={isReserving || (offer.quantity && offer.quantity <= 0)}
-                className={`w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all ${
-                  isReserving || (offer.quantity && offer.quantity <= 0)
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-green-500 hover:bg-green-600 text-white hover:shadow-xl'
-                }`}
-              >
-                {isReserving ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Réservation en cours...
-                  </div>
-                ) : offer.quantity && offer.quantity <= 0 ? (
-                  'Rupture de stock'
-                ) : (
-                  '🛒 Réserver maintenant'
-                )}
-              </button>
+              <span className="font-semibold" style={{ color: timeData.color }}>
+                {timeData.text}
+              </span>
+            </div>
+            <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full transition-all duration-300 rounded-full"
+                style={{
+                  width: `${timeData.percent}%`,
+                  backgroundColor: timeData.color,
+                }}
+              />
             </div>
           </div>
 
-          {/* ZONE 3 : Autres produits du marchand */}
-          {merchantOffers.length > 0 && (
-            <div className="border-t border-gray-200 px-6 md:px-8 py-6 bg-gray-50">
-              <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Package className="w-5 h-5 text-green-600" />
-                Autres produits disponibles
-              </h4>
+          <div className="space-y-3 mb-6">
+            {offer.distance_meters !== undefined && (
+              <div className="flex items-center text-gray-700">
+                <Navigation className="w-5 h-5 text-blue-600 mr-3" />
+                <span className="font-medium">Distance</span>
+                <span className="ml-2 text-blue-600 font-semibold">
+                  {formatDistance(offer.distance_meters)}
+                </span>
+              </div>
+            )}
 
-              {/* Scroll horizontal sur desktop, vertical sur mobile */}
-              <div className="overflow-x-auto md:overflow-x-scroll pb-2">
-                <div className="flex md:flex-row flex-col gap-4 md:w-max">
-                  {merchantOffers.map((otherOffer) => (
-                    <div
-                      key={otherOffer.offer_id}
-                      onClick={() => {
-                        onClose();
-                        setTimeout(() => {
-                          // Simuler un clic sur cette offre
-                          window.dispatchEvent(
-                            new CustomEvent('openOfferDetails', { detail: otherOffer })
-                          );
-                        }, 300);
-                      }}
-                      className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden border border-gray-200 md:w-64 w-full flex-shrink-0"
-                    >
-                      {/* Image */}
-                      {otherOffer.image_url && (
-                        <img
-                          src={otherOffer.image_url}
-                          alt={otherOffer.title}
-                          className="w-full h-40 object-cover"
-                          crossOrigin="anonymous"
-                          referrerPolicy="no-referrer"
-                        />
-                      )}
-
-                      {/* Info */}
-                      <div className="p-3">
-                        <h5 className="font-bold text-gray-900 text-sm mb-2 line-clamp-2">
-                          {otherOffer.title}
-                        </h5>
-
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-bold text-green-600 text-lg">
-                            {otherOffer.price_after.toFixed(2)}€
-                          </span>
-                          <span className="line-through text-gray-400 text-xs">
-                            {otherOffer.price_before.toFixed(2)}€
-                          </span>
-                          <span className="text-xs text-red-600 font-semibold bg-red-50 px-1.5 py-0.5 rounded">
-                            -{getDiscountPercent(otherOffer.price_before, otherOffer.price_after)}%
-                          </span>
-                        </div>
-
-                        <div className="text-xs text-gray-600 flex items-center justify-between">
-                          {otherOffer.available_until && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {getTimeRemaining(otherOffer.available_until)}
-                            </span>
-                          )}
-                          <span>Stock: {otherOffer.quantity}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <div className="flex items-start text-gray-700">
+              <MapPin className="w-5 h-5 text-orange-600 mr-3 mt-0.5" />
+              <div className="flex-1">
+                <span className="font-medium block mb-1">Adresse</span>
+                <span className="text-gray-600">{formatAddress()}</span>
               </div>
             </div>
-          )}
 
-          {loadingOtherOffers && (
-            <div className="border-t border-gray-200 px-6 md:px-8 py-6 bg-gray-50 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
-              <p className="text-sm text-gray-600 mt-2">Chargement des autres produits...</p>
+            <button
+              onClick={() => openGPS(offer.offer_lat, offer.offer_lng)}
+              className="ml-8 bg-blue-500 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-blue-600 transition-colors"
+            >
+              <Navigation className="w-4 h-4" />
+              Itinéraire
+            </button>
+          </div>
+
+          <div className="border-t border-gray-200 pt-6 mb-6">
+            <div className="flex items-end justify-between">
+              <div>
+                <div className="text-gray-400 line-through text-lg mb-1">
+                  {offer.price_before.toFixed(2)} €
+                </div>
+                <div className="text-4xl font-bold text-green-600">
+                  {offer.price_after.toFixed(2)} €
+                </div>
+              </div>
+
+              {offer.quantity !== undefined && (
+                <div className="text-right">
+                  <div className="text-sm text-gray-500 mb-1">Quantité restante</div>
+                  <div className="text-2xl font-semibold text-gray-900">{offer.quantity}</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <button
+            onClick={handleReservation}
+            disabled={loading || !offer.offer_id || offer.quantity === 0}
+            className={`w-full px-6 py-4 rounded-xl font-semibold transition-all shadow-lg mb-6 ${
+              loading || !offer.offer_id || offer.quantity === 0
+                ? 'bg-gray-300 cursor-not-allowed'
+                : 'bg-green-500 text-white hover:bg-green-600 hover:shadow-xl'
+            }`}
+          >
+            {loading ? '⏳ Réservation en cours...' : '🎫 Réserver maintenant'}
+          </button>
+
+          {merchantOffers.length > 0 && (
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                Autres produits du même commerçant
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {merchantOffers.map((merchantOffer) => (
+                  <div
+                    key={`merchant-offer-${merchantOffer.offer_id}`}
+                    className="bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                  >
+                    <img
+                      src={getPublicImageUrl(merchantOffer.image_url)}
+                      alt={merchantOffer.title}
+                      className="w-full h-24 object-cover"
+                      referrerPolicy="no-referrer"
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src =
+                          'https://via.placeholder.com/200x120?text=Image';
+                      }}
+                    />
+                    <div className="p-2">
+                      <h4 className="text-sm font-semibold text-gray-800 truncate">
+                        {merchantOffer.title}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-green-600 font-bold text-sm">
+                          {merchantOffer.price_after.toFixed(2)} €
+                        </span>
+                        <span className="text-gray-400 line-through text-xs">
+                          {merchantOffer.price_before.toFixed(2)} €
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
       </div>
-    </>
+    </div>
   );
-};
+}
+
+export default OfferDetailsModal;
