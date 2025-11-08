@@ -6,7 +6,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
-import { OfferDetailsModal } from "../components/OfferDetailsModal_NEW";
+import { OfferDetailsModal } from "../components/OfferDetailsModal";
 import { MerchantBottomSheet } from "../components/MerchantBottomSheet";
 import { useClientNotifications } from "../hooks/useClientNotifications";
 
