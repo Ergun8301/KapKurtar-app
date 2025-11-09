@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Phone, Navigation, Clock, Package, Star } from 'lucide-react';
+import { X, MapPin, Phone, Navigation, Clock, Package, Star, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface Offer {
   offer_id: string;
@@ -31,14 +32,22 @@ interface Offer {
 interface OfferDetailsModalProps {
   offer: Offer | null;
   onClose: () => void;
+  onOfferChange?: (offer: Offer) => void;
 }
 
-export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onClose }) => {
+export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ 
+  offer, 
+  onClose,
+  onOfferChange 
+}) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isReserving, setIsReserving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [merchantOffers, setMerchantOffers] = useState<Offer[]>([]);
   const [loadingOtherOffers, setLoadingOtherOffers] = useState(false);
+  const [isChanging, setIsChanging] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     if (offer && offer.merchant_id) {
@@ -63,12 +72,11 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
       const { data, error } = await supabase.rpc('get_offers_nearby_public', {
         user_lng: offer.offer_lng,
         user_lat: offer.offer_lat,
-        radius_meters: 100, // Very small radius to get only this merchant
+        radius_meters: 100,
       });
 
       if (error) throw error;
 
-      // Filter to get only this merchant's offers, excluding the current one
       const otherOffers = (data || []).filter(
         (o: Offer) => o.merchant_id === offer.merchant_id && o.offer_id !== offer.offer_id
       );
@@ -90,9 +98,31 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
     if (!until) return '';
     const diff = new Date(until).getTime() - Date.now();
     if (diff <= 0) return 'Expirée';
-    const h = Math.floor(diff / 1000 / 60 / 60);
-    const m = Math.floor((diff / 1000 / 60) % 60);
-    return h > 0 ? `${h}h ${m}min restantes` : `${m} minutes restantes`;
+    
+    const totalMinutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const days = Math.floor(hours / 24);
+    
+    // Plus de 48h : afficher jours + heures
+    if (hours >= 48) {
+      const remainingHours = hours % 24;
+      return `${days} jour${days > 1 ? 's' : ''} ${remainingHours}h`;
+    }
+    
+    // Entre 24h et 48h : afficher jours + heures
+    if (hours >= 24) {
+      const remainingHours = hours % 24;
+      return `${days} jour ${remainingHours}h`;
+    }
+    
+    // Moins de 24h : afficher heures + minutes
+    if (hours > 0) {
+      return `${hours}h ${minutes}min`;
+    }
+    
+    // Moins d'1h : afficher minutes
+    return `${minutes} min`;
   };
 
   const getProgressPercent = () => {
@@ -113,9 +143,10 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
 
   const progressPercent = getProgressPercent();
   
-  let progressColor = '#16a34a'; // green
-  if (progressPercent < 60) progressColor = '#facc15'; // yellow
-  if (progressPercent < 30) progressColor = '#ef4444'; // red
+  // Couleur barre de progression
+  let progressColor = '#16a34a'; // vert (66-100%)
+  if (progressPercent < 66) progressColor = '#f59e0b'; // orange (33-66%)
+  if (progressPercent < 33) progressColor = '#ef4444'; // rouge (0-33%)
 
   const handleGetDirections = () => {
     if (offer.offer_lng && offer.offer_lat) {
@@ -126,7 +157,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
 
   const handleReserve = async () => {
     if (!user) {
-      setToast({ message: '⚠️ Connectez-vous pour réserver', type: 'error' });
+      setShowLoginModal(true);
       return;
     }
 
@@ -173,6 +204,16 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
     }
   };
 
+  const handleOfferChange = (newOffer: Offer) => {
+    if (onOfferChange) {
+      setIsChanging(true);
+      setTimeout(() => {
+        onOfferChange(newOffer);
+        setIsChanging(false);
+      }, 200);
+    }
+  };
+
   return (
     <>
       {/* Overlay */}
@@ -182,7 +223,9 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
       >
         {/* Modal */}
         <div
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto relative"
+          className={`bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto relative transition-opacity duration-200 ${
+            isChanging ? 'opacity-0' : 'opacity-100'
+          }`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Toast */}
@@ -204,174 +247,177 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
             <X className="w-5 h-5 text-gray-600" />
           </button>
 
-          {/* ZONE 1 & 2 : Infos Marchand + Produit Principal */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 md:p-8">
-            {/* ZONE 1 : Infos Marchand (Gauche sur desktop, haut sur mobile) */}
-            <div className="space-y-4">
-              {/* Logo + Nom */}
-              <div className="flex items-center gap-4">
-                {offer.merchant_logo_url ? (
-                  <img
-                    src={offer.merchant_logo_url}
-                    alt={offer.merchant_name}
-                    className="w-20 h-20 rounded-full object-cover border-4 border-green-200 shadow-lg flex-shrink-0"
-                    crossOrigin="anonymous"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-3xl flex-shrink-0 shadow-lg">
-                    🏪
+          {/* HEADER : Infos Marchand (Ligne horizontale) */}
+          <div className="border-b border-gray-200 p-4 md:p-6 bg-gray-50">
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* Logo */}
+              {offer.merchant_logo_url ? (
+                <img
+                  src={offer.merchant_logo_url}
+                  alt={offer.merchant_name}
+                  className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-white shadow-lg flex-shrink-0"
+                  crossOrigin="anonymous"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-2xl md:text-3xl flex-shrink-0 shadow-lg border-4 border-white">
+                  🏪
+                </div>
+              )}
+
+              {/* Infos */}
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">{offer.merchant_name}</h2>
+                
+                {/* Avis (visuel uniquement - bientôt disponible) */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star key={star} className="w-4 h-4 fill-gray-300 text-gray-300" />
+                    ))}
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-1">{offer.merchant_name}</h2>
-                  
-                  {/* 🆕 Emplacement Avis (Visuel uniquement) */}
-                  <div className="flex items-center gap-1 text-sm text-gray-500 mb-2">
-                    <div className="flex">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star key={star} className="w-4 h-4 fill-gray-300 text-gray-300" />
-                      ))}
+                  <span className="text-xs text-gray-500">Bientôt disponible</span>
+                </div>
+
+                {/* Adresse + Téléphone (version compacte) */}
+                <div className="flex items-center gap-4 flex-wrap text-sm text-gray-600">
+                  {offer.merchant_street && (
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <span className="truncate">{offer.merchant_city || offer.merchant_street}</span>
                     </div>
-                    <span className="ml-1">Bientôt disponible</span>
-                  </div>
+                  )}
+                  {offer.merchant_phone && (
+                    <a
+                      href={`tel:${offer.merchant_phone}`}
+                      className="flex items-center gap-1 text-green-600 hover:text-green-700 font-medium"
+                    >
+                      <Phone className="w-4 h-4" />
+                      {offer.merchant_phone}
+                    </a>
+                  )}
                 </div>
               </div>
-
-              {/* Adresse */}
-              {offer.merchant_street && (
-                <div className="flex items-start gap-3 text-gray-700 bg-gray-50 rounded-lg p-3">
-                  <MapPin className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{offer.merchant_street}</p>
-                    {offer.merchant_city && (
-                      <p className="text-sm text-gray-600">
-                        {offer.merchant_postal_code} {offer.merchant_city}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Téléphone */}
-              {offer.merchant_phone && (
-                <a
-                  href={`tel:${offer.merchant_phone}`}
-                  className="flex items-center gap-3 text-green-600 hover:text-green-700 bg-green-50 rounded-lg p-3 transition-colors"
-                >
-                  <Phone className="w-5 h-5 flex-shrink-0" />
-                  <span className="font-semibold">{offer.merchant_phone}</span>
-                </a>
-              )}
 
               {/* Bouton Itinéraire */}
               <button
                 onClick={handleGetDirections}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors shadow-md"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors shadow-md flex-shrink-0"
               >
-                <Navigation className="w-5 h-5" />
-                Voir l'itinéraire
-              </button>
-
-              {/* Distance (si disponible) */}
-              {offer.distance_meters > 0 && (
-                <div className="text-center text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
-                  📍 À {(offer.distance_meters / 1000).toFixed(1)} km de vous
-                </div>
-              )}
-            </div>
-
-            {/* ZONE 2 : Produit Principal (Droite sur desktop, bas sur mobile) */}
-            <div className="space-y-4">
-              {/* Image Produit */}
-              {offer.image_url && (
-                <div className="relative rounded-xl overflow-hidden shadow-lg">
-                  <img
-                    src={offer.image_url}
-                    alt={offer.title}
-                    className="w-full h-64 md:h-80 object-cover"
-                    crossOrigin="anonymous"
-                    referrerPolicy="no-referrer"
-                  />
-                  {/* Badge réduction */}
-                  <div className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg shadow-lg">
-                    -{getDiscountPercent(offer.price_before, offer.price_after)}%
-                  </div>
-                </div>
-              )}
-
-              {/* Titre */}
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{offer.title}</h3>
-
-              {/* Description */}
-              {offer.description && (
-                <p className="text-gray-600 text-sm md:text-base leading-relaxed">{offer.description}</p>
-              )}
-
-              {/* Prix */}
-              <div className="flex items-baseline gap-3 bg-green-50 rounded-lg p-4">
-                <span className="text-4xl font-bold text-green-600">
-                  {offer.price_after.toFixed(2)}€
-                </span>
-                <span className="text-xl text-gray-400 line-through">
-                  {offer.price_before.toFixed(2)}€
-                </span>
-              </div>
-
-              {/* Timer + Barre de progression */}
-              {offer.available_until && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-gray-700">
-                      <Clock className="w-4 h-4" />
-                      <span className="font-semibold">{getTimeRemaining(offer.available_until)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-700">
-                      <Package className="w-4 h-4" />
-                      <span className="font-semibold">Stock: {offer.quantity}</span>
-                    </div>
-                  </div>
-
-                  {/* Barre de progression */}
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full transition-all duration-300 rounded-full"
-                      style={{
-                        width: `${progressPercent}%`,
-                        backgroundColor: progressColor,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Bouton Réserver */}
-              <button
-                onClick={handleReserve}
-                disabled={isReserving || (offer.quantity && offer.quantity <= 0)}
-                className={`w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all ${
-                  isReserving || (offer.quantity && offer.quantity <= 0)
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-green-500 hover:bg-green-600 text-white hover:shadow-xl'
-                }`}
-              >
-                {isReserving ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Réservation en cours...
-                  </div>
-                ) : offer.quantity && offer.quantity <= 0 ? (
-                  'Rupture de stock'
-                ) : (
-                  '🛒 Réserver maintenant'
-                )}
+                <Navigation className="w-4 h-4" />
+                <span className="hidden md:inline">Itinéraire</span>
               </button>
             </div>
           </div>
 
-          {/* ZONE 3 : Autres produits du marchand */}
+          {/* PRODUIT PRINCIPAL */}
+          <div className="p-4 md:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Colonne 1 : Photo */}
+              <div className="relative">
+                {offer.image_url && (
+                  <div className="relative rounded-xl overflow-hidden shadow-lg">
+                    <img
+                      src={offer.image_url}
+                      alt={offer.title}
+                      className="w-full h-64 md:h-80 object-cover"
+                      crossOrigin="anonymous"
+                      referrerPolicy="no-referrer"
+                    />
+                    {/* Badge réduction */}
+                    <div className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg shadow-lg">
+                      -{getDiscountPercent(offer.price_before, offer.price_after)}%
+                    </div>
+                    {/* Icône Favoris (visuel uniquement) */}
+                    <button
+                      className="absolute top-4 left-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors opacity-50 cursor-not-allowed"
+                      title="Bientôt disponible"
+                    >
+                      <Heart className="w-5 h-5 text-gray-400" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Colonne 2 : Infos Produit */}
+              <div className="flex flex-col justify-between">
+                {/* Titre */}
+                <div>
+                  <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{offer.title}</h3>
+
+                  {/* Description */}
+                  {offer.description && (
+                    <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-4">{offer.description}</p>
+                  )}
+                </div>
+
+                {/* Prix */}
+                <div className="flex items-baseline gap-3 bg-green-50 rounded-lg p-4 mb-4">
+                  <span className="text-3xl md:text-4xl font-bold text-green-600">
+                    {offer.price_after.toFixed(2)}€
+                  </span>
+                  <span className="text-lg md:text-xl text-gray-400 line-through">
+                    {offer.price_before.toFixed(2)}€
+                  </span>
+                </div>
+
+                {/* Timer + Stock + Barre de progression */}
+                {offer.available_until && (
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Clock className="w-4 h-4" />
+                        <span className="font-semibold">{getTimeRemaining(offer.available_until)} restantes</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Package className="w-4 h-4" />
+                        <span className="font-semibold">Stock: {offer.quantity}</span>
+                      </div>
+                    </div>
+
+                    {/* Barre de progression colorée */}
+                    <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 rounded-full ${
+                          progressPercent < 10 ? 'animate-pulse' : ''
+                        }`}
+                        style={{
+                          width: `${progressPercent}%`,
+                          backgroundColor: progressColor,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Bouton Réserver */}
+                <button
+                  onClick={handleReserve}
+                  disabled={isReserving || (offer.quantity && offer.quantity <= 0)}
+                  className={`w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all ${
+                    isReserving || (offer.quantity && offer.quantity <= 0)
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-green-500 hover:bg-green-600 text-white hover:shadow-xl'
+                  }`}
+                >
+                  {isReserving ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Réservation en cours...
+                    </div>
+                  ) : offer.quantity && offer.quantity <= 0 ? (
+                    'Rupture de stock'
+                  ) : (
+                    '🛒 Réserver maintenant'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* AUTRES PRODUITS */}
           {merchantOffers.length > 0 && (
-            <div className="border-t border-gray-200 px-6 md:px-8 py-6 bg-gray-50">
+            <div className="border-t border-gray-200 px-4 md:px-6 py-6 bg-gray-50">
               <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Package className="w-5 h-5 text-green-600" />
                 Autres produits disponibles
@@ -383,15 +429,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
                   {merchantOffers.map((otherOffer) => (
                     <div
                       key={otherOffer.offer_id}
-                      onClick={() => {
-                        onClose();
-                        setTimeout(() => {
-                          // Simuler un clic sur cette offre
-                          window.dispatchEvent(
-                            new CustomEvent('openOfferDetails', { detail: otherOffer })
-                          );
-                        }, 300);
-                      }}
+                      onClick={() => handleOfferChange(otherOffer)}
                       className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden border border-gray-200 md:w-64 w-full flex-shrink-0"
                     >
                       {/* Image */}
@@ -448,6 +486,67 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({ offer, onC
           )}
         </div>
       </div>
+
+      {/* Modal Connexion */}
+      {showLoginModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-[2100] flex items-center justify-center p-4"
+          onClick={() => setShowLoginModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">🔒</span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Connexion requise</h3>
+              <p className="text-gray-600">Connectez-vous pour :</p>
+            </div>
+
+            <ul className="space-y-2 mb-6">
+              <li className="flex items-center gap-2 text-gray-700">
+                <span className="text-green-600">✓</span>
+                <span>Réserver des offres</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-700">
+                <span className="text-green-600">✓</span>
+                <span>Recevoir des notifications</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-700">
+                <span className="text-green-600">✓</span>
+                <span>Suivre vos réservations</span>
+              </li>
+            </ul>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => navigate('/customer/auth')}
+                className="w-full py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors shadow-md"
+              >
+                Se connecter
+              </button>
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-colors"
+              >
+                Plus tard
+              </button>
+            </div>
+
+            <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+              <p className="text-sm text-gray-600 mb-2">💼 Vous êtes commerçant ?</p>
+              <button
+                onClick={() => navigate('/merchant/auth')}
+                className="text-green-600 hover:text-green-700 font-semibold text-sm"
+              >
+                Rejoignez SEPET gratuitement
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
