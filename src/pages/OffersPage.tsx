@@ -131,9 +131,27 @@ export default function OffersPage() {
     if (!until) return "";
     const diff = new Date(until).getTime() - Date.now();
     if (diff <= 0) return "⏰ Expirée";
-    const h = Math.floor(diff / 1000 / 60 / 60);
-    const m = Math.floor((diff / 1000 / 60) % 60);
-    return h > 0 ? `⏰ ${h}h ${m}min` : `⏰ ${m} min restantes`;
+    
+    const totalMinutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const days = Math.floor(hours / 24);
+    
+    if (hours >= 48) {
+      const remainingHours = hours % 24;
+      return `⏰ ${days} jour${days > 1 ? 's' : ''} ${remainingHours}h`;
+    }
+    
+    if (hours >= 24) {
+      const remainingHours = hours % 24;
+      return `⏰ ${days} jour ${remainingHours}h`;
+    }
+    
+    if (hours > 0) {
+      return `⏰ ${hours}h ${minutes}min`;
+    }
+    
+    return `⏰ ${minutes} min`;
   };
 
   useEffect(() => {
@@ -253,6 +271,7 @@ export default function OffersPage() {
             },
             (fallbackError) => {
               console.warn("Géolocalisation impossible:", fallbackError);
+              alert("⚠️ Géolocalisation bloquée.\n\nSur Xiaomi MIUI :\n1. Ouvrir Réglages > Autorisations\n2. Trouver votre navigateur\n3. Activer 'Localisation'\n\nOu utilisez la barre de recherche pour trouver un lieu.");
               setUserLocation(DEFAULT_LOCATION);
               setCenter(DEFAULT_LOCATION);
 
@@ -297,7 +316,11 @@ export default function OffersPage() {
     mapRef.current = map;
 
     const geolocate = new mapboxgl.GeolocateControl({
-      positionOptions: { enableHighAccuracy: true },
+      positionOptions: { 
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      },
       trackUserLocation: false,
       showUserHeading: true,
     });
@@ -314,6 +337,11 @@ export default function OffersPage() {
       
       const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
       if (input) input.value = "";
+    });
+
+    geolocate.on("error", (e) => {
+      console.error("❌ Erreur géolocalisation:", e);
+      alert("⚠️ Géolocalisation impossible.\n\nVérifiez les permissions de votre navigateur ou utilisez la barre de recherche.");
     });
 
     const geocoder = new MapboxGeocoder({
@@ -640,7 +668,6 @@ export default function OffersPage() {
 
         {offer.available_until && (
           <div className={`${isMobile ? "text-[10px]" : "text-xs"} text-gray-600 font-medium flex items-center gap-1`}>
-            <span>⏰</span>
             <span>{getTimeRemaining(offer.available_until)}</span>
           </div>
         )}
@@ -697,7 +724,7 @@ export default function OffersPage() {
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
         {viewMode === "nearby" && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1600] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-green-500/20">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[900] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-green-500/20">
             <input
               type="range"
               min={1}
@@ -765,6 +792,7 @@ export default function OffersPage() {
       <OfferDetailsModal
         offer={selectedOffer}
         onClose={() => setSelectedOffer(null)}
+        onOfferChange={(newOffer) => setSelectedOffer(newOffer)}
       />
     </div>
   );
