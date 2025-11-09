@@ -24,7 +24,6 @@ const MerchantAuthPage = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    companyName: "",
   });
 
   // ---------- Redirection ----------
@@ -96,8 +95,6 @@ const MerchantAuthPage = () => {
         // ----------- REGISTER -----------
         if (formData.password.length < 6)
           throw new Error("Le mot de passe doit contenir au moins 6 caractères");
-        if (!formData.companyName.trim())
-          throw new Error("Le nom de l'entreprise est requis");
 
         // 🔹 Crée un flow_state avant signup
         const { data: flow, error: flowError } = await supabase
@@ -117,7 +114,6 @@ const MerchantAuthPage = () => {
               data: {
                 role: "merchant",
                 flow_token: flow.token,
-                company_name: formData.companyName.trim(),
               },
             },
           });
@@ -147,7 +143,7 @@ const MerchantAuthPage = () => {
 
       console.log("🎟️ Flow token créé :", flow.token);
 
-      // 🔹 Redirection Google avec rôle et token dans l’URL
+      // 🔹 Redirection Google avec rôle et token dans l'URL
       const redirectUrl = `${window.location.origin}/auth/callback?role=merchant&flow_token=${flow.token}`;
 
       const { error } = await supabase.auth.signInWithOAuth({
@@ -235,26 +231,6 @@ const MerchantAuthPage = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {mode === "register" && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Nom de l'entreprise
-                  </label>
-                  <div className="relative">
-                    <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      name="companyName"
-                      value={formData.companyName}
-                      onChange={handleInputChange}
-                      className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent text-base"
-                      placeholder="Votre commerce"
-                      required={mode === "register"}
-                    />
-                  </div>
-                </div>
-              )}
-
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Email
