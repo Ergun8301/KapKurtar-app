@@ -191,12 +191,15 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
               </div>
 
               {/* Adresse */}
-              {merchant.merchant_street && (
+              {merchant.merchant_street && 
+               merchant.merchant_street !== 'Position GPS' && 
+               merchant.merchant_street !== 'À définir' && (
                 <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
                   <MapPin className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                   <span>
                     {merchant.merchant_street}
-                    {merchant.merchant_city && `, ${merchant.merchant_city}`}
+                    {merchant.merchant_city && merchant.merchant_city !== 'À définir' && 
+                      `, ${merchant.merchant_city}`}
                   </span>
                 </div>
               )}
