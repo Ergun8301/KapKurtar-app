@@ -36,7 +36,9 @@ type Offer = {
 };
 
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
-const DEFAULT_LOCATION: [number, number] = [28.9784, 41.0082];
+// 🔧 FIX : Centre de la Turquie (au lieu d'Istanbul) pour meilleure UX
+const DEFAULT_LOCATION: [number, number] = [35.2433, 38.9637]; // Centre Turquie
+const DEFAULT_ZOOM = 6; // Zoom pour voir toute la Turquie
 
 const customMapboxCSS = `
   .mapboxgl-ctrl-geolocate:focus,
@@ -271,14 +273,14 @@ export default function OffersPage() {
             },
             (fallbackError) => {
               console.warn("Géolocalisation impossible:", fallbackError);
-              alert("⚠️ Géolocalisation bloquée.\n\nSur Xiaomi MIUI :\n1. Ouvrir Réglages > Autorisations\n2. Trouver votre navigateur\n3. Activer 'Localisation'\n\nOu utilisez la barre de recherche pour trouver un lieu.");
+              // 🔧 FIX : Pas d'alerte, juste utiliser la position par défaut
               setUserLocation(DEFAULT_LOCATION);
               setCenter(DEFAULT_LOCATION);
 
               if (mapRef.current) {
                 mapRef.current.flyTo({
                   center: DEFAULT_LOCATION,
-                  zoom: 6,
+                  zoom: DEFAULT_ZOOM,
                   essential: true,
                 });
               }
@@ -310,7 +312,7 @@ export default function OffersPage() {
       container: mapContainerRef.current,
       style: MAP_STYLE,
       center: safeCenter,
-      zoom: 7,
+      zoom: DEFAULT_ZOOM, // 🔧 FIX : Zoom 6 pour voir toute la Turquie
     });
 
     mapRef.current = map;
@@ -341,7 +343,7 @@ export default function OffersPage() {
 
     geolocate.on("error", (e) => {
       console.error("❌ Erreur géolocalisation:", e);
-      alert("⚠️ Géolocalisation impossible.\n\nVérifiez les permissions de votre navigateur ou utilisez la barre de recherche.");
+      // 🔧 FIX : Pas d'alerte, gérer silencieusement
     });
 
     const geocoder = new MapboxGeocoder({
