@@ -177,7 +177,8 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
         return;
       }
 
-      const { data: reservation, error: reservationError } = await supabase
+      // 🔧 FIX : Retirer .select() qui cause l'erreur RLS 403
+      const { error: reservationError } = await supabase
         .from('reservations')
         .insert([
           {
@@ -185,9 +186,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             client_id: profileData.id,
             status: 'pending',
           },
-        ])
-        .select()
-        .single();
+        ]);
 
       if (reservationError) throw reservationError;
 
@@ -281,10 +280,16 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
                 {/* Adresse + Téléphone (version compacte) */}
                 <div className="flex items-center gap-4 flex-wrap text-sm text-gray-600">
-                  {offer.merchant_street && (
+                  {offer.merchant_street && 
+                   offer.merchant_street !== 'Position GPS' && 
+                   offer.merchant_street !== 'À définir' && (
                     <div className="flex items-center gap-1">
                       <MapPin className="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span className="truncate">{offer.merchant_city || offer.merchant_street}</span>
+                      <span className="truncate">
+                        {offer.merchant_city && offer.merchant_city !== 'À définir' 
+                          ? offer.merchant_city 
+                          : offer.merchant_street}
+                      </span>
                     </div>
                   )}
                   {offer.merchant_phone && (
