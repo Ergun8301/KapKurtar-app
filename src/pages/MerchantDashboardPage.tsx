@@ -552,7 +552,7 @@ const MerchantDashboardPage = () => {
       const { error } = await supabase
         .from('offers')
         .update(updateData)
-        .eq('offer_id', editingOffer.id);
+        .eq('id', editingOffer.id);
 
       if (error) throw error;
 
