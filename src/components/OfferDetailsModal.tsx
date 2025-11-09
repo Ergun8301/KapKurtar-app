@@ -177,16 +177,12 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
         return;
       }
 
-      // 🔧 FIX : Retirer .select() qui cause l'erreur RLS 403
-      const { error: reservationError } = await supabase
-        .from('reservations')
-        .insert([
-          {
-            offer_id: offer.offer_id,
-            client_id: profileData.id,
-            status: 'pending',
-          },
-        ]);
+      // 🔧 FIX : Utiliser la RPC comme avant (SECURITY DEFINER contourne le RLS)
+      const { data, error: reservationError } = await supabase.rpc('create_reservation_dynamic', {
+        p_client_id: profileData.id,
+        p_offer_id: offer.offer_id,
+        p_quantity: 1,
+      });
 
       if (reservationError) throw reservationError;
 
