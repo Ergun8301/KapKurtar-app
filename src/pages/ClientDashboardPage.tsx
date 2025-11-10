@@ -24,7 +24,6 @@ interface Reservation {
   total_price: number;
   status: 'pending' | 'completed' | 'expired';
   created_at: string;
-  pickup_time: string;
   available_until: string;
   merchant_id: string;
   merchant_name: string;
@@ -47,7 +46,6 @@ const ClientDashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  // Fetch client ID
   useEffect(() => {
     const fetchClientId = async () => {
       if (!user) {
@@ -75,7 +73,6 @@ const ClientDashboardPage = () => {
     fetchClientId();
   }, [user, navigate]);
 
-  // Fetch reservations
   useEffect(() => {
     const fetchReservations = async () => {
       if (!clientId) return;
@@ -98,7 +95,6 @@ const ClientDashboardPage = () => {
     fetchReservations();
   }, [clientId]);
 
-  // Toast auto-hide
   useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => setToast(null), 3000);
@@ -151,7 +147,6 @@ const ClientDashboardPage = () => {
         'border-gray-200'
       }`}>
         <div className="flex">
-          {/* Image */}
           {reservation.offer_image_url && (
             <img
               src={reservation.offer_image_url}
@@ -165,7 +160,6 @@ const ClientDashboardPage = () => {
             />
           )}
 
-          {/* Content */}
           <div className="flex-1 p-4">
             <div className="flex items-start justify-between mb-2">
               <div>
@@ -178,7 +172,6 @@ const ClientDashboardPage = () => {
                 </p>
               </div>
               
-              {/* Status Badge */}
               {isPending && (
                 <span className="bg-orange-100 text-orange-700 text-xs font-semibold px-2 py-1 rounded-full">
                   En attente
@@ -196,7 +189,6 @@ const ClientDashboardPage = () => {
               )}
             </div>
 
-            {/* Price & Quantity */}
             <div className="flex items-center gap-3 mb-2">
               <span className="text-lg font-bold text-green-600">
                 {reservation.total_price.toFixed(2)}€
@@ -206,7 +198,6 @@ const ClientDashboardPage = () => {
               </span>
             </div>
 
-            {/* Time info */}
             <div className="flex items-center gap-4 text-xs text-gray-600 mb-3">
               <span className="flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
@@ -220,14 +211,12 @@ const ClientDashboardPage = () => {
               )}
             </div>
 
-            {/* Address */}
             {reservation.merchant_street && (
               <p className="text-xs text-gray-600 mb-3">
                 📍 {reservation.merchant_street}, {reservation.merchant_city}
               </p>
             )}
 
-            {/* Actions */}
             {isPending && (
               <div className="flex gap-2">
                 <button
@@ -267,7 +256,6 @@ const ClientDashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Toast */}
       {toast && (
         <div className={`fixed top-20 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
           toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
@@ -277,7 +265,6 @@ const ClientDashboardPage = () => {
       )}
 
       <div className="max-w-5xl mx-auto px-4 py-8">
-        {/* Profil Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-2xl text-white font-bold">
@@ -290,7 +277,6 @@ const ClientDashboardPage = () => {
           </div>
         </div>
 
-        {/* Reservations Section */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Package className="w-6 h-6 text-green-600" />
@@ -315,7 +301,6 @@ const ClientDashboardPage = () => {
             </div>
           ) : (
             <div className="space-y-8">
-              {/* En attente */}
               {pendingReservations.length > 0 && (
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
@@ -330,7 +315,6 @@ const ClientDashboardPage = () => {
                 </div>
               )}
 
-              {/* Récupérées */}
               {completedReservations.length > 0 && (
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
@@ -345,7 +329,6 @@ const ClientDashboardPage = () => {
                 </div>
               )}
 
-              {/* Expirées */}
               {expiredReservations.length > 0 && (
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
