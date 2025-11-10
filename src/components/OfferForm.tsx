@@ -67,6 +67,31 @@ export const OfferForm: React.FC<OfferFormProps> = ({
         return date.toISOString().slice(0, 16);
       };
 
+      // ✅ Détecter si l'offre est expirée
+      const now = new Date();
+      const availableUntil = new Date(initialData.available_until);
+      const isExpired = now > availableUntil;
+
+      // ✅ Si expirée, réinitialiser les dates à maintenant + 2h
+      let availableFrom: string;
+      let availableUntilFormatted: string;
+
+      if (isExpired) {
+        console.log('🔄 Offre expirée détectée → Réinitialisation des dates');
+        availableFrom = now.toISOString().slice(0, 16);
+        const twoHoursLater = new Date(now.getTime() + 120 * 60000);
+        availableUntilFormatted = twoHoursLater.toISOString().slice(0, 16);
+        
+        // ✅ Informer l'utilisateur
+        setToast({
+          message: '⏰ Offre expirée → Dates réinitialisées (maintenant + 2h)',
+          type: 'success',
+        });
+      } else {
+        availableFrom = formatDateForInput(initialData.available_from);
+        availableUntilFormatted = formatDateForInput(initialData.available_until);
+      }
+
       setFormData({
         title: initialData.title,
         description: initialData.description,
@@ -75,8 +100,8 @@ export const OfferForm: React.FC<OfferFormProps> = ({
         price_before: initialData.price_before.toString(),
         price_after: initialData.price_after.toString(),
         quantity: initialData.quantity.toString(),
-        available_from: formatDateForInput(initialData.available_from),
-        available_until: formatDateForInput(initialData.available_until),
+        available_from: availableFrom,
+        available_until: availableUntilFormatted,
         startNow: false,
         duration: '2h',
         customDuration: '',
