@@ -36,8 +36,9 @@ type Offer = {
 };
 
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
-const DEFAULT_LOCATION: [number, number] = [35.2433, 38.9637];
-const DEFAULT_ZOOM = 6;
+// 🔧 FIX : Centre de la Turquie (au lieu d'Istanbul) pour meilleure UX
+const DEFAULT_LOCATION: [number, number] = [35.2433, 38.9637]; // Centre Turquie
+const DEFAULT_ZOOM = 6; // Zoom pour voir toute la Turquie
 
 const customMapboxCSS = `
   .mapboxgl-ctrl-geolocate:focus,
@@ -272,6 +273,7 @@ export default function OffersPage() {
             },
             (fallbackError) => {
               console.warn("Géolocalisation impossible:", fallbackError);
+              // 🔧 FIX : Pas d'alerte, juste utiliser la position par défaut
               setUserLocation(DEFAULT_LOCATION);
               setCenter(DEFAULT_LOCATION);
 
@@ -297,7 +299,7 @@ export default function OffersPage() {
 
   useEffect(() => {
     mapboxgl.accessToken =
-      "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueHgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g";
+      "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueXgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g";
 
     if (!mapContainerRef.current) return;
 
@@ -310,7 +312,7 @@ export default function OffersPage() {
       container: mapContainerRef.current,
       style: MAP_STYLE,
       center: safeCenter,
-      zoom: DEFAULT_ZOOM,
+      zoom: DEFAULT_ZOOM, // 🔧 FIX : Zoom 6 pour voir toute la Turquie
     });
 
     mapRef.current = map;
@@ -341,6 +343,7 @@ export default function OffersPage() {
 
     geolocate.on("error", (e) => {
       console.error("❌ Erreur géolocalisation:", e);
+      // 🔧 FIX : Pas d'alerte, gérer silencieusement
     });
 
     const geocoder = new MapboxGeocoder({
