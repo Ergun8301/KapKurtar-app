@@ -515,7 +515,7 @@ export default function OffersPage() {
     if (Number.isFinite(targetOffer.offer_lng) && Number.isFinite(targetOffer.offer_lat)) {
       mapRef.current.flyTo({
         center: [targetOffer.offer_lng, targetOffer.offer_lat],
-        zoom: 5,
+        zoom: 15,
         essential: true,
         duration: 1500
       });
