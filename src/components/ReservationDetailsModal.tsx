@@ -1,0 +1,272 @@
+import React, { useState, useEffect } from 'react';
+import { X, User, Mail, Package, Clock, ShoppingBag } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
+
+interface ReservationDetailsModalProps {
+  reservationId: string | null;
+  onClose: () => void;
+}
+
+interface ReservationDetails {
+  id: string;
+  quantity: number;
+  created_at: string;
+  status: string;
+  client: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone?: string;
+  };
+  offer: {
+    title: string;
+    price_after: number;
+    quantity: number; // Stock restant après réservation
+  };
+}
+
+export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = ({
+  reservationId,
+  onClose,
+}) => {
+  const [loading, setLoading] = useState(true);
+  const [details, setDetails] = useState<ReservationDetails | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (reservationId) {
+      loadReservationDetails();
+    }
+  }, [reservationId]);
+
+  const loadReservationDetails = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Récupérer les détails de la réservation
+      const { data: reservation, error: reservationError } = await supabase
+        .from('reservations')
+        .select(`
+          id,
+          quantity,
+          created_at,
+          status,
+          client_id,
+          offer_id
+        `)
+        .eq('id', reservationId)
+        .single();
+
+      if (reservationError) throw reservationError;
+      if (!reservation) throw new Error('Réservation introuvable');
+
+      // Récupérer les infos du client
+      const { data: clientProfile, error: clientError } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email, phone')
+        .eq('id', reservation.client_id)
+        .single();
+
+      if (clientError) throw clientError;
+
+      // Récupérer les infos de l'offre
+      const { data: offer, error: offerError } = await supabase
+        .from('offers')
+        .select('title, price_after, quantity')
+        .eq('id', reservation.offer_id)
+        .single();
+
+      if (offerError) throw offerError;
+
+      // Assembler les données
+      setDetails({
+        id: reservation.id,
+        quantity: reservation.quantity,
+        created_at: reservation.created_at,
+        status: reservation.status,
+        client: {
+          first_name: clientProfile.first_name || 'Non renseigné',
+          last_name: clientProfile.last_name || '',
+          email: clientProfile.email,
+          phone: clientProfile.phone,
+        },
+        offer: {
+          title: offer.title,
+          price_after: offer.price_after,
+          quantity: offer.quantity,
+        },
+      });
+    } catch (err: any) {
+      console.error('Erreur chargement détails réservation:', err);
+      setError(err.message || 'Impossible de charger les détails');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!reservationId) return null;
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 z-[3000] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-t-2xl relative">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-colors"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <ShoppingBag className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">Détails de la réservation</h2>
+              <p className="text-blue-100 text-sm">Nouvelle commande client</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="p-6">
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Chargement des détails...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">❌</span>
+              </div>
+              <p className="text-red-600 font-semibold mb-2">Erreur</p>
+              <p className="text-gray-600 text-sm">{error}</p>
+            </div>
+          ) : details ? (
+            <div className="space-y-4">
+              {/* Client */}
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <User className="w-5 h-5 text-gray-600" />
+                  <h3 className="font-bold text-gray-900">Client</h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Nom :</span>
+                    <span className="font-semibold text-gray-900">
+                      {details.client.first_name} {details.client.last_name}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Email :</span>
+                    <a
+                      href={`mailto:${details.client.email}`}
+                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    >
+                      {details.client.email}
+                    </a>
+                  </div>
+                  {details.client.phone && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Téléphone :</span>
+                      <a
+                        href={`tel:${details.client.phone}`}
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      >
+                        {details.client.phone}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Produit */}
+              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Package className="w-5 h-5 text-green-600" />
+                  <h3 className="font-bold text-gray-900">Produit</h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Nom :</span>
+                    <span className="font-semibold text-gray-900">{details.offer.title}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Prix unitaire :</span>
+                    <span className="font-bold text-green-600">
+                      {details.offer.price_after.toFixed(2)} €
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Quantité réservée :</span>
+                    <span className="font-bold text-blue-600 text-lg">{details.quantity}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Stock restant :</span>
+                    <span className="font-semibold text-gray-900">{details.offer.quantity}</span>
+                  </div>
+                  <div className="pt-2 border-t border-green-200 mt-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-gray-700">Total :</span>
+                      <span className="font-bold text-green-600 text-xl">
+                        {(details.offer.price_after * details.quantity).toFixed(2)} €
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Date/Heure */}
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="w-5 h-5 text-blue-600" />
+                  <h3 className="font-bold text-gray-900">Date et heure</h3>
+                </div>
+                <p className="text-sm text-gray-700">{formatDateTime(details.created_at)}</p>
+              </div>
+
+              {/* Info */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm text-yellow-800">
+                  💡 Le client viendra récupérer sa commande. Pensez à la préparer !
+                </p>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Footer */}
+        {!loading && !error && details && (
+          <div className="border-t border-gray-200 p-4 bg-gray-50 rounded-b-2xl">
+            <button
+              onClick={onClose}
+              className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors"
+            >
+              Fermer
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
