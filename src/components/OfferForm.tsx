@@ -326,7 +326,10 @@ export const OfferForm: React.FC<OfferFormProps> = ({
         </div>
       )}
 
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+      <div 
+  className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto"
+  onClick={(e) => e.stopPropagation()}
+>
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
             {mode === 'create' ? 'Add New Product' : 'Edit Product'}
