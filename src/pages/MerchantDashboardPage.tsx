@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Package, Clock, Pause, Play, Trash2, Edit, Building2, TrendingUp } from 'lucide-react';
+import { Plus, Package, Clock, Pause, Play, Trash2, Edit, Building2, TrendingUp, Check, Phone, Archive } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
@@ -41,6 +41,22 @@ interface MerchantProfile {
   onboarding_completed: boolean;
 }
 
+interface MerchantReservation {
+  reservation_id: string;
+  client_name: string;
+  client_email: string;
+  client_phone: string;
+  offer_id: string;
+  offer_title: string;
+  offer_image_url: string;
+  offer_price: number;
+  quantity: number;
+  total_price: number;
+  status: string;
+  created_at: string;
+  available_until: string;
+}
+
 const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA';
 mapboxgl.accessToken = MAPBOX_TOKEN;
 
@@ -54,7 +70,6 @@ const MerchantDashboardPage = () => {
   const [merchantId, setMerchantId] = useState<string | null>(null);
   const [merchantProfile, setMerchantProfile] = useState<MerchantProfile | null>(null);
   
-  // 🆕 Séparation en 2 catégories : Actives / Inactives
   const [activeOffers, setActiveOffers] = useState<Offer[]>([]);
   const [inactiveOffers, setInactiveOffers] = useState<Offer[]>([]);
   
@@ -92,11 +107,16 @@ const MerchantDashboardPage = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [modalReady, setModalReady] = useState(false);
 
+  // 🆕 States pour les réservations
+  const [reservations, setReservations] = useState<MerchantReservation[]>([]);
+  const [showAllReservations, setShowAllReservations] = useState(false);
+  const [reservationLoading, setReservationLoading] = useState(false);
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
 
-  // Fetch merchant profile (code existant conservé)
+  // Fetch merchant profile
   useEffect(() => {
     const fetchMerchantProfile = async () => {
       if (!user) {
@@ -163,7 +183,7 @@ const MerchantDashboardPage = () => {
     fetchMerchantProfile();
   }, [user, showOnboardingModal]);
 
-  // Settings modal listener (code existant conservé)
+  // Settings modal listener
   useEffect(() => {
     const handleOpenProfileModal = () => {
       setIsFromSettings(true);
@@ -186,7 +206,7 @@ const MerchantDashboardPage = () => {
     return () => window.removeEventListener('openMerchantProfileModal', handleOpenProfileModal);
   }, [merchantProfile]);
 
-  // Mapbox initialization (code existant conservé)
+  // Mapbox initialization
   useEffect(() => {
     if (!showOnboardingModal || !modalReady || !mapContainerRef.current) {
       return;
@@ -279,7 +299,7 @@ const MerchantDashboardPage = () => {
     };
   }, [showOnboardingModal, modalReady]);
 
-  // 🆕 LOAD OFFERS - Tri intelligent avec séparation en 2 catégories
+  // Load offers
   useEffect(() => {
     const checkExpiredOffers = async () => {
       try {
@@ -314,6 +334,32 @@ const MerchantDashboardPage = () => {
     };
   }, [merchantId]);
 
+  // 🆕 Load reservations
+  useEffect(() => {
+    const fetchReservations = async () => {
+      if (!merchantId) return;
+
+      setReservationLoading(true);
+      try {
+        const { data, error } = await supabase.rpc('get_merchant_reservations', {
+          p_merchant_id: merchantId
+        });
+
+        if (error) throw error;
+        setReservations(data || []);
+      } catch (error) {
+        console.error('Erreur chargement réservations:', error);
+      } finally {
+        setReservationLoading(false);
+      }
+    };
+
+    fetchReservations();
+
+    const interval = setInterval(fetchReservations, 30000);
+    return () => clearInterval(interval);
+  }, [merchantId]);
+
   const loadOffers = async () => {
     if (!merchantId) return;
 
@@ -330,7 +376,6 @@ const MerchantDashboardPage = () => {
       const offers = data || [];
       const now = new Date();
 
-      // Séparer en 2 catégories
       const active: Offer[] = [];
       const inactive: Offer[] = [];
 
@@ -345,11 +390,10 @@ const MerchantDashboardPage = () => {
         }
       });
 
-      // Tri des offres actives : nouvelles et réactivées en premier
       active.sort((a, b) => {
         const aUpdated = new Date(a.updated_at).getTime();
         const bUpdated = new Date(b.updated_at).getTime();
-        return bUpdated - aUpdated; // Plus récent en premier
+        return bUpdated - aUpdated;
       });
 
       setActiveOffers(active);
@@ -394,6 +438,71 @@ const MerchantDashboardPage = () => {
     }
     if (hours > 0) return hours + 'h ' + minutes + 'm left';
     return minutes + 'm left';
+  };
+
+  // 🆕 Fonctions pour réservations
+  const handleValidateReservation = async (reservationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('reservations')
+        .update({ status: 'completed' })
+        .eq('id', reservationId);
+
+      if (error) throw error;
+
+      setReservations(prev =>
+        prev.map(r =>
+          r.reservation_id === reservationId ? { ...r, status: 'completed' } : r
+        )
+      );
+
+      setToast({ message: '✅ Réservation validée', type: 'success' });
+    } catch (error) {
+      console.error('Erreur validation:', error);
+      setToast({ message: '❌ Erreur lors de la validation', type: 'error' });
+    }
+  };
+
+  const handleArchiveReservation = async (reservationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('reservations')
+        .update({ status: 'archived' })
+        .eq('id', reservationId);
+
+      if (error) throw error;
+
+      setReservations(prev => prev.filter(r => r.reservation_id !== reservationId));
+
+      setToast({ message: '✅ Réservation archivée', type: 'success' });
+    } catch (error) {
+      console.error('Erreur archivage:', error);
+      setToast({ message: '❌ Erreur lors de l\'archivage', type: 'error' });
+    }
+  };
+
+  const getTimeRemaining = (until: string) => {
+    const diff = new Date(until).getTime() - Date.now();
+    if (diff <= 0) return 'Expirée';
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 24) {
+      const days = Math.floor(hours / 24);
+      return `${days}j ${hours % 24}h`;
+    }
+    if (hours > 0) return `${hours}h ${minutes}min`;
+    return `${minutes} min`;
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const handlePublish = async (formData: any) => {
@@ -465,7 +574,7 @@ const MerchantDashboardPage = () => {
 
       if (error) throw error;
 
-      await loadOffers(); // Recharger les offres
+      await loadOffers();
       closeAddProductModal();
       setToast({ message: '✅ Offer added successfully', type: 'success' });
     } catch (error: any) {
@@ -519,64 +628,61 @@ const MerchantDashboardPage = () => {
     setEditingOffer(null);
   };
 
-  // 🔧 FIX : Ajouter updated_at lors de la mise à jour
   const handleUpdateOffer = async (formData: any) => {
-  if (!user || !editingOffer) return;
+    if (!user || !editingOffer) return;
 
-  if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
-    setToast({ message: 'Discounted price must be lower than original price', type: 'error' });
-    return;
-  }
-
-  setIsPublishing(true);
-  try {
-    let imageUrl = editingOffer.image_url;
-    if (formData.image) {
-      const randomId = crypto.randomUUID();
-      const path = `${user.id}/${randomId}.jpg`;
-      imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
+    if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
+      setToast({ message: 'Discounted price must be lower than original price', type: 'error' });
+      return;
     }
 
-    // ✅ NOUVEAU : Détecter si l'offre était expirée (involontaire)
-    const now = new Date();
-    const oldUntil = new Date(editingOffer.available_until);
-    const wasExpired = now > oldUntil;
+    setIsPublishing(true);
+    try {
+      let imageUrl = editingOffer.image_url;
+      if (formData.image) {
+        const randomId = crypto.randomUUID();
+        const path = `${user.id}/${randomId}.jpg`;
+        imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
+      }
 
-    const updateData: any = {
-      title: formData.title,
-      description: formData.description,
-      image_url: imageUrl,
-      price_before: parseFloat(formData.price_before),
-      price_after: parseFloat(formData.price_after),
-      quantity: parseInt(formData.quantity),
-      available_from: formData.available_from,
-      available_until: formData.available_until,
-      updated_at: new Date().toISOString(),
-      is_active: wasExpired ? true : editingOffer.is_active,
-      expired_at: null,  // ✅ CRITIQUE : Réinitialiser pour passer la RLS
-    };
+      const now = new Date();
+      const oldUntil = new Date(editingOffer.available_until);
+      const wasExpired = now > oldUntil;
 
-    const { error } = await supabase
-      .from('offers')
-      .update(updateData)
-      .eq('id', editingOffer.id);
+      const updateData: any = {
+        title: formData.title,
+        description: formData.description,
+        image_url: imageUrl,
+        price_before: parseFloat(formData.price_before),
+        price_after: parseFloat(formData.price_after),
+        quantity: parseInt(formData.quantity),
+        available_from: formData.available_from,
+        available_until: formData.available_until,
+        updated_at: new Date().toISOString(),
+        is_active: wasExpired ? true : editingOffer.is_active,
+        expired_at: null,
+      };
 
-    if (error) throw error;
+      const { error } = await supabase
+        .from('offers')
+        .update(updateData)
+        .eq('id', editingOffer.id);
 
-    await loadOffers();
-    closeEditModal();
-    
-    // ✅ NOUVEAU : Message différent selon réactivation ou non
-    const message = wasExpired 
-      ? '✅ Offer updated and reactivated!' 
-      : '✅ Offer updated successfully';
-    setToast({ message, type: 'success' });
-  } catch (error: any) {
-    setToast({ message: error.message || 'Failed to update offer', type: 'error' });
-  } finally {
-    setIsPublishing(false);
-  }
-};
+      if (error) throw error;
+
+      await loadOffers();
+      closeEditModal();
+      
+      const message = wasExpired 
+        ? '✅ Offer updated and reactivated!' 
+        : '✅ Offer updated successfully';
+      setToast({ message, type: 'success' });
+    } catch (error: any) {
+      setToast({ message: error.message || 'Failed to update offer', type: 'error' });
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   const handleOnboardingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -707,7 +813,107 @@ const MerchantDashboardPage = () => {
     }
   };
 
-  // 🎨 Composant carte d'offre
+  // 🆕 Composant ReservationCard
+  const ReservationCard = ({ reservation }: { reservation: MerchantReservation }) => {
+    const isPending = reservation.status === 'pending';
+    const isCompleted = reservation.status === 'completed';
+    const isExpired = reservation.status === 'expired';
+
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+        <div className="flex items-center justify-between mb-3">
+          {isPending && (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
+              🟠 En attente
+            </span>
+          )}
+          {isCompleted && (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded-full">
+              🟢 Récupérée
+            </span>
+          )}
+          {isExpired && (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded-full">
+              ⚫ Expirée
+            </span>
+          )}
+          <span className="text-xs text-gray-500">{formatDate(reservation.created_at)}</span>
+        </div>
+
+        <div className="mb-3 pb-3 border-b border-gray-100">
+          <p className="font-bold text-sm text-gray-900 mb-1">👤 {reservation.client_name}</p>
+          {reservation.client_phone && (
+            <p className="text-xs text-gray-600">📞 {reservation.client_phone}</p>
+          )}
+        </div>
+
+        <div className="mb-3">
+          <div className="flex gap-3">
+            {reservation.offer_image_url && (
+              <img
+                src={reservation.offer_image_url}
+                alt={reservation.offer_title}
+                className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                crossOrigin="anonymous"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">
+                🍕 {reservation.offer_title}
+              </p>
+              <p className="text-sm text-gray-900 font-bold mb-1">
+                💰 {reservation.total_price.toFixed(2)}€
+              </p>
+              <p className="text-xs text-gray-500">
+                {reservation.offer_price.toFixed(2)}€ × {reservation.quantity}
+              </p>
+              {isPending && (
+                <p className="text-xs text-orange-600 font-semibold mt-1">
+                  ⏰ Expire dans {getTimeRemaining(reservation.available_until)}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          {isPending && (
+            <>
+              <button
+                onClick={() => handleValidateReservation(reservation.reservation_id)}
+                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                <Check className="w-4 h-4" />
+                Valider
+              </button>
+              {reservation.client_phone && (
+                <a
+                  href={`tel:${reservation.client_phone}`}
+                  className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  <Phone className="w-4 h-4" />
+                </a>
+              )}
+            </>
+          )}
+          {(isCompleted || isExpired) && (
+            <button
+              onClick={() => handleArchiveReservation(reservation.reservation_id)}
+              className="w-full flex items-center justify-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Archive className="w-4 h-4" />
+              Archiver
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const OfferCard = ({ offer, status }: { offer: Offer; status: 'active' | 'inactive' }) => {
     const offerStatus = getOfferStatus(offer);
     
@@ -808,16 +1014,16 @@ const MerchantDashboardPage = () => {
         </div>
       )}
 
-      {/* ONBOARDING MODAL - Code existant conservé */}
+      {/* ONBOARDING MODAL */}
       {showOnboardingModal && (
         <div 
-  className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9998] p-4"
-  onClick={isFromSettings ? () => setShowOnboardingModal(false) : undefined}
->
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9998] p-4"
+          onClick={isFromSettings ? () => setShowOnboardingModal(false) : undefined}
+        >
           <div 
-  className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-  onClick={(e) => e.stopPropagation()}
->
+            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -943,6 +1149,49 @@ const MerchantDashboardPage = () => {
 
       {/* DASHBOARD CONTENT */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* 🆕 SECTION RÉSERVATIONS */}
+        {reservations.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Package className="w-6 h-6 text-green-600" />
+                Réservations récentes ({reservations.length})
+              </h2>
+              {reservations.length > 5 && !showAllReservations && (
+                <button
+                  onClick={() => setShowAllReservations(true)}
+                  className="text-sm text-green-600 hover:text-green-700 font-medium"
+                >
+                  Voir toutes →
+                </button>
+              )}
+            </div>
+
+            {reservationLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {(showAllReservations ? reservations : reservations.slice(0, 5)).map((reservation) => (
+                  <ReservationCard key={reservation.reservation_id} reservation={reservation} />
+                ))}
+              </div>
+            )}
+
+            {showAllReservations && reservations.length > 5 && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => setShowAllReservations(false)}
+                  className="text-sm text-gray-600 hover:text-gray-700 font-medium"
+                >
+                  ← Voir moins
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">My Products</h2>
@@ -959,7 +1208,6 @@ const MerchantDashboardPage = () => {
           </div>
         </div>
 
-        {/* 🆕 SECTION 1 : OFFRES ACTIVES */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <div className="flex items-center gap-2">
@@ -994,7 +1242,6 @@ const MerchantDashboardPage = () => {
           )}
         </div>
 
-        {/* 🆕 SECTION 2 : OFFRES INACTIVES (Expirées + Désactivées) */}
         {inactiveOffers.length > 0 && (
           <div>
             <div className="flex items-center gap-3 mb-4">
