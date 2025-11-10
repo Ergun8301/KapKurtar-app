@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  User, 
   Package, 
   Clock, 
   CheckCircle, 
@@ -9,9 +8,7 @@ import {
   Navigation, 
   Phone,
   MapPin,
-  Calendar,
-  ArrowLeft,
-  LogOut
+  Calendar
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
@@ -108,15 +105,6 @@ const ClientDashboardPage = () => {
       return () => clearTimeout(timer);
     }
   }, [toast]);
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate('/');
-    } catch (error) {
-      console.error('Erreur déconnexion:', error);
-    }
-  };
 
   const handleGetDirections = (lat: number, lng: number) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
@@ -281,34 +269,12 @@ const ClientDashboardPage = () => {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+        <div className={`fixed top-20 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
           toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
         } text-white`}>
           {toast.message}
         </div>
       )}
-
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate('/offers')}
-              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Offres
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center text-red-600 hover:text-red-700 transition-colors"
-            >
-              <LogOut className="w-5 h-5 mr-2" />
-              Déconnexion
-            </button>
-          </div>
-        </div>
-      </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Profil Section */}
