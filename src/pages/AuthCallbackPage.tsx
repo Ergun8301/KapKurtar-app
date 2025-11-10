@@ -14,7 +14,6 @@ const AuthCallbackPage = () => {
       try {
         const role = searchParams.get("role") || "client";
         const flowToken = searchParams.get("flow_token");
-
         console.log("🔁 OAuth callback → rôle:", role, "| flow_token:", flowToken);
 
         // 🔹 attendre session valide
@@ -61,11 +60,34 @@ const AuthCallbackPage = () => {
           console.log("✅ Profil OK:", user.email);
         }
 
-        // 3️⃣ Redirection selon rôle
+        // 3️⃣ Vérifier si le profil est complet (pour les clients)
+        const { data: profileData, error: fetchError } = await supabase
+          .from("profiles")
+          .select("role, first_name, last_name")
+          .eq("auth_id", user.id)
+          .single();
+
+        if (fetchError) {
+          console.warn("⚠️ Impossible de récupérer le profil:", fetchError.message);
+        }
+
+        // 4️⃣ Redirection selon rôle ET complétude du profil
         setIsRedirecting(true);
         if (role === "merchant") {
           navigate("/merchant/dashboard");
+        } else if (role === "client") {
+          // ✅ Vérifier si le profil client est complet
+          if (!profileData?.first_name || !profileData?.last_name) {
+            console.log("⚠️ Profil incomplet → redirection vers /customer/auth");
+            // Profil incomplet → rediriger vers la page d'auth où le modal s'affichera
+            navigate("/customer/auth");
+          } else {
+            console.log("✅ Profil complet → redirection vers /offers");
+            // Profil complet → redirection normale
+            navigate("/offers");
+          }
         } else {
+          // Fallback
           navigate("/offers");
         }
       } catch (err) {
