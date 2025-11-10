@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
+import { useClientNotifications } from '../hooks/useClientNotifications';
 
 interface Reservation {
   reservation_id: string;
@@ -38,8 +39,7 @@ interface Reservation {
 }
 
 const ClientDashboardPage = () => {
-  // ❌ NE PAS utiliser useClientNotifications ici (crée des connexions multiples)
-  // On va gérer Realtime directement dans ce composant
+  useClientNotifications(); // Pour les notifications de la cloche
   
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -50,8 +50,8 @@ const ClientDashboardPage = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [cancelConfirm, setCancelConfirm] = useState<string | null>(null);
   
-  // Ref pour éviter les connexions multiples
-  const realtimeChannelRef = useRef<any>(null);
+  // Ref pour le canal Realtime des réservations uniquement
+  const reservationsChannelRef = useRef<any>(null);
 
   useEffect(() => {
     const fetchClientId = async () => {
@@ -102,20 +102,21 @@ const ClientDashboardPage = () => {
     fetchReservations();
   }, [clientId]);
 
-  // Gestion Realtime PROPRE - UN SEUL CANAL
+  // Gestion Realtime PROPRE - Réservations seulement
+  // (les notifications sont gérées par useClientNotifications)
   useEffect(() => {
     if (!clientId) return;
 
     // Nettoyer l'ancien canal s'il existe
-    if (realtimeChannelRef.current) {
-      supabase.removeChannel(realtimeChannelRef.current);
-      realtimeChannelRef.current = null;
+    if (reservationsChannelRef.current) {
+      supabase.removeChannel(reservationsChannelRef.current);
+      reservationsChannelRef.current = null;
     }
 
-    console.log('🔌 Connexion Realtime CLIENT:', clientId);
+    console.log('🔌 Connexion Realtime RÉSERVATIONS:', clientId);
 
-    // Créer un nouveau canal
-    const channel = supabase
+    // Créer un nouveau canal pour les réservations
+    const reservationsChannel = supabase
       .channel(`client-reservations-${clientId}`)
       .on(
         'postgres_changes',
@@ -135,17 +136,17 @@ const ClientDashboardPage = () => {
         }
       )
       .subscribe((status) => {
-        console.log('📡 Statut Realtime CLIENT:', status);
+        console.log('📡 Statut Realtime RÉSERVATIONS:', status);
       });
 
-    realtimeChannelRef.current = channel;
+    reservationsChannelRef.current = reservationsChannel;
 
     // Cleanup à la déconnexion
     return () => {
-      console.log('🔌 Déconnexion Realtime CLIENT');
-      if (realtimeChannelRef.current) {
-        supabase.removeChannel(realtimeChannelRef.current);
-        realtimeChannelRef.current = null;
+      console.log('🔌 Déconnexion Realtime RÉSERVATIONS');
+      if (reservationsChannelRef.current) {
+        supabase.removeChannel(reservationsChannelRef.current);
+        reservationsChannelRef.current = null;
       }
     };
   }, [clientId]);
