@@ -112,7 +112,7 @@ export default function OffersPage() {
   const [userLocation, setUserLocation] = useState<[number, number]>(DEFAULT_LOCATION);
   const [center, setCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   const [radiusKm, setRadiusKm] = useState<number>(
-    Number(localStorage.getItem("radiusKm")) || 30
+    Number(localStorage.getItem("radiusKm")) || 10
   );
   const [clientId, setClientId] = useState<string | null>(null);
   const [clientIdFetched, setClientIdFetched] = useState(false);
