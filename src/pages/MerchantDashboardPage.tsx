@@ -552,9 +552,8 @@ const MerchantDashboardPage = () => {
       available_from: formData.available_from,
       available_until: formData.available_until,
       updated_at: new Date().toISOString(),
-      // ✅ NOUVEAU : Si c'était expiré, réactiver automatiquement
-      // Si c'était en pause volontaire, garder le statut
       is_active: wasExpired ? true : editingOffer.is_active,
+      expired_at: null,  // ✅ CRITIQUE : Réinitialiser pour passer la RLS
     };
 
     const { error } = await supabase
