@@ -38,7 +38,7 @@ type Offer = {
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
 // 🔧 FIX : Centre de la Turquie (au lieu d'Istanbul) pour meilleure UX
 const DEFAULT_LOCATION: [number, number] = [35.2433, 38.9637]; // Centre Turquie
-const DEFAULT_ZOOM = 1; // Zoom pour voir toute la Turquie
+const DEFAULT_ZOOM = 8; // Zoom pour voir toute la Turquie
 
 const customMapboxCSS = `
   .mapboxgl-ctrl-geolocate:focus,
