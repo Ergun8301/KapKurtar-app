@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Package, 
@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
-import { useClientNotifications } from '../hooks/useClientNotifications';
 
 interface Reservation {
   reservation_id: string;
@@ -39,7 +38,9 @@ interface Reservation {
 }
 
 const ClientDashboardPage = () => {
-  useClientNotifications();
+  // ❌ NE PAS utiliser useClientNotifications ici (crée des connexions multiples)
+  // On va gérer Realtime directement dans ce composant
+  
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -48,6 +49,9 @@ const ClientDashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [cancelConfirm, setCancelConfirm] = useState<string | null>(null);
+  
+  // Ref pour éviter les connexions multiples
+  const realtimeChannelRef = useRef<any>(null);
 
   useEffect(() => {
     const fetchClientId = async () => {
@@ -96,6 +100,54 @@ const ClientDashboardPage = () => {
     };
 
     fetchReservations();
+  }, [clientId]);
+
+  // Gestion Realtime PROPRE - UN SEUL CANAL
+  useEffect(() => {
+    if (!clientId) return;
+
+    // Nettoyer l'ancien canal s'il existe
+    if (realtimeChannelRef.current) {
+      supabase.removeChannel(realtimeChannelRef.current);
+      realtimeChannelRef.current = null;
+    }
+
+    console.log('🔌 Connexion Realtime CLIENT:', clientId);
+
+    // Créer un nouveau canal
+    const channel = supabase
+      .channel(`client-reservations-${clientId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'reservations',
+          filter: `client_id=eq.${clientId}`,
+        },
+        async (payload) => {
+          console.log('🔔 Changement réservation:', payload);
+          // Recharger les réservations
+          const { data } = await supabase.rpc('get_client_reservations', {
+            p_client_id: clientId
+          });
+          if (data) setReservations(data);
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Statut Realtime CLIENT:', status);
+      });
+
+    realtimeChannelRef.current = channel;
+
+    // Cleanup à la déconnexion
+    return () => {
+      console.log('🔌 Déconnexion Realtime CLIENT');
+      if (realtimeChannelRef.current) {
+        supabase.removeChannel(realtimeChannelRef.current);
+        realtimeChannelRef.current = null;
+      }
+    };
   }, [clientId]);
 
   useEffect(() => {
