@@ -603,7 +603,7 @@ export default function OffersPage() {
     if (mode === "nearby" && mapRef.current && Number.isFinite(userLocation[0]) && Number.isFinite(userLocation[1])) {
       mapRef.current.flyTo({
         center: userLocation,
-        zoom: 12,
+        zoom: 6,
         essential: true,
       });
     }
