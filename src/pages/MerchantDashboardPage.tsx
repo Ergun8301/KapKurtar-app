@@ -357,7 +357,7 @@ const MerchantDashboardPage = () => {
     };
   }, [merchantId]);
 
-  // Load active reservations (non archivées)
+  // Load active reservations (non archivées) - SEULEMENT PENDING pour la section principale
   useEffect(() => {
     const fetchReservations = async () => {
       if (!merchantId) return;
@@ -369,7 +369,10 @@ const MerchantDashboardPage = () => {
         });
 
         if (error) throw error;
-        setReservations(data || []);
+        
+        // Ne garder QUE les pending pour la section principale
+        const pendingOnly = (data || []).filter(r => r.status === 'pending');
+        setReservations(pendingOnly);
       } catch (error) {
         console.error('Erreur chargement réservations:', error);
       } finally {
@@ -384,12 +387,13 @@ const MerchantDashboardPage = () => {
   }, [merchantId]);
 
   // Fetch ALL reservations (including archived) for history modal
+  // MAIS on exclut les PENDING (qui sont déjà dans la section principale)
   const fetchAllReservations = async () => {
     if (!merchantId) return;
 
     setHistoryLoading(true);
     try {
-      // Créer une RPC spéciale qui inclut les archivées
+      // Créer une RPC spéciale qui inclut les archivées MAIS pas les pending
       const { data, error } = await supabase
         .from('reservations')
         .select(`
@@ -413,6 +417,7 @@ const MerchantDashboardPage = () => {
           )
         `)
         .eq('offers.merchant_id', merchantId)
+        .neq('status', 'pending')  // ← EXCLUT les pending
         .order('created_at', { ascending: false })
         .limit(50);
 
