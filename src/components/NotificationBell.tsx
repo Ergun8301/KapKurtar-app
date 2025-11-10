@@ -118,7 +118,8 @@ export function NotificationBell({ userType }: NotificationBellProps) {
           setOpen(false);
           setSelectedReservationId(reservationId);
         } else {
-          console.warn('Pas de reservation_id dans notification.data');
+          console.warn('❌ Notification sans reservation_id valide - probablement une ancienne notification');
+          alert('❌ Cette notification est trop ancienne et ne contient pas les détails de réservation.');
         }
       } else if (
         (notification.type === "offer_expired" || notification.type === "stock_empty") &&
