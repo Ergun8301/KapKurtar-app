@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -27,9 +28,17 @@ import NotFoundPage from "./pages/NotFoundPage";
 /* 🔁 Vérifie la session et redirige selon le rôle */
 function SessionRedirect() {
   const nav = useNavigate();
+  const location = useLocation();
   const [checked, setChecked] = useState(false);
   useEffect(() => {
     (async () => {
+      // ✅ Ne pas rediriger si on est déjà sur ces pages protégées
+      const noRedirectPaths = ['/client/profile', '/merchant/dashboard'];
+      if (noRedirectPaths.includes(location.pathname)) {
+        setChecked(true);
+        return;
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -57,7 +66,7 @@ function SessionRedirect() {
       }
       setChecked(true);
     })();
-  }, [nav]);
+  }, [nav, location.pathname]);
   if (!checked) return null;
   return null;
 }
