@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Package, Clock, Pause, Play, Trash2, Edit, Building2, TrendingUp, Check, Phone, Archive, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Package, Clock, Pause, Play, Trash2, Edit, Building2, TrendingUp, Check, Phone, Archive, ChevronDown, ChevronUp, History, X } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
@@ -62,6 +62,7 @@ mapboxgl.accessToken = MAPBOX_TOKEN;
 
 const MerchantDashboardPage = () => {
   const scrolledOnceRef = useRef(false);
+  const reservationsSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!scrolledOnceRef.current) {
@@ -112,14 +113,35 @@ const MerchantDashboardPage = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [modalReady, setModalReady] = useState(false);
 
-  // 🆕 States pour les réservations
+  // States pour les réservations
   const [reservations, setReservations] = useState<MerchantReservation[]>([]);
+  const [allReservations, setAllReservations] = useState<MerchantReservation[]>([]);
   const [showReservationsSection, setShowReservationsSection] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showAllInSection, setShowAllInSection] = useState(false);
   const [reservationLoading, setReservationLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
+
+  // Click outside to close reservations section
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showReservationsSection &&
+        reservationsSectionRef.current &&
+        !reservationsSectionRef.current.contains(event.target as Node)
+      ) {
+        setShowReservationsSection(false);
+        setShowAllInSection(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showReservationsSection]);
 
   useEffect(() => {
     const fetchMerchantProfile = async () => {
@@ -335,7 +357,7 @@ const MerchantDashboardPage = () => {
     };
   }, [merchantId]);
 
-  // 🆕 Load reservations - Timer à 60s au lieu de 30s
+  // Load active reservations (non archivées)
   useEffect(() => {
     const fetchReservations = async () => {
       if (!merchantId) return;
@@ -357,9 +379,69 @@ const MerchantDashboardPage = () => {
 
     fetchReservations();
 
-    const interval = setInterval(fetchReservations, 60000); // 60s au lieu de 30s
+    const interval = setInterval(fetchReservations, 60000);
     return () => clearInterval(interval);
   }, [merchantId]);
+
+  // Fetch ALL reservations (including archived) for history modal
+  const fetchAllReservations = async () => {
+    if (!merchantId) return;
+
+    setHistoryLoading(true);
+    try {
+      // Créer une RPC spéciale qui inclut les archivées
+      const { data, error } = await supabase
+        .from('reservations')
+        .select(`
+          id,
+          quantity,
+          status,
+          created_at,
+          offers!inner(
+            id,
+            title,
+            image_url,
+            price_after,
+            available_until,
+            merchant_id
+          ),
+          profiles!inner(
+            first_name,
+            last_name,
+            email,
+            phone
+          )
+        `)
+        .eq('offers.merchant_id', merchantId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      const formatted: MerchantReservation[] = (data || []).map((r: any) => ({
+        reservation_id: r.id,
+        client_name: `${r.profiles.first_name || ''} ${r.profiles.last_name || ''}`.trim() || 'Client',
+        client_email: r.profiles.email,
+        client_phone: r.profiles.phone,
+        offer_id: r.offers.id,
+        offer_title: r.offers.title,
+        offer_image_url: r.offers.image_url,
+        offer_price: r.offers.price_after,
+        quantity: r.quantity,
+        total_price: r.offers.price_after * r.quantity,
+        status: r.status,
+        created_at: r.created_at,
+        available_until: r.offers.available_until
+      }));
+
+      setAllReservations(formatted);
+    } catch (error) {
+      console.error('Erreur chargement historique:', error);
+      setToast({ message: '❌ Erreur chargement historique', type: 'error' });
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   const loadOffers = async () => {
     if (!merchantId) return;
@@ -472,6 +554,11 @@ const MerchantDashboardPage = () => {
       if (error) throw error;
 
       setReservations(prev => prev.filter(r => r.reservation_id !== reservationId));
+      setAllReservations(prev => 
+        prev.map(r => 
+          r.reservation_id === reservationId ? { ...r, status: 'archived' } : r
+        )
+      );
 
       setToast({ message: '✅ Réservation archivée', type: 'success' });
     } catch (error) {
@@ -812,13 +899,14 @@ const MerchantDashboardPage = () => {
     }
   };
 
-  const ReservationCard = ({ reservation }: { reservation: MerchantReservation }) => {
+  const ReservationCard = ({ reservation, compact = false }: { reservation: MerchantReservation; compact?: boolean }) => {
     const isPending = reservation.status === 'pending';
     const isCompleted = reservation.status === 'completed';
     const isExpired = reservation.status === 'expired';
+    const isArchived = reservation.status === 'archived';
 
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow">
+      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow ${compact ? 'p-2' : 'p-3'}`}>
         <div className="flex items-center justify-between mb-2">
           {isPending && (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
@@ -833,6 +921,11 @@ const MerchantDashboardPage = () => {
           {isExpired && (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded-full">
               ⚫ Expirée
+            </span>
+          )}
+          {isArchived && (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
+              📦 Archivée
             </span>
           )}
           <span className="text-xs text-gray-500">{formatDate(reservation.created_at)}</span>
@@ -851,7 +944,7 @@ const MerchantDashboardPage = () => {
               <img
                 src={reservation.offer_image_url}
                 alt={reservation.offer_title}
-                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                className={`${compact ? 'w-10 h-10' : 'w-12 h-12'} rounded-lg object-cover flex-shrink-0`}
                 crossOrigin="anonymous"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
@@ -875,36 +968,38 @@ const MerchantDashboardPage = () => {
           </div>
         </div>
 
-        <div className="flex gap-2">
-          {isPending && (
-            <>
-              <button
-                onClick={() => handleValidateReservation(reservation.reservation_id)}
-                className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-medium transition-colors"
-              >
-                <Check className="w-3 h-3" />
-                Valider
-              </button>
-              {reservation.client_phone && (
-                <a
-                  href={`tel:${reservation.client_phone}`}
-                  className="flex items-center justify-center gap-1 px-2 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-medium transition-colors"
+        {!isArchived && (
+          <div className="flex gap-2">
+            {isPending && (
+              <>
+                <button
+                  onClick={() => handleValidateReservation(reservation.reservation_id)}
+                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-medium transition-colors"
                 >
-                  <Phone className="w-3 h-3" />
-                </a>
-              )}
-            </>
-          )}
-          {(isCompleted || isExpired) && (
-            <button
-              onClick={() => handleArchiveReservation(reservation.reservation_id)}
-              className="w-full flex items-center justify-center gap-1 px-2 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-medium transition-colors"
-            >
-              <Archive className="w-3 h-3" />
-              Archiver
-            </button>
-          )}
-        </div>
+                  <Check className="w-3 h-3" />
+                  Valider
+                </button>
+                {reservation.client_phone && (
+                  <a
+                    href={`tel:${reservation.client_phone}`}
+                    className="flex items-center justify-center gap-1 px-2 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-medium transition-colors"
+                  >
+                    <Phone className="w-3 h-3" />
+                  </a>
+                )}
+              </>
+            )}
+            {(isCompleted || isExpired) && (
+              <button
+                onClick={() => handleArchiveReservation(reservation.reservation_id)}
+                className="w-full flex items-center justify-center gap-1 px-2 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-medium transition-colors"
+              >
+                <Archive className="w-3 h-3" />
+                Archiver
+              </button>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -1006,6 +1101,60 @@ const MerchantDashboardPage = () => {
       {toast && (
         <div className={'fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg ' + (toast.type === 'success' ? 'bg-green-500' : 'bg-red-500') + ' text-white'}>
           {toast.message}
+        </div>
+      )}
+
+      {/* HISTORY MODAL */}
+      {showHistoryModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+          onClick={() => setShowHistoryModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <History className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Historique des réservations</h2>
+                  <p className="text-sm text-gray-600 mt-1">Toutes vos réservations passées</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-600" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              {historyLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                </div>
+              ) : allReservations.length === 0 ? (
+                <div className="text-center py-12">
+                  <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-600">Aucune réservation dans l'historique</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {allReservations.map((reservation) => (
+                    <ReservationCard 
+                      key={reservation.reservation_id} 
+                      reservation={reservation} 
+                      compact
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -1144,48 +1293,66 @@ const MerchantDashboardPage = () => {
 
       {/* DASHBOARD CONTENT */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 🆕 SECTION RÉSERVATIONS - REPLIABLE */}
+        {/* SECTION RÉSERVATIONS */}
         {reservations.length > 0 && (
-          <div className="mb-6">
-            <button
-              onClick={() => setShowReservationsSection(!showReservationsSection)}
-              className="w-full bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <Package className="w-5 h-5 text-green-600" />
+          <div ref={reservationsSectionRef} className="mb-6">
+            <div className="flex items-center gap-3 mb-4">
+              <button
+                onClick={() => setShowReservationsSection(!showReservationsSection)}
+                className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <Package className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="text-left">
+                    <h2 className="text-lg font-bold text-gray-900">📦 Réservations récentes</h2>
+                    <p className="text-sm text-gray-600">{reservations.length} en cours</p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <h2 className="text-lg font-bold text-gray-900">📦 Réservations récentes</h2>
-                  <p className="text-sm text-gray-600">{reservations.length} en attente</p>
-                </div>
-              </div>
-              {showReservationsSection ? (
-                <ChevronUp className="w-5 h-5 text-gray-600" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-600" />
-              )}
-            </button>
+                {showReservationsSection ? (
+                  <ChevronUp className="w-5 h-5 text-gray-600" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-600" />
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowHistoryModal(true);
+                  fetchAllReservations();
+                }}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all flex items-center gap-2"
+              >
+                <History className="w-5 h-5 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">Historique</span>
+              </button>
+            </div>
 
             {showReservationsSection && (
-              <div className="mt-4">
+              <div className="space-y-4">
                 {reservationLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {reservations.slice(0, 8).map((reservation) => (
-                      <ReservationCard key={reservation.reservation_id} reservation={reservation} />
-                    ))}
-                  </div>
-                )}
-                {reservations.length > 8 && (
-                  <div className="mt-4 text-center">
-                    <button className="text-sm text-green-600 hover:text-green-700 font-medium">
-                      Voir toutes ({reservations.length}) →
-                    </button>
-                  </div>
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                      {(showAllInSection ? reservations : reservations.slice(0, 8)).map((reservation) => (
+                        <ReservationCard key={reservation.reservation_id} reservation={reservation} />
+                      ))}
+                    </div>
+                    {reservations.length > 8 && (
+                      <div className="text-center">
+                        <button 
+                          onClick={() => setShowAllInSection(!showAllInSection)}
+                          className="text-sm text-green-600 hover:text-green-700 font-medium"
+                        >
+                          {showAllInSection ? '← Voir moins' : `Voir toutes (${reservations.length}) →`}
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
