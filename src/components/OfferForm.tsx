@@ -179,48 +179,96 @@ export const OfferForm: React.FC<OfferFormProps> = ({
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const MAX_SIZE = 5 * 1024 * 1024;
-      const validTypes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/webp',
-        'image/heic',
-        'image/heif',
-        'image/avif',
-      ];
+  const convertHeicToJpeg = async (file: File): Promise<File> => {
+    try {
+      // Convertir HEIC en JPEG en utilisant l'API native du navigateur
+      const convertedBlob = await new Promise<Blob>((resolve, reject) => {
+        const img = new Image();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx?.drawImage(img, 0, 0);
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Conversion failed'));
+          }, 'image/jpeg', 0.92);
+        };
+        
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+      });
 
-      if (file.size > MAX_SIZE) {
-        setToast({
-          message:
-            "Image trop volumineuse (max. 5 Mo). Réduis la taille ou compresse-la avant d'envoyer.",
-          type: 'error',
-        });
-        return;
-      }
-
-      if (!validTypes.includes(file.type.toLowerCase())) {
-        setToast({
-          message:
-            'Format non pris en charge. Formats acceptés : JPG, PNG, WEBP, HEIC, HEIF, AVIF.',
-          type: 'error',
-        });
-        return;
-      }
-
-      setFormData({ ...formData, image: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({
-          ...prev,
-          imagePreview: reader.result as string,
-        }));
-      };
-      reader.readAsDataURL(file);
+      return new File([convertedBlob], file.name.replace(/\.heic$/i, '.jpg'), {
+        type: 'image/jpeg',
+      });
+    } catch (error) {
+      console.error('Erreur conversion HEIC:', error);
+      throw error;
     }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const MAX_SIZE = 5 * 1024 * 1024;
+    const validTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/webp',
+      'image/heic',
+      'image/heif',
+      'image/avif',
+    ];
+
+    if (file.size > MAX_SIZE) {
+      setToast({
+        message:
+          "Image trop volumineuse (max. 5 Mo). Réduis la taille ou compresse-la avant d'envoyer.",
+        type: 'error',
+      });
+      return;
+    }
+
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      setToast({
+        message:
+          'Format non pris en charge. Formats acceptés : JPG, PNG, WEBP, HEIC, HEIF, AVIF.',
+        type: 'error',
+      });
+      return;
+    }
+
+    let processedFile = file;
+
+    // ✅ Conversion automatique HEIC/HEIF → JPEG
+    if (file.type === 'image/heic' || file.type === 'image/heif') {
+      try {
+        processedFile = await convertHeicToJpeg(file);
+        console.log('✅ HEIC converti en JPEG');
+      } catch (error) {
+        setToast({
+          message:
+            'Erreur lors de la conversion HEIC. Essaie de convertir ton image en JPG manuellement.',
+          type: 'error',
+        });
+        return;
+      }
+    }
+
+    setFormData({ ...formData, image: processedFile });
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        imagePreview: reader.result as string,
+      }));
+    };
+    reader.readAsDataURL(processedFile);
   };
 
   const handleSubmit = async () => {
@@ -289,65 +337,38 @@ export const OfferForm: React.FC<OfferFormProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               📸 Photo du produit
             </label>
-            {mode === 'create' ? (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                {formData.imagePreview ? (
-                  <div className="relative">
-                    <img
-                      src={formData.imagePreview}
-                      alt="Preview"
-                      className="max-h-48 mx-auto rounded"
-                    />
-                    <button
-                      onClick={() => setFormData({ ...formData, image: null, imagePreview: '' })}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="cursor-pointer">
-                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">Prendre une photo ou choisir une image</p>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-            ) : (
-              <div>
-                <div className="flex items-center space-x-4">
-                  <label className="flex-1 flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 transition-colors">
-                    <Upload className="w-5 h-5 text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-600">
-                      {formData.image
-                        ? formData.image.name
-                        : 'Prendre une photo ou choisir une image (optionnel)'}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                  </label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+              {formData.imagePreview ? (
+                <div className="relative">
+                  <img
+                    src={formData.imagePreview}
+                    alt="Preview"
+                    className="max-h-48 mx-auto rounded"
+                  />
+                  <button
+                    onClick={() => setFormData({ ...formData, image: null, imagePreview: '' })}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                {formData.imagePreview && (
-                  <div className="mt-3">
-                    <img
-                      src={formData.imagePreview}
-                      alt="Preview"
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                  </div>
-                )}
-              </div>
-            )}
+              ) : (
+                <label className="cursor-pointer">
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600">
+                    {mode === 'create' 
+                      ? 'Prendre une photo ou choisir une image'
+                      : 'Changer la photo (optionnel)'}
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
