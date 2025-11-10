@@ -43,6 +43,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isReserving, setIsReserving] = useState(false);
+  const [reservationQuantity, setReservationQuantity] = useState(1);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [merchantOffers, setMerchantOffers] = useState<Offer[]>([]);
   const [loadingOtherOffers, setLoadingOtherOffers] = useState(false);
@@ -52,6 +53,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
   useEffect(() => {
     if (offer && offer.merchant_id) {
       loadMerchantOffers();
+      setReservationQuantity(1);
     }
   }, [offer]);
 
@@ -104,24 +106,20 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
     const minutes = totalMinutes % 60;
     const days = Math.floor(hours / 24);
     
-    // Plus de 48h : afficher jours + heures
     if (hours >= 48) {
       const remainingHours = hours % 24;
       return `${days} jour${days > 1 ? 's' : ''} ${remainingHours}h`;
     }
     
-    // Entre 24h et 48h : afficher jours + heures
     if (hours >= 24) {
       const remainingHours = hours % 24;
       return `${days} jour ${remainingHours}h`;
     }
     
-    // Moins de 24h : afficher heures + minutes
     if (hours > 0) {
       return `${hours}h ${minutes}min`;
     }
     
-    // Moins d'1h : afficher minutes
     return `${minutes} min`;
   };
 
@@ -143,10 +141,9 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
   const progressPercent = getProgressPercent();
   
-  // Couleur barre de progression
-  let progressColor = '#16a34a'; // vert (66-100%)
-  if (progressPercent < 66) progressColor = '#f59e0b'; // orange (33-66%)
-  if (progressPercent < 33) progressColor = '#ef4444'; // rouge (0-33%)
+  let progressColor = '#16a34a';
+  if (progressPercent < 66) progressColor = '#f59e0b';
+  if (progressPercent < 33) progressColor = '#ef4444';
 
   const handleGetDirections = () => {
     if (offer.offer_lng && offer.offer_lat) {
@@ -177,11 +174,10 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
         return;
       }
 
-      // 🔧 FIX : Utiliser la RPC comme avant (SECURITY DEFINER contourne le RLS)
       const { data, error: reservationError } = await supabase.rpc('create_reservation_dynamic', {
         p_client_id: profileData.id,
         p_offer_id: offer.offer_id,
-        p_quantity: 1,
+        p_quantity: reservationQuantity,
       });
 
       if (reservationError) throw reservationError;
@@ -211,19 +207,16 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
   return (
     <>
-      {/* Overlay */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 z-[2000] flex items-center justify-center p-4"
         onClick={onClose}
       >
-        {/* Modal */}
         <div
           className={`bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto relative transition-opacity duration-200 ${
             isChanging ? 'opacity-0' : 'opacity-100'
           }`}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Toast */}
           {toast && (
             <div
               className={`fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg ${
@@ -234,7 +227,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             </div>
           )}
 
-          {/* Close Button */}
           <button
             onClick={onClose}
             className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
@@ -242,10 +234,8 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             <X className="w-5 h-5 text-gray-600" />
           </button>
 
-          {/* HEADER : Infos Marchand (Ligne horizontale) */}
           <div className="border-b border-gray-200 p-4 md:p-6 bg-gray-50">
             <div className="flex items-center gap-4 flex-wrap">
-              {/* Logo */}
               {offer.merchant_logo_url ? (
                 <img
                   src={offer.merchant_logo_url}
@@ -260,11 +250,9 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                 </div>
               )}
 
-              {/* Infos */}
               <div className="flex-1 min-w-0">
                 <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">{offer.merchant_name}</h2>
                 
-                {/* Avis (visuel uniquement - bientôt disponible) */}
                 <div className="flex items-center gap-2 mb-2">
                   <div className="flex">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -274,7 +262,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                   <span className="text-xs text-gray-500">Bientôt disponible</span>
                 </div>
 
-                {/* Adresse + Téléphone (version compacte) */}
                 <div className="flex items-center gap-4 flex-wrap text-sm text-gray-600">
                   {offer.merchant_street && 
                    offer.merchant_street !== 'Position GPS' && 
@@ -300,7 +287,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                 </div>
               </div>
 
-              {/* Bouton Itinéraire */}
               <button
                 onClick={handleGetDirections}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors shadow-md flex-shrink-0"
@@ -311,10 +297,8 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             </div>
           </div>
 
-          {/* PRODUIT PRINCIPAL */}
           <div className="p-4 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Colonne 1 : Photo */}
               <div className="relative">
                 {offer.image_url && (
                   <div className="relative rounded-xl overflow-hidden shadow-lg">
@@ -325,11 +309,9 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                       crossOrigin="anonymous"
                       referrerPolicy="no-referrer"
                     />
-                    {/* Badge réduction */}
                     <div className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg shadow-lg">
                       -{getDiscountPercent(offer.price_before, offer.price_after)}%
                     </div>
-                    {/* Icône Favoris (visuel uniquement) */}
                     <button
                       className="absolute top-4 left-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors opacity-50 cursor-not-allowed"
                       title="Bientôt disponible"
@@ -340,19 +322,15 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                 )}
               </div>
 
-              {/* Colonne 2 : Infos Produit */}
               <div className="flex flex-col justify-between">
-                {/* Titre */}
                 <div>
                   <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{offer.title}</h3>
 
-                  {/* Description */}
                   {offer.description && (
                     <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-4">{offer.description}</p>
                   )}
                 </div>
 
-                {/* Prix */}
                 <div className="flex items-baseline gap-3 bg-green-50 rounded-lg p-4 mb-4">
                   <span className="text-3xl md:text-4xl font-bold text-green-600">
                     {offer.price_after.toFixed(2)}€
@@ -362,7 +340,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                   </span>
                 </div>
 
-                {/* Timer + Stock + Barre de progression */}
                 {offer.available_until && (
                   <div className="space-y-3 mb-4">
                     <div className="flex items-center justify-between text-sm">
@@ -376,7 +353,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                       </div>
                     </div>
 
-                    {/* Barre de progression colorée */}
                     <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className={`h-full transition-all duration-300 rounded-full ${
@@ -391,7 +367,41 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                   </div>
                 )}
 
-                {/* Bouton Réserver */}
+                {/* ✅ Sélecteur de quantité */}
+                <div className="mb-4 bg-gray-50 p-4 rounded-lg">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Quantité
+                  </label>
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setReservationQuantity(Math.max(1, reservationQuantity - 1))}
+                      disabled={reservationQuantity <= 1}
+                      className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xl font-bold"
+                    >
+                      −
+                    </button>
+
+                    <div className="flex flex-col items-center">
+                      <span className="text-2xl font-bold text-green-600">
+                        {reservationQuantity}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        sur {offer.quantity} disponibles
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setReservationQuantity(Math.min(offer.quantity || 1, reservationQuantity + 1))}
+                      disabled={reservationQuantity >= (offer.quantity || 1)}
+                      className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xl font-bold"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
                 <button
                   onClick={handleReserve}
                   disabled={isReserving || (offer.quantity && offer.quantity <= 0)}
@@ -416,7 +426,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             </div>
           </div>
 
-          {/* AUTRES PRODUITS */}
           {merchantOffers.length > 0 && (
             <div className="border-t border-gray-200 px-4 md:px-6 py-6 bg-gray-50">
               <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -424,7 +433,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                 Autres produits disponibles
               </h4>
 
-              {/* Scroll horizontal sur desktop, vertical sur mobile */}
               <div className="overflow-x-auto md:overflow-x-scroll pb-2">
                 <div className="flex md:flex-row flex-col gap-4 md:w-max">
                   {merchantOffers.map((otherOffer) => (
@@ -433,7 +441,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                       onClick={() => handleOfferChange(otherOffer)}
                       className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden border border-gray-200 md:w-64 w-full flex-shrink-0"
                     >
-                      {/* Image */}
                       {otherOffer.image_url && (
                         <img
                           src={otherOffer.image_url}
@@ -444,7 +451,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                         />
                       )}
 
-                      {/* Info */}
                       <div className="p-3">
                         <h5 className="font-bold text-gray-900 text-sm mb-2 line-clamp-2">
                           {otherOffer.title}
@@ -488,7 +494,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
         </div>
       </div>
 
-      {/* Modal Connexion */}
       {showLoginModal && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-[2100] flex items-center justify-center p-4"
