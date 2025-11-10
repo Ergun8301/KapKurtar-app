@@ -521,50 +521,63 @@ const MerchantDashboardPage = () => {
 
   // 🔧 FIX : Ajouter updated_at lors de la mise à jour
   const handleUpdateOffer = async (formData: any) => {
-    if (!user || !editingOffer) return;
+  if (!user || !editingOffer) return;
 
-    if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
-      setToast({ message: 'Discounted price must be lower than original price', type: 'error' });
-      return;
+  if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
+    setToast({ message: 'Discounted price must be lower than original price', type: 'error' });
+    return;
+  }
+
+  setIsPublishing(true);
+  try {
+    let imageUrl = editingOffer.image_url;
+    if (formData.image) {
+      const randomId = crypto.randomUUID();
+      const path = `${user.id}/${randomId}.jpg`;
+      imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
     }
 
-    setIsPublishing(true);
-    try {
-      let imageUrl = editingOffer.image_url;
-      if (formData.image) {
-        const randomId = crypto.randomUUID();
-        const path = `${user.id}/${randomId}.jpg`;
-        imageUrl = await uploadImageToSupabase(formData.image, 'product-images', path);
-      }
+    // ✅ NOUVEAU : Détecter si l'offre était expirée (involontaire)
+    const now = new Date();
+    const oldUntil = new Date(editingOffer.available_until);
+    const wasExpired = now > oldUntil;
 
-      const updateData: any = {
-        title: formData.title,
-        description: formData.description,
-        image_url: imageUrl,
-        price_before: parseFloat(formData.price_before),
-        price_after: parseFloat(formData.price_after),
-        quantity: parseInt(formData.quantity),
-        available_from: formData.available_from,
-        available_until: formData.available_until,
-        updated_at: new Date().toISOString(), // 🔧 FIX : Mise à jour du timestamp
-      };
+    const updateData: any = {
+      title: formData.title,
+      description: formData.description,
+      image_url: imageUrl,
+      price_before: parseFloat(formData.price_before),
+      price_after: parseFloat(formData.price_after),
+      quantity: parseInt(formData.quantity),
+      available_from: formData.available_from,
+      available_until: formData.available_until,
+      updated_at: new Date().toISOString(),
+      // ✅ NOUVEAU : Si c'était expiré, réactiver automatiquement
+      // Si c'était en pause volontaire, garder le statut
+      is_active: wasExpired ? true : editingOffer.is_active,
+    };
 
-      const { error } = await supabase
-        .from('offers')
-        .update(updateData)
-        .eq('id', editingOffer.id);
+    const { error } = await supabase
+      .from('offers')
+      .update(updateData)
+      .eq('id', editingOffer.id);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      await loadOffers();
-      closeEditModal();
-      setToast({ message: '✅ Offer updated successfully', type: 'success' });
-    } catch (error: any) {
-      setToast({ message: error.message || 'Failed to update offer', type: 'error' });
-    } finally {
-      setIsPublishing(false);
-    }
-  };
+    await loadOffers();
+    closeEditModal();
+    
+    // ✅ NOUVEAU : Message différent selon réactivation ou non
+    const message = wasExpired 
+      ? '✅ Offer updated and reactivated!' 
+      : '✅ Offer updated successfully';
+    setToast({ message, type: 'success' });
+  } catch (error: any) {
+    setToast({ message: error.message || 'Failed to update offer', type: 'error' });
+  } finally {
+    setIsPublishing(false);
+  }
+};
 
   const handleOnboardingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
