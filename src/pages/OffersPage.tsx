@@ -360,7 +360,7 @@ export default function OffersPage() {
       if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
       setCenter([lng, lat]);
       setViewMode("nearby");
-      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
+      map.flyTo({ center: [lng, lat], zoom: 6, essential: true });
     });
 
     return () => map.remove();
