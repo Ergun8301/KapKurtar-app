@@ -11,7 +11,7 @@ import {
   Store,
   LayoutDashboard,
   Bell,
-  Package, // ✅ AJOUTÉ
+  Package,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabaseClient";
@@ -28,6 +28,9 @@ const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMerchant, setIsMerchant] = useState<boolean | null>(null);
   const hasCheckedRef = useRef(false);
+  
+  // ✅ AJOUT : Ref pour détecter les clics extérieurs
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user || hasCheckedRef.current) return;
@@ -57,6 +60,23 @@ const Header = () => {
 
     checkUserType();
   }, [user]);
+
+  // ✅ AJOUT : Fermer le menu quand on clique dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   const handleSignOut = async () => {
     await logoutUser(navigate);
@@ -100,7 +120,8 @@ const Header = () => {
             ) : user ? (
               <>
                 <NotificationBell userType={isMerchant ? "merchant" : "client"} />
-                <div className="relative">
+                {/* ✅ AJOUT : ref={userMenuRef} pour détecter clics extérieurs */}
+                <div className="relative" ref={userMenuRef}>
                   <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center space-x-2 text-gray-700 hover:text-green-500 transition-colors">
                     <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                       {isMerchant ? <Store className="w-4 h-4 text-green-600" /> : <User className="w-4 h-4 text-green-600" />}
@@ -123,7 +144,6 @@ const Header = () => {
                         </>
                       ) : (
                         <>
-                          {/* ✅ NOUVEAU BOUTON : Mes Réservations */}
                           <button
                             onClick={() => {
                               setIsUserMenuOpen(false);
@@ -134,7 +154,6 @@ const Header = () => {
                             <Package className="w-4 h-4 mr-2" />
                             Mes Réservations
                           </button>
-                          {/* ✅ BOUTON EXISTANT : Mon Profil */}
                           <button
                             onClick={() => {
                               setIsUserMenuOpen(false);
@@ -157,7 +176,7 @@ const Header = () => {
                 </div>
               </>
             ) : (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="bg-green-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-600 transition-colors inline-flex items-center">
                   Sign In
                   <ChevronDown className="w-4 h-4 ml-1" />
