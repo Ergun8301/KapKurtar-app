@@ -118,7 +118,7 @@ export default function OffersPage() {
   const [clientIdFetched, setClientIdFetched] = useState(false);
   const [isGeolocating, setIsGeolocating] = useState(false);
   const [hasGeolocated, setHasGeolocated] = useState(false);
-  const [viewMode, setViewMode] = useState<"nearby" | "all">("nearby");
+  const [viewMode, setViewMode] = useState<"nearby" | "all">("all");
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
   const [merchantOffers, setMerchantOffers] = useState<Offer[]>([]);
