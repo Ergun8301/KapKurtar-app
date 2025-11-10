@@ -56,28 +56,30 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
           offer_id
         `)
         .eq('id', reservationId)
-        .single();
+        .maybeSingle();
 
       if (reservationError) throw reservationError;
-      if (!reservation) throw new Error('Réservation introuvable');
+      if (!reservation) throw new Error('Réservation introuvable ou supprimée');
 
       // Récupérer les infos du client
       const { data: clientProfile, error: clientError } = await supabase
         .from('profiles')
         .select('first_name, last_name, email, phone')
         .eq('id', reservation.client_id)
-        .single();
+        .maybeSingle();
 
       if (clientError) throw clientError;
+      if (!clientProfile) throw new Error('Profil client introuvable');
 
       // Récupérer les infos de l'offre
       const { data: offer, error: offerError } = await supabase
         .from('offers')
         .select('title, price_after, quantity')
         .eq('id', reservation.offer_id)
-        .single();
+        .maybeSingle();
 
       if (offerError) throw offerError;
+      if (!offer) throw new Error('Offre introuvable ou supprimée');
 
       // Assembler les données
       setDetails({
