@@ -90,6 +90,7 @@ const CustomerAuthPage = () => {
             data: {
               role: 'client',
             },
+            emailRedirectTo: `${window.location.origin}/auth/callback?role=client`,
           },
         });
         if (error) throw error;
