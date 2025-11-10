@@ -335,7 +335,7 @@ export default function OffersPage() {
       setUserLocation([lng, lat]);
       setCenter([lng, lat]);
       setViewMode("nearby");
-      map.flyTo({ center: [lng, lat], zoom: 6, essential: true });
+      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
       
       const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
       if (input) input.value = "";
