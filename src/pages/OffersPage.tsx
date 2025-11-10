@@ -426,11 +426,7 @@ export default function OffersPage() {
 
       const bounds = new mapboxgl.LngLatBounds();
       circle.geometry.coordinates[0].forEach(([lng, lat]) => bounds.extend([lng, lat]));
-      map.fitBounds(bounds, { 
-  padding: 50, 
-  duration: 800,
-  maxZoom: 8  // ← AJOUTE ÇA ! Empêche de zoomer trop proche
-});
+      map.fitBounds(bounds, { padding: 50, duration: 800 });
     } catch (err) {
       console.warn("Erreur drawRadius :", err);
     }
