@@ -229,7 +229,7 @@ export default function OffersPage() {
             if (mapRef.current && Number.isFinite(longitude) && Number.isFinite(latitude)) {
               mapRef.current.flyTo({
                 center: [longitude, latitude],
-                zoom: 6,
+                zoom: 12,
                 essential: true,
               });
             }
