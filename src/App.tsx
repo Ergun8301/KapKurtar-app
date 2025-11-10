@@ -39,12 +39,20 @@ function SessionRedirect() {
       }
       const { data, error } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, first_name, last_name")
         .eq("auth_id", user.id)
         .single();
       if (!error && data?.role === "merchant") {
         nav("/merchant/dashboard");
       } else if (!error && data?.role === "client") {
+        // ✅ Vérifier si le profil est complet AVANT de rediriger
+        if (!data.first_name || !data.last_name) {
+          // Profil incomplet → NE PAS rediriger
+          // L'utilisateur reste sur /customer/auth où le modal s'affichera
+          setChecked(true);
+          return;
+        }
+        // Profil complet → rediriger vers offres
         nav("/offers");
       }
       setChecked(true);
