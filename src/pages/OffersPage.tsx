@@ -33,12 +33,13 @@ type Offer = {
   available_until?: string;
   expired_at?: string | null;
   is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
 };
 
 const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
-// 🔧 FIX : Centre de la Turquie (au lieu d'Istanbul) pour meilleure UX
-const DEFAULT_LOCATION: [number, number] = [35.2433, 38.9637]; // Centre Turquie
-const DEFAULT_ZOOM = 6; // Zoom pour voir toute la Turquie
+const DEFAULT_LOCATION: [number, number] = [35.2433, 38.9637];
+const DEFAULT_ZOOM = 6;
 
 const customMapboxCSS = `
   .mapboxgl-ctrl-geolocate:focus,
@@ -102,6 +103,56 @@ const customMapboxCSS = `
     right: 6px !important;
   }
 `;
+
+const sortOffersSmart = (offers: Offer[]) => {
+  const now = new Date();
+  
+  return [...offers].sort((a, b) => {
+    const aCreated = new Date(a.created_at || a.available_from || 0).getTime();
+    const aUpdated = new Date(a.updated_at || a.available_from || 0).getTime();
+    const aExpires = new Date(a.available_until || 0).getTime();
+    
+    const bCreated = new Date(b.created_at || b.available_from || 0).getTime();
+    const bUpdated = new Date(b.updated_at || b.available_from || 0).getTime();
+    const bExpires = new Date(b.available_until || 0).getTime();
+    
+    const nowTime = now.getTime();
+    
+    const aIsNew = (nowTime - aCreated) < 5 * 60 * 1000;
+    const bIsNew = (nowTime - bCreated) < 5 * 60 * 1000;
+    
+    if (aIsNew && !bIsNew) return -1;
+    if (!aIsNew && bIsNew) return 1;
+    
+    const aReactivated = (aUpdated - aCreated) > 60 * 1000 && (nowTime - aUpdated) < 5 * 60 * 1000;
+    const bReactivated = (bUpdated - bCreated) > 60 * 1000 && (nowTime - bUpdated) < 5 * 60 * 1000;
+    
+    if (aReactivated && !bReactivated) return -1;
+    if (!aReactivated && bReactivated) return 1;
+    
+    const aTimeLeft = aExpires - nowTime;
+    const bTimeLeft = bExpires - nowTime;
+    const twoHours = 2 * 60 * 60 * 1000;
+    
+    const aExpiresSoon = aTimeLeft < twoHours && aTimeLeft > 0;
+    const bExpiresSoon = bTimeLeft < twoHours && bTimeLeft > 0;
+    
+    if (aExpiresSoon && !bExpiresSoon) return -1;
+    if (!aExpiresSoon && bExpiresSoon) return 1;
+    
+    if (aExpiresSoon && bExpiresSoon) {
+      return aTimeLeft - bTimeLeft;
+    }
+    
+    if (a.distance_meters !== undefined && b.distance_meters !== undefined) {
+      if (Math.abs(a.distance_meters - b.distance_meters) > 100) {
+        return a.distance_meters - b.distance_meters;
+      }
+    }
+    
+    return bUpdated - aUpdated;
+  });
+};
 
 export default function OffersPage() {
   useClientNotifications();
@@ -273,7 +324,6 @@ export default function OffersPage() {
             },
             (fallbackError) => {
               console.warn("Géolocalisation impossible:", fallbackError);
-              // 🔧 FIX : Pas d'alerte, juste utiliser la position par défaut
               setUserLocation(DEFAULT_LOCATION);
               setCenter(DEFAULT_LOCATION);
 
@@ -299,7 +349,7 @@ export default function OffersPage() {
 
   useEffect(() => {
     mapboxgl.accessToken =
-      "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueXgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g";
+      "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueHgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g";
 
     if (!mapContainerRef.current) return;
 
@@ -312,7 +362,7 @@ export default function OffersPage() {
       container: mapContainerRef.current,
       style: MAP_STYLE,
       center: safeCenter,
-      zoom: DEFAULT_ZOOM, // 🔧 FIX : Zoom 6 pour voir toute la Turquie
+      zoom: DEFAULT_ZOOM,
     });
 
     mapRef.current = map;
@@ -343,7 +393,6 @@ export default function OffersPage() {
 
     geolocate.on("error", (e) => {
       console.error("❌ Erreur géolocalisation:", e);
-      // 🔧 FIX : Pas d'alerte, gérer silencieusement
     });
 
     const geocoder = new MapboxGeocoder({
@@ -488,7 +537,8 @@ export default function OffersPage() {
           console.log("✅ Données reçues depuis Supabase:", data);
         }
 
-        setOffers(data || []);
+        const sortedOffers = sortOffersSmart(data || []);
+        setOffers(sortedOffers);
       } catch (error) {
         console.error("❌ Erreur lors de la récupération des offres:", error);
         setOffers([]);
