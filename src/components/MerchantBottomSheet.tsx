@@ -298,8 +298,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
                         {offer.available_until && (
-                          <span className="flex items-center gap-1 text-gray-700 font-semibold">
-                            <Clock className="w-3 h-3" />
+                          <span className="text-gray-700 font-semibold">
                             {getTimeRemaining(offer.available_until)}
                           </span>
                         )}
@@ -309,7 +308,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
                         </span>
                       </div>
                       {offer.available_until && (
-                        <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                           <div
                             className={`h-full transition-all duration-300 rounded-full ${
                               getProgressPercent(offer.available_from, offer.available_until) < 33 ? 'animate-pulse-fast' :

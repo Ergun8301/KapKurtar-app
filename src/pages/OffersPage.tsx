@@ -687,11 +687,10 @@ export default function OffersPage() {
 
         {offer.available_until && (
           <div className="space-y-1">
-            <div className={`${isMobile ? "text-[10px]" : "text-xs"} text-gray-700 font-semibold flex items-center gap-1`}>
-              <Clock className="w-3.5 h-3.5" />
+            <div className={`${isMobile ? "text-[10px]" : "text-xs"} text-gray-700 font-semibold`}>
               <span>{getTimeRemaining(offer.available_until)}</span>
             </div>
-            <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
                 className={`h-full transition-all duration-300 rounded-full ${
                   getProgressPercent(offer.available_from, offer.available_until) < 33 ? 'animate-pulse-fast' :
