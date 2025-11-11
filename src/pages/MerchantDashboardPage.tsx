@@ -1086,29 +1086,13 @@ const MerchantDashboardPage = () => {
             </div>
           </div>
 
-          <div className="mb-4 space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center text-gray-700 font-semibold">
-                <Clock className="w-4 h-4 mr-1" />
-                <span>{getTimeRemainingDetailed(offer.available_until)}</span>
-              </div>
-              <div className="text-gray-600">
-                <span className="font-medium">Stock: {offer.quantity}</span>
-              </div>
+          <div className="flex items-center justify-between text-sm mb-4">
+            <div className="flex items-center text-gray-700 font-semibold">
+              <Clock className="w-4 h-4 mr-1" />
+              <span>{getTimeRemainingDetailed(offer.available_until)}</span>
             </div>
-            <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className={`h-full transition-all duration-300 rounded-full ${
-                  getProgressPercent(offer.available_from, offer.available_until) < 33 ? 'animate-pulse-fast' :
-                  getProgressPercent(offer.available_from, offer.available_until) < 67 ? 'animate-pulse-medium' :
-                  ''
-                }`}
-                style={{
-                  width: `${getProgressPercent(offer.available_from, offer.available_until)}%`,
-                  backgroundColor: getProgressPercent(offer.available_from, offer.available_until) < 33 ? '#ef4444' :
-                                  getProgressPercent(offer.available_from, offer.available_until) < 67 ? '#f59e0b' : '#16a34a'
-                }}
-              />
+            <div className="text-gray-600">
+              <span className="font-medium">Stock: {offer.quantity}</span>
             </div>
           </div>
 
