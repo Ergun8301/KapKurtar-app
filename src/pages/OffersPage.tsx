@@ -691,17 +691,17 @@ export default function OffersPage() {
               <Clock className="w-3.5 h-3.5" />
               <span>{getTimeRemaining(offer.available_until)}</span>
             </div>
-            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
               <div
                 className={`h-full transition-all duration-300 rounded-full ${
-                  getProgressPercent(offer.available_from, offer.available_until) < 20 ? 'animate-pulse-fast' :
-                  getProgressPercent(offer.available_from, offer.available_until) < 50 ? 'animate-pulse-medium' :
-                  'animate-pulse-slow'
+                  getProgressPercent(offer.available_from, offer.available_until) < 33 ? 'animate-pulse-fast' :
+                  getProgressPercent(offer.available_from, offer.available_until) < 67 ? 'animate-pulse-medium' :
+                  ''
                 }`}
                 style={{
                   width: `${getProgressPercent(offer.available_from, offer.available_until)}%`,
-                  backgroundColor: getProgressPercent(offer.available_from, offer.available_until) < 20 ? '#ef4444' :
-                                  getProgressPercent(offer.available_from, offer.available_until) < 50 ? '#f59e0b' : '#16a34a'
+                  backgroundColor: getProgressPercent(offer.available_from, offer.available_until) < 33 ? '#ef4444' :
+                                  getProgressPercent(offer.available_from, offer.available_until) < 67 ? '#f59e0b' : '#16a34a'
                 }}
               />
             </div>
