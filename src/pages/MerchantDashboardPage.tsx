@@ -509,6 +509,49 @@ const MerchantDashboardPage = () => {
     return 'active';
   };
 
+  const getTimeRemainingDetailed = (until?: string) => {
+    if (!until) return '';
+    const diff = new Date(until).getTime() - Date.now();
+    if (diff <= 0) return 'Expirée';
+
+    const totalMinutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const days = Math.floor(hours / 24);
+
+    if (hours >= 48) {
+      const remainingHours = hours % 24;
+      return `${days}j ${remainingHours}h`;
+    }
+
+    if (hours >= 24) {
+      const remainingHours = hours % 24;
+      return `${days}j ${remainingHours}h`;
+    }
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}min`;
+    }
+
+    return `${minutes}min`;
+  };
+
+  const getProgressPercent = (availableFrom?: string, availableUntil?: string) => {
+    if (!availableFrom || !availableUntil) return 0;
+
+    const now = new Date();
+    const start = new Date(availableFrom);
+    const end = new Date(availableUntil);
+
+    const total = end.getTime() - start.getTime();
+    const remaining = end.getTime() - now.getTime();
+
+    if (remaining <= 0) return 0;
+    if (remaining >= total) return 100;
+
+    return Math.max(0, Math.min(100, (remaining / total) * 100));
+  };
+
   const calculateTimeLeft = (endDate: string) => {
     const now = new Date();
     const end = new Date(endDate);
@@ -1043,13 +1086,29 @@ const MerchantDashboardPage = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-sm mb-4">
-            <div className="flex items-center text-gray-600">
-              <Clock className="w-4 h-4 mr-1" />
-              <span>{calculateTimeLeft(offer.available_until)}</span>
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center text-gray-700 font-semibold">
+                <Clock className="w-4 h-4 mr-1" />
+                <span>{getTimeRemainingDetailed(offer.available_until)}</span>
+              </div>
+              <div className="text-gray-600">
+                <span className="font-medium">Stock: {offer.quantity}</span>
+              </div>
             </div>
-            <div className="text-gray-600">
-              <span className="font-medium">Stock: {offer.quantity}</span>
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-300 rounded-full ${
+                  getProgressPercent(offer.available_from, offer.available_until) < 20 ? 'animate-pulse-fast' :
+                  getProgressPercent(offer.available_from, offer.available_until) < 50 ? 'animate-pulse-medium' :
+                  'animate-pulse-slow'
+                }`}
+                style={{
+                  width: `${getProgressPercent(offer.available_from, offer.available_until)}%`,
+                  backgroundColor: getProgressPercent(offer.available_from, offer.available_until) < 20 ? '#ef4444' :
+                                  getProgressPercent(offer.available_from, offer.available_until) < 50 ? '#f59e0b' : '#16a34a'
+                }}
+              />
             </div>
           </div>
 
