@@ -4,6 +4,7 @@ import mapboxgl, { Map, Marker } from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
+import { Clock } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { OfferDetailsModal } from "../components/OfferDetailsModal";
