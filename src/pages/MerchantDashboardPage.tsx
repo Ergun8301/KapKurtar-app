@@ -1087,8 +1087,7 @@ const MerchantDashboardPage = () => {
           </div>
 
           <div className="flex items-center justify-between text-sm mb-4">
-            <div className="flex items-center text-gray-700 font-semibold">
-              <Clock className="w-4 h-4 mr-1" />
+            <div className="text-gray-700 font-semibold">
               <span>{getTimeRemainingDetailed(offer.available_until)}</span>
             </div>
             <div className="text-gray-600">
