@@ -457,7 +457,7 @@ const MerchantDashboardPage = () => {
         .select('*')
         .eq('merchant_id', merchantId)
         .eq('is_deleted', false)
-        .order('updated_at', { ascending: false });
+        .order('available_until', { ascending: true });
 
       if (error) throw error;
 
@@ -479,9 +479,9 @@ const MerchantDashboardPage = () => {
       });
 
       active.sort((a, b) => {
-        const aUpdated = new Date(a.updated_at).getTime();
-        const bUpdated = new Date(b.updated_at).getTime();
-        return bUpdated - aUpdated;
+        const aUntil = new Date(a.available_until).getTime();
+        const bUntil = new Date(b.available_until).getTime();
+        return aUntil - bUntil;
       });
 
       setActiveOffers(active);
