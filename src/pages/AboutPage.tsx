@@ -159,13 +159,13 @@ const AboutPage = () => {
             Que vous soyez commerçant ou consommateur, vous pouvez faire partie de la solution
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            
+            <a
               href="/merchant/auth"
               className="bg-tilkapp-green text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
             >
               Je suis commerçant
             </a>
-            
+            <a
               href="/download"
               className="bg-tilkapp-orange text-white px-8 py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium"
             >

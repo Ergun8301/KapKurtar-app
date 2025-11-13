@@ -14,7 +14,7 @@ const ForMerchantsPage = () => {
             <p className="text-xl text-tilkapp-beige mb-8 max-w-2xl mx-auto">
               Rejoignez plus de 150 commerçants qui ont déjà réduit leur gaspillage et augmenté leurs revenus avec TILKAPP
             </p>
-            
+            <a
               href="/merchant/auth"
               className="inline-block bg-tilkapp-orange text-white px-8 py-4 rounded-lg hover:bg-orange-600 transition-colors font-bold text-lg"
             >
@@ -263,7 +263,7 @@ const ForMerchantsPage = () => {
           <p className="text-xl text-tilkapp-beige mb-8">
             Rejoignez TILKAPP gratuitement et commencez à vendre dès aujourd'hui
           </p>
-          
+          <a
             href="/merchant/auth"
             className="inline-block bg-tilkapp-orange text-white px-8 py-4 rounded-lg hover:bg-orange-600 transition-colors font-bold text-lg"
           >
