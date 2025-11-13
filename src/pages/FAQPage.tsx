@@ -169,7 +169,7 @@ const FAQPage = () => {
           <p className="text-gray-600 mb-8">
             Notre équipe est là pour vous aider
           </p>
-          
+          <a
             href="/contact"
             className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
           >

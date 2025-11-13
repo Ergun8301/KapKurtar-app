@@ -227,7 +227,7 @@ const BlogPage = () => {
                 
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-500">{post.reading_time} min de lecture</span>
-                  
+                  <a
                     href={`/blog/${post.id}`}
                     className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange font-medium transition-colors"
                   >
