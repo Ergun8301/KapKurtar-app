@@ -286,7 +286,7 @@ const BlogArticle10 = () => {
   <p className="text-gray-700 mb-6">
     Découvrez les offres TILKAPP et donnez une seconde chance aux invendus
   </p>
-  
+  <a
     href="/offers"
     className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
   >

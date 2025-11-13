@@ -213,7 +213,7 @@ const BlogArticle5 = () => {
             <p className="mb-6 text-tilkapp-beige">
               Inscrivez-vous gratuitement et commencez à valoriser vos invendus dès aujourd'hui
             </p>
-            
+            <a
               href="/merchant/auth"
               className="bg-white text-tilkapp-green px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-beige transition-colors inline-block"
             >

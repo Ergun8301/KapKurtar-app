@@ -119,7 +119,7 @@ const BlogArticle4 = () => {
             <p className="text-gray-700 mb-6">
               Téléchargez TILKAPP et commencez à économiser tout en sauvant la planète
             </p>
-            
+            <a
               href="/download"
               className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
             >

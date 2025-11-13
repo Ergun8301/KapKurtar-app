@@ -68,7 +68,7 @@ const ContactPage = () => {
           {/* Contact Cards */}
           <div className="lg:col-span-1 space-y-6">
             {/* WhatsApp */}
-            
+            <a
               href="https://wa.me/33685507985?text=Bonjour%20TILKAPP,%20j'ai%20une%20question"
               target="_blank"
               rel="noopener noreferrer"

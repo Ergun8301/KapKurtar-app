@@ -248,7 +248,7 @@ const BlogArticle9 = () => {
             <p className="mb-6 text-tilkapp-beige">
               Téléchargez TILKAPP et découvrez les offres près de chez vous
             </p>
-            
+            <a
               href="/download"
               className="bg-white text-tilkapp-green px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-beige transition-colors inline-block"
             >

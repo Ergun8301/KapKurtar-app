@@ -294,7 +294,7 @@ const BlogArticle8 = () => {
             <p className="text-gray-700 mb-6">
               Fruits et légumes légèrement défraîchis à -50% ? Parfaits pour smoothies, soupes et compotes !
             </p>
-            
+            <a
               href="/offers"
               className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
             >

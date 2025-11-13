@@ -161,7 +161,7 @@ const BlogArticle6 = () => {
               <li>4. Ajoutez le pain en morceaux</li>
               <li>5. Laissez mijoter 20 min en remuant</li>
               <li>6. Mixez partiellement pour une texture crémeuse</li>
-            </ul>
+            </ol>
           </div>
           <p className="text-sm text-gray-600 italic">
             🥖 Servez avec un filet d'huile d'olive, du persil ciselé et du pain grillé !
@@ -217,7 +217,7 @@ const BlogArticle6 = () => {
             <p className="text-gray-700 mb-6">
               Avec TILKAPP, achetez du pain frais de boulangerie à -50% en fin de journée
             </p>
-            
+            <a
               href="/offers"
               className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
             >

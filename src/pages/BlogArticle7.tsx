@@ -221,13 +221,13 @@ const BlogArticle7 = () => {
               Que vous soyez commerçant ou consommateur, participez à la révolution anti-gaspi
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              
+              <a
                 href="/merchant/auth"
                 className="bg-white text-tilkapp-green px-6 py-3 rounded-lg font-medium hover:bg-tilkapp-beige transition-colors inline-block"
               >
                 Je suis commerçant
               </a>
-              
+              <a
                 href="/download"
                 className="bg-tilkapp-orange text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors inline-block"
               >
