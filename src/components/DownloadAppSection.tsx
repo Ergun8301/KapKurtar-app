@@ -3,12 +3,12 @@ import { QrCode } from 'lucide-react';
 
 const DownloadAppSection = () => {
   return (
-    <div className="bg-gradient-to-br from-green-500 to-green-700 py-20">
+    <div className="bg-tilkapp-green py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left side - Content */}
-          <div className="text-white">
-            <h2 className="text-4xl font-bold mb-6">
+          <div className="text-tilkapp-beige">
+            <h2 className="text-4xl font-bold mb-6 text-white">
               Download Our App
             </h2>
             <div className="mb-8">
@@ -19,10 +19,9 @@ const DownloadAppSection = () => {
                 Never miss a deal from your favorite restaurants. Get push notifications for new offers near you.
               </p>
             </div>
-
             {/* Download Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <a
+              
                 href="#"
                 className="transition-transform hover:scale-105"
               >
@@ -32,7 +31,7 @@ const DownloadAppSection = () => {
                   className="h-14"
                 />
               </a>
-              <a
+              
                 href="#"
                 className="transition-transform hover:scale-105"
               >
@@ -43,7 +42,6 @@ const DownloadAppSection = () => {
                 />
               </a>
             </div>
-
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
@@ -60,7 +58,6 @@ const DownloadAppSection = () => {
               </div>
             </div>
           </div>
-
           {/* Right side - QR Code */}
           <div className="text-center">
             <div className="bg-white rounded-2xl p-8 shadow-2xl inline-block">
