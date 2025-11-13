@@ -16,7 +16,7 @@ const ContactPage = () => {
     setIsSubmitting(true);
 
     // Formspree endpoint (gratuit, pas de backend nécessaire)
-    const formspreeEndpoint = 'https://formspree.io/f/xanykvyr'; // Je vais créer ça pour toi
+    const formspreeEndpoint = 'https://formspree.io/f/xeovowdl'; // Je vais créer ça pour toi
 
     try {
       const response = await fetch(formspreeEndpoint, {
