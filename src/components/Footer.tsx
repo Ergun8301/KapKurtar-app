@@ -12,7 +12,7 @@ const Footer = () => {
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center mb-4">
               <img 
-                src="/tilkapp-logo.svg" 
+                src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/Logo%20g.png" 
                 alt="TILKAPP" 
                 className="h-20 w-auto"
               />
