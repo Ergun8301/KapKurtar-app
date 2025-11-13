@@ -241,8 +241,7 @@ const BlogPage = () => {
     Lire l'article
     <ExternalLink className="w-4 h-4 ml-1" />
   </a>
-) : (
-                   
+) : (       
                       href={`/blog/${post.id}`}
                       className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange font-medium transition-colors"
                     >
