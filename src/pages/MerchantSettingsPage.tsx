@@ -71,8 +71,8 @@ const MerchantSettingsPage = () => {
   const ToggleButton = ({ value, onClick }: { value: boolean; onClick: () => void }) => (
     <button
       onClick={onClick}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-tilkapp-blue focus:ring-offset-2 ${
-        value ? 'bg-tilkapp-blue' : 'bg-gray-300'
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-tilkapp-green focus:ring-offset-2 ${
+        value ? 'bg-tilkapp-green' : 'bg-gray-300'
       }`}
     >
       <span
@@ -87,7 +87,7 @@ const MerchantSettingsPage = () => {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {showToast && (
-          <div className="fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg bg-tilkapp-blue text-white flex items-center">
+          <div className="fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg bg-tilkapp-green text-white flex items-center">
             <Check className="w-5 h-5 mr-2" />
             Settings updated
           </div>
@@ -103,8 +103,8 @@ const MerchantSettingsPage = () => {
 
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="flex items-center mb-6">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-              <Settings className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+              <Settings className="w-6 h-6 text-green-600" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
           </div>
@@ -112,15 +112,15 @@ const MerchantSettingsPage = () => {
           <div className="space-y-8">
             <div className="border-t pt-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                <Bell className="w-5 h-5 text-blue-600 mr-2" />
+                <Bell className="w-5 h-5 text-green-600 mr-2" />
                 Notifications
               </h2>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
                   <div className="flex items-center">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                      <Bell className="w-5 h-5 text-blue-600" />
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                      <Bell className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">New reservation</p>
@@ -135,8 +135,8 @@ const MerchantSettingsPage = () => {
 
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
                   <div className="flex items-center">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                      <Package className="w-5 h-5 text-blue-600" />
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                      <Package className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">Stock low</p>
@@ -195,8 +195,8 @@ const MerchantSettingsPage = () => {
             </div>
 
             <div className="border-t pt-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-blue-800 text-sm">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-green-800 text-sm">
                   <strong>Note:</strong> Your notification preferences are saved locally in your browser.
                   They will apply across all your sessions on this device.
                 </p>

@@ -49,17 +49,17 @@ const NotificationsPage = () => {
         };
       case 'daily_summary':
         return {
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-50',
-          borderColor: 'border-blue-200',
+          color: 'text-green-600',
+          bgColor: 'bg-green-50',
+          borderColor: 'border-green-200',
           icon: TrendingUp,
           badge: '🟢'
         };
       case 'offer':
         return {
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-50',
-          borderColor: 'border-blue-200',
+          color: 'text-green-600',
+          bgColor: 'bg-green-50',
+          borderColor: 'border-green-200',
           icon: Package,
           badge: '🔵'
         };
@@ -89,7 +89,7 @@ const NotificationsPage = () => {
           </p>
           <button
             onClick={() => navigate('/customer/auth')}
-            className="w-full bg-tilkapp-blue text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            className="w-full bg-tilkapp-green text-white px-6 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors"
           >
             Sign In
           </button>
@@ -113,7 +113,7 @@ const NotificationsPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <Bell className="w-8 h-8 text-blue-600" />
+                <Bell className="w-8 h-8 text-green-600" />
                 Notifications
               </h1>
               {unreadCount > 0 && (
@@ -126,7 +126,7 @@ const NotificationsPage = () => {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="flex items-center gap-2 bg-tilkapp-blue text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="flex items-center gap-2 bg-tilkapp-green text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors"
               >
                 <CheckCheck className="w-5 h-5" />
                 Mark All Read
@@ -140,7 +140,7 @@ const NotificationsPage = () => {
             onClick={() => setFilter('all')}
             className={`px-6 py-2 rounded-lg font-medium transition-all ${
               filter === 'all'
-                ? 'bg-tilkapp-blue text-white shadow-md'
+                ? 'bg-tilkapp-green text-white shadow-md'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
@@ -150,7 +150,7 @@ const NotificationsPage = () => {
             onClick={() => setFilter('unread')}
             className={`px-6 py-2 rounded-lg font-medium transition-all ${
               filter === 'unread'
-                ? 'bg-tilkapp-blue text-white shadow-md'
+                ? 'bg-tilkapp-green text-white shadow-md'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >

@@ -37,16 +37,16 @@ export default function ResetPasswordPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-green-300"
           />
           <button
             type="submit"
-            className="w-full bg-blue-700 text-white py-2 rounded-lg hover:bg-blue-800 transition"
+            className="w-full bg-green-700 text-white py-2 rounded-lg hover:bg-tilkapp-orange transition"
           >
             Envoyer le lien
           </button>
         </form>
-        {message && <p className="text-blue-600 mt-4 text-center">{message}</p>}
+        {message && <p className="text-green-600 mt-4 text-center">{message}</p>}
         {error && <p className="text-red-600 mt-4 text-center">{error}</p>}
       </div>
     </div>

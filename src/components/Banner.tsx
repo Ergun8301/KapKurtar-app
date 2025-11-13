@@ -70,7 +70,7 @@ const Banner = () => {
             {currentSlideData.title.split(' ').map((word, index) => (
               <span
                 key={index}
-                className={word.toLowerCase() === 'save' || word.toLowerCase() === 'together' ? 'text-blue-400' : ''}
+                className={word.toLowerCase() === 'save' || word.toLowerCase() === 'together' ? 'text-green-400' : ''}
               >
                 {word}{' '}
               </span>
@@ -82,7 +82,7 @@ const Banner = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href={currentSlideData.cta_link}
-              className="bg-tilkapp-blue text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors"
             >
               {currentSlideData.cta_text}
             </a>

@@ -105,8 +105,8 @@ const SettingsPage = () => {
   const ToggleButton = ({ value, onClick }: { value: boolean; onClick: () => void }) => (
     <button
       onClick={onClick}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-tilkapp-blue focus:ring-offset-2 ${
-        value ? 'bg-tilkapp-blue' : 'bg-gray-300'
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-tilkapp-green focus:ring-offset-2 ${
+        value ? 'bg-tilkapp-green' : 'bg-gray-300'
       }`}
     >
       <span

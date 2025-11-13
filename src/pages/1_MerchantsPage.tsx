@@ -87,7 +87,7 @@ const MerchantsPage = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="bg-tilkapp-blue text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-flex items-center text-lg shadow-lg"
+                  className="bg-tilkapp-green text-white px-8 py-4 rounded-lg font-semibold hover:bg-tilkapp-orange transition-colors inline-flex items-center text-lg shadow-lg"
                 >
                   Become a Partner
                   <ArrowRight className="w-5 h-5 ml-2" />
@@ -116,12 +116,12 @@ const MerchantsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {benefits.map((benefit, index) => (
                 <div key={index} className="text-center p-8 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <benefit.icon className="w-10 h-10 text-blue-600" />
+                  <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <benefit.icon className="w-10 h-10 text-green-600" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">{benefit.title}</h3>
                   <p className="text-gray-600 mb-6 leading-relaxed">{benefit.description}</p>
-                  <div className="text-sm font-semibold text-blue-600 bg-blue-50 px-4 py-2 rounded-full inline-block">
+                  <div className="text-sm font-semibold text-green-600 bg-green-50 px-4 py-2 rounded-full inline-block">
                     {benefit.stats}
                   </div>
                 </div>
@@ -140,21 +140,21 @@ const MerchantsPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="text-center">
-                <div className="bg-tilkapp-blue text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
+                <div className="bg-tilkapp-green text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
                   1
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">Sign Up & Setup</h3>
                 <p className="text-gray-600 leading-relaxed">Create your merchant account and set up your restaurant profile in minutes.</p>
               </div>
               <div className="text-center">
-                <div className="bg-tilkapp-blue text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
+                <div className="bg-tilkapp-green text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
                   2
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">List Your Offers</h3>
                 <p className="text-gray-600 leading-relaxed">Add surplus food items with discounted prices. Set pickup times and quantities.</p>
               </div>
               <div className="text-center">
-                <div className="bg-tilkapp-blue text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
+                <div className="bg-tilkapp-green text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
                   3
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">Serve Customers</h3>
@@ -206,22 +206,22 @@ const MerchantsPage = () => {
         </div>
 
         {/* Final CTA Section */}
-        <div className="py-24 bg-tilkapp-blue">
+        <div className="py-24 bg-tilkapp-green">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-4xl font-bold text-white mb-6">Ready to Transform Your Business?</h2>
-            <p className="text-xl text-blue-100 mb-12 leading-relaxed">
+            <p className="text-xl text-green-100 mb-12 leading-relaxed">
               Join TILKAPP today and start turning your food waste into revenue while attracting new customers.
             </p>
             
             <button
               onClick={() => setShowAuthModal(true)}
-              className="bg-white text-blue-600 px-12 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center text-xl shadow-lg"
+              className="bg-white text-green-600 px-12 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center text-xl shadow-lg"
             >
               <CheckCircle className="w-6 h-6 mr-3" />
               Become a Partner
             </button>
             
-            <p className="text-blue-200 mt-6">No setup fees • Cancel anytime • 24/7 support</p>
+            <p className="text-green-200 mt-6">No setup fees • Cancel anytime • 24/7 support</p>
           </div>
         </div>
       </div>
