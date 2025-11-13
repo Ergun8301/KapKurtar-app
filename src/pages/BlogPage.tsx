@@ -94,7 +94,7 @@ const BlogPage = () => {
       category: 'Actualités',
       author: 'Rédaction',
       published_at: '2024-11-25',
-      featured_image_url: 'https://images.pexels.com/photos/1105325/pexels-photo-1105325.jpeg?auto=compress&cs=tinysrgb&w=800',
+      featured_image_url: 'https://images.pexels.com/photos/2767815/pexels-photo-2767815.jpeg',
       reading_time: 6
     },
     {
