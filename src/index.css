@@ -73,7 +73,7 @@ textarea:focus {
 }
 
 .btn-secondary {
-  @apply bg-tilkapp-blue text-white px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-all;
+  @apply bg-tilkapp-green text-white px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-all;
 }
 
 .line-clamp-2 {
