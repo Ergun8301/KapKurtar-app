@@ -2,7 +2,15 @@
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'tilkapp-orange': '#f75c00',
+        'tilkapp-beige': '#f3eace',
+        'tilkapp-blue': '#256874',
+        'tilkapp-black': '#000000',
+        'tilkapp-white': '#ffffff',
+      }
+    },
   },
   plugins: [],
 };
