@@ -1,13 +1,12 @@
 import React from 'react';
 import { QrCode } from 'lucide-react';
-
 const DownloadAppSection = () => {
   return (
-    <div className="bg-tilkapp-green py-20">
+    <div className="bg-gradient-to-br from-green-500 to-green-700 py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left side - Content */}
-          <div className="text-tilkapp-beige">
+          <div className="text-white">
             <h2 className="text-4xl font-bold mb-6">
               Download Our App
             </h2>
@@ -72,5 +71,4 @@ const DownloadAppSection = () => {
     </div>
   );
 };
-
 export default DownloadAppSection;
