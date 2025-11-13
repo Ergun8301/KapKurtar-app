@@ -132,7 +132,7 @@ const ProfileCompletePage = () => {
             </div>
           )}
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+            <div className="bg-green-100 border border-green-300 text-tilkapp-green px-4 py-3 rounded-lg mb-6">
               {success}
             </div>
           )}

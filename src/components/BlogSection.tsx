@@ -74,7 +74,7 @@ const BlogSection = () => {
                   <span>{formatDate(post.published_at)}</span>
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-tilkapp-green transition-colors">
                   {post.title}
                 </h3>
                 
@@ -82,7 +82,7 @@ const BlogSection = () => {
 
                 <a
                   href={`/blog/${post.id}`}
-                  className="inline-flex items-center text-green-600 hover:text-green-700 font-medium transition-colors"
+                  className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-green font-medium transition-colors"
                 >
                   Read More
                   <ArrowRight className="w-4 h-4 ml-1" />

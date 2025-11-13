@@ -70,7 +70,7 @@ const HeroBanner = () => {
       <div className="relative h-full flex items-center justify-center">
         <div className="text-center text-white px-4 max-w-5xl">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-            Save Money, <span className="text-green-400">Save Food</span>, <br />Save the Planet
+            Save Money, <span className="text-tilkapp-orange">Save Food</span>, <br />Save the Planet
           </h1>
           <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed">
             Discover amazing deals on delicious meals from local restaurants while helping reduce food waste. 
@@ -95,7 +95,7 @@ const HeroBanner = () => {
             </a>
           </div>
 
-          <p className="text-green-200 text-lg flex items-center justify-center">
+          <p className="text-tilkapp-beige text-lg flex items-center justify-center">
             <Smartphone className="w-5 h-5 mr-2" />
             Download the app to receive real-time notifications
           </p>

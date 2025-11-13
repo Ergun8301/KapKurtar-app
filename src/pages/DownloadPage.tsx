@@ -80,15 +80,15 @@ const DownloadPage = () => {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">4.8★</div>
+                <div className="text-2xl font-bold text-tilkapp-green">4.8★</div>
                 <div className="text-sm text-gray-600">App Rating</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">50K+</div>
+                <div className="text-2xl font-bold text-tilkapp-green">50K+</div>
                 <div className="text-sm text-gray-600">Downloads</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">1M+</div>
+                <div className="text-2xl font-bold text-tilkapp-green">1M+</div>
                 <div className="text-sm text-gray-600">Meals Saved</div>
               </div>
             </div>
@@ -103,8 +103,8 @@ const DownloadPage = () => {
             <div className="space-y-8 mb-8">
               {features.map((feature, index) => (
                 <div key={index} className="flex items-start space-x-4">
-                  <div className="bg-green-100 p-4 rounded-lg">
-                    <feature.icon className="w-8 h-8 text-green-600" />
+                  <div className="bg-tilkapp-beige p-4 rounded-lg">
+                    <feature.icon className="w-8 h-8 text-tilkapp-green" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2 text-lg">{feature.title}</h3>
@@ -114,9 +114,9 @@ const DownloadPage = () => {
               ))}
             </div>
 
-            <div className="bg-green-50 p-6 rounded-lg">
-              <h3 className="font-semibold text-green-800 mb-2">📱 Activate Notifications</h3>
-              <p className="text-green-700 leading-relaxed">
+            <div className="bg-green-100 p-6 rounded-lg">
+              <h3 className="font-semibold text-tilkapp-green mb-2">📱 Activate Notifications</h3>
+              <p className="text-tilkapp-green leading-relaxed">
                 Enable push notifications to never miss a deal. Get alerted when your favorite restaurants post new offers!
               </p>
             </div>
@@ -154,7 +154,7 @@ const DownloadPage = () => {
                   
                   <div className="bg-gray-100 rounded-lg p-3">
                     <div className="flex items-center space-x-2 mb-2">
-                      <div className="w-8 h-8 bg-green-500 rounded-full"></div>
+                      <div className="w-8 h-8 bg-green-100 rounded-full"></div>
                       <div>
                         <div className="h-2 bg-gray-300 rounded w-24"></div>
                         <div className="h-2 bg-gray-200 rounded w-12 mt-1"></div>

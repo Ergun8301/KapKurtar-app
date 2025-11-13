@@ -94,21 +94,21 @@ const Header = () => {
   if (user && isMerchant === null) return null;
 
   return (
-    <header className="bg-white shadow-sm border-b sticky top-0 z-40">
+    <header className="bg-tilkapp-green shadow-sm border-b border-tilkapp-green sticky top-0 z-40">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <a href="/" className="flex items-center">
             <img
-              src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/Logo.png"
+              src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/Logo%20(1).png"
               alt="TILKAPP"
-              className="h-12 w-auto"
+              className="h-14 w-auto"
             />
           </a>
 
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               {navigation.map((item) => (
-                <a key={item.name} href={item.href} className="text-gray-600 hover:text-tilkapp-orange px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                <a key={item.name} href={item.href} className="text-tilkapp-beige hover:text-tilkapp-orange px-3 py-2 rounded-md text-sm font-medium transition-colors">
                   {item.name}
                 </a>
               ))}
@@ -123,7 +123,7 @@ const Header = () => {
                 <NotificationBell userType={isMerchant ? "merchant" : "client"} />
                 {/* ✅ AJOUT : ref={userMenuRef} pour détecter clics extérieurs */}
                 <div className="relative" ref={userMenuRef}>
-                  <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center space-x-2 text-gray-700 hover:text-tilkapp-orange transition-colors">
+                  <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center space-x-2 text-tilkapp-beige hover:text-tilkapp-orange transition-colors">
                     <div className="w-8 h-8 bg-tilkapp-beige rounded-full flex items-center justify-center">
                       {isMerchant ? <Store className="w-4 h-4 text-tilkapp-green" /> : <User className="w-4 h-4 text-tilkapp-green" />}
                     </div>
@@ -178,7 +178,7 @@ const Header = () => {
               </>
             ) : (
               <div className="relative" ref={userMenuRef}>
-                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="bg-tilkapp-green text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-flex items-center">
+                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="bg-tilkapp-beige text-tilkapp-green px-4 py-2 rounded-lg font-bold hover:bg-tilkapp-orange hover:text-white transition-colors inline-flex items-center">
                   Sign In
                   <ChevronDown className="w-4 h-4 ml-1" />
                 </button>

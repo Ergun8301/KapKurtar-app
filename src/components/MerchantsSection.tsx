@@ -75,12 +75,12 @@ const MerchantsSection = () => {
                 {merchant.verified && (
                   <div className="flex items-center mb-4">
                     <Award className="w-4 h-4 text-tilkapp-green mr-1" />
-                    <span className="text-sm text-green-600">Verified Merchant</span>
+                    <span className="text-sm text-tilkapp-green">Verified Merchant</span>
                   </div>
                 )}
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center text-sm text-green-600">
+                  <div className="flex items-center text-sm text-tilkapp-green">
                     <Clock className="w-4 h-4 mr-1" />
                     <span>Open now</span>
                   </div>

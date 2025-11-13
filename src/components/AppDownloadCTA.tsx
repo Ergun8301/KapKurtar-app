@@ -8,7 +8,7 @@ const AppDownloadCTA = () => {
           <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
             Get notified instantly. Download our app today.
           </h3>
-          <p className="text-green-100 text-lg max-w-2xl mx-auto">
+          <p className="text-tilkapp-beige text-lg max-w-2xl mx-auto">
             Never miss a deal from your favorite restaurants. Get push notifications for new offers near you.
           </p>
         </div>

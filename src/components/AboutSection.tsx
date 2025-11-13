@@ -39,8 +39,8 @@ const AboutSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {features.map((feature, index) => (
             <div key={index} className="text-center">
-              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <feature.icon className="w-8 h-8 text-green-600" />
+              <div className="bg-tilkapp-beige w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <feature.icon className="w-8 h-8 text-tilkapp-green" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
               <p className="text-gray-600">{feature.description}</p>
@@ -60,15 +60,15 @@ const AboutSection = () => {
               </p>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-2xl font-bold text-green-600">100K+</div>
+                  <div className="text-2xl font-bold text-tilkapp-green">100K+</div>
                   <div className="text-sm text-gray-500">Meals Saved</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-600">500+</div>
+                  <div className="text-2xl font-bold text-tilkapp-green">500+</div>
                   <div className="text-sm text-gray-500">Partner Restaurants</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-600">50K+</div>
+                  <div className="text-2xl font-bold text-tilkapp-green">50K+</div>
                   <div className="text-sm text-gray-500">Happy Customers</div>
                 </div>
               </div>

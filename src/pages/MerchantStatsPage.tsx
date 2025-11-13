@@ -88,8 +88,8 @@ export default function MerchantStatsPage() {
 
   const formatAction = (log: AuditLog) => {
     const actionColors = {
-      INSERT: 'text-green-600',
-      UPDATE: 'text-green-600',
+      INSERT: 'text-tilkapp-green',
+      UPDATE: 'text-tilkapp-green',
       DELETE: 'text-red-600',
     };
 
@@ -164,8 +164,8 @@ export default function MerchantStatsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Package className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-tilkapp-beige rounded-lg">
+                <Package className="w-6 h-6 text-tilkapp-green" />
               </div>
               <span className="text-sm text-gray-500">Offers</span>
             </div>
@@ -192,8 +192,8 @@ export default function MerchantStatsPage() {
 
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-tilkapp-beige rounded-lg">
+                <CheckCircle className="w-6 h-6 text-tilkapp-green" />
               </div>
               <span className="text-sm text-gray-500">Confirmed</span>
             </div>

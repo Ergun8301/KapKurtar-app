@@ -674,7 +674,7 @@ export default function OffersPage() {
         </h3>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`font-bold text-green-600 ${isMobile ? "text-base" : "text-lg"}`}>
+          <span className={`font-bold text-tilkapp-green ${isMobile ? "text-base" : "text-lg"}`}>
             {offer.price_after.toFixed(2)}€
           </span>
           <span className={`line-through text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
@@ -745,7 +745,7 @@ export default function OffersPage() {
         )}
 
         {viewMode === "nearby" && offer.distance_meters > 0 && (
-          <p className={`text-green-600 font-semibold ${isMobile ? "text-[10px]" : "text-xs"}`}>
+          <p className={`text-tilkapp-green font-semibold ${isMobile ? "text-[10px]" : "text-xs"}`}>
             {(offer.distance_meters / 1000).toFixed(1)} km
           </p>
         )}
@@ -779,8 +779,8 @@ export default function OffersPage() {
             <button
               className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
                 viewMode === "nearby"
-                  ? "bg-white text-green-700 shadow"
-                  : "text-gray-500 hover:text-green-600"
+                  ? "bg-white text-tilkapp-green shadow"
+                  : "text-gray-500 hover:text-tilkapp-green"
               }`}
               onClick={() => handleViewModeChange("nearby")}
             >
@@ -789,8 +789,8 @@ export default function OffersPage() {
             <button
               className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
                 viewMode === "all"
-                  ? "bg-white text-green-700 shadow"
-                  : "text-gray-500 hover:text-green-600"
+                  ? "bg-white text-tilkapp-green shadow"
+                  : "text-gray-500 hover:text-tilkapp-green"
               }`}
               onClick={() => handleViewModeChange("all")}
             >

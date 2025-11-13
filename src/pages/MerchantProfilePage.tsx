@@ -144,7 +144,7 @@ const MerchantProfilePage = () => {
             </div>
           )}
 
-          <label className="mt-4 cursor-pointer flex items-center gap-2 text-green-600 hover:text-green-700 font-medium">
+          <label className="mt-4 cursor-pointer flex items-center gap-2 text-tilkapp-green hover:text-tilkapp-green font-medium">
             <Upload className="w-5 h-5" />
             <span>Changer de logo</span>
             <input
@@ -160,7 +160,7 @@ const MerchantProfilePage = () => {
             <button
               onClick={handleSaveLogo}
               disabled={uploading}
-              className="mt-3 px-6 py-2 bg-green-700 text-white rounded-lg hover:bg-tilkapp-orange transition"
+              className="mt-3 px-6 py-2 bg-tilkapp-green text-white rounded-lg hover:bg-tilkapp-orange transition"
             >
               {uploading ? 'Téléchargement...' : 'Enregistrer le logo'}
             </button>
@@ -192,7 +192,7 @@ const MerchantProfilePage = () => {
 
           <button
             onClick={handleUpdateInfo}
-            className="w-full bg-green-700 text-white py-3 rounded-lg hover:bg-tilkapp-orange transition-colors"
+            className="w-full bg-tilkapp-green text-white py-3 rounded-lg hover:bg-tilkapp-orange transition-colors"
           >
             Enregistrer les informations
           </button>

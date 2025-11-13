@@ -185,8 +185,8 @@ const ClientProfilePage = () => {
         <div className="bg-white rounded-lg shadow-md p-8">
           {/* Header */}
           <div className="flex items-center mb-8">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-              <User className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-tilkapp-beige rounded-full flex items-center justify-center mr-4">
+              <User className="w-6 h-6 text-tilkapp-green" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
           </div>

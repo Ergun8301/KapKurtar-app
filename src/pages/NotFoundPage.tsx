@@ -28,7 +28,7 @@ export default function NotFoundPage() {
 
           <button
             onClick={() => navigate('/')}
-            className="flex items-center justify-center space-x-2 bg-green-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors"
+            className="flex items-center justify-center space-x-2 bg-tilkapp-green text-white px-6 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors"
           >
             <Home className="w-5 h-5" />
             <span>Retour à l'accueil</span>
@@ -42,21 +42,21 @@ export default function NotFoundPage() {
           <div className="flex flex-wrap gap-3 justify-center">
             <button
               onClick={() => navigate('/offers')}
-              className="text-green-600 hover:text-green-700 font-medium text-sm"
+              className="text-tilkapp-green hover:text-tilkapp-green font-medium text-sm"
             >
               Voir les offres
             </button>
             <span className="text-gray-300">•</span>
             <button
               onClick={() => navigate('/customer/auth')}
-              className="text-green-600 hover:text-green-700 font-medium text-sm"
+              className="text-tilkapp-green hover:text-tilkapp-green font-medium text-sm"
             >
               Se connecter
             </button>
             <span className="text-gray-300">•</span>
             <button
               onClick={() => navigate('/merchant/auth')}
-              className="text-green-600 hover:text-green-700 font-medium text-sm"
+              className="text-tilkapp-green hover:text-tilkapp-green font-medium text-sm"
             >
               Espace commerçant
             </button>

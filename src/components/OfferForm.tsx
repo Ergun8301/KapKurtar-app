@@ -434,8 +434,8 @@ export const OfferForm: React.FC<OfferFormProps> = ({
           </div>
 
           {formData.price_before && formData.price_after && parseFloat(formData.price_before) > 0 && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-              <span className="text-lg font-bold text-green-600">
+            <div className="bg-green-100 border border-green-300 rounded-lg p-3 text-center">
+              <span className="text-lg font-bold text-tilkapp-green">
                 -{calculateDiscount(formData.price_before, formData.price_after)}% discount
               </span>
             </div>
@@ -572,7 +572,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
               'w-full py-3 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ' +
               (mode === 'create'
                 ? 'bg-tilkapp-green hover:bg-tilkapp-orange'
-                : 'bg-green-500 hover:bg-tilkapp-orange')
+                : 'bg-green-100 hover:bg-tilkapp-orange')
             }
           >
             {isSubmitting

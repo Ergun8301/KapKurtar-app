@@ -117,17 +117,17 @@ const CustomerAppPage = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Location Prompt */}
       {showLocationPrompt && (
-        <div className="bg-green-50 border-b border-green-200">
+        <div className="bg-green-100 border-b border-green-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <MapPin className="w-5 h-5 text-green-600 mr-2" />
-                <span className="text-green-800 font-medium">Share your location to see nearby offers</span>
+                <MapPin className="w-5 h-5 text-tilkapp-green mr-2" />
+                <span className="text-tilkapp-green font-medium">Share your location to see nearby offers</span>
               </div>
               <button
                 onClick={handleLocationRequest}
                 disabled={locationLoading}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:opacity-50 inline-flex items-center"
+                className="bg-tilkapp-green text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:opacity-50 inline-flex items-center"
               >
                 <Navigation className="w-4 h-4 mr-2" />
                 {locationLoading ? 'Getting Location...' : 'Share Location'}
@@ -188,7 +188,7 @@ const CustomerAppPage = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <span className="text-2xl font-bold text-green-600">
+                      <span className="text-2xl font-bold text-tilkapp-green">
                         €{offer.price_after}
                       </span>
                       <span className="text-lg text-gray-400 line-through">
@@ -230,7 +230,7 @@ const CustomerAppPage = () => {
 
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-2">
-                  <span className="text-3xl font-bold text-green-600">
+                  <span className="text-3xl font-bold text-tilkapp-green">
                     €{selectedOffer.price_after}
                   </span>
                   <span className="text-xl text-gray-400 line-through">

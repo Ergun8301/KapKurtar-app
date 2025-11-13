@@ -206,7 +206,7 @@ const CustomerOnboardingPage = () => {
                 type="button"
                 onClick={handleLocationRequest}
                 disabled={locationLoading}
-                className="w-full bg-green-500 text-white px-4 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
+                className="w-full bg-green-100 text-white px-4 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
               >
                 <Navigation className="w-5 h-5 mr-2" />
                 {locationLoading ? 'Getting Location...' : 'Use My Current Location'}

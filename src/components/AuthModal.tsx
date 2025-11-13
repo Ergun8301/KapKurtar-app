@@ -126,7 +126,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
             </div>
           )}
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+            <div className="bg-green-100 border border-green-300 text-tilkapp-green px-4 py-3 rounded-lg mb-6">
               {success}
             </div>
           )}
@@ -147,7 +147,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
                 disabled={isLoading}
                 className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
-                <div className="w-5 h-5 mr-3 bg-green-600 rounded"></div>
+                <div className="w-5 h-5 mr-3 bg-tilkapp-green rounded"></div>
                 Continue with Facebook
               </button>
               <div className="relative">
@@ -215,7 +215,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
               <>
                 <button
                   onClick={() => switchMode('forgot')}
-                  className="text-green-600 hover:text-green-700 text-sm font-medium"
+                  className="text-tilkapp-green hover:text-tilkapp-green text-sm font-medium"
                 >
                   Forgot your password?
                 </button>
@@ -223,7 +223,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
                   Don't have an account?{' '}
                   <button
                     onClick={() => switchMode('signup')}
-                    className="text-green-600 hover:text-green-700 font-medium"
+                    className="text-tilkapp-green hover:text-tilkapp-green font-medium"
                   >
                     Sign up
                   </button>
@@ -235,7 +235,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
                 Already have an account?{' '}
                 <button
                   onClick={() => switchMode('signin')}
-                  className="text-green-600 hover:text-green-700 font-medium"
+                  className="text-tilkapp-green hover:text-tilkapp-green font-medium"
                 >
                   Sign in
                 </button>
@@ -246,7 +246,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
                 Remember your password?{' '}
                 <button
                   onClick={() => switchMode('signin')}
-                  className="text-green-600 hover:text-green-700 font-medium"
+                  className="text-tilkapp-green hover:text-tilkapp-green font-medium"
                 >
                   Sign in
                 </button>
