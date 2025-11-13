@@ -96,7 +96,7 @@ const Header = () => {
   return (
     <header className="bg-tilkapp-green shadow-sm border-b border-tilkapp-green sticky top-0 z-40">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-24">
+        <div className="flex justify-between items-center h-16">
           <a href="/" className="flex items-center">
             <img
               src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/Logo%20(1).png"
