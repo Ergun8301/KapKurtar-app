@@ -8,7 +8,7 @@ const DownloadAppSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left side - Content */}
           <div className="text-tilkapp-beige">
-            <h2 className="text-4xl font-bold mb-6 text-white">
+            <h2 className="text-4xl font-bold mb-6">
               Download Our App
             </h2>
             <div className="mb-8">
