@@ -33,6 +33,9 @@ import NotFoundPage from "./pages/NotFoundPage";
 import FAQPage from "./pages/FAQPage";
 import BlogPage from "./pages/BlogPage";
 import ContactPage from "./pages/ContactPage";
+import AboutPage from "./pages/AboutPage";
+import ForMerchantsPage from "./pages/ForMerchantsPage";
+import LegalPage from "./pages/LegalPage";
 
 // ✅ Articles blog
 import BlogArticle4 from "./pages/BlogArticle4";
@@ -137,9 +140,13 @@ function App() {
               {/* 📱 Téléchargement */}
               <Route path="/download" element={<DownloadPage />} />
 
-              {/* 📚 Blog & FAQ */}
+              {/* 📚 Pages marketing */}
               <Route path="/faq" element={<FAQPage />} />
               <Route path="/blog" element={<BlogPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/for-merchants" element={<ForMerchantsPage />} />
+              <Route path="/legal" element={<LegalPage />} />
               
               {/* 📰 Articles blog individuels */}
               <Route path="/blog/4" element={<BlogArticle4 />} />
@@ -149,9 +156,6 @@ function App() {
               <Route path="/blog/8" element={<BlogArticle8 />} />
               <Route path="/blog/9" element={<BlogArticle9 />} />
               <Route path="/blog/10" element={<BlogArticle10 />} />
-
-              {/* 📞 Contact */}
-              <Route path="/contact" element={<ContactPage />} />
 
               {/* 🚫 Redirections anciennes */}
               <Route
