@@ -193,7 +193,7 @@ const ProfilePage = () => {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tilkapp-orange"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tilkapp-blue"></div>
       </div>
     );
   }
@@ -206,7 +206,7 @@ const ProfilePage = () => {
 
         {toast && (
           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-            toast.type === 'success' ? 'bg-tilkapp-orange' : 'bg-red-500'
+            toast.type === 'success' ? 'bg-tilkapp-blue' : 'bg-red-500'
           } text-white`}>
             {toast.message}
           </div>
@@ -223,7 +223,7 @@ const ProfilePage = () => {
                   <User className="w-16 h-16 text-gray-400" />
                 )}
               </div>
-              <label className={`absolute bottom-0 right-0 bg-tilkapp-orange rounded-full p-2 cursor-pointer hover:bg-orange-600 transition-colors shadow-lg ${
+              <label className={`absolute bottom-0 right-0 bg-tilkapp-blue rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg ${
                 isUploadingPhoto ? 'opacity-50 cursor-not-allowed' : ''
               }`}>
                 {isUploadingPhoto ? (

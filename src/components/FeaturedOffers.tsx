@@ -267,7 +267,7 @@ const FeaturedOffers = () => {
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <span className="text-2xl font-bold text-orange-600">
+                    <span className="text-2xl font-bold text-blue-600">
                       ${offer.discounted_price}
                     </span>
                     <span className="text-lg text-gray-400 line-through">
@@ -278,7 +278,7 @@ const FeaturedOffers = () => {
                     <button
                       onClick={() => handleReserve(offer)}
                       disabled={!offer.quantity || offer.quantity <= 0}
-                      className="bg-tilkapp-orange text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      className="bg-tilkapp-blue text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                       {!offer.quantity || offer.quantity <= 0 ? 'Sold Out' : 'Reserve Now'}
                     </button>
@@ -303,7 +303,7 @@ const FeaturedOffers = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="/customer/teaser"
-              className="bg-tilkapp-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors inline-flex items-center"
+              className="bg-tilkapp-blue text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
             >
               View All Offers
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -337,7 +337,7 @@ const FeaturedOffers = () => {
         <div className="fixed bottom-4 right-4 z-50 animate-slide-up">
           <div
             className={`px-6 py-3 rounded-lg shadow-lg ${
-              toast.type === 'success' ? 'bg-tilkapp-orange' : 'bg-red-500'
+              toast.type === 'success' ? 'bg-tilkapp-blue' : 'bg-red-500'
             } text-white font-medium`}
           >
             {toast.message}

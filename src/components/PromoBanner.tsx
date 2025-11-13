@@ -22,7 +22,7 @@ const PromoBanner = () => {
   ];
 
   return (
-    <div className="bg-tilkapp-orange text-white py-3 overflow-hidden">
+    <div className="bg-tilkapp-blue text-white py-3 overflow-hidden">
       <div className="animate-scroll flex items-center space-x-12 whitespace-nowrap">
         {[...promos, ...promos, ...promos].map((promo, index) => (
           <div key={index} className="flex items-center space-x-2 flex-shrink-0">

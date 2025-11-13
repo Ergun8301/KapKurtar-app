@@ -88,7 +88,7 @@ export default function MerchantStatsPage() {
 
   const formatAction = (log: AuditLog) => {
     const actionColors = {
-      INSERT: 'text-orange-600',
+      INSERT: 'text-blue-600',
       UPDATE: 'text-blue-600',
       DELETE: 'text-red-600',
     };
@@ -118,7 +118,7 @@ export default function MerchantStatsPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-tilkapp-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-tilkapp-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -192,8 +192,8 @@ export default function MerchantStatsPage() {
 
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-orange-600" />
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-blue-600" />
               </div>
               <span className="text-sm text-gray-500">Confirmed</span>
             </div>

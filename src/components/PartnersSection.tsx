@@ -71,7 +71,7 @@ const PartnersSection = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="/partners/apply"
-              className="bg-tilkapp-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors"
+              className="bg-tilkapp-blue text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
             >
               Apply for Partnership
             </a>

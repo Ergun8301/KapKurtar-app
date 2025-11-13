@@ -98,7 +98,7 @@ const MerchantOnboardingPage = () => {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Bienvenue chez <span className="text-orange-600">TILKAPP</span> 🌱
+            Bienvenue chez <span className="text-blue-600">TILKAPP</span> 🌱
           </h1>
           <p className="text-gray-600">
             Complétez votre profil marchand (facultatif sauf le nom).
@@ -122,7 +122,7 @@ const MerchantOnboardingPage = () => {
                 placeholder="Nom de l'entreprise *"
                 value={formData.company_name}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-tilkapp-orange"
+                className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-tilkapp-blue"
                 required
               />
             </div>
@@ -200,7 +200,7 @@ const MerchantOnboardingPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 bg-tilkapp-orange text-white py-3 rounded-lg hover:bg-orange-600"
+                className="flex-1 bg-tilkapp-blue text-white py-3 rounded-lg hover:bg-blue-700"
               >
                 {isLoading ? 'Sauvegarde...' : 'Enregistrer'}
               </button>

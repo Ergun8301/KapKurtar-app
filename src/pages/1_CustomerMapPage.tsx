@@ -220,7 +220,7 @@ export default function CustomerMapPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto mb-4"></div>
           <p className="text-gray-600">Obtention de votre position...</p>
         </div>
       </div>
@@ -237,7 +237,7 @@ export default function CustomerMapPage() {
           <div className="p-4 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center space-x-2">
-                <MapPin className="w-5 h-5 text-orange-600" />
+                <MapPin className="w-5 h-5 text-blue-600" />
                 <span className="font-medium text-gray-700">Rayon :</span>
               </div>
               <div className="flex space-x-2 flex-wrap">
@@ -247,7 +247,7 @@ export default function CustomerMapPage() {
                     onClick={() => handleRadiusChange(radius)}
                     className={`px-4 py-2 rounded-lg font-medium transition-all ${
                       radiusKm === radius
-                        ? 'bg-orange-600 text-white shadow-md'
+                        ? 'bg-blue-700 text-white shadow-md'
                         : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                     }`}
                   >
@@ -337,13 +337,13 @@ export default function CustomerMapPage() {
                           )}
                         </div>
 
-                        <p className="text-sm text-orange-600 font-semibold mb-2">
+                        <p className="text-sm text-blue-600 font-semibold mb-2">
                           📍 {(offer.distance_meters / 1000).toFixed(2)} km
                         </p>
 
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-2">
-                            <span className="text-lg font-bold text-orange-600">
+                            <span className="text-lg font-bold text-blue-600">
                               {offer.price_after.toFixed(2)}€
                             </span>
                             <span className="text-sm text-gray-400 line-through">

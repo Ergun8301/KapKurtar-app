@@ -72,7 +72,7 @@ const FAQSection = () => {
           <p className="text-gray-600 mb-4">Still have questions?</p>
           <a
             href="/faq"
-            className="bg-tilkapp-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors inline-block mr-4"
+            className="bg-tilkapp-blue text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-block mr-4"
           >
             View All FAQs
           </a>
