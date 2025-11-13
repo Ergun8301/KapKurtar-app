@@ -232,17 +232,17 @@ const BlogPage = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-500">{post.reading_time} min de lecture</span>
                   {post.external_url ? (
-  
-    href={post.external_url}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange font-medium transition-colors"
-  >
-    Lire l'article
-    <ExternalLink className="w-4 h-4 ml-1" />
-  </a>
-) : (       
-                
+                    <a
+                      href={post.external_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange font-medium transition-colors"
+                    >
+                      Lire l'article
+                      <ExternalLink className="w-4 h-4 ml-1" />
+                    </a>
+                  ) : (
+                    <a
                       href={`/blog/${post.id}`}
                       className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange font-medium transition-colors"
                     >
