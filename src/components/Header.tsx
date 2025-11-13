@@ -1,219 +1,210 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, MapPin, User, ShoppingBag, LogOut } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  Menu,
+  X,
+  ChevronDown,
+  User,
+  Settings,
+  LogOut,
+  ArrowRight,
+  Store,
+  LayoutDashboard,
+  Bell,
+  Package,
+} from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+import { supabase } from "../lib/supabaseClient";
+import { NotificationBell } from "./NotificationBell";
+import { logoutUser } from "../lib/logout";
+import { useAddProduct } from "../contexts/AddProductContext";
 
 const Header = () => {
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, loading } = useAuth();
+  const { openAddProductModal } = useAddProduct();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isMerchant, setIsMerchant] = useState<boolean | null>(null);
+  const hasCheckedRef = useRef(false);
+  
+  // ✅ AJOUT : Ref pour détecter les clics extérieurs
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+    if (!user || hasCheckedRef.current) return;
+    
+    const checkUserType = async () => {
+      hasCheckedRef.current = true;
 
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('auth_id', user.id)
-          .single();
-        setProfile(data);
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_id", user.id)
+        .maybeSingle();
+
+      if (profileError || !profileData) {
+        setIsMerchant(false);
+        return;
+      }
+
+      const { data: merchantData } = await supabase
+        .from("merchants")
+        .select("id")
+        .eq("profile_id", profileData.id)
+        .maybeSingle();
+
+      setIsMerchant(!!merchantData);
+    };
+
+    checkUserType();
+  }, [user]);
+
+  // ✅ AJOUT : Fermer le menu quand on clique dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
       }
     };
 
-    getUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
-      if (!session?.user) {
-        setProfile(null);
-      }
-    });
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
 
     return () => {
-      authListener.subscription.unsubscribe();
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isUserMenuOpen]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setProfile(null);
-    navigate('/');
+    await logoutUser(navigate);
+    setIsUserMenuOpen(false);
   };
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+  const getUserDisplayName = () => user?.email?.split("@")[0] || "User";
 
-  const navLinks = [
-    { path: '/offers', label: 'Offres', icon: MapPin },
-    { path: '/blog', label: 'Blog', icon: null },
-    { path: '/faq', label: 'FAQ', icon: null },
+  const navigation = [
+    { name: "Explore Offers", href: "/offers" },
+    { name: "For Merchants", href: "/merchant/info" },
+    { name: "Download App", href: "/download" },
   ];
 
+  if (user && isMerchant === null) return null;
+
   return (
-    <header className="bg-tilkapp-green sticky top-0 z-50 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          {/* Logo - PLUS GROS */}
-          <Link to="/" className="flex items-center">
-            <img 
-              src="/tilkapp-logo.svg" 
-              alt="TILKAPP" 
-              className="h-16 w-auto" 
+    <header className="bg-tilkapp-green shadow-sm border-b border-tilkapp-green sticky top-0 z-40">
+      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <a href="/" className="flex items-center">
+            <img
+              src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/Logo%20g.png"
+              alt="TILKAPP"
+              className="h-16 w-auto"
             />
-          </Link>
+          </a>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`flex items-center space-x-1 text-lg font-medium transition-colors ${
-                  isActive(link.path)
-                    ? 'text-white border-b-2 border-white'
-                    : 'text-tilkapp-beige hover:text-white'
-                }`}
-              >
-                {link.icon && <link.icon className="w-5 h-5" />}
-                <span>{link.label}</span>
-              </Link>
-            ))}
+          <div className="hidden md:block">
+            <div className="ml-10 flex items-baseline space-x-8">
+              {navigation.map((item) => (
+                <a key={item.name} href={item.href} className="text-tilkapp-beige hover:text-tilkapp-orange px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                  {item.name}
+                </a>
+              ))}
+            </div>
+          </div>
 
-            {user ? (
-              <div className="flex items-center space-x-4">
-                {profile?.role === 'merchant' ? (
-                  <Link
-                    to="/merchant/dashboard"
-                    className="flex items-center space-x-2 bg-white text-tilkapp-green px-4 py-2 rounded-lg hover:bg-tilkapp-beige transition-colors font-medium"
-                  >
-                    <ShoppingBag className="w-5 h-5" />
-                    <span>Dashboard</span>
-                  </Link>
-                ) : (
-                  <Link
-                    to="/client/profile"
-                    className="flex items-center space-x-2 bg-white text-tilkapp-green px-4 py-2 rounded-lg hover:bg-tilkapp-beige transition-colors font-medium"
-                  >
-                    <User className="w-5 h-5" />
-                    <span>Profil</span>
-                  </Link>
-                )}
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center space-x-2 text-white hover:text-tilkapp-beige transition-colors"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span>Déconnexion</span>
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link
-                  to="/customer/auth"
-                  className="text-tilkapp-beige hover:text-white font-medium transition-colors"
-                >
-                  Connexion
-                </Link>
-                <Link
-                  to="/merchant/auth"
-                  className="bg-tilkapp-orange text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium"
-                >
-                  Commerçant
-                </Link>
-              </div>
-            )}
-          </nav>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden text-white"
-          >
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-tilkapp-green border-t border-white/20">
-          <div className="px-4 py-4 space-y-3">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  isActive(link.path)
-                    ? 'bg-white/20 text-white'
-                    : 'text-tilkapp-beige hover:bg-white/10'
-                }`}
-              >
-                {link.icon && <link.icon className="w-5 h-5" />}
-                <span>{link.label}</span>
-              </Link>
-            ))}
-
-            {user ? (
+          <div className="flex items-center space-x-4">
+            {loading ? (
+              <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+            ) : user ? (
               <>
-                {profile?.role === 'merchant' ? (
-                  <Link
-                    to="/merchant/dashboard"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center space-x-2 px-3 py-2 bg-white text-tilkapp-green rounded-lg"
-                  >
-                    <ShoppingBag className="w-5 h-5" />
-                    <span>Dashboard</span>
-                  </Link>
-                ) : (
-                  <Link
-                    to="/client/profile"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center space-x-2 px-3 py-2 bg-white text-tilkapp-green rounded-lg"
-                  >
-                    <User className="w-5 h-5" />
-                    <span>Profil</span>
-                  </Link>
-                )}
-                <button
-                  onClick={() => {
-                    handleSignOut();
-                    setIsMenuOpen(false);
-                  }}
-                  className="flex items-center space-x-2 px-3 py-2 text-white hover:bg-white/10 rounded-lg w-full"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span>Déconnexion</span>
-                </button>
+                <NotificationBell userType={isMerchant ? "merchant" : "client"} />
+                {/* ✅ AJOUT : ref={userMenuRef} pour détecter clics extérieurs */}
+                <div className="relative" ref={userMenuRef}>
+                  <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center space-x-2 text-tilkapp-beige hover:text-tilkapp-orange transition-colors">
+                    <div className="w-8 h-8 bg-tilkapp-beige rounded-full flex items-center justify-center">
+                      {isMerchant ? <Store className="w-4 h-4 text-tilkapp-green" /> : <User className="w-4 h-4 text-tilkapp-green" />}
+                    </div>
+                    <span className="hidden sm:block font-medium">{getUserDisplayName()}</span>
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                      {isMerchant ? (
+                        <>
+                          <button onClick={() => { setIsUserMenuOpen(false); navigate("/merchant/dashboard"); }} className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <LayoutDashboard className="w-4 h-4 mr-2" />
+                            Dashboard
+                          </button>
+                          <button onClick={() => { setIsUserMenuOpen(false); window.dispatchEvent(new CustomEvent("openMerchantProfileModal")); }} className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <Settings className="w-4 h-4 mr-2" />
+                            Settings
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              setIsUserMenuOpen(false);
+                              navigate("/customer/dashboard");
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Package className="w-4 h-4 mr-2" />
+                            Mes Réservations
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsUserMenuOpen(false);
+                              navigate("/client/profile");
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <User className="w-4 h-4 mr-2" />
+                            Mon Profil
+                          </button>
+                        </>
+                      )}
+                      <hr className="my-1" />
+                      <button onClick={handleSignOut} className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
-              <>
-                <Link
-                  to="/customer/auth"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-2 text-tilkapp-beige hover:bg-white/10 rounded-lg"
-                >
-                  Connexion
-                </Link>
-                <Link
-                  to="/merchant/auth"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-2 bg-tilkapp-orange text-white rounded-lg text-center"
-                >
-                  Commerçant
-                </Link>
-              </>
+              <div className="relative" ref={userMenuRef}>
+                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="bg-tilkapp-beige text-tilkapp-green px-4 py-2 rounded-lg font-bold hover:bg-tilkapp-orange hover:text-white transition-colors inline-flex items-center">
+                  Sign In
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </button>
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                    <div className="px-4 py-2 text-xs text-gray-500 uppercase tracking-wide font-semibold">Choose Account Type</div>
+                    <button onClick={() => { setIsUserMenuOpen(false); navigate("/customer/auth"); }} className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
+                      <User className="w-4 h-4 mr-3" />
+                      Customer Login
+                      <ArrowRight className="w-4 h-4 ml-auto" />
+                    </button>
+                    <button onClick={() => { setIsUserMenuOpen(false); navigate("/merchant/auth"); }} className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
+                      <Store className="w-4 h-4 mr-3" />
+                      Merchant Login
+                      <ArrowRight className="w-4 h-4 ml-auto" />
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
-      )}
+      </nav>
     </header>
   );
 };
