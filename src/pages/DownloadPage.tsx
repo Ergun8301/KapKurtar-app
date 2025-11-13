@@ -114,7 +114,7 @@ const DownloadPage = () => {
               ))}
             </div>
 
-            <div className="bg-green-100 p-6 rounded-lg">
+            <div className="bg-tilkapp-green py-16">
               <h3 className="font-semibold text-tilkapp-green mb-2">📱 Activate Notifications</h3>
               <p className="text-tilkapp-green leading-relaxed">
                 Enable push notifications to never miss a deal. Get alerted when your favorite restaurants post new offers!
