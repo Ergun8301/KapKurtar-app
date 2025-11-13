@@ -39,7 +39,7 @@ const BlogPage = () => {
       category: 'Actualités',
       author: 'Ekoiq',
       published_at: '2024-05-22',
-      featured_image_url: 'https://images.pexels.com/photos/2724748/pexels-photo-2724748.jpeg?auto=compress&cs=tinysrgb&w=800',
+      featured_image_url: 'https://images.pexels.com/photos/8466654/pexels-photo-8466654.jpeg',
       reading_time: 6,
       external_url: 'https://www.ekoiq.com/turkiyede-her-yil-23-milyon-ton-gida-israf-ediliyor-tum-paydaslar-sorumluluk-almali/'
     },
