@@ -4,9 +4,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        'tilkapp-orange': '#f75c00',
-        'tilkapp-beige': '#f3eace',
         'tilkapp-blue': '#256874',
+        'tilkapp-beige': '#f3eace',
+        'tilkapp-orange': '#f75c00',
         'tilkapp-black': '#000000',
         'tilkapp-white': '#ffffff',
       }
