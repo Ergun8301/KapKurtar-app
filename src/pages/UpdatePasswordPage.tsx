@@ -115,13 +115,13 @@ export default function UpdatePasswordPage() {
               className={`flex items-center p-3 rounded-lg text-sm border ${
                 isError
                   ? 'bg-red-50 border-red-200 text-red-700'
-                  : 'bg-orange-50 border-orange-200 text-orange-700'
+                  : 'bg-blue-50 border-blue-200 text-blue-700'
               }`}
             >
               {isError ? (
                 <AlertTriangle className="w-5 h-5 mr-2 text-red-600" />
               ) : (
-                <CheckCircle2 className="w-5 h-5 mr-2 text-orange-600" />
+                <CheckCircle2 className="w-5 h-5 mr-2 text-blue-600" />
               )}
               <span>{message}</span>
             </div>

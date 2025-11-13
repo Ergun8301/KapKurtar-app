@@ -68,7 +68,7 @@ const FavoritesPage: React.FC = () => {
     return (
       <div className="p-6 text-center">
         <p>Vous n'avez encore aucun favori.</p>
-        <Link to="/offers/map" className="text-orange-600 underline">
+        <Link to="/offers/map" className="text-blue-600 underline">
           Explorer les commerces
         </Link>
       </div>
@@ -98,7 +98,7 @@ const FavoritesPage: React.FC = () => {
             <div className="flex justify-center mt-2">
               <Link
                 to={`/merchant/${fav.merchant_id}`}
-                className="text-sm text-orange-600 flex items-center gap-1 hover:underline"
+                className="text-sm text-blue-600 flex items-center gap-1 hover:underline"
               >
                 <MapPin className="w-4 h-4" />
                 Voir la fiche

@@ -74,7 +74,7 @@ const BlogSection = () => {
                   <span>{formatDate(post.published_at)}</span>
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-orange-600 transition-colors">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
                   {post.title}
                 </h3>
                 
@@ -82,7 +82,7 @@ const BlogSection = () => {
 
                 <a
                   href={`/blog/${post.id}`}
-                  className="inline-flex items-center text-orange-600 hover:text-orange-700 font-medium transition-colors"
+                  className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors"
                 >
                   Read More
                   <ArrowRight className="w-4 h-4 ml-1" />
@@ -95,7 +95,7 @@ const BlogSection = () => {
         <div className="text-center mt-12">
           <a
             href="/blog"
-            className="bg-tilkapp-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors inline-block"
+            className="bg-tilkapp-blue text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-block"
           >
             View All Articles
           </a>

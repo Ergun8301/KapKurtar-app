@@ -37,14 +37,14 @@ const HowItWorks = () => {
           {steps.map((step, index) => (
             <div key={index} className="text-center relative">
               {/* Step Number */}
-              <div className="absolute -top-4 -left-4 bg-tilkapp-orange text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg z-10">
+              <div className="absolute -top-4 -left-4 bg-tilkapp-blue text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg z-10">
                 {step.step}
               </div>
               
               {/* Card */}
               <div className="bg-gray-50 rounded-xl p-8 hover:bg-gray-100 transition-colors h-full">
-                <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <step.icon className="w-8 h-8 text-orange-600" />
+                <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <step.icon className="w-8 h-8 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">{step.title}</h3>
                 <p className="text-gray-600">{step.description}</p>
@@ -52,7 +52,7 @@ const HowItWorks = () => {
 
               {/* Connector Line */}
               {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-0.5 bg-orange-200 transform -translate-y-1/2"></div>
+                <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-0.5 bg-blue-200 transform -translate-y-1/2"></div>
               )}
             </div>
           ))}
@@ -61,7 +61,7 @@ const HowItWorks = () => {
         <div className="text-center mt-12">
           <a
             href="/customer/teaser"
-            className="bg-tilkapp-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors inline-block"
+            className="bg-tilkapp-blue text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-block"
           >
             Start Saving Now
           </a>

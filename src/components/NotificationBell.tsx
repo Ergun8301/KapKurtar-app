@@ -182,11 +182,11 @@ export function NotificationBell({ userType }: NotificationBellProps) {
     switch (type) {
       case "offer":
       case "offer_nearby":
-        return "border-l-tilkapp-orange";
+        return "border-l-tilkapp-blue";
       case "reservation":
         return "border-l-blue-500";
       case "offer_expired":
-        return "border-l-orange-500";
+        return "border-l-tilkapp-blue";
       case "stock_empty":
         return "border-l-red-500";
       case "system":
@@ -208,7 +208,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
         >
           <Bell
             className={`w-6 h-6 ${
-              unreadCount > 0 ? "text-orange-600" : "text-gray-700"
+              unreadCount > 0 ? "text-blue-600" : "text-gray-700"
             }`}
           />
 
@@ -221,14 +221,14 @@ export function NotificationBell({ userType }: NotificationBellProps) {
 
         {open && (
           <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-[9999] overflow-hidden">
-            <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-emerald-50">
+            <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-emerald-50">
               <h3 className="text-sm font-bold text-gray-800">
                 Notifications {unreadCount > 0 && `(${unreadCount})`}
               </h3>
               {notifications.length > 0 && unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-xs text-orange-600 hover:text-orange-700 font-medium hover:underline transition-colors"
+                  className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline transition-colors"
                 >
                   Tout marquer lu
                 </button>
@@ -251,12 +251,12 @@ export function NotificationBell({ userType }: NotificationBellProps) {
                     onClick={() => handleNotificationClick(n)}
                     className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition-all hover:bg-gray-50 ${
                       !n.is_read
-                        ? `bg-orange-50 border-l-4 ${getNotificationBorderColor(n.type)}`
+                        ? `bg-blue-50 border-l-4 ${getNotificationBorderColor(n.type)}`
                         : "bg-white border-l-4 border-l-transparent"
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-lg shadow-sm">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-700 flex items-center justify-center text-lg shadow-sm">
                         {getNotificationIcon(n.type)}
                       </div>
 
@@ -279,7 +279,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
                       </div>
 
                       {!n.is_read && (
-                        <div className="flex-shrink-0 w-2.5 h-2.5 bg-tilkapp-orange rounded-full mt-1 shadow-sm"></div>
+                        <div className="flex-shrink-0 w-2.5 h-2.5 bg-tilkapp-blue rounded-full mt-1 shadow-sm"></div>
                       )}
                     </div>
                   </div>

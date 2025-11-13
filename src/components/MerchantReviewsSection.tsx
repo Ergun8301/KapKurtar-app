@@ -65,7 +65,7 @@ const MerchantReviewsSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
           {reviews.map((review) => (
             <div key={review.id} className="bg-gray-50 rounded-xl p-6 relative">
-              <Quote className="absolute top-4 right-4 w-8 h-8 text-orange-200" />
+              <Quote className="absolute top-4 right-4 w-8 h-8 text-blue-200" />
               
               <div className="flex items-center mb-4">
                 <img
@@ -90,7 +90,7 @@ const MerchantReviewsSection = () => {
         </div>
 
         <div className="text-center mt-12">
-          <div className="bg-orange-50 rounded-2xl p-8 mb-8">
+          <div className="bg-blue-50 rounded-2xl p-8 mb-8">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Join Our Community</h3>
             <p className="text-gray-600 mb-6">
               Be part of the food rescue movement. Save money, reduce waste, and discover amazing local restaurants.
@@ -98,13 +98,13 @@ const MerchantReviewsSection = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/auth"
-                className="bg-tilkapp-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                className="bg-tilkapp-blue text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
                 Join as Customer
               </a>
               <a
                 href="/merchants/signup"
-                className="bg-white text-orange-600 border-2 border-tilkapp-orange px-8 py-3 rounded-lg font-medium hover:bg-orange-50 transition-colors"
+                className="bg-white text-blue-600 border-2 border-tilkapp-blue px-8 py-3 rounded-lg font-medium hover:bg-blue-50 transition-colors"
               >
                 Join as Merchant
               </a>
@@ -113,7 +113,7 @@ const MerchantReviewsSection = () => {
 
           <a
             href="/reviews"
-            className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
+            className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
           >
             Read All Reviews →
           </a>
