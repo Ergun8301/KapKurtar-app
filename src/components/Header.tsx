@@ -101,7 +101,7 @@ const Header = () => {
             <img
               src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/Logo%20g.png"
               alt="TILKAPP"
-              className="h-18 w-auto"
+              className="h-16 w-auto"
             />
           </a>
 
