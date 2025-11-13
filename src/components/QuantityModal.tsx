@@ -97,14 +97,14 @@ export const QuantityModal: React.FC<QuantityModalProps> = ({
             </div>
           </div>
 
-          <div className="bg-blue-50 rounded-lg p-4 mb-6">
+          <div className="bg-green-50 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-600">Price per unit:</span>
               <span className="font-semibold text-gray-900">${(safePrice ?? 0).toFixed(2)}</span>
             </div>
-            <div className="flex items-center justify-between border-t border-blue-200 pt-2">
+            <div className="flex items-center justify-between border-t border-green-200 pt-2">
               <span className="text-lg font-semibold text-gray-900">Total:</span>
-              <span className="text-2xl font-bold text-blue-600">${totalPrice}</span>
+              <span className="text-2xl font-bold text-green-600">${totalPrice}</span>
             </div>
           </div>
 
@@ -119,7 +119,7 @@ export const QuantityModal: React.FC<QuantityModalProps> = ({
             <button
               onClick={handleConfirm}
               disabled={loading || quantity < 1 || quantity > safeAvailableQuantity}
-              className="flex-1 px-4 py-3 bg-tilkapp-blue text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 bg-tilkapp-green text-white rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

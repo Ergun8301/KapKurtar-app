@@ -108,7 +108,7 @@ const CustomerAppPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tilkapp-blue"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tilkapp-green"></div>
       </div>
     );
   }
@@ -117,17 +117,17 @@ const CustomerAppPage = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Location Prompt */}
       {showLocationPrompt && (
-        <div className="bg-blue-50 border-b border-blue-200">
+        <div className="bg-green-50 border-b border-green-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <MapPin className="w-5 h-5 text-blue-600 mr-2" />
-                <span className="text-blue-800 font-medium">Share your location to see nearby offers</span>
+                <MapPin className="w-5 h-5 text-green-600 mr-2" />
+                <span className="text-green-800 font-medium">Share your location to see nearby offers</span>
               </div>
               <button
                 onClick={handleLocationRequest}
                 disabled={locationLoading}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 inline-flex items-center"
+                className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:opacity-50 inline-flex items-center"
               >
                 <Navigation className="w-4 h-4 mr-2" />
                 {locationLoading ? 'Getting Location...' : 'Share Location'}
@@ -188,14 +188,14 @@ const CustomerAppPage = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <span className="text-2xl font-bold text-blue-600">
+                      <span className="text-2xl font-bold text-green-600">
                         €{offer.price_after}
                       </span>
                       <span className="text-lg text-gray-400 line-through">
                         €{offer.price_before}
                       </span>
                     </div>
-                    <button className="bg-tilkapp-blue text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md">
+                    <button className="bg-tilkapp-green text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors shadow-md">
                       View Details
                     </button>
                   </div>
@@ -230,7 +230,7 @@ const CustomerAppPage = () => {
 
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-2">
-                  <span className="text-3xl font-bold text-blue-600">
+                  <span className="text-3xl font-bold text-green-600">
                     €{selectedOffer.price_after}
                   </span>
                   <span className="text-xl text-gray-400 line-through">
@@ -242,7 +242,7 @@ const CustomerAppPage = () => {
                 </div>
               </div>
 
-              <button className="w-full bg-tilkapp-blue text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors mb-4">
+              <button className="w-full bg-tilkapp-green text-white py-3 px-4 rounded-lg font-semibold hover:bg-tilkapp-orange transition-colors mb-4">
                 Reserve in App
               </button>
 

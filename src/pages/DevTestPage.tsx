@@ -85,7 +85,7 @@ const DevTestPage = () => {
   const getStatusIcon = (status: 'PASS' | 'FAIL' | 'PENDING') => {
     switch (status) {
       case 'PASS':
-        return <CheckCircle className="w-5 h-5 text-tilkapp-blue" />;
+        return <CheckCircle className="w-5 h-5 text-tilkapp-green" />;
       case 'FAIL':
         return <XCircle className="w-5 h-5 text-red-500" />;
       case 'PENDING':
@@ -105,7 +105,7 @@ const DevTestPage = () => {
             <button
               onClick={runAllTests}
               disabled={isRunning}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              className="bg-green-600 hover:bg-tilkapp-orange disabled:bg-green-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
               {isRunning ? 'Running Tests...' : 'Run All Tests'}
             </button>
@@ -120,7 +120,7 @@ const DevTestPage = () => {
                 <div className="flex items-center space-x-2">
                   {getStatusIcon(status)}
                   <span className={`font-medium ${
-                    status === 'PASS' ? 'text-blue-600' : 
+                    status === 'PASS' ? 'text-green-600' : 
                     status === 'FAIL' ? 'text-red-600' : 
                     'text-yellow-600'
                   }`}>
@@ -131,11 +131,11 @@ const DevTestPage = () => {
             ))}
           </div>
 
-          <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-            <h3 className="font-semibold text-blue-900 mb-2">Setup Instructions</h3>
-            <p className="text-blue-800 text-sm">
+          <div className="mt-8 p-4 bg-green-50 rounded-lg">
+            <h3 className="font-semibold text-green-900 mb-2">Setup Instructions</h3>
+            <p className="text-green-800 text-sm">
               Make sure to run the SQL functions in Supabase SQL Editor from: 
-              <code className="bg-blue-100 px-2 py-1 rounded ml-1">/supabase/sql/rpc.sql</code>
+              <code className="bg-green-100 px-2 py-1 rounded ml-1">/supabase/sql/rpc.sql</code>
             </p>
           </div>
 

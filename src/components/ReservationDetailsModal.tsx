@@ -130,7 +130,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-t-2xl relative">
+        <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-t-2xl relative">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-colors"
@@ -144,7 +144,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">Détails de la réservation</h2>
-              <p className="text-blue-100 text-sm">Nouvelle commande client</p>
+              <p className="text-green-100 text-sm">Nouvelle commande client</p>
             </div>
           </div>
         </div>
@@ -153,7 +153,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
         <div className="p-6">
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
               <p className="text-gray-600">Chargement des détails...</p>
             </div>
           ) : error ? (
@@ -183,7 +183,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
                     <span className="text-sm text-gray-600">Email :</span>
                     <a
                       href={`mailto:${details.client.email}`}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      className="text-green-600 hover:text-green-700 text-sm font-medium"
                     >
                       {details.client.email}
                     </a>
@@ -193,7 +193,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
                       <span className="text-sm text-gray-600">Téléphone :</span>
                       <a
                         href={`tel:${details.client.phone}`}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        className="text-green-600 hover:text-green-700 text-sm font-medium"
                       >
                         {details.client.phone}
                       </a>
@@ -203,9 +203,9 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
               </div>
 
               {/* Produit */}
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                 <div className="flex items-center gap-2 mb-3">
-                  <Package className="w-5 h-5 text-blue-600" />
+                  <Package className="w-5 h-5 text-green-600" />
                   <h3 className="font-bold text-gray-900">Produit</h3>
                 </div>
                 <div className="space-y-2">
@@ -215,22 +215,22 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Prix unitaire :</span>
-                    <span className="font-bold text-blue-600">
+                    <span className="font-bold text-green-600">
                       {details.offer.price_after.toFixed(2)} €
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Quantité réservée :</span>
-                    <span className="font-bold text-blue-600 text-lg">{details.quantity}</span>
+                    <span className="font-bold text-green-600 text-lg">{details.quantity}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Stock restant :</span>
                     <span className="font-semibold text-gray-900">{details.offer.quantity}</span>
                   </div>
-                  <div className="pt-2 border-t border-blue-200 mt-2">
+                  <div className="pt-2 border-t border-green-200 mt-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold text-gray-700">Total :</span>
-                      <span className="font-bold text-blue-600 text-xl">
+                      <span className="font-bold text-green-600 text-xl">
                         {(details.offer.price_after * details.quantity).toFixed(2)} €
                       </span>
                     </div>
@@ -239,9 +239,9 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
               </div>
 
               {/* Date/Heure */}
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-5 h-5 text-blue-600" />
+                  <Clock className="w-5 h-5 text-green-600" />
                   <h3 className="font-bold text-gray-900">Date et heure</h3>
                 </div>
                 <p className="text-sm text-gray-700">{formatDateTime(details.created_at)}</p>
@@ -262,7 +262,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
           <div className="border-t border-gray-200 p-4 bg-gray-50 rounded-b-2xl">
             <button
               onClick={onClose}
-              className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors"
+              className="w-full py-3 bg-green-500 hover:bg-tilkapp-orange text-white rounded-lg font-semibold transition-colors"
             >
               Fermer
             </button>

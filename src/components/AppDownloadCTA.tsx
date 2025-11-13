@@ -2,13 +2,13 @@ import React from 'react';
 
 const AppDownloadCTA = () => {
   return (
-    <div className="bg-gradient-to-r from-blue-500 to-blue-700 py-12">
+    <div className="bg-gradient-to-r from-green-500 to-green-700 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="mb-8">
           <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
             Get notified instantly. Download our app today.
           </h3>
-          <p className="text-blue-100 text-lg max-w-2xl mx-auto">
+          <p className="text-green-100 text-lg max-w-2xl mx-auto">
             Never miss a deal from your favorite restaurants. Get push notifications for new offers near you.
           </p>
         </div>
