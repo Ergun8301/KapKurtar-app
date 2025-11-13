@@ -56,7 +56,7 @@ const MerchantsSection = () => {
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 {merchant.verified && (
-                  <div className="absolute top-4 right-4 bg-green-500 text-white p-2 rounded-full">
+                  <div className="absolute top-4 right-4 bg-tilkapp-orange text-white p-2 rounded-full">
                     <Award className="w-4 h-4" />
                   </div>
                 )}
@@ -74,17 +74,17 @@ const MerchantsSection = () => {
 
                 {merchant.verified && (
                   <div className="flex items-center mb-4">
-                    <Award className="w-4 h-4 text-green-500 mr-1" />
-                    <span className="text-sm text-green-600">Verified Merchant</span>
+                    <Award className="w-4 h-4 text-tilkapp-orange mr-1" />
+                    <span className="text-sm text-orange-600">Verified Merchant</span>
                   </div>
                 )}
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center text-sm text-green-600">
+                  <div className="flex items-center text-sm text-orange-600">
                     <Clock className="w-4 h-4 mr-1" />
                     <span>Open now</span>
                   </div>
-                  <button className="bg-green-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-600 transition-colors">
+                  <button className="bg-tilkapp-orange text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors">
                     View Menu
                   </button>
                 </div>
@@ -96,7 +96,7 @@ const MerchantsSection = () => {
         <div className="text-center mt-12">
           <a
             href="/merchants"
-            className="bg-green-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors inline-block"
+            className="bg-tilkapp-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors inline-block"
           >
             View All Merchants
           </a>

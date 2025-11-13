@@ -71,8 +71,8 @@ const MerchantSettingsPage = () => {
   const ToggleButton = ({ value, onClick }: { value: boolean; onClick: () => void }) => (
     <button
       onClick={onClick}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-        value ? 'bg-green-500' : 'bg-gray-300'
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-tilkapp-orange focus:ring-offset-2 ${
+        value ? 'bg-tilkapp-orange' : 'bg-gray-300'
       }`}
     >
       <span
@@ -87,7 +87,7 @@ const MerchantSettingsPage = () => {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {showToast && (
-          <div className="fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg bg-green-500 text-white flex items-center">
+          <div className="fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg bg-tilkapp-orange text-white flex items-center">
             <Check className="w-5 h-5 mr-2" />
             Settings updated
           </div>
@@ -103,8 +103,8 @@ const MerchantSettingsPage = () => {
 
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="flex items-center mb-6">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-              <Settings className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+              <Settings className="w-6 h-6 text-orange-600" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
           </div>
@@ -112,7 +112,7 @@ const MerchantSettingsPage = () => {
           <div className="space-y-8">
             <div className="border-t pt-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                <Bell className="w-5 h-5 text-green-600 mr-2" />
+                <Bell className="w-5 h-5 text-orange-600 mr-2" />
                 Notifications
               </h2>
 

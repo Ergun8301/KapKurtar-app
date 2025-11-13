@@ -108,7 +108,7 @@ const CustomerAppPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tilkapp-orange"></div>
       </div>
     );
   }
@@ -188,14 +188,14 @@ const CustomerAppPage = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <span className="text-2xl font-bold text-green-600">
+                      <span className="text-2xl font-bold text-orange-600">
                         €{offer.price_after}
                       </span>
                       <span className="text-lg text-gray-400 line-through">
                         €{offer.price_before}
                       </span>
                     </div>
-                    <button className="bg-green-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-600 transition-colors shadow-md">
+                    <button className="bg-tilkapp-orange text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors shadow-md">
                       View Details
                     </button>
                   </div>
@@ -230,7 +230,7 @@ const CustomerAppPage = () => {
 
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-2">
-                  <span className="text-3xl font-bold text-green-600">
+                  <span className="text-3xl font-bold text-orange-600">
                     €{selectedOffer.price_after}
                   </span>
                   <span className="text-xl text-gray-400 line-through">
@@ -242,7 +242,7 @@ const CustomerAppPage = () => {
                 </div>
               </div>
 
-              <button className="w-full bg-green-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-600 transition-colors mb-4">
+              <button className="w-full bg-tilkapp-orange text-white py-3 px-4 rounded-lg font-semibold hover:bg-orange-600 transition-colors mb-4">
                 Reserve in App
               </button>
 

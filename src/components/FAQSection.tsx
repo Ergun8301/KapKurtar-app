@@ -6,8 +6,8 @@ const FAQSection = () => {
 
   const faqs = [
     {
-      question: 'How does ResQ Food work?',
-      answer: 'ResQ Food connects you with local restaurants offering discounted meals to reduce food waste. Browse available offers, place your order, and pick up your meal at the specified time.'
+      question: 'How does TILKAPP work?',
+      answer: 'TILKAPP connects you with local restaurants offering discounted meals to reduce food waste. Browse available offers, place your order, and pick up your meal at the specified time.'
     },
     {
       question: 'Are the discounted meals still fresh and safe?',
@@ -41,7 +41,7 @@ const FAQSection = () => {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
           <p className="text-xl text-gray-600">
-            Got questions? We've got answers. Find everything you need to know about ResQ Food.
+            Got questions? We've got answers. Find everything you need to know about TILKAPP.
           </p>
         </div>
 
@@ -72,7 +72,7 @@ const FAQSection = () => {
           <p className="text-gray-600 mb-4">Still have questions?</p>
           <a
             href="/faq"
-            className="bg-green-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors inline-block mr-4"
+            className="bg-tilkapp-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors inline-block mr-4"
           >
             View All FAQs
           </a>

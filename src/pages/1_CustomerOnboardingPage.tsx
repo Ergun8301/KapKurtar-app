@@ -99,10 +99,10 @@ const CustomerOnboardingPage = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-6">
-            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-3">
+            <div className="w-12 h-12 bg-tilkapp-orange rounded-lg flex items-center justify-center mr-3">
               <span className="text-white font-bold text-xl">R</span>
             </div>
-            <span className="font-bold text-2xl text-gray-900">ResQ Food</span>
+            <span className="font-bold text-2xl text-gray-900">TILKAPP</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome! Let's set up your profile</h1>
           <p className="text-gray-600">
@@ -129,7 +129,7 @@ const CustomerOnboardingPage = () => {
                   placeholder="First Name"
                   value={formData.first_name}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
                   required
                 />
               </div>
@@ -141,7 +141,7 @@ const CustomerOnboardingPage = () => {
                   placeholder="Last Name"
                   value={formData.last_name}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
                   required
                 />
               </div>
@@ -156,14 +156,14 @@ const CustomerOnboardingPage = () => {
                 placeholder="Phone Number"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
               />
             </div>
 
             {/* Location Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-green-500" />
+                <MapPin className="w-5 h-5 mr-2 text-tilkapp-orange" />
                 Location Information
               </h3>
               
@@ -174,7 +174,7 @@ const CustomerOnboardingPage = () => {
                   placeholder="City"
                   value={formData.city}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
                 />
                 <input
                   type="text"
@@ -182,7 +182,7 @@ const CustomerOnboardingPage = () => {
                   placeholder="Postal Code"
                   value={formData.postal_code}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
                 />
               </div>
 
@@ -190,7 +190,7 @@ const CustomerOnboardingPage = () => {
                 name="country"
                 value={formData.country}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
               >
                 <option value="FR">France</option>
                 <option value="US">United States</option>
@@ -217,7 +217,7 @@ const CustomerOnboardingPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-green-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-tilkapp-orange text-white py-3 px-4 rounded-lg font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Saving...' : 'Complete Setup'}
             </button>

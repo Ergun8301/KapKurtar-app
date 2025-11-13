@@ -269,7 +269,7 @@ const ClientDashboardPage = () => {
                 {reservation.offer_title}
               </h3>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-base font-bold text-green-600">{reservation.total_price.toFixed(2)}€</span>
+                <span className="text-base font-bold text-orange-600">{reservation.total_price.toFixed(2)}€</span>
                 <span className="text-xs text-gray-400">×{reservation.quantity}</span>
               </div>
               <div className="text-xs text-gray-500 space-y-0.5">
@@ -289,7 +289,7 @@ const ClientDashboardPage = () => {
 
           {/* Status Badge */}
           {isCompleted && (
-            <div className="mb-3 flex items-center gap-2 text-xs text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+            <div className="mb-3 flex items-center gap-2 text-xs text-orange-700 bg-orange-50 px-3 py-2 rounded-lg">
               <CheckCircle className="w-4 h-4" />
               <span className="font-medium">Réservation récupérée</span>
             </div>
@@ -321,7 +321,7 @@ const ClientDashboardPage = () => {
                 }}
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-xs">
+              <div className="w-8 h-8 rounded-full bg-tilkapp-orange flex items-center justify-center text-white font-bold text-xs">
                 {reservation.merchant_name[0]}
               </div>
             )}
@@ -349,7 +349,7 @@ const ClientDashboardPage = () => {
                   href={`tel:${reservation.merchant_phone}`}
                   className="flex flex-col items-center justify-center gap-1 p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors"
                 >
-                  <Phone className="w-4 h-4 text-green-600" />
+                  <Phone className="w-4 h-4 text-orange-600" />
                   <span className="text-xs text-gray-700 font-medium">Appel</span>
                 </a>
               )}
@@ -394,7 +394,7 @@ const ClientDashboardPage = () => {
                   {reservation.offer_title}
                 </h3>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg font-bold text-green-600">{reservation.total_price.toFixed(2)}€</span>
+                  <span className="text-lg font-bold text-orange-600">{reservation.total_price.toFixed(2)}€</span>
                   <span className="text-xs text-gray-400">{reservation.offer_price.toFixed(2)}€ × {reservation.quantity}</span>
                 </div>
               </div>
@@ -429,7 +429,7 @@ const ClientDashboardPage = () => {
                     href={`tel:${reservation.merchant_phone}`}
                     className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors"
                   >
-                    <Phone className="w-4 h-4 text-green-600" />
+                    <Phone className="w-4 h-4 text-orange-600" />
                     <span className="text-sm text-gray-700 font-medium">Appeler</span>
                   </a>
                 )}
@@ -466,7 +466,7 @@ const ClientDashboardPage = () => {
                 }}
               />
             ) : (
-              <div className="w-14 h-14 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+              <div className="w-14 h-14 rounded-full bg-tilkapp-orange flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
                 {reservation.merchant_name[0]}
               </div>
             )}
@@ -494,7 +494,7 @@ const ClientDashboardPage = () => {
 
           {/* Status Badge Desktop */}
           {isCompleted && (
-            <div className="col-span-12 -mt-2 flex items-center gap-2 text-xs text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+            <div className="col-span-12 -mt-2 flex items-center gap-2 text-xs text-orange-700 bg-orange-50 px-3 py-2 rounded-lg">
               <CheckCircle className="w-4 h-4" />
               <span className="font-medium">Réservation récupérée avec succès</span>
             </div>
@@ -520,7 +520,7 @@ const ClientDashboardPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tilkapp-orange mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement...</p>
         </div>
       </div>
@@ -532,7 +532,7 @@ const ClientDashboardPage = () => {
       {/* Toast */}
       {toast && (
         <div className={`fixed top-20 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-          toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+          toast.type === 'success' ? 'bg-tilkapp-orange' : 'bg-red-500'
         } text-white`}>
           {toast.message}
         </div>
@@ -560,7 +560,7 @@ const ClientDashboardPage = () => {
               </button>
               <button
                 onClick={() => handleCancelReservation(cancelConfirm)}
-                className="flex-1 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors text-sm"
+                className="flex-1 px-4 py-2.5 bg-tilkapp-orange hover:bg-orange-600 text-white rounded-lg font-medium transition-colors text-sm"
               >
                 Oui, annuler
               </button>
@@ -573,7 +573,7 @@ const ClientDashboardPage = () => {
         {/* Profil */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-xl text-white font-bold">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-xl text-white font-bold">
               {user?.email?.[0].toUpperCase()}
             </div>
             <div>
@@ -586,7 +586,7 @@ const ClientDashboardPage = () => {
         {/* Réservations */}
         <div>
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Package className="w-5 h-5 text-green-600" />
+            <Package className="w-5 h-5 text-orange-600" />
             Mes Réservations ({reservations.length})
           </h2>
 
@@ -601,7 +601,7 @@ const ClientDashboardPage = () => {
               </p>
               <button
                 onClick={() => navigate('/offers')}
-                className="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors"
+                className="px-6 py-2.5 bg-tilkapp-orange hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors"
               >
                 Découvrir les offres
               </button>
@@ -627,7 +627,7 @@ const ClientDashboardPage = () => {
               {completedReservations.length > 0 && (
                 <div>
                   <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <CheckCircle className="w-4 h-4 text-orange-600" />
                     Récupérées ({completedReservations.length})
                   </h3>
                   <div className="space-y-3">

@@ -29,7 +29,7 @@ const AboutSection = () => {
     <div className="bg-gray-50 py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">About ResQ Food</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">About TILKAPP</h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             We're on a mission to connect people with delicious food while reducing waste and supporting local businesses. 
             Join thousands of food lovers making a difference, one meal at a time.
@@ -39,8 +39,8 @@ const AboutSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {features.map((feature, index) => (
             <div key={index} className="text-center">
-              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <feature.icon className="w-8 h-8 text-green-600" />
+              <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <feature.icon className="w-8 h-8 text-orange-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
               <p className="text-gray-600">{feature.description}</p>
@@ -53,22 +53,22 @@ const AboutSection = () => {
             <div>
               <h3 className="text-2xl font-bold text-gray-900 mb-6">Our Story</h3>
               <p className="text-gray-600 mb-4">
-                ResQ Food was born from a simple observation: too much good food goes to waste while people are looking for affordable, quality meals. We created a platform that benefits everyone - customers get great deals, restaurants reduce waste, and our planet gets a little healthier.
+                TILKAPP was born from a simple observation: too much good food goes to waste while people are looking for affordable, quality meals. We created a platform that benefits everyone - customers get great deals, restaurants reduce waste, and our planet gets a little healthier.
               </p>
               <p className="text-gray-600 mb-6">
                 Since our launch, we've helped save over 100,000 meals from going to waste, supported hundreds of local businesses, and built a community of conscious food lovers who care about making a difference.
               </p>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-2xl font-bold text-green-600">100K+</div>
+                  <div className="text-2xl font-bold text-orange-600">100K+</div>
                   <div className="text-sm text-gray-500">Meals Saved</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-600">500+</div>
+                  <div className="text-2xl font-bold text-orange-600">500+</div>
                   <div className="text-sm text-gray-500">Partner Restaurants</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-600">50K+</div>
+                  <div className="text-2xl font-bold text-orange-600">50K+</div>
                   <div className="text-sm text-gray-500">Happy Customers</div>
                 </div>
               </div>
@@ -86,7 +86,7 @@ const AboutSection = () => {
         <div className="text-center mt-12">
           <a
             href="/about"
-            className="bg-green-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors inline-block"
+            className="bg-tilkapp-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors inline-block"
           >
             Learn More About Us
           </a>

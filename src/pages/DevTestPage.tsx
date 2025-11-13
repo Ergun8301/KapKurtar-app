@@ -85,7 +85,7 @@ const DevTestPage = () => {
   const getStatusIcon = (status: 'PASS' | 'FAIL' | 'PENDING') => {
     switch (status) {
       case 'PASS':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return <CheckCircle className="w-5 h-5 text-tilkapp-orange" />;
       case 'FAIL':
         return <XCircle className="w-5 h-5 text-red-500" />;
       case 'PENDING':
@@ -120,7 +120,7 @@ const DevTestPage = () => {
                 <div className="flex items-center space-x-2">
                   {getStatusIcon(status)}
                   <span className={`font-medium ${
-                    status === 'PASS' ? 'text-green-600' : 
+                    status === 'PASS' ? 'text-orange-600' : 
                     status === 'FAIL' ? 'text-red-600' : 
                     'text-yellow-600'
                   }`}>

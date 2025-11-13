@@ -98,8 +98,8 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-              <User className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+              <User className="w-6 h-6 text-orange-600" />
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-gray-900">Bienvenue ! 🎉</h2>
@@ -128,7 +128,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                   <User className="w-12 h-12 text-gray-400" />
                 )}
               </div>
-              <label className="absolute bottom-0 right-0 bg-green-500 text-white p-2 rounded-full cursor-pointer hover:bg-green-600 transition-colors shadow-lg">
+              <label className="absolute bottom-0 right-0 bg-tilkapp-orange text-white p-2 rounded-full cursor-pointer hover:bg-orange-600 transition-colors shadow-lg">
                 <Camera className="w-4 h-4" />
                 <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
               </label>
@@ -159,7 +159,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                 name="first_name"
                 value={formData.first_name}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
                 placeholder="Ex: Jean"
                 required
               />
@@ -178,7 +178,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                 name="last_name"
                 value={formData.last_name}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
                 placeholder="Ex: Dupont"
                 required
               />
@@ -197,7 +197,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
                 placeholder="Ex: 06 12 34 56 78"
               />
             </div>
@@ -214,7 +214,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-green-500 text-white py-4 rounded-lg font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-tilkapp-orange text-white py-4 rounded-lg font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <div className="flex items-center justify-center">

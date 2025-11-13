@@ -185,7 +185,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-2xl md:text-3xl flex-shrink-0 shadow-lg border-4 border-white">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-2xl md:text-3xl flex-shrink-0 shadow-lg border-4 border-white">
                 🏪
               </div>
             )}
@@ -211,7 +211,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
                merchant.merchant_street !== 'Position GPS' && 
                merchant.merchant_street !== 'À définir' && (
                 <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                  <MapPin className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                  <MapPin className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
                   <span>
                     {merchant.merchant_street}
                     {merchant.merchant_city && merchant.merchant_city !== 'À définir' && 
@@ -224,7 +224,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
               {merchant.merchant_phone && (
                 <a
                   href={`tel:${merchant.merchant_phone}`}
-                  className="flex items-center gap-2 text-sm text-green-600 hover:text-green-700 font-medium mb-3"
+                  className="flex items-center gap-2 text-sm text-orange-600 hover:text-orange-700 font-medium mb-3"
                 >
                   <Phone className="w-4 h-4" />
                   {merchant.merchant_phone}
@@ -246,7 +246,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
         {/* Liste des offres */}
         <div className="p-4 md:p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Package className="w-5 h-5 text-green-600" />
+            <Package className="w-5 h-5 text-orange-600" />
             {offers.length} offre{offers.length > 1 ? 's' : ''} disponible{offers.length > 1 ? 's' : ''}
           </h3>
 
@@ -258,7 +258,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
                   onOfferClick(offer);
                   handleClose();
                 }}
-                className="bg-white rounded-lg border border-gray-200 hover:border-green-500 hover:shadow-md transition-all cursor-pointer overflow-hidden"
+                className="bg-white rounded-lg border border-gray-200 hover:border-tilkapp-orange hover:shadow-md transition-all cursor-pointer overflow-hidden"
               >
                 <div className="flex">
                   {/* Image */}
@@ -286,7 +286,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
 
                     {/* Prix */}
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="font-bold text-green-600 text-lg">
+                      <span className="font-bold text-orange-600 text-lg">
                         {offer.price_after.toFixed(2)}€
                       </span>
                       <span className="line-through text-gray-400 text-sm">
