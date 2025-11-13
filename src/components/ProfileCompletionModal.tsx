@@ -98,8 +98,8 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-              <User className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-tilkapp-beige rounded-full flex items-center justify-center">
+              <User className="w-6 h-6 text-tilkapp-green" />
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-gray-900">Bienvenue ! 🎉</h2>
@@ -204,8 +204,8 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
           </div>
 
           {/* Info */}
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-sm text-green-800">
+          <div className="bg-green-100 border border-green-300 rounded-lg p-4">
+            <p className="text-sm text-tilkapp-green">
               ℹ️ Ces informations seront visibles par les commerçants lors de vos réservations.
             </p>
           </div>

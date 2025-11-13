@@ -269,7 +269,7 @@ const ClientDashboardPage = () => {
                 {reservation.offer_title}
               </h3>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-base font-bold text-green-600">{reservation.total_price.toFixed(2)}€</span>
+                <span className="text-base font-bold text-tilkapp-green">{reservation.total_price.toFixed(2)}€</span>
                 <span className="text-xs text-gray-400">×{reservation.quantity}</span>
               </div>
               <div className="text-xs text-gray-500 space-y-0.5">
@@ -278,7 +278,7 @@ const ClientDashboardPage = () => {
                   {formatDate(reservation.created_at)}
                 </div>
                 {isPending && (
-                  <div className="flex items-center gap-1 text-green-600 font-medium">
+                  <div className="flex items-center gap-1 text-tilkapp-green font-medium">
                     <Clock className="w-3 h-3" />
                     {getTimeRemaining(reservation.available_until)}
                   </div>
@@ -289,7 +289,7 @@ const ClientDashboardPage = () => {
 
           {/* Status Badge */}
           {isCompleted && (
-            <div className="mb-3 flex items-center gap-2 text-xs text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+            <div className="mb-3 flex items-center gap-2 text-xs text-tilkapp-green bg-green-100 px-3 py-2 rounded-lg">
               <CheckCircle className="w-4 h-4" />
               <span className="font-medium">Réservation récupérée</span>
             </div>
@@ -301,7 +301,7 @@ const ClientDashboardPage = () => {
             </div>
           )}
           {isCancelled && (
-            <div className="mb-3 flex items-center gap-2 text-xs text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+            <div className="mb-3 flex items-center gap-2 text-xs text-tilkapp-green bg-green-100 px-3 py-2 rounded-lg">
               <X className="w-4 h-4" />
               <span className="font-medium">Réservation annulée</span>
             </div>
@@ -341,7 +341,7 @@ const ClientDashboardPage = () => {
                 onClick={() => handleGetDirections(reservation.merchant_lat, reservation.merchant_lng)}
                 className="flex flex-col items-center justify-center gap-1 p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors"
               >
-                <Navigation className="w-4 h-4 text-green-600" />
+                <Navigation className="w-4 h-4 text-tilkapp-green" />
                 <span className="text-xs text-gray-700 font-medium">Itin.</span>
               </button>
               {reservation.merchant_phone && (
@@ -349,7 +349,7 @@ const ClientDashboardPage = () => {
                   href={`tel:${reservation.merchant_phone}`}
                   className="flex flex-col items-center justify-center gap-1 p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors"
                 >
-                  <Phone className="w-4 h-4 text-green-600" />
+                  <Phone className="w-4 h-4 text-tilkapp-green" />
                   <span className="text-xs text-gray-700 font-medium">Appel</span>
                 </a>
               )}
@@ -394,7 +394,7 @@ const ClientDashboardPage = () => {
                   {reservation.offer_title}
                 </h3>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg font-bold text-green-600">{reservation.total_price.toFixed(2)}€</span>
+                  <span className="text-lg font-bold text-tilkapp-green">{reservation.total_price.toFixed(2)}€</span>
                   <span className="text-xs text-gray-400">{reservation.offer_price.toFixed(2)}€ × {reservation.quantity}</span>
                 </div>
               </div>
@@ -404,7 +404,7 @@ const ClientDashboardPage = () => {
                   {formatDate(reservation.created_at)}
                 </div>
                 {isPending && (
-                  <div className="flex items-center gap-1 text-green-600 font-medium">
+                  <div className="flex items-center gap-1 text-tilkapp-green font-medium">
                     <Clock className="w-3 h-3" />
                     {getTimeRemaining(reservation.available_until)}
                   </div>
@@ -421,7 +421,7 @@ const ClientDashboardPage = () => {
                   onClick={() => handleGetDirections(reservation.merchant_lat, reservation.merchant_lng)}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors"
                 >
-                  <Navigation className="w-4 h-4 text-green-600" />
+                  <Navigation className="w-4 h-4 text-tilkapp-green" />
                   <span className="text-sm text-gray-700 font-medium">Itinéraire</span>
                 </button>
                 {reservation.merchant_phone && (
@@ -429,7 +429,7 @@ const ClientDashboardPage = () => {
                     href={`tel:${reservation.merchant_phone}`}
                     className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors"
                   >
-                    <Phone className="w-4 h-4 text-green-600" />
+                    <Phone className="w-4 h-4 text-tilkapp-green" />
                     <span className="text-sm text-gray-700 font-medium">Appeler</span>
                   </a>
                 )}
@@ -494,7 +494,7 @@ const ClientDashboardPage = () => {
 
           {/* Status Badge Desktop */}
           {isCompleted && (
-            <div className="col-span-12 -mt-2 flex items-center gap-2 text-xs text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+            <div className="col-span-12 -mt-2 flex items-center gap-2 text-xs text-tilkapp-green bg-green-100 px-3 py-2 rounded-lg">
               <CheckCircle className="w-4 h-4" />
               <span className="font-medium">Réservation récupérée avec succès</span>
             </div>
@@ -506,7 +506,7 @@ const ClientDashboardPage = () => {
             </div>
           )}
           {isCancelled && (
-            <div className="col-span-12 -mt-2 flex items-center gap-2 text-xs text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+            <div className="col-span-12 -mt-2 flex items-center gap-2 text-xs text-tilkapp-green bg-green-100 px-3 py-2 rounded-lg">
               <X className="w-4 h-4" />
               <span className="font-medium">Réservation annulée - Stock libéré</span>
             </div>
@@ -543,8 +543,8 @@ const ClientDashboardPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <X className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 bg-tilkapp-beige rounded-full flex items-center justify-center flex-shrink-0">
+                <X className="w-6 h-6 text-tilkapp-green" />
               </div>
               <h3 className="text-lg font-bold text-gray-900">Annuler la réservation ?</h3>
             </div>
@@ -586,7 +586,7 @@ const ClientDashboardPage = () => {
         {/* Réservations */}
         <div>
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Package className="w-5 h-5 text-green-600" />
+            <Package className="w-5 h-5 text-tilkapp-green" />
             Mes Réservations ({reservations.length})
           </h2>
 
@@ -612,7 +612,7 @@ const ClientDashboardPage = () => {
               {pendingReservations.length > 0 && (
                 <div>
                   <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-green-600" />
+                    <Clock className="w-4 h-4 text-tilkapp-green" />
                     En attente ({pendingReservations.length})
                   </h3>
                   <div className="space-y-3">
@@ -627,7 +627,7 @@ const ClientDashboardPage = () => {
               {completedReservations.length > 0 && (
                 <div>
                   <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <CheckCircle className="w-4 h-4 text-tilkapp-green" />
                     Récupérées ({completedReservations.length})
                   </h3>
                   <div className="space-y-3">
@@ -642,7 +642,7 @@ const ClientDashboardPage = () => {
               {cancelledReservations.length > 0 && (
                 <div>
                   <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <X className="w-4 h-4 text-green-600" />
+                    <X className="w-4 h-4 text-tilkapp-green" />
                     Annulées ({cancelledReservations.length})
                   </h3>
                   <div className="space-y-3 opacity-75">

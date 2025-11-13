@@ -208,7 +208,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
         >
           <Bell
             className={`w-6 h-6 ${
-              unreadCount > 0 ? "text-green-600" : "text-gray-700"
+              unreadCount > 0 ? "text-tilkapp-green" : "text-gray-700"
             }`}
           />
 
@@ -228,7 +228,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
               {notifications.length > 0 && unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-xs text-green-600 hover:text-green-700 font-medium hover:underline transition-colors"
+                  className="text-xs text-tilkapp-green hover:text-tilkapp-green font-medium hover:underline transition-colors"
                 >
                   Tout marquer lu
                 </button>
@@ -251,7 +251,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
                     onClick={() => handleNotificationClick(n)}
                     className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition-all hover:bg-gray-50 ${
                       !n.is_read
-                        ? `bg-green-50 border-l-4 ${getNotificationBorderColor(n.type)}`
+                        ? `bg-green-100 border-l-4 ${getNotificationBorderColor(n.type)}`
                         : "bg-white border-l-4 border-l-transparent"
                     }`}
                   >

@@ -65,7 +65,7 @@ const MerchantReviewsSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
           {reviews.map((review) => (
             <div key={review.id} className="bg-gray-50 rounded-xl p-6 relative">
-              <Quote className="absolute top-4 right-4 w-8 h-8 text-green-200" />
+              <Quote className="absolute top-4 right-4 w-8 h-8 text-tilkapp-beige" />
               
               <div className="flex items-center mb-4">
                 <img
@@ -90,7 +90,7 @@ const MerchantReviewsSection = () => {
         </div>
 
         <div className="text-center mt-12">
-          <div className="bg-green-50 rounded-2xl p-8 mb-8">
+          <div className="bg-green-100 rounded-2xl p-8 mb-8">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Join Our Community</h3>
             <p className="text-gray-600 mb-6">
               Be part of the food rescue movement. Save money, reduce waste, and discover amazing local restaurants.
@@ -104,7 +104,7 @@ const MerchantReviewsSection = () => {
               </a>
               <a
                 href="/merchants/signup"
-                className="bg-white text-green-600 border-2 border-tilkapp-green px-8 py-3 rounded-lg font-medium hover:bg-green-50 transition-colors"
+                className="bg-white text-tilkapp-green border-2 border-tilkapp-green px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-beige transition-colors"
               >
                 Join as Merchant
               </a>
@@ -113,7 +113,7 @@ const MerchantReviewsSection = () => {
 
           <a
             href="/reviews"
-            className="text-green-600 hover:text-green-700 font-medium transition-colors"
+            className="text-tilkapp-green hover:text-tilkapp-green font-medium transition-colors"
           >
             Read All Reviews →
           </a>

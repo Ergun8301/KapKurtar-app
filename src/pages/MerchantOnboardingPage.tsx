@@ -98,7 +98,7 @@ const MerchantOnboardingPage = () => {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Bienvenue chez <span className="text-green-600">TILKAPP</span> 🌱
+            Bienvenue chez <span className="text-tilkapp-green">TILKAPP</span> 🌱
           </h1>
           <p className="text-gray-600">
             Complétez votre profil marchand (facultatif sauf le nom).
@@ -190,7 +190,7 @@ const MerchantOnboardingPage = () => {
               type="button"
               onClick={handleLocationRequest}
               disabled={locationLoading}
-              className="w-full bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-tilkapp-orange"
+              className="w-full bg-green-100 text-white px-4 py-3 rounded-lg hover:bg-tilkapp-orange"
             >
               {locationLoading ? 'Obtention...' : '📍 Utiliser ma position actuelle'}
             </button>

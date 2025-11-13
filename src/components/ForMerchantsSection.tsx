@@ -37,8 +37,8 @@ const ForMerchantsSection = () => {
             <div className="space-y-6 mb-8">
               {benefits.map((benefit, index) => (
                 <div key={index} className="flex items-start space-x-4">
-                  <div className="bg-green-100 p-3 rounded-lg">
-                    <benefit.icon className="w-6 h-6 text-green-600" />
+                  <div className="bg-tilkapp-beige p-3 rounded-lg">
+                    <benefit.icon className="w-6 h-6 text-tilkapp-green" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
@@ -75,12 +75,12 @@ const ForMerchantsSection = () => {
             
             {/* Floating Stats */}
             <div className="absolute -bottom-6 -left-6 bg-white rounded-lg shadow-lg p-4">
-              <div className="text-2xl font-bold text-green-600">25%</div>
+              <div className="text-2xl font-bold text-tilkapp-green">25%</div>
               <div className="text-sm text-gray-600">Average Revenue Increase</div>
             </div>
             
             <div className="absolute -top-6 -right-6 bg-white rounded-lg shadow-lg p-4">
-              <div className="text-2xl font-bold text-green-600">500+</div>
+              <div className="text-2xl font-bold text-tilkapp-green">500+</div>
               <div className="text-sm text-gray-600">Partner Restaurants</div>
             </div>
           </div>

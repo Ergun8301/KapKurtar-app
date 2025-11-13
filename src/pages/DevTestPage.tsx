@@ -105,7 +105,7 @@ const DevTestPage = () => {
             <button
               onClick={runAllTests}
               disabled={isRunning}
-              className="bg-green-600 hover:bg-tilkapp-orange disabled:bg-green-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              className="bg-tilkapp-green hover:bg-tilkapp-orange disabled:bg-tilkapp-orange text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
               {isRunning ? 'Running Tests...' : 'Run All Tests'}
             </button>
@@ -120,7 +120,7 @@ const DevTestPage = () => {
                 <div className="flex items-center space-x-2">
                   {getStatusIcon(status)}
                   <span className={`font-medium ${
-                    status === 'PASS' ? 'text-green-600' : 
+                    status === 'PASS' ? 'text-tilkapp-green' : 
                     status === 'FAIL' ? 'text-red-600' : 
                     'text-yellow-600'
                   }`}>
@@ -131,11 +131,11 @@ const DevTestPage = () => {
             ))}
           </div>
 
-          <div className="mt-8 p-4 bg-green-50 rounded-lg">
-            <h3 className="font-semibold text-green-900 mb-2">Setup Instructions</h3>
-            <p className="text-green-800 text-sm">
+          <div className="mt-8 p-4 bg-green-100 rounded-lg">
+            <h3 className="font-semibold text-tilkapp-green mb-2">Setup Instructions</h3>
+            <p className="text-tilkapp-green text-sm">
               Make sure to run the SQL functions in Supabase SQL Editor from: 
-              <code className="bg-green-100 px-2 py-1 rounded ml-1">/supabase/sql/rpc.sql</code>
+              <code className="bg-tilkapp-beige px-2 py-1 rounded ml-1">/supabase/sql/rpc.sql</code>
             </p>
           </div>
 

@@ -940,7 +940,7 @@ const MerchantDashboardPage = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
+      case 'active': return 'bg-tilkapp-beige text-tilkapp-green';
       case 'paused': return 'bg-yellow-100 text-yellow-800';
       case 'expired': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -957,12 +957,12 @@ const MerchantDashboardPage = () => {
       <div className={`bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow ${compact ? 'p-2' : 'p-3'}`}>
         <div className="flex items-center justify-between mb-2">
           {isPending && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-tilkapp-green bg-tilkapp-beige px-2 py-1 rounded-full">
               🟠 En attente
             </span>
           )}
           {isCompleted && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-tilkapp-green bg-tilkapp-beige px-2 py-1 rounded-full">
               🟢 Récupérée
             </span>
           )}
@@ -1008,7 +1008,7 @@ const MerchantDashboardPage = () => {
                 💰 {reservation.total_price.toFixed(2)}€
               </p>
               {isPending && (
-                <p className="text-xs text-green-600 font-semibold">
+                <p className="text-xs text-tilkapp-green font-semibold">
                   ⏰ {getTimeRemaining(reservation.available_until)}
                 </p>
               )}
@@ -1030,7 +1030,7 @@ const MerchantDashboardPage = () => {
                 {reservation.client_phone && (
                   <a
                     href={`tel:${reservation.client_phone}`}
-                    className="flex items-center justify-center gap-1 px-2 py-1.5 bg-green-500 hover:bg-tilkapp-orange text-white rounded text-xs font-medium transition-colors"
+                    className="flex items-center justify-center gap-1 px-2 py-1.5 bg-green-100 hover:bg-tilkapp-orange text-white rounded text-xs font-medium transition-colors"
                   >
                     <Phone className="w-3 h-3" />
                   </a>
@@ -1076,10 +1076,10 @@ const MerchantDashboardPage = () => {
             <div>
               <div className="flex items-baseline space-x-2">
                 <span className="text-xs text-gray-500 line-through">{offer.price_before.toFixed(2)} €</span>
-                <span className="text-lg font-bold text-green-600">{offer.price_after.toFixed(2)} €</span>
+                <span className="text-lg font-bold text-tilkapp-green">{offer.price_after.toFixed(2)} €</span>
               </div>
               {offer.discount_percent && (
-                <span className="text-xs font-medium text-green-600">
+                <span className="text-xs font-medium text-tilkapp-green">
                   -{offer.discount_percent}% off
                 </span>
               )}
@@ -1103,7 +1103,7 @@ const MerchantDashboardPage = () => {
                   ? 'bg-gray-200 text-gray-500 cursor-wait opacity-60'
                   : offer.is_active
                     ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    : 'bg-green-100 text-green-700 hover:bg-green-300')}
+                    : 'bg-tilkapp-beige text-tilkapp-green hover:bg-green-300')}
               disabled={togglingOfferId === offer.id}
             >
               {togglingOfferId === offer.id ? (
@@ -1124,7 +1124,7 @@ const MerchantDashboardPage = () => {
 
             <button
               onClick={() => openEditModal(offer)}
-              className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-300 transition-colors"
+              className="p-2 bg-tilkapp-beige text-tilkapp-green rounded-lg hover:bg-green-300 transition-colors"
               title="Edit"
             >
               <Edit className="w-4 h-4" />
@@ -1163,8 +1163,8 @@ const MerchantDashboardPage = () => {
           >
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <History className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-tilkapp-beige rounded-full flex items-center justify-center">
+                  <History className="w-6 h-6 text-tilkapp-green" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Historique des réservations</h2>
@@ -1217,8 +1217,8 @@ const MerchantDashboardPage = () => {
           >
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-tilkapp-beige rounded-full flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-tilkapp-green" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Complétez votre profil marchand</h2>
@@ -1278,7 +1278,7 @@ const MerchantDashboardPage = () => {
                       className="absolute bottom-4 right-4 w-12 h-12 bg-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center border border-gray-200 hover:bg-gray-50 z-10"
                       title="Me géolocaliser"
                     >
-                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6 text-tilkapp-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
@@ -1297,7 +1297,7 @@ const MerchantDashboardPage = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleLogoChange}
-                  className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-sm text-gray-500 cursor-pointer hover:border-green-400"
+                  className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-sm text-gray-500 cursor-pointer hover:border-tilkapp-green"
                   required={!onboardingData.logo_url}
                 />
                 {onboardingData.logo_url && (
@@ -1319,7 +1319,7 @@ const MerchantDashboardPage = () => {
                   <button
                     type="submit"
                     disabled={isSubmittingOnboarding}
-                    className="px-4 py-2 rounded-lg bg-green-700 hover:bg-tilkapp-orange text-white font-medium"
+                    className="px-4 py-2 rounded-lg bg-tilkapp-green hover:bg-tilkapp-orange text-white font-medium"
                   >
                     {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
                   </button>
@@ -1328,7 +1328,7 @@ const MerchantDashboardPage = () => {
                 <button
                   type="submit"
                   disabled={isSubmittingOnboarding}
-                  className="w-full py-3 bg-green-700 hover:bg-tilkapp-orange text-white font-semibold rounded-lg"
+                  className="w-full py-3 bg-tilkapp-green hover:bg-tilkapp-orange text-white font-semibold rounded-lg"
                 >
                   {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
                 </button>
@@ -1349,8 +1349,8 @@ const MerchantDashboardPage = () => {
                 className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <Package className="w-5 h-5 text-green-600" />
+                  <div className="w-10 h-10 bg-tilkapp-beige rounded-full flex items-center justify-center">
+                    <Package className="w-5 h-5 text-tilkapp-green" />
                   </div>
                   <div className="text-left">
                     <h2 className="text-lg font-bold text-gray-900">📦 Réservations récentes</h2>
@@ -1393,7 +1393,7 @@ const MerchantDashboardPage = () => {
                       <div className="text-center">
                         <button 
                           onClick={() => setShowAllInSection(!showAllInSection)}
-                          className="text-sm text-green-600 hover:text-green-700 font-medium"
+                          className="text-sm text-tilkapp-green hover:text-tilkapp-green font-medium"
                         >
                           {showAllInSection ? '← Voir moins' : `Voir toutes (${reservations.length}) →`}
                         </button>
@@ -1425,19 +1425,19 @@ const MerchantDashboardPage = () => {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-green-600" />
+              <div className="w-10 h-10 bg-tilkapp-beige rounded-full flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-tilkapp-green" />
               </div>
               <h3 className="text-xl font-bold text-gray-900">✅ Active Offers</h3>
             </div>
-            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+            <span className="bg-tilkapp-beige text-tilkapp-green px-3 py-1 rounded-full text-sm font-semibold">
               {activeOffers.length}
             </span>
           </div>
 
           {activeOffers.length === 0 ? (
-            <div className="bg-green-50 border-2 border-dashed border-green-200 rounded-lg p-8 text-center">
-              <Package className="w-12 h-12 text-green-400 mx-auto mb-3" />
+            <div className="bg-green-100 border-2 border-dashed border-green-300 rounded-lg p-8 text-center">
+              <Package className="w-12 h-12 text-tilkapp-orange mx-auto mb-3" />
               <p className="text-gray-600 mb-4">No active offers yet</p>
               <button
                 onClick={openAddProductModal}

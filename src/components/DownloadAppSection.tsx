@@ -15,7 +15,7 @@ const DownloadAppSection = () => {
               <p className="text-2xl font-semibold text-white mb-4">
                 Get notified instantly. Download our app today.
               </p>
-              <p className="text-xl text-green-100">
+              <p className="text-xl text-tilkapp-beige">
                 Never miss a deal from your favorite restaurants. Get push notifications for new offers near you.
               </p>
             </div>
@@ -48,15 +48,15 @@ const DownloadAppSection = () => {
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-white">4.8★</div>
-                <div className="text-sm text-green-100">App Rating</div>
+                <div className="text-sm text-tilkapp-beige">App Rating</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-white">50K+</div>
-                <div className="text-sm text-green-100">Downloads</div>
+                <div className="text-sm text-tilkapp-beige">Downloads</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-white">1M+</div>
-                <div className="text-sm text-green-100">Meals Saved</div>
+                <div className="text-sm text-tilkapp-beige">Meals Saved</div>
               </div>
             </div>
           </div>

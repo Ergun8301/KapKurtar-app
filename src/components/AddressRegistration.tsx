@@ -132,7 +132,7 @@ export const AddressRegistration: React.FC = () => {
     <div className="bg-white border border-gray-200 rounded-lg p-6 mb-4 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-          <MapPin className="w-5 h-5 text-green-600 mr-2" />
+          <MapPin className="w-5 h-5 text-tilkapp-green mr-2" />
           Register Your Address
         </h3>
         <button
@@ -150,8 +150,8 @@ export const AddressRegistration: React.FC = () => {
       )}
 
       {success && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-sm text-green-600">{success}</p>
+        <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-lg">
+          <p className="text-sm text-tilkapp-green">{success}</p>
         </div>
       )}
 
@@ -200,7 +200,7 @@ export const AddressRegistration: React.FC = () => {
         <button
           onClick={handleUseCurrentLocation}
           disabled={loading}
-          className="w-full bg-green-500 text-white py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-full bg-green-100 text-white py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
         >
           <Navigation className="w-5 h-5 mr-2" />
           Use Current Location

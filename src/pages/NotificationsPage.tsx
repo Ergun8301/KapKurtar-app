@@ -49,17 +49,17 @@ const NotificationsPage = () => {
         };
       case 'daily_summary':
         return {
-          color: 'text-green-600',
-          bgColor: 'bg-green-50',
-          borderColor: 'border-green-200',
+          color: 'text-tilkapp-green',
+          bgColor: 'bg-green-100',
+          borderColor: 'border-green-300',
           icon: TrendingUp,
           badge: '🟢'
         };
       case 'offer':
         return {
-          color: 'text-green-600',
-          bgColor: 'bg-green-50',
-          borderColor: 'border-green-200',
+          color: 'text-tilkapp-green',
+          bgColor: 'bg-green-100',
+          borderColor: 'border-green-300',
           icon: Package,
           badge: '🔵'
         };
@@ -113,7 +113,7 @@ const NotificationsPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <Bell className="w-8 h-8 text-green-600" />
+                <Bell className="w-8 h-8 text-tilkapp-green" />
                 Notifications
               </h1>
               {unreadCount > 0 && (

@@ -119,12 +119,12 @@ const MerchantInfoPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {benefits.map((benefit, index) => (
               <div key={index} className="text-center p-8 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <benefit.icon className="w-10 h-10 text-green-600" />
+                <div className="bg-tilkapp-beige w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <benefit.icon className="w-10 h-10 text-tilkapp-green" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">{benefit.title}</h3>
                 <p className="text-gray-600 mb-6 leading-relaxed">{benefit.description}</p>
-                <div className="text-sm font-semibold text-green-600 bg-green-50 px-4 py-2 rounded-full inline-block">
+                <div className="text-sm font-semibold text-tilkapp-green bg-green-100 px-4 py-2 rounded-full inline-block">
                   {benefit.stats}
                 </div>
               </div>
@@ -164,12 +164,12 @@ const MerchantInfoPage = () => {
               
               {/* Floating Stats */}
               <div className="absolute -bottom-6 -left-6 bg-white rounded-lg shadow-lg p-4">
-                <div className="text-2xl font-bold text-green-600">500+</div>
+                <div className="text-2xl font-bold text-tilkapp-green">500+</div>
                 <div className="text-sm text-gray-600">Partner Restaurants</div>
               </div>
               
               <div className="absolute -top-6 -right-6 bg-white rounded-lg shadow-lg p-4">
-                <div className="text-2xl font-bold text-green-600">€2M+</div>
+                <div className="text-2xl font-bold text-tilkapp-green">€2M+</div>
                 <div className="text-sm text-gray-600">Revenue Generated</div>
               </div>
             </div>
@@ -190,7 +190,7 @@ const MerchantInfoPage = () => {
               <div key={index} className="bg-gray-50 rounded-xl p-8 relative">
                 <div className="flex items-center mb-4">
                   {renderStars(testimonial.rating)}
-                  <span className="ml-3 text-sm font-semibold text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                  <span className="ml-3 text-sm font-semibold text-tilkapp-green bg-tilkapp-beige px-3 py-1 rounded-full">
                     {testimonial.revenue}
                   </span>
                 </div>
@@ -198,8 +198,8 @@ const MerchantInfoPage = () => {
                 <p className="text-gray-700 italic mb-6 text-lg leading-relaxed">"{testimonial.quote}"</p>
                 
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                    <Award className="w-6 h-6 text-green-600" />
+                  <div className="w-12 h-12 bg-tilkapp-beige rounded-full flex items-center justify-center mr-4">
+                    <Award className="w-6 h-6 text-tilkapp-green" />
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900 text-lg">{testimonial.name}</div>
@@ -259,20 +259,20 @@ const MerchantInfoPage = () => {
             <Leaf className="w-12 h-12 text-white mr-4" />
             <h2 className="text-4xl font-bold text-white">Ready to Transform Your Business?</h2>
           </div>
-          <p className="text-xl text-green-100 mb-12 leading-relaxed">
+          <p className="text-xl text-tilkapp-beige mb-12 leading-relaxed">
             Join our exclusive network of professional partners and start monetizing your surplus inventory 
             while building a more sustainable business model.
           </p>
           
           <button
             onClick={() => navigate('/merchant/auth')}
-            className="bg-white text-green-600 px-12 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center text-xl shadow-lg"
+            className="bg-white text-tilkapp-green px-12 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center text-xl shadow-lg"
           >
             <CheckCircle className="w-6 h-6 mr-3" />
             Register as Professional Partner
           </button>
           
-          <p className="text-green-200 mt-6">No setup fees • Professional support • Cancel anytime</p>
+          <p className="text-tilkapp-beige mt-6">No setup fees • Professional support • Cancel anytime</p>
         </div>
       </div>
     </div>

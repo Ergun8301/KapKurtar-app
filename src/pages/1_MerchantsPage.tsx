@@ -116,12 +116,12 @@ const MerchantsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {benefits.map((benefit, index) => (
                 <div key={index} className="text-center p-8 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <benefit.icon className="w-10 h-10 text-green-600" />
+                  <div className="bg-tilkapp-beige w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <benefit.icon className="w-10 h-10 text-tilkapp-green" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">{benefit.title}</h3>
                   <p className="text-gray-600 mb-6 leading-relaxed">{benefit.description}</p>
-                  <div className="text-sm font-semibold text-green-600 bg-green-50 px-4 py-2 rounded-full inline-block">
+                  <div className="text-sm font-semibold text-tilkapp-green bg-green-100 px-4 py-2 rounded-full inline-block">
                     {benefit.stats}
                   </div>
                 </div>
@@ -209,19 +209,19 @@ const MerchantsPage = () => {
         <div className="py-24 bg-tilkapp-green">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-4xl font-bold text-white mb-6">Ready to Transform Your Business?</h2>
-            <p className="text-xl text-green-100 mb-12 leading-relaxed">
+            <p className="text-xl text-tilkapp-beige mb-12 leading-relaxed">
               Join TILKAPP today and start turning your food waste into revenue while attracting new customers.
             </p>
             
             <button
               onClick={() => setShowAuthModal(true)}
-              className="bg-white text-green-600 px-12 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center text-xl shadow-lg"
+              className="bg-white text-tilkapp-green px-12 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center text-xl shadow-lg"
             >
               <CheckCircle className="w-6 h-6 mr-3" />
               Become a Partner
             </button>
             
-            <p className="text-green-200 mt-6">No setup fees • Cancel anytime • 24/7 support</p>
+            <p className="text-tilkapp-beige mt-6">No setup fees • Cancel anytime • 24/7 support</p>
           </div>
         </div>
       </div>

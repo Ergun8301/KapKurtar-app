@@ -43,8 +43,8 @@ const HowItWorks = () => {
               
               {/* Card */}
               <div className="bg-gray-50 rounded-xl p-8 hover:bg-gray-100 transition-colors h-full">
-                <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <step.icon className="w-8 h-8 text-green-600" />
+                <div className="bg-tilkapp-beige w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <step.icon className="w-8 h-8 text-tilkapp-green" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">{step.title}</h3>
                 <p className="text-gray-600">{step.description}</p>

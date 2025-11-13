@@ -41,12 +41,12 @@ export default function ResetPasswordPage() {
           />
           <button
             type="submit"
-            className="w-full bg-green-700 text-white py-2 rounded-lg hover:bg-tilkapp-orange transition"
+            className="w-full bg-tilkapp-green text-white py-2 rounded-lg hover:bg-tilkapp-orange transition"
           >
             Envoyer le lien
           </button>
         </form>
-        {message && <p className="text-green-600 mt-4 text-center">{message}</p>}
+        {message && <p className="text-tilkapp-green mt-4 text-center">{message}</p>}
         {error && <p className="text-red-600 mt-4 text-center">{error}</p>}
       </div>
     </div>
