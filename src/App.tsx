@@ -21,13 +21,17 @@ import AuthCallbackPage from "./pages/AuthCallbackPage";
 import ProfileCompletePage from "./pages/ProfileCompletePage";
 import MerchantDashboardPage from "./pages/MerchantDashboardPage";
 import ClientProfilePage from "./pages/ClientProfilePage";
-import ClientDashboardPage from "./pages/ClientDashboardPage"; // ✅ NOUVEAU
+import ClientDashboardPage from "./pages/ClientDashboardPage";
 
 // ✅ Pages utilisateurs
 import FavoritesPage from "./pages/FavoritesPage";
 import ReviewsPage from "./pages/ReviewsPage";
 import DownloadPage from "./pages/DownloadPage";
 import NotFoundPage from "./pages/NotFoundPage";
+
+// ✅ NOUVEAU - Pages marketing
+import FAQPage from "./pages/FAQPage";
+import BlogPage from "./pages/BlogPage";
 
 /* 🔁 Vérifie la session et redirige selon le rôle */
 function SessionRedirect() {
@@ -41,7 +45,7 @@ function SessionRedirect() {
       const noRedirectPaths = [
         '/client/profile', 
         '/merchant/dashboard',
-        '/customer/dashboard' // ✅ AJOUTÉ
+        '/customer/dashboard'
       ];
       
       if (noRedirectPaths.includes(location.pathname)) {
@@ -70,7 +74,6 @@ function SessionRedirect() {
         // ✅ Vérifier si le profil est complet AVANT de rediriger
         if (!data.first_name || !data.last_name) {
           // Profil incomplet → NE PAS rediriger
-          // L'utilisateur reste sur /customer/auth où le modal s'affichera
           setChecked(true);
           return;
         }
@@ -102,7 +105,7 @@ function App() {
 
               {/* 👤 Profils clients */}
               <Route path="/client/profile" element={<ClientProfilePage />} />
-              <Route path="/customer/dashboard" element={<ClientDashboardPage />} /> {/* ✅ NOUVEAU */}
+              <Route path="/customer/dashboard" element={<ClientDashboardPage />} />
 
               {/* ❤️ Favoris */}
               <Route path="/favorites" element={<FavoritesPage />} />
@@ -123,6 +126,10 @@ function App() {
 
               {/* 📱 Téléchargement */}
               <Route path="/download" element={<DownloadPage />} />
+
+              {/* 📚 NOUVEAU - Blog & FAQ */}
+              <Route path="/faq" element={<FAQPage />} />
+              <Route path="/blog" element={<BlogPage />} />
 
               {/* 🚫 Redirections anciennes */}
               <Route
