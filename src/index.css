@@ -1,48 +1,26 @@
 @import 'leaflet/dist/leaflet.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom animations */
 @keyframes scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 @keyframes slide {
-  0% {
-    transform: translateX(-25%);
-  }
-  100% {
-    transform: translateX(0);
-  }
+  0% { transform: translateX(-25%); }
+  100% { transform: translateX(0); }
 }
 
 @keyframes slideDown {
-  0% {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  0% { opacity: 0; transform: translateY(-20px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideUp {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 .animate-slide-down {
@@ -61,7 +39,6 @@
   animation: slide 15s linear infinite;
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -71,38 +48,34 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #22c55e;
+  background: #f75c00;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #16a34a;
+  background: #d64d00;
 }
 
-/* Smooth transitions */
 * {
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
-/* Focus styles */
 button:focus,
 input:focus,
 select:focus,
 textarea:focus {
-  outline: 2px solid #22c55e;
+  outline: 2px solid #f75c00;
   outline-offset: 2px;
 }
 
-/* Custom button styles */
 .btn-primary {
-  @apply bg-green-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-600 transition-colors;
+  @apply bg-tilkapp-orange text-white px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-all;
 }
 
 .btn-secondary {
-  @apply bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors;
+  @apply bg-tilkapp-blue text-white px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-all;
 }
 
-/* Line clamp utility */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -117,7 +90,6 @@ textarea:focus {
   overflow: hidden;
 }
 
-/* Card shadows */
 .card-shadow {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
@@ -126,23 +98,19 @@ textarea:focus {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-/* Modern typography */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   letter-spacing: -0.025em;
 }
 
-/* Enhanced transitions */
 .transition-all {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Modern gradient overlays */
 .gradient-overlay {
   background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 100%);
 }
 
-/* Enhanced shadows */
 .shadow-modern {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
@@ -151,25 +119,15 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-/* Better button styles */
 .btn-modern {
   @apply px-8 py-4 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1;
 }
 
-/* Responsive text */
 @media (max-width: 640px) {
-  h1 {
-    font-size: 2rem;
-    line-height: 2.5rem;
-  }
-
-  h2 {
-    font-size: 1.5rem;
-    line-height: 2rem;
-  }
+  h1 { font-size: 2rem; line-height: 2.5rem; }
+  h2 { font-size: 1.5rem; line-height: 2rem; }
 }
 
-/* Progress bar animations */
 @keyframes pulse-slow {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.8; }
