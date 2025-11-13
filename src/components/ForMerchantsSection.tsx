@@ -31,14 +31,14 @@ const ForMerchantsSection = () => {
             </h2>
             <p className="text-xl text-gray-600 mb-8">
               Join our network of forward-thinking restaurants. Reduce food waste, 
-              attract new customers, and boost your bottom line with ResQ Food.
+              attract new customers, and boost your bottom line with TILKAPP.
             </p>
 
             <div className="space-y-6 mb-8">
               {benefits.map((benefit, index) => (
                 <div key={index} className="flex items-start space-x-4">
-                  <div className="bg-green-100 p-3 rounded-lg">
-                    <benefit.icon className="w-6 h-6 text-green-600" />
+                  <div className="bg-orange-100 p-3 rounded-lg">
+                    <benefit.icon className="w-6 h-6 text-orange-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
@@ -51,7 +51,7 @@ const ForMerchantsSection = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <a
                 href="/merchant/info"
-                className="bg-green-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors inline-flex items-center"
+                className="bg-tilkapp-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors inline-flex items-center"
               >
                 Become a Partner
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -75,12 +75,12 @@ const ForMerchantsSection = () => {
             
             {/* Floating Stats */}
             <div className="absolute -bottom-6 -left-6 bg-white rounded-lg shadow-lg p-4">
-              <div className="text-2xl font-bold text-green-600">25%</div>
+              <div className="text-2xl font-bold text-orange-600">25%</div>
               <div className="text-sm text-gray-600">Average Revenue Increase</div>
             </div>
             
             <div className="absolute -top-6 -right-6 bg-white rounded-lg shadow-lg p-4">
-              <div className="text-2xl font-bold text-green-600">500+</div>
+              <div className="text-2xl font-bold text-orange-600">500+</div>
               <div className="text-sm text-gray-600">Partner Restaurants</div>
             </div>
           </div>

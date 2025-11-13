@@ -150,7 +150,7 @@ const ClientProfilePage = () => {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tilkapp-orange"></div>
       </div>
     );
   }
@@ -165,7 +165,7 @@ const ClientProfilePage = () => {
         {toast && (
           <div
             className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-              toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+              toast.type === 'success' ? 'bg-tilkapp-orange' : 'bg-red-500'
             } text-white`}
           >
             {toast.message}
@@ -185,8 +185,8 @@ const ClientProfilePage = () => {
         <div className="bg-white rounded-lg shadow-md p-8">
           {/* Header */}
           <div className="flex items-center mb-8">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-              <User className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+              <User className="w-6 h-6 text-orange-600" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
           </div>
@@ -202,7 +202,7 @@ const ClientProfilePage = () => {
                 )}
               </div>
               <label
-                className={`absolute bottom-0 right-0 bg-green-500 rounded-full p-2 cursor-pointer hover:bg-green-600 transition-colors shadow-lg ${
+                className={`absolute bottom-0 right-0 bg-tilkapp-orange rounded-full p-2 cursor-pointer hover:bg-orange-600 transition-colors shadow-lg ${
                   isUploadingPhoto ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
@@ -252,7 +252,7 @@ const ClientProfilePage = () => {
                   name="first_name"
                   value={editedProfile?.first_name || ''}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
                   placeholder="Prénom"
                   required
                 />
@@ -271,7 +271,7 @@ const ClientProfilePage = () => {
                   name="last_name"
                   value={editedProfile?.last_name || ''}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
                   placeholder="Nom"
                   required
                 />
@@ -290,7 +290,7 @@ const ClientProfilePage = () => {
                   name="phone"
                   value={editedProfile?.phone || ''}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
                   placeholder="Ex: 06 12 34 56 78"
                 />
               </div>
@@ -308,7 +308,7 @@ const ClientProfilePage = () => {
                 <button
                   onClick={handleSaveChanges}
                   disabled={isSaving}
-                  className="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="flex-1 px-6 py-3 bg-tilkapp-orange text-white rounded-lg hover:bg-orange-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {isSaving ? (
                     <>

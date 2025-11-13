@@ -9,7 +9,7 @@ const MerchantReviewsSection = () => {
       role: 'Food Lover',
       avatar: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=100',
       rating: 5,
-      review: 'ResQ Food has completely changed how I think about dining out. I get amazing meals at great prices while helping reduce food waste. It\'s a win-win!',
+      review: 'TILKAPP has completely changed how I think about dining out. I get amazing meals at great prices while helping reduce food waste. It\'s a win-win!',
       restaurant: 'Green Kitchen'
     },
     {
@@ -36,7 +36,7 @@ const MerchantReviewsSection = () => {
       role: 'Restaurant Owner',
       avatar: 'https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=100',
       rating: 5,
-      review: 'As a restaurant owner, ResQ Food has helped us reduce waste significantly while reaching new customers. The platform is fantastic for business.',
+      review: 'As a restaurant owner, TILKAPP has helped us reduce waste significantly while reaching new customers. The platform is fantastic for business.',
       restaurant: 'Rossi\'s Pizzeria'
     }
   ];
@@ -58,14 +58,14 @@ const MerchantReviewsSection = () => {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">What Our Community Says</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Hear from customers and merchants who are making a difference with ResQ Food
+            Hear from customers and merchants who are making a difference with TILKAPP
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
           {reviews.map((review) => (
             <div key={review.id} className="bg-gray-50 rounded-xl p-6 relative">
-              <Quote className="absolute top-4 right-4 w-8 h-8 text-green-200" />
+              <Quote className="absolute top-4 right-4 w-8 h-8 text-orange-200" />
               
               <div className="flex items-center mb-4">
                 <img
@@ -90,7 +90,7 @@ const MerchantReviewsSection = () => {
         </div>
 
         <div className="text-center mt-12">
-          <div className="bg-green-50 rounded-2xl p-8 mb-8">
+          <div className="bg-orange-50 rounded-2xl p-8 mb-8">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Join Our Community</h3>
             <p className="text-gray-600 mb-6">
               Be part of the food rescue movement. Save money, reduce waste, and discover amazing local restaurants.
@@ -98,13 +98,13 @@ const MerchantReviewsSection = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/auth"
-                className="bg-green-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors"
+                className="bg-tilkapp-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors"
               >
                 Join as Customer
               </a>
               <a
                 href="/merchants/signup"
-                className="bg-white text-green-600 border-2 border-green-500 px-8 py-3 rounded-lg font-medium hover:bg-green-50 transition-colors"
+                className="bg-white text-orange-600 border-2 border-tilkapp-orange px-8 py-3 rounded-lg font-medium hover:bg-orange-50 transition-colors"
               >
                 Join as Merchant
               </a>
@@ -113,7 +113,7 @@ const MerchantReviewsSection = () => {
 
           <a
             href="/reviews"
-            className="text-green-600 hover:text-green-700 font-medium transition-colors"
+            className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
           >
             Read All Reviews →
           </a>

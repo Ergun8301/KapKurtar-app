@@ -203,9 +203,9 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
               </div>
 
               {/* Produit */}
-              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+              <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
                 <div className="flex items-center gap-2 mb-3">
-                  <Package className="w-5 h-5 text-green-600" />
+                  <Package className="w-5 h-5 text-orange-600" />
                   <h3 className="font-bold text-gray-900">Produit</h3>
                 </div>
                 <div className="space-y-2">
@@ -215,7 +215,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Prix unitaire :</span>
-                    <span className="font-bold text-green-600">
+                    <span className="font-bold text-orange-600">
                       {details.offer.price_after.toFixed(2)} €
                     </span>
                   </div>
@@ -227,10 +227,10 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
                     <span className="text-sm text-gray-600">Stock restant :</span>
                     <span className="font-semibold text-gray-900">{details.offer.quantity}</span>
                   </div>
-                  <div className="pt-2 border-t border-green-200 mt-2">
+                  <div className="pt-2 border-t border-orange-200 mt-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold text-gray-700">Total :</span>
-                      <span className="font-bold text-green-600 text-xl">
+                      <span className="font-bold text-orange-600 text-xl">
                         {(details.offer.price_after * details.quantity).toFixed(2)} €
                       </span>
                     </div>

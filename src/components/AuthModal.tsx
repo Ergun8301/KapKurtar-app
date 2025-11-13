@@ -91,10 +91,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-2">
+            <div className="w-8 h-8 bg-tilkapp-orange rounded-lg flex items-center justify-center mr-2">
               <span className="text-white font-bold text-lg">R</span>
             </div>
-            <span className="font-bold text-xl text-gray-900">ResQ Food</span>
+            <span className="font-bold text-xl text-gray-900">TILKAPP</span>
           </div>
           <button
             onClick={onClose}
@@ -126,7 +126,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
             </div>
           )}
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+            <div className="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg mb-6">
               {success}
             </div>
           )}
@@ -170,7 +170,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
                 placeholder="Email address"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
                 required
               />
             </div>
@@ -183,7 +183,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
                   placeholder="Password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-orange focus:border-transparent"
                   required
                 />
                 <button
@@ -199,7 +199,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-green-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-tilkapp-orange text-white py-3 px-4 rounded-lg font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Loading...' : 
                 mode === 'signin' ? 'Sign In' : 
@@ -215,7 +215,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
               <>
                 <button
                   onClick={() => switchMode('forgot')}
-                  className="text-green-600 hover:text-green-700 text-sm font-medium"
+                  className="text-orange-600 hover:text-orange-700 text-sm font-medium"
                 >
                   Forgot your password?
                 </button>
@@ -223,7 +223,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
                   Don't have an account?{' '}
                   <button
                     onClick={() => switchMode('signup')}
-                    className="text-green-600 hover:text-green-700 font-medium"
+                    className="text-orange-600 hover:text-orange-700 font-medium"
                   >
                     Sign up
                   </button>
@@ -235,7 +235,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
                 Already have an account?{' '}
                 <button
                   onClick={() => switchMode('signin')}
-                  className="text-green-600 hover:text-green-700 font-medium"
+                  className="text-orange-600 hover:text-orange-700 font-medium"
                 >
                   Sign in
                 </button>
@@ -246,7 +246,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultMode = 's
                 Remember your password?{' '}
                 <button
                   onClick={() => switchMode('signin')}
-                  className="text-green-600 hover:text-green-700 font-medium"
+                  className="text-orange-600 hover:text-orange-700 font-medium"
                 >
                   Sign in
                 </button>

@@ -83,7 +83,7 @@ export const GeolocationButton: React.FC<GeolocationButtonProps> = ({
 
   if (success) {
     return (
-      <div className={`flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg ${className}`}>
+      <div className={`flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-lg ${className}`}>
         <CheckCircle className="w-5 h-5" />
         <span className="font-medium">Position mise à jour avec succès !</span>
       </div>
