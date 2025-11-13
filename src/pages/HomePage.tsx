@@ -10,10 +10,8 @@ const HomePage = () => {
   return (
     <div>
       <HeroBanner />
-      <AppDownloadCTA />
       <HowItWorks />
       <FeaturedOffers />
-      <AppDownloadCTA />
       <ForMerchantsSection />
       <DownloadAppSection />
     </div>
