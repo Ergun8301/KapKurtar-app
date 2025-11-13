@@ -282,17 +282,17 @@ const BlogArticle10 = () => {
           </blockquote>
 
           <div className="bg-gray-100 rounded-lg p-8 my-12 text-center">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Sauvez des produits encore parfaits</h3>
-            <p className="text-gray-700 mb-6">
-              Découvrez les offres TILKAPP et donnez une seconde chance aux invendus
-            </p>
-            
-              href="/offers"
-              className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
-            >
-              Voir les offres
-            </a>
-          </div>
+  <h3 className="text-2xl font-bold text-gray-900 mb-4">Sauvez des produits encore parfaits</h3>
+  <p className="text-gray-700 mb-6">
+    Découvrez les offres TILKAPP et donnez une seconde chance aux invendus
+  </p>
+  
+    href="/offers"
+    className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
+  >
+    Voir les offres
+  </a>
+</div>
         </div>
       </div>
     </div>
