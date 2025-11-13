@@ -93,7 +93,7 @@ const BlogPage = () => {
       content: '',
       category: 'Actualités',
       author: 'Rédaction',
-      published_at: '2024-12-25',
+      published_at: '2024-11-25',
       featured_image_url: 'https://images.pexels.com/photos/1105325/pexels-photo-1105325.jpeg?auto=compress&cs=tinysrgb&w=800',
       reading_time: 6
     },
@@ -104,7 +104,7 @@ const BlogPage = () => {
       content: '',
       category: 'Conseils',
       author: 'Nutritionniste Elif',
-      published_at: '2024-12-22',
+      published_at: '2024-09-22',
       featured_image_url: 'https://images.pexels.com/photos/1300972/pexels-photo-1300972.jpeg?auto=compress&cs=tinysrgb&w=800',
       reading_time: 9
     },
@@ -115,7 +115,7 @@ const BlogPage = () => {
       content: '',
       category: 'Anti-Gaspi',
       author: 'Nutritionniste Elif',
-      published_at: '2024-12-20',
+      published_at: '2024-05-20',
       featured_image_url: 'https://images.pexels.com/photos/1640772/pexels-photo-1640772.jpeg?auto=compress&cs=tinysrgb&w=800',
       reading_time: 7
     },
@@ -126,7 +126,7 @@ const BlogPage = () => {
       content: '',
       category: 'Anti-Gaspi',
       author: 'Dr. Mehmet Yılmaz',
-      published_at: '2024-12-18',
+      published_at: '2023-11-18',
       featured_image_url: 'https://images.pexels.com/photos/1435904/pexels-photo-1435904.jpeg?auto=compress&cs=tinysrgb&w=800',
       reading_time: 6
     }
