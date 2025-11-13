@@ -98,10 +98,11 @@ const Header = () => {
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <a href="/" className="flex items-center">
-            <div className="w-8 h-8 bg-tilkapp-green rounded-lg flex items-center justify-center mr-2">
-              <span className="text-white font-bold text-lg">R</span>
-            </div>
-            <span className="font-bold text-xl text-gray-900">TILKAPP</span>
+            <img
+              src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/Logo.png"
+              alt="TILKAPP"
+              className="h-12 w-auto"
+            />
           </a>
 
           <div className="hidden md:block">
@@ -123,8 +124,8 @@ const Header = () => {
                 {/* ✅ AJOUT : ref={userMenuRef} pour détecter clics extérieurs */}
                 <div className="relative" ref={userMenuRef}>
                   <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center space-x-2 text-gray-700 hover:text-tilkapp-orange transition-colors">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      {isMerchant ? <Store className="w-4 h-4 text-green-600" /> : <User className="w-4 h-4 text-green-600" />}
+                    <div className="w-8 h-8 bg-tilkapp-beige rounded-full flex items-center justify-center">
+                      {isMerchant ? <Store className="w-4 h-4 text-tilkapp-green" /> : <User className="w-4 h-4 text-tilkapp-green" />}
                     </div>
                     <span className="hidden sm:block font-medium">{getUserDisplayName()}</span>
                     <ChevronDown className="w-4 h-4" />
