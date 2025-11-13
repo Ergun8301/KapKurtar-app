@@ -107,6 +107,7 @@ function App() {
       <Router>
         <div className="flex flex-col min-h-screen bg-white">
           <Header />
+          <ScrollToTop />
           <main className="flex-grow">
             <SessionRedirect />
             <Routes>
