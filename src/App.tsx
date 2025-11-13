@@ -29,9 +29,19 @@ import ReviewsPage from "./pages/ReviewsPage";
 import DownloadPage from "./pages/DownloadPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
-// ✅ NOUVEAU - Pages marketing
+// ✅ Pages marketing
 import FAQPage from "./pages/FAQPage";
 import BlogPage from "./pages/BlogPage";
+import ContactPage from "./pages/ContactPage";
+
+// ✅ Articles blog
+import BlogArticle4 from "./pages/BlogArticle4";
+import BlogArticle5 from "./pages/BlogArticle5";
+import BlogArticle6 from "./pages/BlogArticle6";
+import BlogArticle7 from "./pages/BlogArticle7";
+import BlogArticle8 from "./pages/BlogArticle8";
+import BlogArticle9 from "./pages/BlogArticle9";
+import BlogArticle10 from "./pages/BlogArticle10";
 
 /* 🔁 Vérifie la session et redirige selon le rôle */
 function SessionRedirect() {
@@ -127,9 +137,21 @@ function App() {
               {/* 📱 Téléchargement */}
               <Route path="/download" element={<DownloadPage />} />
 
-              {/* 📚 NOUVEAU - Blog & FAQ */}
+              {/* 📚 Blog & FAQ */}
               <Route path="/faq" element={<FAQPage />} />
               <Route path="/blog" element={<BlogPage />} />
+              
+              {/* 📰 Articles blog individuels */}
+              <Route path="/blog/4" element={<BlogArticle4 />} />
+              <Route path="/blog/5" element={<BlogArticle5 />} />
+              <Route path="/blog/6" element={<BlogArticle6 />} />
+              <Route path="/blog/7" element={<BlogArticle7 />} />
+              <Route path="/blog/8" element={<BlogArticle8 />} />
+              <Route path="/blog/9" element={<BlogArticle9 />} />
+              <Route path="/blog/10" element={<BlogArticle10 />} />
+
+              {/* 📞 Contact */}
+              <Route path="/contact" element={<ContactPage />} />
 
               {/* 🚫 Redirections anciennes */}
               <Route
