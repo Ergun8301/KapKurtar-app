@@ -50,7 +50,7 @@ const BlogPage = () => {
       category: 'Actualités',
       author: 'Risale Haber',
       published_at: '2024-06-10',
-      featured_image_url: 'https://images.pexels.com/photos/4099484/pexels-photo-4099484.jpeg?auto=compress&cs=tinysrgb&w=800',
+      featured_image_url: 'https://images.pexels.com/photos/8466649/pexels-photo-8466649.jpeg',
       reading_time: 7,
       external_url: 'https://www.risalehaber.com/korkunc-israf-turkiyede-her-yil-23-milyon-ton-gida-cope-gidiyor-447473h.htm'
     },
