@@ -3,8 +3,6 @@ import HeroBanner from '../components/HeroBanner';
 import HowItWorks from '../components/HowItWorks';
 import FeaturedOffers from '../components/FeaturedOffers';
 import ForMerchantsSection from '../components/ForMerchantsSection';
-import DownloadAppSection from '../components/DownloadAppSection';
-import AppDownloadCTA from '../components/AppDownloadCTA';
 
 const HomePage = () => {
   return (
@@ -13,7 +11,6 @@ const HomePage = () => {
       <HowItWorks />
       <FeaturedOffers />
       <ForMerchantsSection />
-      <DownloadAppSection />
     </div>
   );
 };
