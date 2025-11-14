@@ -49,6 +49,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
   const [loadingOtherOffers, setLoadingOtherOffers] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showStickyButton, setShowStickyButton] = useState(false);
 
   useEffect(() => {
     if (offer && offer.merchant_id) {
@@ -63,6 +64,24 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
       return () => clearTimeout(timer);
     }
   }, [toast]);
+
+  // ✅ Sticky button pour mobile - apparaît après scroll
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.scrollTop > 100) {
+        setShowStickyButton(true);
+      } else {
+        setShowStickyButton(false);
+      }
+    };
+
+    const modalElement = document.querySelector('.offer-modal-content');
+    if (modalElement) {
+      modalElement.addEventListener('scroll', handleScroll);
+      return () => modalElement.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   if (!offer) return null;
 
@@ -212,7 +231,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
         onClick={onClose}
       >
         <div
-          className={`bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto relative transition-opacity duration-200 ${
+          className={`offer-modal-content bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto relative transition-opacity duration-200 ${
             isChanging ? 'opacity-0' : 'opacity-100'
           }`}
           onClick={(e) => e.stopPropagation()}
@@ -234,6 +253,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             <X className="w-5 h-5 text-gray-600" />
           </button>
 
+          {/* ✅ HEADER MARCHAND - avec bouton Itinéraire vert foncé */}
           <div className="border-b border-gray-200 p-4 md:p-6 bg-gray-50">
             <div className="flex items-center gap-4 flex-wrap">
               {offer.merchant_logo_url ? (
@@ -287,9 +307,10 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                 </div>
               </div>
 
+              {/* ✅ FIX: Bouton Itinéraire - vert foncé + texte beige */}
               <button
                 onClick={handleGetDirections}
-                className="flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-tilkapp-orange text-white rounded-lg font-semibold transition-colors shadow-md flex-shrink-0"
+                className="flex items-center gap-2 px-4 py-2 bg-tilkapp-green hover:bg-tilkapp-orange text-tilkapp-beige rounded-lg font-semibold transition-colors shadow-md flex-shrink-0"
               >
                 <Navigation className="w-4 h-4" />
                 <span className="hidden md:inline">Itinéraire</span>
@@ -297,9 +318,11 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             </div>
           </div>
 
-          <div className="p-4 md:p-6">
+          {/* ✅ CONTENU PRODUIT - Layout optimisé Desktop + Mobile */}
+          <div className="p-4 md:p-6 pb-24 md:pb-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="relative">
+              {/* ✅ COLONNE GAUCHE - Image + Description */}
+              <div className="space-y-4">
                 {offer.image_url && (
                   <div className="relative rounded-xl overflow-hidden shadow-lg">
                     <img
@@ -320,14 +343,25 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                     </button>
                   </div>
                 )}
+
+                {/* ✅ Description sous l'image (Desktop uniquement) */}
+                {offer.description && (
+                  <div className="hidden md:block">
+                    <p className="text-gray-600 text-sm md:text-base leading-relaxed">
+                      {offer.description}
+                    </p>
+                  </div>
+                )}
               </div>
 
+              {/* ✅ COLONNE DROITE - Détails + Actions */}
               <div className="flex flex-col justify-between">
                 <div>
                   <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{offer.title}</h3>
 
+                  {/* ✅ Description mobile (sous le titre) */}
                   {offer.description && (
-                    <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-4">{offer.description}</p>
+                    <p className="md:hidden text-gray-600 text-sm leading-relaxed mb-4">{offer.description}</p>
                   )}
                 </div>
 
@@ -367,8 +401,8 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                   </div>
                 )}
 
-                {/* ✅ Sélecteur de quantité */}
-                <div className="mb-4 bg-gray-50 p-4 rounded-lg">
+                {/* ✅ Sélecteur de quantité - Desktop uniquement */}
+                <div className="hidden md:block mb-4 bg-gray-50 p-4 rounded-lg">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Quantité
                   </label>
@@ -402,10 +436,11 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                   </div>
                 </div>
 
+                {/* ✅ Bouton Réserver - Desktop uniquement */}
                 <button
                   onClick={handleReserve}
                   disabled={isReserving || (offer.quantity && offer.quantity <= 0)}
-                  className={`w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all ${
+                  className={`hidden md:flex w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all items-center justify-center ${
                     isReserving || (offer.quantity && offer.quantity <= 0)
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-tilkapp-green hover:bg-tilkapp-orange text-white hover:shadow-xl'
@@ -423,6 +458,61 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* ✅ STICKY BOTTOM BUTTON - Mobile uniquement (style Uber Eats) */}
+          <div className={`md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-4 shadow-2xl transition-transform duration-300 z-50 ${
+            showStickyButton ? 'translate-y-0' : 'translate-y-full'
+          }`}>
+            <div className="flex items-center gap-3">
+              {/* Quantité à gauche */}
+              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-2">
+                <button
+                  type="button"
+                  onClick={() => setReservationQuantity(Math.max(1, reservationQuantity - 1))}
+                  disabled={reservationQuantity <= 1}
+                  className="w-8 h-8 rounded-full bg-white hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg font-bold shadow-sm"
+                >
+                  −
+                </button>
+                <span className="text-lg font-bold text-tilkapp-green min-w-[24px] text-center">
+                  {reservationQuantity}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setReservationQuantity(Math.min(offer.quantity || 1, reservationQuantity + 1))}
+                  disabled={reservationQuantity >= (offer.quantity || 1)}
+                  className="w-8 h-8 rounded-full bg-white hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg font-bold shadow-sm"
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Bouton Réserver à droite */}
+              <button
+                onClick={handleReserve}
+                disabled={isReserving || (offer.quantity && offer.quantity <= 0)}
+                className={`flex-1 py-3 px-4 rounded-lg font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${
+                  isReserving || (offer.quantity && offer.quantity <= 0)
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-tilkapp-green hover:bg-tilkapp-orange text-tilkapp-beige'
+                }`}
+              >
+                {isReserving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm">Réservation...</span>
+                  </>
+                ) : offer.quantity && offer.quantity <= 0 ? (
+                  'Rupture'
+                ) : (
+                  <>
+                    <span>🛒 Réserver</span>
+                    <span className="font-bold">{offer.price_after.toFixed(2)}€</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
