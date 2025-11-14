@@ -19,6 +19,8 @@ import OffersPage from "./pages/OffersPage";
 import CustomerAuthPage from "./pages/CustomerAuthPage";
 import MerchantAuthPage from "./pages/MerchantAuthPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import MerchantForgotPasswordPage from "./pages/MerchantForgotPasswordPage";
 import ProfileCompletePage from "./pages/ProfileCompletePage";
 import MerchantDashboardPage from "./pages/MerchantDashboardPage";
 import ClientProfilePage from "./pages/ClientProfilePage";
@@ -132,6 +134,8 @@ function App() {
               <Route path="/customer/auth" element={<CustomerAuthPage />} />
               <Route path="/merchant/auth" element={<MerchantAuthPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/merchant/forgot-password" element={<MerchantForgotPasswordPage />} />
 
               {/* 👤 Compléter profil */}
               <Route path="/profile/complete" element={<ProfileCompletePage />} />
