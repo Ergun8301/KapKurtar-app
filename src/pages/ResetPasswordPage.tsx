@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
-import { useAuthFlow } from '../hooks/useAuthFlow';
+import type { Session } from '@supabase/supabase-js';
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
-  const { user, role, initialized } = useAuthFlow();
+  const [session, setSession] = useState<Session | null>(null);
+  const [role, setRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -15,12 +17,24 @@ const ResetPasswordPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  // Vérifier si l'utilisateur est authentifié (via le lien email)
+  // Récupérer la session directement pour éviter erreur 422
   useEffect(() => {
-    if (initialized && !user) {
-      navigate('/');
-    }
-  }, [initialized, user, navigate]);
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setSession(session);
+        // Récupérer le rôle
+        const { data } = await supabase.rpc('get_user_role', {
+          p_auth_id: session.user.id
+        });
+        setRole(data);
+      } else {
+        // Pas de session valide, rediriger
+        navigate('/');
+      }
+      setLoading(false);
+    })();
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +80,7 @@ const ResetPasswordPage = () => {
     }
   };
 
-  if (!initialized) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
