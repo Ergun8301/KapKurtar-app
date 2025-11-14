@@ -81,7 +81,7 @@ const CustomerAuthPage = () => {
         }
       } else {
         if (formData.password.length < 6)
-          throw new Error('Le mot de passe doit contenir au moins 6 caractères');
+          throw new Error('Şifre en az 6 karakter içermelidir');
 
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
@@ -96,7 +96,7 @@ const CustomerAuthPage = () => {
         if (error) throw error;
 
         alert(
-          '✅ Un e-mail de confirmation vous a été envoyé. Veuillez cliquer sur le lien pour activer votre compte.'
+          '✅ Bir onay e-postası gönderildi. Hesabınızı etkinleştirmek için lütfen bağlantıya tıklayın.'
         );
       }
     } catch (err) {
@@ -158,7 +158,7 @@ const CustomerAuthPage = () => {
               className="inline-flex items-center text-[#3A6932] hover:text-[#2d5226] font-medium mb-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Retour
+              Geri
             </button>
 
             <div className="text-center mb-8">
@@ -168,12 +168,12 @@ const CustomerAuthPage = () => {
                 </div>
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {mode === 'login' ? 'Bienvenue' : 'Rejoignez SEPET'}
+                {mode === 'login' ? 'Hoş Geldiniz' : 'SEPET\'e Katılın'}
               </h1>
               <p className="text-gray-600">
                 {mode === 'login'
-                  ? 'Accédez aux offres près de chez vous'
-                  : 'Sauvez de la nourriture, économisez'}
+                  ? 'Yakınınızdaki tekliflere erişin'
+                  : 'Gıdayı kurtarın, tasarruf edin'}
               </p>
             </div>
 
@@ -187,7 +187,7 @@ const CustomerAuthPage = () => {
                       : 'text-gray-500'
                   }`}
                 >
-                  Connexion
+                  Giriş
                 </button>
                 <button
                   onClick={() => setMode('register')}
@@ -197,7 +197,7 @@ const CustomerAuthPage = () => {
                       : 'text-gray-500'
                   }`}
                 >
-                  Inscription
+                  Kayıt
                 </button>
               </div>
 
@@ -209,7 +209,7 @@ const CustomerAuthPage = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">E-posta</label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
@@ -218,7 +218,7 @@ const CustomerAuthPage = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A6932] focus:border-transparent text-base"
-                      placeholder="votre@email.com"
+                      placeholder="email@ornek.com"
                       required
                     />
                   </div>
@@ -226,7 +226,7 @@ const CustomerAuthPage = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Mot de passe
+                    Şifre
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -255,7 +255,7 @@ const CustomerAuthPage = () => {
                         onClick={() => navigate('/forgot-password')}
                         className="text-sm text-[#3A6932] hover:text-[#2d5226] font-medium"
                       >
-                        Mot de passe oublié ?
+                        Şifremi unuttum?
                       </button>
                     </div>
                   )}
@@ -269,12 +269,12 @@ const CustomerAuthPage = () => {
                   {isLoading ? (
                     <div className="flex items-center justify-center">
                       <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Chargement...
+                      Yükleniyor...
                     </div>
                   ) : mode === 'login' ? (
-                    'Se connecter'
+                    'Giriş Yap'
                   ) : (
-                    'Créer mon compte'
+                    'Hesap Oluştur'
                   )}
                 </button>
               </form>
@@ -284,7 +284,7 @@ const CustomerAuthPage = () => {
                   <div className="w-full border-t border-gray-200"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500 font-medium">Ou continuer avec</span>
+                  <span className="px-4 bg-white text-gray-500 font-medium">Veya şununla devam edin</span>
                 </div>
               </div>
 
