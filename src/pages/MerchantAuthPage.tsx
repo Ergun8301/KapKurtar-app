@@ -277,6 +277,17 @@ const MerchantAuthPage = () => {
                     )}
                   </button>
                 </div>
+                {mode === "login" && (
+                  <div className="text-right mt-2">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/merchant/forgot-password")}
+                      className="text-sm text-[#FF6B35] hover:text-[#e55a28] font-medium"
+                    >
+                      Mot de passe oublié ?
+                    </button>
+                  </div>
+                )}
               </div>
 
               <button
