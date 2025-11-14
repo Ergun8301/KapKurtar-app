@@ -30,17 +30,8 @@ const ImpactSection = () => {
   ];
 
   return (
-    <div className="relative bg-gradient-to-b from-gray-50 to-white py-20 overflow-hidden">
-      {/* Logo Watermark */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <img
-          src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/Logo%20g.png"
-          alt=""
-          className="w-[500px] h-[500px] opacity-[0.03] grayscale select-none"
-        />
-      </div>
-
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="bg-gradient-to-b from-gray-50 to-white py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Notre Impact

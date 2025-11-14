@@ -9,11 +9,7 @@ import { useNearbyOffers } from '../hooks/useNearbyOffers';
 import { useClientLocation } from '../hooks/useClientLocation';
 import { getPublicImageUrl } from '../lib/supabasePublic';
 
-interface FeaturedOffersProps {
-  onOpenDownloadModal?: () => void;
-}
-
-const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) => {
+const FeaturedOffers = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
@@ -287,12 +283,12 @@ const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) 
                       {!offer.quantity || offer.quantity <= 0 ? 'Sold Out' : 'Reserve Now'}
                     </button>
                   ) : (
-                    <button
-                      onClick={onOpenDownloadModal}
-                      className="bg-tilkapp-green text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors"
+                    <a
+                      href="/customer/auth"
+                      className="bg-tilkapp-green text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
                     >
                       Sign In to Reserve
-                    </button>
+                    </a>
                   )}
                 </div>
               </div>
