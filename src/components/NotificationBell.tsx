@@ -207,9 +207,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
           aria-label="Notifications"
         >
           <Bell
-            className={`w-6 h-6 ${
-              unreadCount > 0 ? "text-tilkapp-green" : "text-gray-700"
-            }`}
+            className="w-6 h-6 text-tilkapp-beige hover:text-tilkapp-orange transition-colors"
           />
 
           {unreadCount > 0 && (
