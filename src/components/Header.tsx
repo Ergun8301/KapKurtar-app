@@ -12,12 +12,14 @@ import {
   LayoutDashboard,
   Bell,
   Package,
+  Download,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabaseClient";
 import { NotificationBell } from "./NotificationBell";
 import { logoutUser } from "../lib/logout";
 import { useAddProduct } from "../contexts/AddProductContext";
+import DownloadAppModal from "./DownloadAppModal";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -27,8 +29,9 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMerchant, setIsMerchant] = useState<boolean | null>(null);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
   const hasCheckedRef = useRef(false);
-  
+
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -86,7 +89,6 @@ const Header = () => {
   const navigation = [
     { name: "Explore Offers", href: "/offers" },
     { name: "For Merchants", href: "/for-merchants" },
-    { name: "Download App", href: "/download" },
   ];
 
   if (user && isMerchant === null) return null;
@@ -111,6 +113,13 @@ const Header = () => {
                   {item.name}
                 </a>
               ))}
+              <button
+                onClick={() => setShowDownloadModal(true)}
+                className="bg-tilkapp-green text-white hover:bg-tilkapp-orange px-4 py-2 rounded-md text-sm font-medium transition-colors border border-white/20 flex items-center space-x-2"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download App</span>
+              </button>
             </div>
           </div>
 
@@ -209,7 +218,7 @@ const Header = () => {
         <div className="md:hidden bg-tilkapp-green border-t border-white/20">
           <div className="px-4 py-4 space-y-3">
             {navigation.map((item) => (
-              
+
                <a key={item.name}
                 href={item.href}
                 onClick={() => setIsMenuOpen(false)}
@@ -218,7 +227,18 @@ const Header = () => {
                 {item.name}
               </a>
             ))}
-            
+
+            <button
+              onClick={() => {
+                setShowDownloadModal(true);
+                setIsMenuOpen(false);
+              }}
+              className="w-full text-left px-3 py-2 text-tilkapp-beige hover:text-white hover:bg-white/10 rounded-lg transition-colors flex items-center space-x-2"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download App</span>
+            </button>
+
             {!user && (
               <>
                 <hr className="border-white/20 my-2" />
@@ -241,6 +261,12 @@ const Header = () => {
           </div>
         </div>
       )}
+
+      {/* Download App Modal */}
+      <DownloadAppModal
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+      />
     </header>
   );
 };
