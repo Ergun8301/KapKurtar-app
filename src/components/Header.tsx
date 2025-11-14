@@ -209,7 +209,7 @@ const Header = () => {
           <div className="px-4 py-4 space-y-3">
             {navigation.map((item) => (
               
-                key={item.name}
+               <a key={item.name}
                 href={item.href}
                 onClick={() => setIsMenuOpen(false)}
                 className="block px-3 py-2 text-tilkapp-beige hover:text-white hover:bg-white/10 rounded-lg transition-colors"
