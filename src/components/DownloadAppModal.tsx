@@ -9,25 +9,51 @@ interface DownloadAppModalProps {
 const DownloadAppModal: React.FC<DownloadAppModalProps> = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      // TODO: Implement email notification signup
-      console.log('Email submitted for notifications:', email);
-      setIsSubmitted(true);
-      setTimeout(() => {
-        setIsSubmitted(false);
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('https://formspree.io/f/xeovowdl', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email,
+          subject: 'TILKAPP - Notification lancement app',
+          message: `Nouvel utilisateur souhaite être notifié : ${email}`
+        })
+      });
+
+      if (response.ok) {
+        setIsSubmitted(true);
         setEmail('');
-      }, 3000);
+        setTimeout(() => {
+          setIsSubmitted(false);
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Erreur Formspree:', error);
+      alert('Erreur lors de l\'envoi. Réessayez.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full relative transform transition-all">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl max-w-md w-full relative transform transition-all"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -97,9 +123,10 @@ const DownloadAppModal: React.FC<DownloadAppModalProps> = ({ isOpen, onClose }) 
               />
               <button
                 type="submit"
-                className="w-full bg-tilkapp-green text-white px-6 py-3 rounded-lg font-bold hover:bg-tilkapp-orange transition-colors shadow-md hover:shadow-lg"
+                disabled={isSubmitting}
+                className="w-full bg-tilkapp-green text-white px-6 py-3 rounded-lg font-bold hover:bg-tilkapp-orange transition-colors shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitted ? '✓ Merci !' : 'Notifiez-moi'}
+                {isSubmitting ? 'Envoi...' : isSubmitted ? '✓ Merci !' : 'Notifiez-moi'}
               </button>
             </form>
           </div>
