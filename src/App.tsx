@@ -21,6 +21,7 @@ import MerchantAuthPage from "./pages/MerchantAuthPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import MerchantForgotPasswordPage from "./pages/MerchantForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProfileCompletePage from "./pages/ProfileCompletePage";
 import MerchantDashboardPage from "./pages/MerchantDashboardPage";
 import ClientProfilePage from "./pages/ClientProfilePage";
@@ -59,9 +60,16 @@ function SessionRedirect() {
     (async () => {
       // ✅ Ne pas rediriger si on est déjà sur ces pages protégées
       const noRedirectPaths = [
-        '/client/profile', 
+        '/client/profile',
         '/merchant/dashboard',
-        '/customer/dashboard'
+        '/customer/dashboard',
+        '/customer/auth',
+        '/merchant/auth',
+        '/forgot-password',
+        '/merchant/forgot-password',
+        '/reset-password',
+        '/auth/callback',
+        '/profile/complete'
       ];
       
       if (noRedirectPaths.includes(location.pathname)) {
@@ -136,6 +144,7 @@ function App() {
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/merchant/forgot-password" element={<MerchantForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
 
               {/* 👤 Compléter profil */}
               <Route path="/profile/complete" element={<ProfileCompletePage />} />
