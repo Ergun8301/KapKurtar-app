@@ -321,14 +321,20 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
           {/* ✅ CONTENU PRODUIT - Layout optimisé Desktop + Mobile */}
           <div className="p-4 md:p-6 pb-24 md:pb-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* ✅ COLONNE GAUCHE - Image + Description */}
-              <div className="space-y-4">
+              {/* ✅ COLONNE GAUCHE - Titre + Image */}
+              <div className="flex flex-col">
+                {/* Titre - Desktop uniquement en haut */}
+                <h3 className="hidden md:block text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                  {offer.title}
+                </h3>
+
+                {/* Image */}
                 {offer.image_url && (
-                  <div className="relative rounded-xl overflow-hidden shadow-lg">
+                  <div className="relative rounded-xl overflow-hidden shadow-lg flex-1">
                     <img
                       src={offer.image_url}
                       alt={offer.title}
-                      className="w-full h-64 md:h-80 object-cover"
+                      className="w-full h-full object-cover md:min-h-[400px]"
                       crossOrigin="anonymous"
                       referrerPolicy="no-referrer"
                     />
@@ -343,28 +349,25 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                     </button>
                   </div>
                 )}
+              </div>
 
-                {/* ✅ Description sous l'image (Desktop uniquement) */}
+              {/* ✅ COLONNE DROITE - Descriptif + Prix + Actions */}
+              <div className="flex flex-col">
+                {/* Titre - Mobile uniquement en haut */}
+                <h3 className="md:hidden text-2xl font-bold text-gray-900 mb-3">
+                  {offer.title}
+                </h3>
+
+                {/* Description en haut */}
                 {offer.description && (
-                  <div className="hidden md:block">
+                  <div className="mb-4">
                     <p className="text-gray-600 text-sm md:text-base leading-relaxed">
                       {offer.description}
                     </p>
                   </div>
                 )}
-              </div>
 
-              {/* ✅ COLONNE DROITE - Détails + Actions */}
-              <div className="flex flex-col justify-between">
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{offer.title}</h3>
-
-                  {/* ✅ Description mobile (sous le titre) */}
-                  {offer.description && (
-                    <p className="md:hidden text-gray-600 text-sm leading-relaxed mb-4">{offer.description}</p>
-                  )}
-                </div>
-
+                {/* Prix */}
                 <div className="flex items-baseline gap-3 bg-green-100 rounded-lg p-4 mb-4">
                   <span className="text-3xl md:text-4xl font-bold text-tilkapp-green">
                     {offer.price_after.toFixed(2)}€
@@ -374,6 +377,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                   </span>
                 </div>
 
+                {/* Timer + Stock + Barre */}
                 {offer.available_until && (
                   <div className="space-y-3 mb-4">
                     <div className="flex items-center justify-between text-sm">
@@ -401,9 +405,9 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                   </div>
                 )}
 
-                {/* ✅ Sélecteur de quantité - Desktop uniquement */}
-                <div className="hidden md:block mb-4 bg-gray-50 p-4 rounded-lg">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                {/* ✅ Sélecteur de quantité - Desktop uniquement - PLUS PETIT */}
+                <div className="hidden md:block mb-4 bg-gray-50 p-3 rounded-lg">
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
                     Quantité
                   </label>
                   <div className="flex items-center justify-between">
@@ -411,16 +415,16 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                       type="button"
                       onClick={() => setReservationQuantity(Math.max(1, reservationQuantity - 1))}
                       disabled={reservationQuantity <= 1}
-                      className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xl font-bold"
+                      className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg font-bold"
                     >
                       −
                     </button>
 
                     <div className="flex flex-col items-center">
-                      <span className="text-2xl font-bold text-tilkapp-green">
+                      <span className="text-xl font-bold text-tilkapp-green">
                         {reservationQuantity}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-[10px] text-gray-500">
                         sur {offer.quantity} disponibles
                       </span>
                     </div>
@@ -429,7 +433,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                       type="button"
                       onClick={() => setReservationQuantity(Math.min(offer.quantity || 1, reservationQuantity + 1))}
                       disabled={reservationQuantity >= (offer.quantity || 1)}
-                      className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xl font-bold"
+                      className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg font-bold"
                     >
                       +
                     </button>
@@ -440,7 +444,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                 <button
                   onClick={handleReserve}
                   disabled={isReserving || (offer.quantity && offer.quantity <= 0)}
-                  className={`hidden md:flex w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all items-center justify-center ${
+                  className={`hidden md:flex w-full py-3.5 rounded-lg font-bold text-lg shadow-lg transition-all items-center justify-center ${
                     isReserving || (offer.quantity && offer.quantity <= 0)
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-tilkapp-green hover:bg-tilkapp-orange text-white hover:shadow-xl'
