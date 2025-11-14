@@ -18,7 +18,7 @@ const Footer = () => {
               />
             </Link>
             <p className="text-tilkapp-beige text-sm leading-relaxed">
-              Connecter les commerçants avec les clients pour réduire le gaspillage alimentaire et soutenir les commerces locaux.
+              Gıda israfını azaltmak ve yerel işletmeleri desteklemek için tüccarları müşterilerle buluşturuyoruz.
             </p>
             {/* Réseaux sociaux */}
             <div className="flex space-x-4 mt-4">
@@ -60,31 +60,31 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-bold mb-4">Liens rapides</h3>
+            <h3 className="text-lg font-bold mb-4">Hızlı Bağlantılar</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
-                  Accueil
+                  Ana Sayfa
                 </Link>
               </li>
               <li>
                 <Link to="/offers" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
-                  Explorer les offres
+                  Teklifleri Keşfet
                 </Link>
               </li>
               <li>
                 <Link to="/for-merchants" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
-                  Pour les commerçants
+                  İşletmeler İçin
                 </Link>
               </li>
               <li>
                 <Link to="/download" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
-                  Télécharger l'app
+                  Uygulamayı İndir
                 </Link>
               </li>
               <li>
                 <Link to="/about" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
-                  À propos
+                  Hakkımızda
                 </Link>
               </li>
             </ul>
@@ -92,11 +92,11 @@ const Footer = () => {
 
           {/* Support */}
           <div>
-            <h3 className="text-lg font-bold mb-4">Support</h3>
+            <h3 className="text-lg font-bold mb-4">Destek</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/faq" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
-                  FAQ
+                  SSS
                 </Link>
               </li>
               <li>
@@ -106,12 +106,12 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/contact" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
-                  Nous contacter
+                  Bize Ulaşın
                 </Link>
               </li>
               <li>
                 <Link to="/legal" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
-                  Mentions légales
+                  Yasal Bilgiler
                 </Link>
               </li>
             </ul>
@@ -119,17 +119,17 @@ const Footer = () => {
 
           {/* Contact */}
           <div>
-            <h3 className="text-lg font-bold mb-4">Nous contacter</h3>
+            <h3 className="text-lg font-bold mb-4">Bize Ulaşın</h3>
             <div className="space-y-3">
               {/* WhatsApp Button */}
               <a
-                href="https://wa.me/33685507985?text=Bonjour%20TILKAPP"
+                href="https://wa.me/33685507985?text=Merhaba%20TILKAPP"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center space-x-2 text-tilkapp-beige hover:text-white transition-colors text-sm"
               >
                 <MessageCircle className="w-5 h-5 flex-shrink-0" />
-                <span>Contactez-nous sur WhatsApp</span>
+                <span>WhatsApp'tan Bize Ulaşın</span>
               </a>
 
               {/* Address */}
@@ -147,7 +147,7 @@ const Footer = () => {
                 to="/contact"
                 className="inline-block bg-tilkapp-orange text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium mt-4"
               >
-                Formulaire de contact
+                İletişim Formu
               </Link>
             </div>
           </div>
@@ -159,14 +159,14 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-tilkapp-beige text-sm">
-              © 2025 TILKAPP. Tous droits réservés.
+              © 2025 TILKAPP. Tüm hakları saklıdır.
             </p>
             <div className="flex space-x-6 text-sm">
               <Link to="/legal" className="text-tilkapp-beige hover:text-white transition-colors">
-                Politique de confidentialité
+                Gizlilik Politikası
               </Link>
               <Link to="/legal" className="text-tilkapp-beige hover:text-white transition-colors">
-                Conditions d'utilisation
+                Kullanım Koşulları
               </Link>
             </div>
           </div>

@@ -89,12 +89,12 @@ const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) 
     const end = new Date(dateString);
     const diff = end.getTime() - now.getTime();
 
-    if (diff <= 0) return 'Expired';
+    if (diff <= 0) return 'Süresi Doldu';
 
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-    return `${hours}h ${minutes}m left`;
+    return `${hours}s ${minutes}dk kalan`;
   };
 
   const handleReserve = (offer: Offer) => {
@@ -102,19 +102,19 @@ const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) 
 
     if (!user) {
       console.log('User not authenticated, cannot reserve');
-      setToast({ message: 'Please sign in to make a reservation', type: 'error' });
+      setToast({ message: 'Rezervasyon yapmak için lütfen giriş yapın', type: 'error' });
       return;
     }
 
     if (!clientLocation) {
       console.warn('User location not available yet');
-      setToast({ message: 'Please wait while we load your location...', type: 'error' });
+      setToast({ message: 'Konumunuz yüklenirken lütfen bekleyin...', type: 'error' });
       return;
     }
 
     if (!offer.merchant_id) {
       console.error('Offer missing merchant_id:', offer);
-      setToast({ message: 'Invalid offer data', type: 'error' });
+      setToast({ message: 'Geçersiz teklif verisi', type: 'error' });
       return;
     }
 
@@ -130,14 +130,14 @@ const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) 
 
     if (!user) {
       console.error('User not authenticated');
-      setToast({ message: 'Please sign in to make a reservation', type: 'error' });
+      setToast({ message: 'Rezervasyon yapmak için lütfen giriş yapın', type: 'error' });
       setSelectedOffer(null);
       return;
     }
 
     if (!selectedOffer.merchant_id) {
       console.error('Offer missing merchant_id');
-      setToast({ message: 'Invalid offer: missing merchant information', type: 'error' });
+      setToast({ message: 'Geçersiz teklif: işletme bilgisi eksik', type: 'error' });
       setSelectedOffer(null);
       return;
     }
@@ -155,16 +155,16 @@ const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) 
 
       if (result.success) {
         console.log('Reservation successful:', result.data);
-        setToast({ message: 'Reservation created successfully!', type: 'success' });
+        setToast({ message: 'Rezervasyon başarıyla oluşturuldu!', type: 'success' });
         setSelectedOffer(null);
         fetchOffers();
       } else {
         console.error('Reservation failed:', result.error);
-        setToast({ message: result.error || 'Failed to create reservation', type: 'error' });
+        setToast({ message: result.error || 'Rezervasyon oluşturulamadı', type: 'error' });
       }
     } catch (error: any) {
       console.error('Exception during reservation:', error);
-      setToast({ message: error.message || 'An error occurred', type: 'error' });
+      setToast({ message: error.message || 'Bir hata oluştu', type: 'error' });
     } finally {
       setReserving(false);
     }
@@ -188,9 +188,9 @@ const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) 
     <div className="bg-gray-50 py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Offers</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Öne Çıkan Teklifler</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover amazing deals from local restaurants. Sign up to see full details and reserve your favorites!
+            Yerel restoranlardan inanılmaz fırsatlar keşfedin. Tüm detayları görmek ve favorilerinizi rezerve etmek için kaydolun!
           </p>
         </div>
 
@@ -200,22 +200,22 @@ const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) 
               <>
                 <MapPinOff className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-xl text-gray-600 mb-6">
-                  Aucune offre disponible dans votre zone
+                  Bölgenizde teklif bulunmuyor
                 </p>
                 <p className="text-gray-500 mb-4">
-                  Nous n'avons trouvé aucune offre dans un rayon de 50km autour de votre position.
+                  Konumunuzun 50km yarıçapında hiçbir teklif bulamadık.
                 </p>
                 <p className="text-sm text-gray-400">
-                  Modifiez votre adresse dans votre profil ou vérifiez plus tard pour de nouvelles offres.
+                  Profilinizden adresinizi değiştirin veya yeni teklifler için daha sonra tekrar kontrol edin.
                 </p>
               </>
             ) : (
               <>
                 <p className="text-xl text-gray-600 mb-6">
-                  No offers available yet. Check back soon!
+                  Henüz teklif yok. Yakında tekrar kontrol edin!
                 </p>
                 <p className="text-gray-500">
-                  Merchants can add offers through their dashboard.
+                  İşletmeler kontrol panellerinden teklif ekleyebilir.
                 </p>
               </>
             )}
@@ -262,8 +262,8 @@ const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) 
 
                 <div className="flex items-center text-sm text-gray-500 mb-4">
                   <MapPin className="w-4 h-4 mr-1" />
-                  <span>{offer.merchant?.company_name || 'Unknown Merchant'}</span>
-                  {!user && <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Sign in to see full address</span>}
+                  <span>{offer.merchant?.company_name || 'Bilinmeyen İşletme'}</span>
+                  {!user && <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Tam adresi görmek için giriş yapın</span>}
                   {user && offer.merchant?.full_address && (
                     <span className="ml-2 text-xs text-gray-400">• {offer.merchant.full_address}</span>
                   )}
@@ -284,14 +284,14 @@ const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) 
                       disabled={!offer.quantity || offer.quantity <= 0}
                       className="bg-tilkapp-green text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                      {!offer.quantity || offer.quantity <= 0 ? 'Sold Out' : 'Reserve Now'}
+                      {!offer.quantity || offer.quantity <= 0 ? 'Tükendi' : 'Şimdi Rezerve Et'}
                     </button>
                   ) : (
                     <button
                       onClick={onOpenDownloadModal}
                       className="bg-tilkapp-green text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors"
                     >
-                      Sign In to Reserve
+                      Rezerve Etmek İçin Giriş Yapın
                     </button>
                   )}
                 </div>
