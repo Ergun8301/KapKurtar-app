@@ -29,7 +29,6 @@ const Header = () => {
   const [isMerchant, setIsMerchant] = useState<boolean | null>(null);
   const hasCheckedRef = useRef(false);
   
-  // ✅ AJOUT : Ref pour détecter les clics extérieurs
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,7 +60,6 @@ const Header = () => {
     checkUserType();
   }, [user]);
 
-  // ✅ AJOUT : Fermer le menu quand on clique dehors
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
@@ -121,7 +119,6 @@ const Header = () => {
             ) : user ? (
               <>
                 <NotificationBell userType={isMerchant ? "merchant" : "client"} />
-                {/* ✅ AJOUT : ref={userMenuRef} pour détecter clics extérieurs */}
                 <div className="relative" ref={userMenuRef}>
                   <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center space-x-2 text-tilkapp-beige hover:text-tilkapp-orange transition-colors">
                     <div className="w-8 h-8 bg-tilkapp-beige rounded-full flex items-center justify-center">
@@ -199,12 +196,50 @@ const Header = () => {
                 )}
               </div>
             )}
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-md text-tilkapp-beige hover:text-white transition-colors">
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
       </nav>
+
+      {/* ✅ MENU MOBILE - C'ÉTAIT ÇA QUI MANQUAIT */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-tilkapp-green border-t border-white/20">
+          <div className="px-4 py-4 space-y-3">
+            {navigation.map((item) => (
+              
+                key={item.name}
+                href={item.href}
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-3 py-2 text-tilkapp-beige hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              >
+                {item.name}
+              </a>
+            ))}
+            
+            {!user && (
+              <>
+                <hr className="border-white/20 my-2" />
+                
+                  href="/customer/auth"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-2 text-tilkapp-beige hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  Customer Login
+                </a>
+                
+                  href="/merchant/auth"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-2 text-tilkapp-beige hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  Merchant Login
+                </a>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 };
