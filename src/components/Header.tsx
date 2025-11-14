@@ -85,7 +85,7 @@ const Header = () => {
 
   const navigation = [
     { name: "Explore Offers", href: "/offers" },
-    { name: "For Merchants", href: "/merchant/info" },
+    { name: "For Merchants", href: "/for-merchants" },
     { name: "Download App", href: "/download" },
   ];
 
@@ -95,12 +95,13 @@ const Header = () => {
     <header className="bg-tilkapp-green shadow-sm border-b border-tilkapp-green sticky top-0 z-40">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <a href="/" className="flex items-center">
+          <a href="/" className="flex items-center space-x-3">
             <img
               src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/Logo%20g.png"
               alt="TILKAPP"
               className="h-16 w-auto"
             />
+            <span className="font-bold text-white text-2xl">TILKAPP</span>
           </a>
 
           <div className="hidden md:block">

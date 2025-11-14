@@ -283,37 +283,17 @@ const FeaturedOffers = () => {
                       {!offer.quantity || offer.quantity <= 0 ? 'Sold Out' : 'Reserve Now'}
                     </button>
                   ) : (
-                    <button className="bg-gray-300 text-gray-600 px-4 py-2 rounded-lg font-medium cursor-not-allowed">
+                    <a
+                      href="/customer/auth"
+                      className="bg-tilkapp-green text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
+                    >
                       Sign In to Reserve
-                    </button>
+                    </a>
                   )}
                 </div>
               </div>
             </div>
           ))}
-        </div>
-
-        {/* CTA Section */}
-        <div className="bg-white rounded-2xl p-8 text-center shadow-lg">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">Ready to Start Saving?</h3>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Join thousands of food lovers who are saving money while helping reduce food waste. 
-            Sign up now to access all offers and start reserving your favorite meals!
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="/customer/teaser"
-              className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-flex items-center"
-            >
-              View All Offers
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </a>
-            {!user && (
-              <button className="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors">
-                Sign Up Free
-              </button>
-            )}
-          </div>
         </div>
         </>
         )}
