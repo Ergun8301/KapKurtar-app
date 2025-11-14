@@ -70,11 +70,11 @@ const HeroBanner = () => {
       <div className="relative h-full flex items-center justify-center">
         <div className="text-center text-white px-4 max-w-5xl">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-            Save Money, <span className="text-tilkapp-orange">Save Food</span>, <br />Save the Planet
+            Tasarruf Edin, <span className="text-tilkapp-orange">Gıdayı Kurtarın</span>, <br />Gezegeni Kurtarın
           </h1>
           <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Discover amazing deals on delicious meals from local restaurants while helping reduce food waste. 
-            Join the food rescue movement today!
+            Yerel restoranlardan lezzetli yemeklerde inanılmaz fırsatlar keşfedin ve gıda israfını azaltmaya yardımcı olun.
+            Bugün gıda kurtarma hareketine katılın!
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
@@ -83,7 +83,7 @@ const HeroBanner = () => {
               href="/offers"
               className="bg-tilkapp-green text-white px-8 py-4 rounded-lg font-semibold hover:bg-tilkapp-orange transition-colors inline-flex items-center text-lg shadow-lg"
             >
-              Explore Offers
+              Teklifleri Keşfet
               <ArrowRight className="w-5 h-5 ml-2" />
             </a>
 
@@ -91,13 +91,13 @@ const HeroBanner = () => {
               href="/for-merchants"
               className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-gray-900 transition-colors text-lg"
             >
-              For Merchants
+              İşletmeler İçin
             </a>
           </div>
 
           <p className="text-tilkapp-beige text-lg flex items-center justify-center">
             <Smartphone className="w-5 h-5 mr-2" />
-            Download the app to receive real-time notifications
+            Gerçek zamanlı bildirimler almak için uygulamayı indirin
           </p>
         </div>
       </div>

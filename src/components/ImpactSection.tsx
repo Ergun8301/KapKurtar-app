@@ -6,26 +6,26 @@ const ImpactSection = () => {
     {
       icon: Leaf,
       value: '25',
-      unit: 'tonnes',
-      label: 'de nourriture sauvées'
+      unit: 'ton',
+      label: 'kurtarılan gıda'
     },
     {
       icon: Store,
       value: '150+',
       unit: '',
-      label: 'commerçants partenaires'
+      label: 'ortak işletme'
     },
     {
       icon: Users,
       value: '8000+',
       unit: '',
-      label: 'utilisateurs actifs'
+      label: 'aktif kullanıcı'
     },
     {
       icon: MapPin,
       value: '5',
-      unit: 'villes',
-      label: 'couvertes en 2025'
+      unit: 'şehir',
+      label: '2025\'te kapsanan'
     }
   ];
 
@@ -43,10 +43,10 @@ const ImpactSection = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Notre Impact
+            Etkimiz
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Ensemble, nous créons un avenir plus durable
+            Birlikte daha sürdürülebilir bir gelecek yaratıyoruz
           </p>
         </div>
 

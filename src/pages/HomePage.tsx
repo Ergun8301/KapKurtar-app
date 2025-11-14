@@ -26,16 +26,16 @@ const HomePage = () => {
             </div>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Téléchargez l'application TILKAPP
+            TILKAPP Uygulamasını İndirin
           </h2>
           <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
-            Recevez des notifications en temps réel et ne ratez plus aucune offre près de chez vous
+            Gerçek zamanlı bildirimler alın ve yakınınızdaki hiçbir teklifi kaçırmayın
           </p>
           <button
             onClick={() => setShowDownloadModal(true)}
             className="bg-tilkapp-green text-white px-8 py-4 rounded-lg font-bold hover:bg-tilkapp-orange transition-colors text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
           >
-            Télécharger maintenant
+            Şimdi İndir
           </button>
         </div>
       </div>

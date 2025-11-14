@@ -5,20 +5,20 @@ const HowItWorks = () => {
   const steps = [
     {
       icon: Search,
-      title: 'Discover Offers',
-      description: 'Browse amazing deals from local restaurants near you. Find discounted meals from your favorite places.',
+      title: 'Teklifleri Keşfet',
+      description: 'Yakınınızdaki yerel restoranlardan harika fırsatlar görün. Favori yerlerinizden indirimli yemekler bulun.',
       step: '01'
     },
     {
       icon: ShoppingCart,
-      title: 'Reserve Your Meal',
-      description: 'Select the offers you want and reserve them instantly. Pay securely through our platform.',
+      title: 'Yemeğinizi Rezerve Edin',
+      description: 'İstediğiniz teklifleri seçin ve anında rezerve edin. Platformumuz üzerinden güvenli ödeme yapın.',
       step: '02'
     },
     {
       icon: MapPin,
-      title: 'Pick Up & Enjoy',
-      description: 'Head to the restaurant at your chosen time, pick up your meal, and enjoy delicious food at great prices.',
+      title: 'Alın ve Tadını Çıkarın',
+      description: 'Seçtiğiniz saatte restorana gidin, yemeğinizi alın ve harika fiyatlarla lezzetli yemeklerin tadını çıkarın.',
       step: '03'
     }
   ];
@@ -27,9 +27,9 @@ const HowItWorks = () => {
     <div className="bg-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Nasıl Çalışır</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Save money and reduce food waste in three simple steps
+            Üç basit adımda tasarruf edin ve gıda israfını azaltın
           </p>
         </div>
 
@@ -63,7 +63,7 @@ const HowItWorks = () => {
             href="/customer/teaser"
             className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
           >
-            Start Saving Now
+            Hemen Tasarruf Etmeye Başlayın
           </a>
         </div>
       </div>
