@@ -16,7 +16,7 @@ const ContactPage = () => {
     setIsSubmitting(true);
 
     // Formspree endpoint (remplace par ton vrai endpoint)
-    const formspreeEndpoint = 'https://formspree.io/f/xeovowdl';
+    const formspreeEndpoint = 'https://formspree.io/f/xanykvyr';
 
     try {
       const response = await fetch(formspreeEndpoint, {

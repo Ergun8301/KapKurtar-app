@@ -9,51 +9,25 @@ interface DownloadAppModalProps {
 const DownloadAppModal: React.FC<DownloadAppModalProps> = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+  const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch('https://formspree.io/f/xeovowdl', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: email,
-          subject: 'TILKAPP - Notification lancement app',
-          message: `Nouvel utilisateur souhaite être notifié : ${email}`
-        })
-      });
-
-      if (response.ok) {
-        setIsSubmitted(true);
+    if (email) {
+      // TODO: Implement email notification signup
+      console.log('Email submitted for notifications:', email);
+      setIsSubmitted(true);
+      setTimeout(() => {
+        setIsSubmitted(false);
         setEmail('');
-        setTimeout(() => {
-          setIsSubmitted(false);
-        }, 3000);
-      }
-    } catch (error) {
-      console.error('Erreur Formspree:', error);
-      alert('Erreur lors de l\'envoi. Réessayez.');
-    } finally {
-      setIsSubmitting(false);
+      }, 3000);
     }
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-2xl max-w-md w-full relative transform transition-all"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full relative transform transition-all">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -123,10 +97,9 @@ const DownloadAppModal: React.FC<DownloadAppModalProps> = ({ isOpen, onClose }) 
               />
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-tilkapp-green text-white px-6 py-3 rounded-lg font-bold hover:bg-tilkapp-orange transition-colors shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-tilkapp-green text-white px-6 py-3 rounded-lg font-bold hover:bg-tilkapp-orange transition-colors shadow-md hover:shadow-lg"
               >
-                {isSubmitting ? 'Envoi...' : isSubmitted ? '✓ Merci !' : 'Notifiez-moi'}
+                {isSubmitted ? '✓ Merci !' : 'Notifiez-moi'}
               </button>
             </form>
           </div>
