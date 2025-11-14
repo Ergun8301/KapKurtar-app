@@ -228,8 +228,8 @@ const Header = () => {
                 >
                   Customer Login
                 </a>
-                <a
-                  href="/merchant/auth"
+                
+                 <a href="/merchant/auth"
                   onClick={() => setIsMenuOpen(false)}
                   className="block px-3 py-2 text-tilkapp-beige hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                 >
