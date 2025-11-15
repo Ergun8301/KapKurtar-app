@@ -100,7 +100,7 @@ const Header = () => {
           <a href="/" className="flex items-center space-x-3">
             <img
               src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/KK%20ORANGE%20CREME.png"
-              alt="TILKAPP"
+              alt="KapKurtar"
               className="h-[200px] w-auto"
             />
           </a>
