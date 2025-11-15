@@ -119,7 +119,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
           setSelectedReservationId(reservationId);
         } else {
           console.warn('❌ Notification sans reservation_id valide - probablement une ancienne notification');
-          alert('❌ Cette notification est trop ancienne et ne contient pas les détails de réservation.');
+          alert('❌ Bu bildirim çok eski ve rezervasyon detaylarını içermiyor.');
         }
       } else if (
         (notification.type === "offer_expired" || notification.type === "stock_empty") &&
@@ -221,14 +221,14 @@ export function NotificationBell({ userType }: NotificationBellProps) {
           <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-[9999] overflow-hidden">
             <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50">
               <h3 className="text-sm font-bold text-gray-800">
-                Notifications {unreadCount > 0 && `(${unreadCount})`}
+                Bildirimler {unreadCount > 0 && `(${unreadCount})`}
               </h3>
               {notifications.length > 0 && unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
                   className="text-xs text-tilkapp-green hover:text-tilkapp-green font-medium hover:underline transition-colors"
                 >
-                  Tout marquer lu
+                  Tümünü Okundu İşaretle
                 </button>
               )}
             </div>
@@ -237,9 +237,9 @@ export function NotificationBell({ userType }: NotificationBellProps) {
               {notifications.length === 0 ? (
                 <div className="text-center py-12">
                   <Bell className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500 font-medium">Aucune notification</p>
+                  <p className="text-sm text-gray-500 font-medium">Bildirim Yok</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Vous serez notifié ici des nouvelles offres et réservations
+                    Yeni teklifler ve rezervasyonlardan burada bilgilendirileceksiniz
                   </p>
                 </div>
               ) : (
@@ -267,7 +267,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
                         <p className="text-sm text-gray-700 line-clamp-2">{n.message}</p>
                         <p className="text-xs text-gray-400 mt-1.5 flex items-center gap-1">
                           <span>🕒</span>
-                          {new Date(n.created_at).toLocaleString("fr-FR", {
+                          {new Date(n.created_at).toLocaleString("tr-TR", {
                             day: "2-digit",
                             month: "short",
                             hour: "2-digit",

@@ -10,10 +10,10 @@ const LegalPage = () => {
       <div className="bg-tilkapp-green text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Mentions Légales
+            Yasal Bildirim
           </h1>
           <p className="text-xl text-tilkapp-beige">
-            Conditions d'utilisation, politique de confidentialité et mentions légales
+            Kullanım koşulları, gizlilik politikası ve yasal bildirim
           </p>
         </div>
       </div>
@@ -31,7 +31,7 @@ const LegalPage = () => {
               }`}
             >
               <FileText className="w-5 h-5" />
-              <span>Conditions d'utilisation</span>
+              <span>Kullanım Koşulları</span>
             </button>
             <button
               onClick={() => setActiveTab('privacy')}
@@ -42,7 +42,7 @@ const LegalPage = () => {
               }`}
             >
               <Lock className="w-5 h-5" />
-              <span>Politique de confidentialité</span>
+              <span>Gizlilik Politikası</span>
             </button>
             <button
               onClick={() => setActiveTab('mentions')}
@@ -53,7 +53,7 @@ const LegalPage = () => {
               }`}
             >
               <Shield className="w-5 h-5" />
-              <span>Mentions légales</span>
+              <span>Yasal Bildirim</span>
             </button>
           </div>
         </div>
@@ -63,217 +63,216 @@ const LegalPage = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {activeTab === 'terms' && (
           <div className="prose prose-lg max-w-none">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Conditions Générales d'Utilisation</h2>
-            <p className="text-sm text-gray-600 mb-8">Dernière mise à jour : Novembre 2024</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">Genel Kullanım Koşulları</h2>
+            <p className="text-sm text-gray-600 mb-8">Son güncelleme: Kasım 2024</p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">1. Objet</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">1. Amaç</h3>
             <p className="text-gray-700 mb-4">
-              Les présentes Conditions Générales d'Utilisation (CGU) ont pour objet de définir les modalités 
-              et conditions d'utilisation de la plateforme TILKAPP accessible via le site web et l'application mobile.
+              Bu Genel Kullanım Koşulları (GKK), web sitesi ve mobil uygulama aracılığıyla erişilebilen
+              TILKAPP platformunun kullanım şartlarını ve koşullarını tanımlamayı amaçlamaktadır.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">2. Acceptation des conditions</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">2. Koşulların Kabulü</h3>
             <p className="text-gray-700 mb-4">
-              L'utilisation de la plateforme TILKAPP implique l'acceptation pleine et entière des présentes CGU. 
-              Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser notre service.
+              TILKAPP platformunun kullanımı, bu GKK'nın tam ve eksiksiz kabulünü gerektirir.
+              Bu koşulları kabul etmiyorsanız, lütfen hizmetimizi kullanmayın.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">3. Description du service</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">3. Hizmet Açıklaması</h3>
             <p className="text-gray-700 mb-4">
-              TILKAPP est une plateforme numérique qui met en relation des commerçants proposant des produits 
-              alimentaires invendus à prix réduit avec des consommateurs. La plateforme permet :
+              TILKAPP, satılmayan gıda ürünlerini indirimli fiyatlarla sunan işletmeleri tüketicilerle
+              buluşturan dijital bir platformdur. Platform şunları sağlar:
             </p>
             <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
-              <li>Aux commerçants de publier leurs offres d'invendus</li>
-              <li>Aux consommateurs de réserver et acheter ces produits à prix réduit</li>
-              <li>La gestion des paiements et des transactions</li>
+              <li>İşletmelerin satılmayan ürün tekliflerini yayınlaması</li>
+              <li>Tüketicilerin bu ürünleri indirimli fiyatlarla rezerve edip satın alması</li>
+              <li>Ödemelerin ve işlemlerin yönetimi</li>
             </ul>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">4. Inscription et compte utilisateur</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">4. Kayıt ve Kullanıcı Hesabı</h3>
             <p className="text-gray-700 mb-4">
-              <strong>4.1.</strong> Pour utiliser TILKAPP, vous devez créer un compte en fournissant des informations exactes et à jour.
+              <strong>4.1.</strong> TILKAPP'ı kullanmak için doğru ve güncel bilgiler vererek bir hesap oluşturmalısınız.
             </p>
             <p className="text-gray-700 mb-4">
-              <strong>4.2.</strong> Vous êtes responsable de la confidentialité de vos identifiants de connexion.
+              <strong>4.2.</strong> Giriş bilgilerinizin gizliliğinden siz sorumlusunuz.
             </p>
             <p className="text-gray-700 mb-4">
-              <strong>4.3.</strong> Vous devez avoir au moins 18 ans pour créer un compte.
+              <strong>4.3.</strong> Hesap oluşturmak için en az 18 yaşında olmalısınız.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">5. Obligations des utilisateurs</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">5. Kullanıcı Yükümlülükleri</h3>
             <p className="text-gray-700 mb-4">
-              <strong>Pour les consommateurs :</strong>
+              <strong>Tüketiciler için:</strong>
             </p>
             <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
-              <li>Récupérer les commandes aux horaires convenus</li>
-              <li>Payer les produits réservés</li>
-              <li>Ne pas abuser du système de réservation</li>
+              <li>Siparişleri kararlaştırılan saatlerde teslim almak</li>
+              <li>Rezerve edilen ürünler için ödeme yapmak</li>
+              <li>Rezervasyon sistemini kötüye kullanmamak</li>
             </ul>
             <p className="text-gray-700 mb-4">
-              <strong>Pour les commerçants :</strong>
+              <strong>İşletmeler için:</strong>
             </p>
             <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
-              <li>Proposer des produits conformes aux normes sanitaires en vigueur</li>
-              <li>Respecter les prix et horaires annoncés</li>
-              <li>Honorer les commandes réservées</li>
+              <li>Yürürlükteki sağlık standartlarına uygun ürünler sunmak</li>
+              <li>Belirtilen fiyatlara ve saatlere uymak</li>
+              <li>Rezerve edilen siparişleri yerine getirmek</li>
             </ul>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">6. Transactions et paiements</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">6. İşlemler ve Ödemeler</h3>
             <p className="text-gray-700 mb-4">
-              <strong>6.1.</strong> Les paiements sont effectués via la plateforme de manière sécurisée.
+              <strong>6.1.</strong> Ödemeler platform aracılığıyla güvenli bir şekilde gerçekleştirilir.
             </p>
             <p className="text-gray-700 mb-4">
-              <strong>6.2.</strong> TILKAPP prélève une commission de 15% sur chaque transaction réalisée.
+              <strong>6.2.</strong> TILKAPP gerçekleştirilen her işlemden %15 komisyon alır.
             </p>
             <p className="text-gray-700 mb-4">
-              <strong>6.3.</strong> Les remboursements sont possibles selon les conditions définies dans notre politique de remboursement.
-            </p>
-
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">7. Responsabilité</h3>
-            <p className="text-gray-700 mb-4">
-              <strong>7.1.</strong> TILKAPP agit en tant qu'intermédiaire entre commerçants et consommateurs.
-            </p>
-            <p className="text-gray-700 mb-4">
-              <strong>7.2.</strong> La qualité et la conformité des produits relèvent de la responsabilité des commerçants.
-            </p>
-            <p className="text-gray-700 mb-4">
-              <strong>7.3.</strong> TILKAPP ne peut être tenu responsable en cas de litige entre un commerçant et un consommateur.
+              <strong>6.3.</strong> İade politikamızda tanımlanan koşullara göre geri ödemeler mümkündür.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">8. Propriété intellectuelle</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">7. Sorumluluk</h3>
             <p className="text-gray-700 mb-4">
-              Tous les éléments de la plateforme TILKAPP (logo, marque, design, contenu) sont protégés 
-              par les droits de propriété intellectuelle et ne peuvent être utilisés sans autorisation.
+              <strong>7.1.</strong> TILKAPP, işletmeler ve tüketiciler arasında aracı olarak hareket eder.
+            </p>
+            <p className="text-gray-700 mb-4">
+              <strong>7.2.</strong> Ürünlerin kalitesi ve uygunluğu işletmelerin sorumluluğundadır.
+            </p>
+            <p className="text-gray-700 mb-4">
+              <strong>7.3.</strong> TILKAPP, bir işletme ile tüketici arasındaki anlaşmazlık durumunda sorumlu tutulamaz.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">9. Modification des CGU</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">8. Fikri Mülkiyet</h3>
             <p className="text-gray-700 mb-4">
-              TILKAPP se réserve le droit de modifier les présentes CGU à tout moment. Les utilisateurs 
-              seront informés de toute modification significative.
+              TILKAPP platformunun tüm unsurları (logo, marka, tasarım, içerik) fikri mülkiyet
+              hakları ile korunmaktadır ve izinsiz kullanılamaz.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">10. Droit applicable</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">9. GKK'nın Değiştirilmesi</h3>
             <p className="text-gray-700 mb-4">
-              Les présentes CGU sont régies par le droit turc. En cas de litige, les tribunaux turcs seront compétents.
+              TILKAPP, bu GKK'yı herhangi bir zamanda değiştirme hakkını saklı tutar. Kullanıcılar
+              önemli değişikliklerden haberdar edilecektir.
+            </p>
+
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">10. Uygulanacak Hukuk</h3>
+            <p className="text-gray-700 mb-4">
+              Bu GKK Türk hukukuna tabidir. Herhangi bir anlaşmazlık durumunda Türk mahkemeleri yetkilidir.
             </p>
           </div>
         )}
 
         {activeTab === 'privacy' && (
           <div className="prose prose-lg max-w-none">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Politique de Confidentialité</h2>
-            <p className="text-sm text-gray-600 mb-8">Dernière mise à jour : Novembre 2024</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">Gizlilik Politikası</h2>
+            <p className="text-sm text-gray-600 mb-8">Son güncelleme: Kasım 2024</p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">1. Introduction</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">1. Giriş</h3>
             <p className="text-gray-700 mb-4">
-              TILKAPP s'engage à protéger la vie privée de ses utilisateurs. Cette politique explique 
-              comment nous collectons, utilisons et protégeons vos données personnelles.
+              TILKAPP, kullanıcılarının gizliliğini korumayı taahhüt eder. Bu politika,
+              kişisel verilerinizi nasıl topladığımızı, kullandığımızı ve koruduğumuzu açıklar.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">2. Données collectées</h3>
-            <p className="text-gray-700 mb-4">Nous collectons les types de données suivants :</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">2. Toplanan Veriler</h3>
+            <p className="text-gray-700 mb-4">Aşağıdaki veri türlerini topluyoruz:</p>
             <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
-              <li><strong>Données d'identification :</strong> Nom, prénom, email, numéro de téléphone</li>
-              <li><strong>Données de localisation :</strong> Adresse, position GPS (si autorisée)</li>
-              <li><strong>Données de paiement :</strong> Informations bancaires (traitées de manière sécurisée par notre prestataire)</li>
-              <li><strong>Données d'utilisation :</strong> Historique des commandes, préférences</li>
+              <li><strong>Kimlik verileri:</strong> Ad, soyad, e-posta, telefon numarası</li>
+              <li><strong>Konum verileri:</strong> Adres, GPS konumu (izin verilirse)</li>
+              <li><strong>Ödeme verileri:</strong> Banka bilgileri (hizmet sağlayıcımız tarafından güvenli şekilde işlenir)</li>
+              <li><strong>Kullanım verileri:</strong> Sipariş geçmişi, tercihler</li>
             </ul>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">3. Utilisation des données</h3>
-            <p className="text-gray-700 mb-4">Vos données sont utilisées pour :</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">3. Verilerin Kullanımı</h3>
+            <p className="text-gray-700 mb-4">Verileriniz şunlar için kullanılır:</p>
             <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
-              <li>Fournir et améliorer nos services</li>
-              <li>Traiter vos commandes et paiements</li>
-              <li>Vous envoyer des notifications pertinentes</li>
-              <li>Personnaliser votre expérience</li>
-              <li>Assurer la sécurité de la plateforme</li>
+              <li>Hizmetlerimizi sağlamak ve geliştirmek</li>
+              <li>Siparişlerinizi ve ödemelerinizi işlemek</li>
+              <li>Size ilgili bildirimler göndermek</li>
+              <li>Deneyiminizi kişiselleştirmek</li>
+              <li>Platformun güvenliğini sağlamak</li>
             </ul>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">4. Partage des données</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">4. Verilerin Paylaşımı</h3>
             <p className="text-gray-700 mb-4">
-              Nous ne vendons jamais vos données personnelles. Vos données peuvent être partagées uniquement avec :
+              Kişisel verilerinizi asla satmayız. Verileriniz yalnızca şunlarla paylaşılabilir:
             </p>
             <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
-              <li>Les commerçants concernés par vos commandes (nom, numéro de commande)</li>
-              <li>Nos prestataires de services (paiement, hébergement) sous strict contrat de confidentialité</li>
-              <li>Les autorités légales si requis par la loi</li>
+              <li>Siparişlerinizle ilgili işletmeler (ad, sipariş numarası)</li>
+              <li>Hizmet sağlayıcılarımız (ödeme, barındırma) sıkı gizlilik sözleşmesi altında</li>
+              <li>Kanun gerektiriyorsa yasal makamlar</li>
             </ul>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">5. Sécurité des données</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">5. Veri Güvenliği</h3>
             <p className="text-gray-700 mb-4">
-              Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles pour protéger 
-              vos données contre tout accès, modification, divulgation ou destruction non autorisés.
+              Verilerinizi yetkisiz erişim, değişiklik, ifşa veya yok etmeye karşı korumak için
+              teknik ve organizasyonel güvenlik önlemleri uyguluyoruz.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">6. Vos droits</h3>
-            <p className="text-gray-700 mb-4">Conformément au RGPD et au KVKK (loi turque sur la protection des données), vous disposez des droits suivants :</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">6. Haklarınız</h3>
+            <p className="text-gray-700 mb-4">KVKK (Kişisel Verilerin Korunması Kanunu) uyarınca aşağıdaki haklara sahipsiniz:</p>
             <ul className="list-disc ml-6 text-gray-700 space-y-2 mb-4">
-              <li><strong>Droit d'accès :</strong> Consulter vos données personnelles</li>
-              <li><strong>Droit de rectification :</strong> Corriger vos données inexactes</li>
-              <li><strong>Droit à l'effacement :</strong> Supprimer votre compte et vos données</li>
-              <li><strong>Droit d'opposition :</strong> Refuser certains traitements</li>
-              <li><strong>Droit à la portabilité :</strong> Récupérer vos données</li>
+              <li><strong>Erişim hakkı:</strong> Kişisel verilerinizi görüntüleme</li>
+              <li><strong>Düzeltme hakkı:</strong> Hatalı verilerinizi düzeltme</li>
+              <li><strong>Silme hakkı:</strong> Hesabınızı ve verilerinizi silme</li>
+              <li><strong>İtiraz hakkı:</strong> Belirli işlemleri reddetme</li>
+              <li><strong>Taşınabilirlik hakkı:</strong> Verilerinizi alma</li>
             </ul>
             <p className="text-gray-700 mb-4">
-              Pour exercer vos droits, contactez-nous via notre formulaire de contact.
+              Haklarınızı kullanmak için iletişim formumuzu kullanarak bize ulaşın.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">7. Cookies</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">7. Çerezler</h3>
             <p className="text-gray-700 mb-4">
-              Nous utilisons des cookies pour améliorer votre expérience. Vous pouvez gérer vos préférences 
-              de cookies dans les paramètres de votre navigateur.
+              Deneyiminizi geliştirmek için çerezler kullanıyoruz. Çerez tercihlerinizi
+              tarayıcınızın ayarlarından yönetebilirsiniz.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">8. Conservation des données</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">8. Verilerin Saklanması</h3>
             <p className="text-gray-700 mb-4">
-              Vos données sont conservées pendant la durée nécessaire aux finalités pour lesquelles elles 
-              ont été collectées, puis archivées ou supprimées conformément aux obligations légales.
+              Verileriniz, toplandıkları amaçlar için gerekli olan süre boyunca saklanır,
+              ardından yasal yükümlülüklere uygun olarak arşivlenir veya silinir.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">9. Contact</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">9. İletişim</h3>
             <p className="text-gray-700 mb-4">
-              Pour toute question concernant cette politique de confidentialité, contactez-nous via notre 
-              formulaire de contact ou par WhatsApp.
+              Bu gizlilik politikası hakkında sorularınız için iletişim formumuzu veya
+              WhatsApp'ı kullanarak bize ulaşın.
             </p>
           </div>
         )}
 
         {activeTab === 'mentions' && (
           <div className="prose prose-lg max-w-none">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Mentions Légales</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">Yasal Bildirim</h2>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Éditeur de la plateforme</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Platform Yayıncısı</h3>
             <div className="bg-gray-100 rounded-lg p-6 mb-6">
-              <p className="text-gray-700 mb-2"><strong>Nom :</strong> TILKAPP</p>
-              <p className="text-gray-700 mb-2"><strong>Forme juridique :</strong> En cours de constitution</p>
-              <p className="text-gray-700 mb-2"><strong>Adresse :</strong> Eski Hisar, 9501. Sk. No:3, 07600 Manavgat/Antalya, Türkiye</p>
-              <p className="text-gray-700 mb-2"><strong>Contact :</strong> Via formulaire de contact ou WhatsApp</p>
+              <p className="text-gray-700 mb-2"><strong>İsim:</strong> TILKAPP</p>
+              <p className="text-gray-700 mb-2"><strong>Yasal statü:</strong> Kuruluş aşamasında</p>
+              <p className="text-gray-700 mb-2"><strong>Adres:</strong> Eski Hisar, 9501. Sk. No:3, 07600 Manavgat/Antalya, Türkiye</p>
+              <p className="text-gray-700 mb-2"><strong>İletişim:</strong> İletişim formu veya WhatsApp aracılığıyla</p>
             </div>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Hébergement</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Barındırma</h3>
             <div className="bg-gray-100 rounded-lg p-6 mb-6">
-              <p className="text-gray-700 mb-2"><strong>Service :</strong> Supabase</p>
-              <p className="text-gray-700 mb-2"><strong>Hébergement :</strong> Cloud infrastructure</p>
+              <p className="text-gray-700 mb-2"><strong>Hizmet:</strong> Supabase</p>
+              <p className="text-gray-700 mb-2"><strong>Barındırma:</strong> Bulut altyapısı</p>
             </div>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Propriété intellectuelle</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Fikri Mülkiyet</h3>
             <p className="text-gray-700 mb-4">
-              L'ensemble du contenu de la plateforme TILKAPP (textes, images, logos, design) est protégé 
-              par les droits de propriété intellectuelle. Toute reproduction ou utilisation non autorisée 
-              est strictement interdite.
+              TILKAPP platformunun tüm içeriği (metinler, görseller, logolar, tasarım) fikri mülkiyet
+              hakları ile korunmaktadır. Yetkisiz herhangi bir çoğaltma veya kullanım kesinlikle yasaktır.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Responsabilité</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Sorumluluk</h3>
             <p className="text-gray-700 mb-4">
-              TILKAPP s'efforce de maintenir la plateforme accessible et fonctionnelle. Toutefois, nous ne 
-              pouvons garantir une disponibilité à 100% et déclinons toute responsabilité en cas d'interruption 
-              temporaire du service.
+              TILKAPP, platformu erişilebilir ve işlevsel tutmak için çaba gösterir. Ancak, %100
+              kullanılabilirlik garanti edemeyiz ve hizmetin geçici kesintisi durumunda hiçbir
+              sorumluluk kabul etmeyiz.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Droit applicable et juridiction</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Uygulanacak Hukuk ve Yetki</h3>
             <p className="text-gray-700 mb-4">
-              Les présentes mentions légales sont régies par le droit turc. En cas de litige, les tribunaux 
-              compétents d'Antalya seront seuls compétents.
+              Bu yasal bildirim Türk hukukuna tabidir. Herhangi bir anlaşmazlık durumunda,
+              Antalya mahkemeleri münhasıran yetkilidir.
             </p>
           </div>
         )}

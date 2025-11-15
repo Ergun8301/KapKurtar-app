@@ -290,8 +290,8 @@ const MerchantDashboardPage = () => {
           accessToken: MAPBOX_TOKEN,
           mapboxgl: mapboxgl,
           marker: false,
-          placeholder: 'Rechercher une adresse...',
-          language: 'fr',
+          placeholder: 'Adres ara...',
+          language: 'tr',
           types: 'address,poi',
         });
 
@@ -442,7 +442,7 @@ const MerchantDashboardPage = () => {
       setAllReservations(formatted);
     } catch (error) {
       console.error('Erreur chargement historique:', error);
-      setToast({ message: '❌ Erreur chargement historique', type: 'error' });
+      setToast({ message: '❌ Geçmiş yüklenirken hata oluştu', type: 'error' });
     } finally {
       setHistoryLoading(false);
     }
@@ -488,7 +488,7 @@ const MerchantDashboardPage = () => {
       setInactiveOffers(inactive);
     } catch (error: any) {
       console.error('Error loading offers:', error);
-      setToast({ message: error.message || 'Failed to load offers', type: 'error' });
+      setToast({ message: error.message || 'Teklifler yüklenemedi', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -512,7 +512,7 @@ const MerchantDashboardPage = () => {
   const getTimeRemainingDetailed = (until?: string) => {
     if (!until) return '';
     const diff = new Date(until).getTime() - Date.now();
-    if (diff <= 0) return 'Expirée';
+    if (diff <= 0) return 'Süresi Doldu';
 
     const totalMinutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(totalMinutes / 60);
@@ -521,19 +521,19 @@ const MerchantDashboardPage = () => {
 
     if (hours >= 48) {
       const remainingHours = hours % 24;
-      return `${days}j ${remainingHours}h`;
+      return `${days}g ${remainingHours}s`;
     }
 
     if (hours >= 24) {
       const remainingHours = hours % 24;
-      return `${days}j ${remainingHours}h`;
+      return `${days}g ${remainingHours}s`;
     }
 
     if (hours > 0) {
-      return `${hours}h ${minutes}min`;
+      return `${hours}s ${minutes}dk`;
     }
 
-    return `${minutes}min`;
+    return `${minutes}dk`;
   };
 
   const getProgressPercent = (availableFrom?: string, availableUntil?: string) => {
@@ -557,17 +557,17 @@ const MerchantDashboardPage = () => {
     const end = new Date(endDate);
     const diff = end.getTime() - now.getTime();
 
-    if (diff < 0) return 'Expired';
+    if (diff < 0) return 'Süresi Doldu';
 
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
     if (hours > 24) {
       const days = Math.floor(hours / 24);
-      return days + ' day' + (days > 1 ? 's' : '') + ' left';
+      return days + ' gün kaldı';
     }
-    if (hours > 0) return hours + 'h ' + minutes + 'm left';
-    return minutes + 'm left';
+    if (hours > 0) return hours + 's ' + minutes + 'dk kaldı';
+    return minutes + 'dk kaldı';
   };
 
   const handleValidateReservation = async (reservationId: string) => {
@@ -585,10 +585,10 @@ const MerchantDashboardPage = () => {
         )
       );
 
-      setToast({ message: '✅ Réservation validée', type: 'success' });
+      setToast({ message: '✅ Rezervasyon onaylandı', type: 'success' });
     } catch (error) {
       console.error('Erreur validation:', error);
-      setToast({ message: '❌ Erreur lors de la validation', type: 'error' });
+      setToast({ message: '❌ Doğrulama sırasında hata oluştu', type: 'error' });
     }
   };
 
@@ -608,30 +608,30 @@ const MerchantDashboardPage = () => {
         )
       );
 
-      setToast({ message: '✅ Réservation archivée', type: 'success' });
+      setToast({ message: '✅ Rezervasyon arşivlendi', type: 'success' });
     } catch (error) {
       console.error('Erreur archivage:', error);
-      setToast({ message: '❌ Erreur lors de l\'archivage', type: 'error' });
+      setToast({ message: '❌ Arşivleme sırasında hata oluştu', type: 'error' });
     }
   };
 
   const getTimeRemaining = (until: string) => {
     const diff = new Date(until).getTime() - Date.now();
-    if (diff <= 0) return 'Expirée';
-    
+    if (diff <= 0) return 'Süresi Doldu';
+
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (hours > 24) {
       const days = Math.floor(hours / 24);
-      return `${days}j ${hours % 24}h`;
+      return `${days}g ${hours % 24}s`;
     }
-    if (hours > 0) return `${hours}h ${minutes}min`;
-    return `${minutes} min`;
+    if (hours > 0) return `${hours}s ${minutes}dk`;
+    return `${minutes} dk`;
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('fr-FR', {
+    return new Date(date).toLocaleDateString('tr-TR', {
       day: '2-digit',
       month: '2-digit',
       hour: '2-digit',
@@ -641,12 +641,12 @@ const MerchantDashboardPage = () => {
 
   const handlePublish = async (formData: any) => {
     if (!user) {
-      setToast({ message: 'Please log in to create an offer', type: 'error' });
+      setToast({ message: 'Teklif oluşturmak için lütfen giriş yapın', type: 'error' });
       return;
     }
 
     if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
-      setToast({ message: 'Discounted price must be lower than original price', type: 'error' });
+      setToast({ message: 'İndirimli fiyat orijinal fiyattan düşük olmalıdır', type: 'error' });
       return;
     }
 
@@ -659,7 +659,7 @@ const MerchantDashboardPage = () => {
         .maybeSingle();
 
       if (profileError || !profileData) {
-        setToast({ message: 'Erreur : profil introuvable', type: 'error' });
+        setToast({ message: 'Hata: Profil bulunamadı', type: 'error' });
         setIsPublishing(false);
         return;
       }
@@ -671,7 +671,7 @@ const MerchantDashboardPage = () => {
         .maybeSingle();
 
       if (merchantError || !merchantData) {
-        setToast({ message: 'Erreur : marchand introuvable', type: 'error' });
+        setToast({ message: 'Hata: İşletme bulunamadı', type: 'error' });
         setIsPublishing(false);
         return;
       }
@@ -710,10 +710,10 @@ const MerchantDashboardPage = () => {
 
       await loadOffers();
       closeAddProductModal();
-      setToast({ message: '✅ Offer added successfully', type: 'success' });
+      setToast({ message: '✅ Teklif başarıyla eklendi', type: 'success' });
     } catch (error: any) {
       console.error('❌ Error publishing offer:', error);
-      setToast({ message: error.message || 'Failed to publish offer', type: 'error' });
+      setToast({ message: error.message || 'Teklif yayınlanamadı', type: 'error' });
     } finally {
       setIsPublishing(false);
     }
@@ -728,9 +728,9 @@ const MerchantDashboardPage = () => {
       const { error } = await supabase.rpc('toggle_offer_status', { p_offer_id: offerId });
       if (error) throw error;
       await loadOffers();
-      setToast({ message: currentStatus ? '✅ Offer paused' : '✅ Offer activated', type: 'success' });
+      setToast({ message: currentStatus ? '✅ Teklif duraklatıldı' : '✅ Teklif etkinleştirildi', type: 'success' });
     } catch (error: any) {
-      setToast({ message: error.message || 'Failed to toggle offer status', type: 'error' });
+      setToast({ message: error.message || 'Teklif durumu değiştirilemedi', type: 'error' });
     } finally {
       setTogglingOfferId(null);
     }
@@ -739,16 +739,16 @@ const MerchantDashboardPage = () => {
   const deleteOffer = async (offerId: string) => {
     if (!user) return;
 
-    const confirmed = confirm('Are you sure you want to hide this offer?');
+    const confirmed = confirm('Bu teklifi gizlemek istediğinizden emin misiniz?');
     if (!confirmed) return;
 
     try {
       const { error } = await supabase.rpc('delete_offer_soft', { p_offer_id: offerId });
       if (error) throw error;
       await loadOffers();
-      setToast({ message: '🗑️ Offer hidden', type: 'success' });
+      setToast({ message: '🗑️ Teklif gizlendi', type: 'success' });
     } catch (error: any) {
-      setToast({ message: error.message || 'Failed to delete offer', type: 'error' });
+      setToast({ message: error.message || 'Teklif silinemedi', type: 'error' });
     }
   };
 
@@ -766,7 +766,7 @@ const MerchantDashboardPage = () => {
     if (!user || !editingOffer) return;
 
     if (parseFloat(formData.price_after) >= parseFloat(formData.price_before)) {
-      setToast({ message: 'Discounted price must be lower than original price', type: 'error' });
+      setToast({ message: 'İndirimli fiyat orijinal fiyattan düşük olmalıdır', type: 'error' });
       return;
     }
 
@@ -807,12 +807,12 @@ const MerchantDashboardPage = () => {
       await loadOffers();
       closeEditModal();
       
-      const message = wasExpired 
-        ? '✅ Offer updated and reactivated!' 
-        : '✅ Offer updated successfully';
+      const message = wasExpired
+        ? '✅ Teklif güncellendi ve yeniden etkinleştirildi!'
+        : '✅ Teklif başarıyla güncellendi';
       setToast({ message, type: 'success' });
     } catch (error: any) {
-      setToast({ message: error.message || 'Failed to update offer', type: 'error' });
+      setToast({ message: error.message || 'Teklif güncellenemedi', type: 'error' });
     } finally {
       setIsPublishing(false);
     }
@@ -837,8 +837,8 @@ const MerchantDashboardPage = () => {
       const updatePayload: any = {
         company_name: onboardingData.company_name,
         phone: onboardingData.phone,
-        street: onboardingData.street || 'Position GPS',
-        city: onboardingData.city || 'À définir',
+        street: onboardingData.street || 'GPS Konumu',
+        city: onboardingData.city || 'Belirtilmemiş',
         postal_code: onboardingData.postal_code || '00000',
         logo_url: logoUrl,
         onboarding_completed: true,
@@ -852,7 +852,7 @@ const MerchantDashboardPage = () => {
 
       if (updateError) throw updateError;
 
-      setToast({ message: '✅ Profil complété avec succès', type: 'success' });
+      setToast({ message: '✅ Profil başarıyla tamamlandı', type: 'success' });
       setShowOnboardingModal(false);
       setModalReady(false);
 
@@ -867,7 +867,7 @@ const MerchantDashboardPage = () => {
       }
     } catch (error: any) {
       console.error('❌ Erreur mise à jour:', error);
-      setToast({ message: error.message || 'Erreur lors de la mise à jour', type: 'error' });
+      setToast({ message: error.message || 'Güncelleme sırasında hata oluştu', type: 'error' });
     } finally {
       setIsSubmittingOnboarding(false);
     }
@@ -1005,7 +1005,7 @@ const MerchantDashboardPage = () => {
                 {reservation.offer_title}
               </p>
               <p className="text-xs text-gray-900 font-bold mb-1">
-                💰 {reservation.total_price.toFixed(2)}€
+                💰 {(reservation.total_price * 49).toFixed(2)}₺
               </p>
               {isPending && (
                 <p className="text-xs text-tilkapp-green font-semibold">
@@ -1025,7 +1025,7 @@ const MerchantDashboardPage = () => {
                   className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-tilkapp-green hover:bg-tilkapp-orange text-white rounded text-xs font-medium transition-colors"
                 >
                   <Check className="w-3 h-3" />
-                  Valider
+                  Onayla
                 </button>
                 {reservation.client_phone && (
                   <a
@@ -1043,7 +1043,7 @@ const MerchantDashboardPage = () => {
                 className="w-full flex items-center justify-center gap-1 px-2 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-medium transition-colors"
               >
                 <Archive className="w-3 h-3" />
-                Archiver
+                Arşivle
               </button>
             )}
           </div>
@@ -1064,7 +1064,7 @@ const MerchantDashboardPage = () => {
             className="w-full h-full object-cover"
           />
           <div className={'absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium ' + getStatusColor(offerStatus)}>
-            {offerStatus === 'paused' ? '⏸️ En pause' : offerStatus === 'active' ? '✅ Active' : '⏰ Expirée'}
+            {offerStatus === 'paused' ? '⏸️ Duraklatıldı' : offerStatus === 'active' ? '✅ Aktif' : '⏰ Süresi Doldu'}
           </div>
         </div>
 
@@ -1075,8 +1075,8 @@ const MerchantDashboardPage = () => {
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="flex items-baseline space-x-2">
-                <span className="text-xs text-gray-500 line-through">{offer.price_before.toFixed(2)} €</span>
-                <span className="text-lg font-bold text-tilkapp-green">{offer.price_after.toFixed(2)} €</span>
+                <span className="text-xs text-gray-500 line-through">{(offer.price_before * 49).toFixed(2)} ₺</span>
+                <span className="text-lg font-bold text-tilkapp-green">{(offer.price_after * 49).toFixed(2)} ₺</span>
               </div>
               {offer.discount_percent && (
                 <span className="text-xs font-medium text-tilkapp-green">
@@ -1091,7 +1091,7 @@ const MerchantDashboardPage = () => {
               <span>{getTimeRemainingDetailed(offer.available_until)}</span>
             </div>
             <div className="text-gray-600">
-              <span className="font-medium">Stock: {offer.quantity}</span>
+              <span className="font-medium">Stok: {offer.quantity}</span>
             </div>
           </div>
 
@@ -1109,15 +1109,15 @@ const MerchantDashboardPage = () => {
               {togglingOfferId === offer.id ? (
                 <>
                   <div className="w-4 h-4 mr-1 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                  {offer.is_active ? 'Pausing...' : 'Activating...'}
+                  {offer.is_active ? 'Duraklatılıyor...' : 'Etkinleştiriliyor...'}
                 </>
               ) : offer.is_active ? (
                 <>
-                  <Pause className="w-4 h-4 mr-1" /> Pause
+                  <Pause className="w-4 h-4 mr-1" /> Duraklat
                 </>
               ) : (
                 <>
-                  <Play className="w-4 h-4 mr-1" /> Activate
+                  <Play className="w-4 h-4 mr-1" /> Etkinleştir
                 </>
               )}
             </button>
@@ -1125,7 +1125,7 @@ const MerchantDashboardPage = () => {
             <button
               onClick={() => openEditModal(offer)}
               className="p-2 bg-tilkapp-beige text-tilkapp-green rounded-lg hover:bg-green-300 transition-colors"
-              title="Edit"
+              title="Düzenle"
             >
               <Edit className="w-4 h-4" />
             </button>
@@ -1133,7 +1133,7 @@ const MerchantDashboardPage = () => {
             <button
               onClick={() => deleteOffer(offer.id)}
               className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
-              title="Delete"
+              title="Sil"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -1167,8 +1167,8 @@ const MerchantDashboardPage = () => {
                   <History className="w-6 h-6 text-tilkapp-green" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Historique des réservations</h2>
-                  <p className="text-sm text-gray-600 mt-1">Toutes vos réservations passées</p>
+                  <h2 className="text-2xl font-bold text-gray-900">Rezervasyon Geçmişi</h2>
+                  <p className="text-sm text-gray-600 mt-1">Tüm geçmiş rezervasyonlarınız</p>
                 </div>
               </div>
               <button
@@ -1187,7 +1187,7 @@ const MerchantDashboardPage = () => {
               ) : allReservations.length === 0 ? (
                 <div className="text-center py-12">
                   <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600">Aucune réservation dans l'historique</p>
+                  <p className="text-gray-600">Geçmişte rezervasyon yok</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1221,46 +1221,46 @@ const MerchantDashboardPage = () => {
                   <Building2 className="w-6 h-6 text-tilkapp-green" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Complétez votre profil marchand</h2>
-                  <p className="text-sm text-gray-600 mt-1">Finalisez votre inscription pour publier des offres</p>
+                  <h2 className="text-2xl font-bold text-gray-900">İşletme Profilinizi Tamamlayın</h2>
+                  <p className="text-sm text-gray-600 mt-1">Teklif yayınlamak için kaydınızı tamamlayın</p>
                 </div>
               </div>
             </div>
 
             <form onSubmit={handleOnboardingSubmit} className="p-6 space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nom de l'entreprise *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">İşletme Adı *</label>
                 <input
                   type="text"
                   value={onboardingData.company_name}
                   onChange={(e) => setOnboardingData({ ...onboardingData, company_name: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green"
-                  placeholder="Ex: Boulangerie Martin"
+                  placeholder="Örn: Ahmet'in Fırını"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Telefon *</label>
                 <input
                   type="tel"
                   value={onboardingData.phone}
                   onChange={(e) => setOnboardingData({ ...onboardingData, phone: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green"
-                  placeholder="Ex: 06 12 34 56 78"
+                  placeholder="Örn: 0532 123 45 67"
                   required
                 />
               </div>
 
               <div className="space-y-4">
-                <p className="text-sm font-medium text-gray-700">📍 Définissez votre position sur la carte</p>
+                <p className="text-sm font-medium text-gray-700">📍 Haritada konumunuzu belirleyin</p>
 
                 <div className="relative">
                   {!mapLoaded && (
                     <div className="w-full h-[400px] rounded-xl bg-gray-100 flex items-center justify-center">
                       <div className="text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tilkapp-green mx-auto mb-2"></div>
-                        <p className="text-sm text-gray-500">Chargement de la carte...</p>
+                        <p className="text-sm text-gray-500">Harita yükleniyor...</p>
                       </div>
                     </div>
                   )}
@@ -1287,12 +1287,12 @@ const MerchantDashboardPage = () => {
                 </div>
 
                 <div className="text-xs text-gray-400 text-center">
-                  Position : {onboardingData.latitude.toFixed(6)}, {onboardingData.longitude.toFixed(6)}
+                  Konum: {onboardingData.latitude.toFixed(6)}, {onboardingData.longitude.toFixed(6)}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Logo de l'entreprise *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">İşletme Logosu *</label>
                 <input
                   type="file"
                   accept="image/*"
@@ -1302,7 +1302,7 @@ const MerchantDashboardPage = () => {
                 />
                 {onboardingData.logo_url && (
                   <div className="mt-3 flex justify-center">
-                    <img src={onboardingData.logo_url} alt="Logo" className="h-16 rounded-md shadow-sm" />
+                    <img src={onboardingData.logo_url} alt="İşletme Logosu" className="h-16 rounded-md shadow-sm" />
                   </div>
                 )}
               </div>
@@ -1314,14 +1314,14 @@ const MerchantDashboardPage = () => {
                     onClick={() => setShowOnboardingModal(false)}
                     className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"
                   >
-                    Annuler
+                    İptal
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmittingOnboarding}
                     className="px-4 py-2 rounded-lg bg-tilkapp-green hover:bg-tilkapp-orange text-white font-medium"
                   >
-                    {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
+                    {isSubmittingOnboarding ? 'Kaydediliyor...' : 'Kaydet'}
                   </button>
                 </div>
               ) : (
@@ -1330,7 +1330,7 @@ const MerchantDashboardPage = () => {
                   disabled={isSubmittingOnboarding}
                   className="w-full py-3 bg-tilkapp-green hover:bg-tilkapp-orange text-white font-semibold rounded-lg"
                 >
-                  {isSubmittingOnboarding ? 'Enregistrement...' : 'Enregistrer'}
+                  {isSubmittingOnboarding ? 'Kaydediliyor...' : 'Kaydet'}
                 </button>
               )}
             </form>
@@ -1353,8 +1353,8 @@ const MerchantDashboardPage = () => {
                     <Package className="w-5 h-5 text-tilkapp-green" />
                   </div>
                   <div className="text-left">
-                    <h2 className="text-lg font-bold text-gray-900">📦 Réservations récentes</h2>
-                    <p className="text-sm text-gray-600">{reservations.length} en cours</p>
+                    <h2 className="text-lg font-bold text-gray-900">📦 Son Rezervasyonlar</h2>
+                    <p className="text-sm text-gray-600">{reservations.length} devam ediyor</p>
                   </div>
                 </div>
                 {showReservationsSection ? (
@@ -1372,7 +1372,7 @@ const MerchantDashboardPage = () => {
                 className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all flex items-center gap-2"
               >
                 <History className="w-5 h-5 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">Historique</span>
+                <span className="text-sm font-medium text-gray-700">Geçmiş</span>
               </button>
             </div>
 
@@ -1395,7 +1395,7 @@ const MerchantDashboardPage = () => {
                           onClick={() => setShowAllInSection(!showAllInSection)}
                           className="text-sm text-tilkapp-green hover:text-tilkapp-green font-medium"
                         >
-                          {showAllInSection ? '← Voir moins' : `Voir toutes (${reservations.length}) →`}
+                          {showAllInSection ? '← Daha Az Göster' : `Tümünü Göster (${reservations.length}) →`}
                         </button>
                       </div>
                     )}
@@ -1408,8 +1408,8 @@ const MerchantDashboardPage = () => {
 
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">My Products</h2>
-            <p className="text-gray-600 mt-1">{activeOffers.length + inactiveOffers.length} total products</p>
+            <h2 className="text-2xl font-bold text-gray-900">Ürünlerim</h2>
+            <p className="text-gray-600 mt-1">Toplam {activeOffers.length + inactiveOffers.length} ürün</p>
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -1417,7 +1417,7 @@ const MerchantDashboardPage = () => {
               className="flex items-center px-6 py-3 bg-tilkapp-green text-white rounded-lg hover:bg-tilkapp-orange transition-colors font-medium shadow-sm"
             >
               <Plus className="w-5 h-5 mr-2" />
-              Add Product
+              Ürün Ekle
             </button>
           </div>
         </div>
@@ -1428,7 +1428,7 @@ const MerchantDashboardPage = () => {
               <div className="w-10 h-10 bg-tilkapp-beige rounded-full flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-tilkapp-green" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">✅ Active Offers</h3>
+              <h3 className="text-xl font-bold text-gray-900">✅ Aktif Teklifler</h3>
             </div>
             <span className="bg-tilkapp-beige text-tilkapp-green px-3 py-1 rounded-full text-sm font-semibold">
               {activeOffers.length}
@@ -1438,13 +1438,13 @@ const MerchantDashboardPage = () => {
           {activeOffers.length === 0 ? (
             <div className="bg-green-100 border-2 border-dashed border-green-300 rounded-lg p-8 text-center">
               <Package className="w-12 h-12 text-tilkapp-orange mx-auto mb-3" />
-              <p className="text-gray-600 mb-4">No active offers yet</p>
+              <p className="text-gray-600 mb-4">Henüz aktif teklif yok</p>
               <button
                 onClick={openAddProductModal}
                 className="inline-flex items-center px-6 py-3 bg-tilkapp-green text-white rounded-lg hover:bg-tilkapp-orange transition-colors font-medium"
               >
                 <Plus className="w-5 h-5 mr-2" />
-                Create Your First Offer
+                İlk Teklifinizi Oluşturun
               </button>
             </div>
           ) : (
@@ -1463,7 +1463,7 @@ const MerchantDashboardPage = () => {
                 <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                   <Clock className="w-5 h-5 text-gray-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">⏸️ Inactive Offers</h3>
+                <h3 className="text-xl font-bold text-gray-900">⏸️ Pasif Teklifler</h3>
               </div>
               <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
                 {inactiveOffers.length}
