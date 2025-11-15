@@ -122,7 +122,7 @@ const Footer = () => {
             <h3 className="text-lg font-bold mb-4">Bize Ulaşın</h3>
             <div className="space-y-3">
               {/* WhatsApp Button */}
-              
+              <a
                 href="https://wa.me/33685507985?text=Merhaba%20TILKAPP"
                 target="_blank"
                 rel="noopener noreferrer"
