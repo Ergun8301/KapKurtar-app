@@ -155,7 +155,7 @@ const Footer = () => {
             <img 
               src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/KK%20ORANGE%20CREME.png" 
               alt="KapKurtar" 
-              className="h-[200px] w-auto"
+              className="h-[300px] w-auto"
             />
           </Link>
         </div>
