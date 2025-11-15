@@ -150,7 +150,7 @@ const Footer = () => {
         </div>
 
         {/* Logo KapKurtar centré */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-1">
           <Link to="/" className="inline-block">
             <img 
               src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/KK%20ORANGE%20CREME.png" 
