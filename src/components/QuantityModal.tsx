@@ -104,7 +104,7 @@ export const QuantityModal: React.FC<QuantityModalProps> = ({
             </div>
             <div className="flex items-center justify-between border-t border-green-300 pt-2">
               <span className="text-lg font-semibold text-gray-900">Toplam:</span>
-              <span className="text-2xl font-bold text-[#00615F]">{((safePrice ?? 0) * quantity * 49).toFixed(2)}₺</span>
+              <span className="text-2xl font-bold text-tilkapp-green">{((safePrice ?? 0) * quantity * 49).toFixed(2)}₺</span>
             </div>
           </div>
 
@@ -119,7 +119,7 @@ export const QuantityModal: React.FC<QuantityModalProps> = ({
             <button
               onClick={handleConfirm}
               disabled={loading || quantity < 1 || quantity > safeAvailableQuantity}
-              className="flex-1 px-4 py-3 bg-[#F75C00] text-white rounded-lg font-medium hover:bg-[#FF7A29] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 bg-tilkapp-green text-white rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

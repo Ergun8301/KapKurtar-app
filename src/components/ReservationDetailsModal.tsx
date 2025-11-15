@@ -144,7 +144,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">Détails de la réservation</h2>
-              <p className="text-[#F3EACE] text-sm">Nouvelle commande client</p>
+              <p className="text-tilkapp-beige text-sm">Nouvelle commande client</p>
             </div>
           </div>
         </div>
@@ -153,7 +153,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
         <div className="p-6">
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00615F] mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tilkapp-green mx-auto mb-4"></div>
               <p className="text-gray-600">Chargement des détails...</p>
             </div>
           ) : error ? (
@@ -183,7 +183,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
                     <span className="text-sm text-gray-600">Email :</span>
                     <a
                       href={`mailto:${details.client.email}`}
-                      className="text-[#00615F] hover:text-[#00615F] text-sm font-medium"
+                      className="text-tilkapp-green hover:text-tilkapp-green text-sm font-medium"
                     >
                       {details.client.email}
                     </a>
@@ -193,7 +193,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
                       <span className="text-sm text-gray-600">Téléphone :</span>
                       <a
                         href={`tel:${details.client.phone}`}
-                        className="text-[#00615F] hover:text-[#00615F] text-sm font-medium"
+                        className="text-tilkapp-green hover:text-tilkapp-green text-sm font-medium"
                       >
                         {details.client.phone}
                       </a>
@@ -205,7 +205,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
               {/* Produit */}
               <div className="bg-green-100 rounded-lg p-4 border border-green-300">
                 <div className="flex items-center gap-2 mb-3">
-                  <Package className="w-5 h-5 text-[#00615F]" />
+                  <Package className="w-5 h-5 text-tilkapp-green" />
                   <h3 className="font-bold text-gray-900">Produit</h3>
                 </div>
                 <div className="space-y-2">
@@ -215,13 +215,13 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Prix unitaire :</span>
-                    <span className="font-bold text-[#00615F]">
+                    <span className="font-bold text-tilkapp-green">
                       {details.offer.price_after.toFixed(2)} €
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Quantité réservée :</span>
-                    <span className="font-bold text-[#00615F] text-lg">{details.quantity}</span>
+                    <span className="font-bold text-tilkapp-green text-lg">{details.quantity}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Stock restant :</span>
@@ -230,7 +230,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
                   <div className="pt-2 border-t border-green-300 mt-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold text-gray-700">Total :</span>
-                      <span className="font-bold text-[#00615F] text-xl">
+                      <span className="font-bold text-tilkapp-green text-xl">
                         {(details.offer.price_after * details.quantity).toFixed(2)} €
                       </span>
                     </div>
@@ -241,7 +241,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
               {/* Date/Heure */}
               <div className="bg-green-100 rounded-lg p-4 border border-green-300">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-5 h-5 text-[#00615F]" />
+                  <Clock className="w-5 h-5 text-tilkapp-green" />
                   <h3 className="font-bold text-gray-900">Date et heure</h3>
                 </div>
                 <p className="text-sm text-gray-700">{formatDateTime(details.created_at)}</p>
@@ -262,7 +262,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
           <div className="border-t border-gray-200 p-4 bg-gray-50 rounded-b-2xl">
             <button
               onClick={onClose}
-              className="w-full py-3 bg-green-100 hover:bg-[#FF7A29] text-white rounded-lg font-semibold transition-colors"
+              className="w-full py-3 bg-green-100 hover:bg-tilkapp-orange text-white rounded-lg font-semibold transition-colors"
             >
               Fermer
             </button>

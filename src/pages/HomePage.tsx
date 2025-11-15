@@ -52,8 +52,8 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Section ForMerchants - fond blanc */}
-      <div className="bg-white">
+      {/* Section ForMerchants - fond turquoise clair */}
+      <div className="bg-[#2DD4BF]/10">
         <ForMerchantsSection />
       </div>
 

@@ -7,7 +7,7 @@ const BlogArticle4 = () => {
       {/* Back Button */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <a href="/blog" className="inline-flex items-center text-[#00615F] hover:text-[#2DD4BF] transition-colors">
+          <a href="/blog" className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange transition-colors">
             <ArrowLeft className="w-5 h-5 mr-2" />
             Bloga dön
           </a>
@@ -18,7 +18,7 @@ const BlogArticle4 = () => {
       <div className="bg-white py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
-            <span className="bg-[#00615F] text-white px-4 py-2 rounded-full text-sm font-medium">
+            <span className="bg-tilkapp-green text-white px-4 py-2 rounded-full text-sm font-medium">
               Referanslar
             </span>
           </div>
@@ -56,7 +56,7 @@ const BlogArticle4 = () => {
             gerçek olamayacak kadar güzel görünüyordu."
           </p>
 
-          <blockquote className="border-l-4 border-[#00615F] pl-6 my-8 italic text-gray-700">
+          <blockquote className="border-l-4 border-tilkapp-green pl-6 my-8 italic text-gray-700">
             "İlk siparişimi aldığımda kaliteye şaşırdım.
             Aynı sabah tam fiyata satılan ürünlerle tamamen aynıydılar!"
           </blockquote>
@@ -68,7 +68,7 @@ const BlogArticle4 = () => {
             İşten geç geldiğim akşamlar için mükemmel."
           </p>
 
-          <div className="bg-[#F3EACE] rounded-lg p-6 my-8">
+          <div className="bg-tilkapp-beige rounded-lg p-6 my-8">
             <h3 className="font-bold text-gray-900 mb-3">Zeynep'in TILKAPP ile aylık bütçesi:</h3>
             <ul className="space-y-2 text-gray-700">
               <li>• Ekmek ve hamur işleri: Ayda 150 TL tasarruf</li>
@@ -92,7 +92,7 @@ const BlogArticle4 = () => {
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">İyi başlamak için tavsiyeleri</h2>
-          <div className="bg-white border-2 border-[#00615F] rounded-lg p-6 my-8">
+          <div className="bg-white border-2 border-tilkapp-green rounded-lg p-6 my-8">
             <h3 className="font-bold text-gray-900 mb-4">Zeynep'in 5 tavsiyesi:</h3>
             <ol className="space-y-3 text-gray-700">
               <li><strong>1. Bildirimleri açın</strong> - Favori işletmelerinizin hiçbir teklifini kaçırmamak için</li>
@@ -109,7 +109,7 @@ const BlogArticle4 = () => {
             Her sabah kahvemi içerken uygulamayı kontrol ediyorum ve akşam için ilgimi çeken şeyleri ayırtıyorum."
           </p>
 
-          <blockquote className="border-l-4 border-[#00615F] pl-6 my-8 italic text-gray-700">
+          <blockquote className="border-l-4 border-tilkapp-green pl-6 my-8 italic text-gray-700">
             "Tüm bunlardaki en güzel şey? Çocuklarım gerçek israf karşıtı elçiler oldular.
             Okuldaki arkadaşlarına bundan bahsediyorlar!"
           </blockquote>
@@ -121,7 +121,7 @@ const BlogArticle4 = () => {
             </p>
             <a
               href="/download"
-              className="bg-[#00615F] text-white px-8 py-3 rounded-lg font-medium hover:bg-[#2DD4BF] transition-colors inline-block"
+              className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
             >
               Uygulamayı indir
             </a>

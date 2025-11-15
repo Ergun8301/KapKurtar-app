@@ -7,12 +7,12 @@ const LegalPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-[#00615F] text-white py-16">
+      <div className="bg-tilkapp-green text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Yasal Bildirim
           </h1>
-          <p className="text-xl text-[#F3EACE]">
+          <p className="text-xl text-tilkapp-beige">
             Kullanım koşulları, gizlilik politikası ve yasal bildirim
           </p>
         </div>
@@ -26,7 +26,7 @@ const LegalPage = () => {
               onClick={() => setActiveTab('terms')}
               className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'terms'
-                  ? 'border-[#00615F] text-[#00615F]'
+                  ? 'border-tilkapp-green text-tilkapp-green'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -37,7 +37,7 @@ const LegalPage = () => {
               onClick={() => setActiveTab('privacy')}
               className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'privacy'
-                  ? 'border-[#00615F] text-[#00615F]'
+                  ? 'border-tilkapp-green text-tilkapp-green'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -48,7 +48,7 @@ const LegalPage = () => {
               onClick={() => setActiveTab('mentions')}
               className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'mentions'
-                  ? 'border-[#00615F] text-[#00615F]'
+                  ? 'border-tilkapp-green text-tilkapp-green'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >

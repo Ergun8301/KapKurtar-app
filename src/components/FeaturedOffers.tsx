@@ -271,7 +271,7 @@ const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) 
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <span className="text-2xl font-bold text-[#00615F]">
+                    <span className="text-2xl font-bold text-tilkapp-green">
                       ${offer.discounted_price}
                     </span>
                     <span className="text-lg text-gray-400 line-through">
@@ -282,14 +282,14 @@ const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) 
                     <button
                       onClick={() => handleReserve(offer)}
                       disabled={!offer.quantity || offer.quantity <= 0}
-                      className="bg-[#00615F] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#2DD4BF] transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      className="bg-tilkapp-green text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                       {!offer.quantity || offer.quantity <= 0 ? 'Tükendi' : 'Şimdi Rezerve Et'}
                     </button>
                   ) : (
                     <button
                       onClick={onOpenDownloadModal}
-                      className="bg-[#F75C00] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#FF7A29] transition-colors duration-300"
+                      className="bg-tilkapp-green text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors"
                     >
                       Rezerve Etmek İçin Giriş Yapın
                     </button>
@@ -321,7 +321,7 @@ const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) 
         <div className="fixed bottom-4 right-4 z-50 animate-slide-up">
           <div
             className={`px-6 py-3 rounded-lg shadow-lg ${
-              toast.type === 'success' ? 'bg-[#00615F]' : 'bg-red-500'
+              toast.type === 'success' ? 'bg-tilkapp-green' : 'bg-red-500'
             } text-white font-medium`}
           >
             {toast.message}

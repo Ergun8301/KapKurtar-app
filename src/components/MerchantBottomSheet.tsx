@@ -211,7 +211,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
                merchant.merchant_street !== 'Position GPS' && 
                merchant.merchant_street !== 'À définir' && (
                 <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                  <MapPin className="w-4 h-4 text-[#00615F] flex-shrink-0 mt-0.5" />
+                  <MapPin className="w-4 h-4 text-tilkapp-green flex-shrink-0 mt-0.5" />
                   <span>
                     {merchant.merchant_street}
                     {merchant.merchant_city && merchant.merchant_city !== 'À définir' && 
@@ -224,7 +224,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
               {merchant.merchant_phone && (
                 <a
                   href={`tel:${merchant.merchant_phone}`}
-                  className="flex items-center gap-2 text-sm text-[#00615F] hover:text-[#2DD4BF] font-medium mb-3 transition-colors duration-300"
+                  className="flex items-center gap-2 text-sm text-tilkapp-green hover:text-tilkapp-green font-medium mb-3"
                 >
                   <Phone className="w-4 h-4" />
                   {merchant.merchant_phone}
@@ -234,7 +234,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
               {/* Bouton Itinéraire */}
               <button
   onClick={handleGetDirections}
-  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#00615F] hover:bg-[#2DD4BF] text-white rounded-lg font-semibold transition-colors duration-300 shadow-md"
+  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-tilkapp-green hover:bg-tilkapp-orange text-tilkapp-beige rounded-lg font-semibold transition-colors shadow-md"
 >
                 <Navigation className="w-4 h-4" />
                 Yol Tarifi
@@ -246,7 +246,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
         {/* Liste des offres */}
         <div className="p-4 md:p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Package className="w-5 h-5 text-[#00615F]" />
+            <Package className="w-5 h-5 text-tilkapp-green" />
             {offers.length} teklif mevcut
           </h3>
 
@@ -258,7 +258,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
                   onOfferClick(offer);
                   handleClose();
                 }}
-                className="bg-white rounded-lg border border-gray-200 hover:border-[#00615F] hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden"
+                className="bg-white rounded-lg border border-gray-200 hover:border-tilkapp-green hover:shadow-md transition-all cursor-pointer overflow-hidden"
               >
                 <div className="flex">
                   {/* Image */}
@@ -286,7 +286,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
 
                     {/* Prix */}
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="font-bold text-[#00615F] text-lg">
+                      <span className="font-bold text-tilkapp-green text-lg">
                         {(offer.price_after * 49).toFixed(2)}₺
                       </span>
                       <span className="line-through text-gray-400 text-sm">

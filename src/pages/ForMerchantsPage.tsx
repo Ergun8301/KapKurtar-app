@@ -5,18 +5,18 @@ const ForMerchantsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-[#00615F] text-white py-16">
+      <div className="bg-tilkapp-green text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Satılmayan Ürünlerinizi Gelire Dönüştürün
             </h1>
-            <p className="text-xl text-[#F3EACE] mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-tilkapp-beige mb-8 max-w-2xl mx-auto">
               TILKAPP ile israfı azaltmış ve gelirlerini artırmış 150'den fazla işletmeye katılın
             </p>
             <a
               href="/merchant/auth"
-              className="inline-block bg-[#F75C00] text-white px-8 py-4 rounded-lg hover:bg-orange-600 transition-colors font-bold text-lg"
+              className="inline-block bg-tilkapp-orange text-white px-8 py-4 rounded-lg hover:bg-orange-600 transition-colors font-bold text-lg"
             >
               Ücretsiz Ortak Olun
             </a>
@@ -56,7 +56,7 @@ const ForMerchantsPage = () => {
         {/* Benefits Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           <div className="bg-white rounded-xl p-6 shadow-lg text-center">
-            <div className="bg-[#00615F] rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <div className="bg-tilkapp-green rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
               <TrendingUp className="w-8 h-8 text-white" />
             </div>
             <h3 className="font-bold text-lg text-gray-900 mb-2">+%30 Gelir</h3>
@@ -64,7 +64,7 @@ const ForMerchantsPage = () => {
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-lg text-center">
-            <div className="bg-[#F75C00] rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <div className="bg-tilkapp-orange rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
               <Clock className="w-8 h-8 text-white" />
             </div>
             <h3 className="font-bold text-lg text-gray-900 mb-2">2 Dakika</h3>
@@ -93,7 +93,7 @@ const ForMerchantsPage = () => {
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Nasıl Çalışır?</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="bg-[#00615F] text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+              <div className="bg-tilkapp-green text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 1
               </div>
               <h3 className="font-bold text-lg text-gray-900 mb-2">Kayıt</h3>
@@ -101,7 +101,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="text-center">
-              <div className="bg-[#00615F] text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+              <div className="bg-tilkapp-green text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 2
               </div>
               <h3 className="font-bold text-lg text-gray-900 mb-2">Yayınlama</h3>
@@ -109,7 +109,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="text-center">
-              <div className="bg-[#00615F] text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+              <div className="bg-tilkapp-green text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 3
               </div>
               <h3 className="font-bold text-lg text-gray-900 mb-2">Rezervasyon</h3>
@@ -117,7 +117,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="text-center">
-              <div className="bg-[#00615F] text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+              <div className="bg-tilkapp-green text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 4
               </div>
               <h3 className="font-bold text-lg text-gray-900 mb-2">Teslim Alma</h3>
@@ -132,7 +132,7 @@ const ForMerchantsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <div className="flex items-center mb-4">
-                <div className="bg-[#00615F] text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl mr-3">
+                <div className="bg-tilkapp-green text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl mr-3">
                   A
                 </div>
                 <div>
@@ -148,7 +148,7 @@ const ForMerchantsPage = () => {
 
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <div className="flex items-center mb-4">
-                <div className="bg-[#F75C00] text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl mr-3">
+                <div className="bg-tilkapp-orange text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl mr-3">
                   F
                 </div>
                 <div>
@@ -181,11 +181,11 @@ const ForMerchantsPage = () => {
         </div>
 
         {/* Features List */}
-        <div className="bg-[#F3EACE] rounded-xl p-8 md:p-12 mb-16">
+        <div className="bg-tilkapp-beige rounded-xl p-8 md:p-12 mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">İhtiyacınız Olan Tüm Özellikler</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-[#00615F] flex-shrink-0 mr-3 mt-1" />
+              <CheckCircle className="w-6 h-6 text-tilkapp-green flex-shrink-0 mr-3 mt-1" />
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">Basit Arayüz</h3>
                 <p className="text-sm text-gray-700">Sezgisel mobil uygulama, eğitim gerektirmez</p>
@@ -193,7 +193,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-[#00615F] flex-shrink-0 mr-3 mt-1" />
+              <CheckCircle className="w-6 h-6 text-tilkapp-green flex-shrink-0 mr-3 mt-1" />
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">Güvenli Ödeme</h3>
                 <p className="text-sm text-gray-700">Müşteriler online öder, otomatik olarak ödeme alırsınız</p>
@@ -201,7 +201,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-[#00615F] flex-shrink-0 mr-3 mt-1" />
+              <CheckCircle className="w-6 h-6 text-tilkapp-green flex-shrink-0 mr-3 mt-1" />
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">Gerçek Zamanlı Bildirimler</h3>
                 <p className="text-sm text-gray-700">Sipariş verilir verilmez bildirim alın</p>
@@ -209,7 +209,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-[#00615F] flex-shrink-0 mr-3 mt-1" />
+              <CheckCircle className="w-6 h-6 text-tilkapp-green flex-shrink-0 mr-3 mt-1" />
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">Detaylı İstatistikler</h3>
                 <p className="text-sm text-gray-700">Satışlarınızı ve israf önleme etkinizi takip edin</p>
@@ -217,7 +217,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-[#00615F] flex-shrink-0 mr-3 mt-1" />
+              <CheckCircle className="w-6 h-6 text-tilkapp-green flex-shrink-0 mr-3 mt-1" />
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">Esnek Saatler</h3>
                 <p className="text-sm text-gray-700">Teslim alma zamanlarını istediğiniz gibi belirleyin</p>
@@ -225,7 +225,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-[#00615F] flex-shrink-0 mr-3 mt-1" />
+              <CheckCircle className="w-6 h-6 text-tilkapp-green flex-shrink-0 mr-3 mt-1" />
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">Hızlı Destek</h3>
                 <p className="text-sm text-gray-700">Ekibimiz her adımda size eşlik eder</p>
@@ -238,7 +238,7 @@ const ForMerchantsPage = () => {
         <div className="bg-white rounded-xl shadow-lg p-8 md:p-12 mb-16 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Şeffaf Fiyatlandırma</h2>
           <div className="flex items-center justify-center mb-6">
-            <div className="text-6xl font-bold text-[#00615F]">0₺</div>
+            <div className="text-6xl font-bold text-tilkapp-green">0₺</div>
             <div className="text-left ml-4">
               <div className="text-xl font-bold text-gray-900">Kayıt</div>
               <div className="text-gray-600">%100 ücretsiz</div>
@@ -248,28 +248,28 @@ const ForMerchantsPage = () => {
             TILKAPP sadece gerçekleştirilen satışlardan küçük bir komisyon alır.
             Satış yok = ücret yok. Bu kadar basit!
           </p>
-          <div className="inline-block bg-[#F3EACE] rounded-lg px-6 py-3">
+          <div className="inline-block bg-tilkapp-beige rounded-lg px-6 py-3">
             <p className="text-gray-900">
-              <span className="font-bold text-2xl text-[#00615F]">%15</span> her satıştan komisyon
+              <span className="font-bold text-2xl text-tilkapp-green">%15</span> her satıştan komisyon
             </p>
           </div>
         </div>
       </div>
 
       {/* Final CTA */}
-      <div className="bg-[#00615F] text-white py-16">
+      <div className="bg-tilkapp-green text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">Satılmayan Ürünlerinizi Gelire Dönüştürmeye Hazır mısınız?</h2>
-          <p className="text-xl text-[#F3EACE] mb-8">
+          <p className="text-xl text-tilkapp-beige mb-8">
             TILKAPP'a ücretsiz katılın ve bugün satmaya başlayın
           </p>
           <a
             href="/merchant/auth"
-            className="inline-block bg-[#F75C00] text-white px-8 py-4 rounded-lg hover:bg-orange-600 transition-colors font-bold text-lg"
+            className="inline-block bg-tilkapp-orange text-white px-8 py-4 rounded-lg hover:bg-orange-600 transition-colors font-bold text-lg"
           >
             İşletme Hesabımı Oluştur
           </a>
-          <p className="text-sm text-[#F3EACE] mt-4">
+          <p className="text-sm text-tilkapp-beige mt-4">
             5 dakikada kayıt • Kredi kartı gerektirmez
           </p>
         </div>

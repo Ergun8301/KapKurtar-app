@@ -147,12 +147,12 @@ const BlogPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-[#00615F] text-white py-16">
+      <div className="bg-tilkapp-green text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             TILKAPP Blog
           </h1>
-          <p className="text-xl text-[#F3EACE] mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-tilkapp-beige mb-8 max-w-2xl mx-auto">
             İsraf önleyici yaşam tarzı için haberler, tavsiyeler ve tarifler
           </p>
 
@@ -180,7 +180,7 @@ const BlogPage = () => {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                   selectedCategory === category
-                    ? 'bg-[#00615F] text-white'
+                    ? 'bg-tilkapp-green text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -203,7 +203,7 @@ const BlogPage = () => {
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute top-4 left-4">
-                  <span className="bg-[#00615F] text-white px-3 py-1 rounded-full text-sm font-medium">
+                  <span className="bg-tilkapp-green text-white px-3 py-1 rounded-full text-sm font-medium">
                     {post.category}
                   </span>
                 </div>
@@ -223,7 +223,7 @@ const BlogPage = () => {
                   <Calendar className="w-4 h-4 mr-1" />
                   <span>{formatDate(post.published_at)}</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#00615F] transition-colors">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-tilkapp-green transition-colors">
                   {post.title}
                 </h3>
                 
@@ -236,7 +236,7 @@ const BlogPage = () => {
                       href={post.external_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center text-[#00615F] hover:text-[#2DD4BF] font-medium transition-colors"
+                      className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange font-medium transition-colors"
                     >
                       Makaleyi oku
                       <ExternalLink className="w-4 h-4 ml-1" />
@@ -244,7 +244,7 @@ const BlogPage = () => {
                   ) : (
                     <a
                       href={`/blog/${post.id}`}
-                      className="inline-flex items-center text-[#00615F] hover:text-[#2DD4BF] font-medium transition-colors"
+                      className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange font-medium transition-colors"
                     >
                       Devamını oku
                       <ArrowRight className="w-4 h-4 ml-1" />
