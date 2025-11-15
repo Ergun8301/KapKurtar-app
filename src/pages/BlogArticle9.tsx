@@ -21,7 +21,7 @@ const BlogArticle9 = () => {
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            TILKAPP ile tasarruf ederken sağlıklı beslenmek
+            KapKurtar ile tasarruf ederken sağlıklı beslenmek
           </h1>
           <div className="flex items-center text-gray-600 mb-8">
             <User className="w-5 h-5 mr-2" />
@@ -42,7 +42,7 @@ const BlogArticle9 = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="prose prose-lg max-w-none">
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            Sağlıklı beslenmenin pahalı olduğu sık duyulur. TILKAPP ile, kaliteli satılmayan ürünler
+            Sağlıklı beslenmenin pahalı olduğu sık duyulur. KapKurtar ile, kaliteli satılmayan ürünler
             sayesinde kısıtlı bütçeyi dengeli beslenme ile nasıl uzlaştıracağınızı keşfedin.
           </p>
 
@@ -65,7 +65,7 @@ const BlogArticle9 = () => {
           </div>
 
           <blockquote className="border-l-4 border-tilkapp-green pl-6 my-8 italic text-gray-700">
-            "TILKAPP sabah satılanlara eşdeğer kalitede ürünlere, fakat yarı fiyatına erişim sağlıyor.
+            "KapKurtar sabah satılanlara eşdeğer kalitede ürünlere, fakat yarı fiyatına erişim sağlıyor.
             Sağlıklı beslenme erişimi için bir devrim."
             <br />
             <span className="text-sm not-italic">- Dr. Elif Yıldız, diyetisyen</span>
@@ -104,7 +104,7 @@ const BlogArticle9 = () => {
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">
             <Utensils className="inline w-6 h-6 mr-2 text-tilkapp-green" />
-            TILKAPP dengeli beslenmeyi nasıl kolaylaştırıyor
+            KapKurtar dengeli beslenmeyi nasıl kolaylaştırıyor
           </h2>
 
           <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">1. Taze meyve ve sebzeye kolay erişim</h3>
@@ -142,7 +142,7 @@ const BlogArticle9 = () => {
           <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">3. Tam buğday ekmek ve tahıl ürünleri</h3>
           <p className="text-gray-700 mb-4 leading-relaxed">
             Beyaz ekmekten daha besleyici olan tam buğday ekmek genellikle daha pahalıdır.
-            TILKAPP'ta gün sonunda indirimli bulursunuz.
+            KapKurtar'ta gün sonunda indirimli bulursunuz.
           </p>
           <div className="bg-amber-50 rounded-lg p-6 my-6">
             <p className="text-sm text-gray-700">
@@ -154,13 +154,13 @@ const BlogArticle9 = () => {
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Referans: Ayşe'nin gıda bütçesi</h2>
           <div className="bg-gray-100 rounded-lg p-6 my-8">
             <p className="text-gray-700 mb-4">
-              38 yaşında, 3 çocuk annesi, Antalya'da öğretmen olan Ayşe, TILKAPP'ı 8 aydır kullanıyor.
+              38 yaşında, 3 çocuk annesi, Antalya'da öğretmen olan Ayşe, KapKurtar'ı 8 aydır kullanıyor.
               Gıda bütçesini nasıl dönüştürdüğü:
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
               <div className="bg-red-50 rounded p-4">
-                <h4 className="font-bold text-gray-900 mb-3">❌ TILKAPP öncesi</h4>
+                <h4 className="font-bold text-gray-900 mb-3">❌ KapKurtar öncesi</h4>
                 <ul className="text-sm text-gray-700 space-y-2">
                   <li>• Aylık bütçe: 5.200 TL</li>
                   <li>• Meyve/sebze: Haftada maksimum 2 kez</li>
@@ -169,7 +169,7 @@ const BlogArticle9 = () => {
                 </ul>
               </div>
               <div className="bg-green-50 rounded p-4">
-                <h4 className="font-bold text-gray-900 mb-3">✅ TILKAPP ile</h4>
+                <h4 className="font-bold text-gray-900 mb-3">✅ KapKurtar ile</h4>
                 <ul className="text-sm text-gray-700 space-y-2">
                   <li>• Aylık bütçe: 3.800 TL</li>
                   <li>• Meyve/sebze: Haftada 4-5 kez</li>
@@ -185,20 +185,20 @@ const BlogArticle9 = () => {
             </p>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">TILKAPP ile haftalık menü fikirleri</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">KapKurtar ile haftalık menü fikirleri</h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            Geleneksel alışverişi ve TILKAPP tekliflerini birleştirerek tipik bir hafta örneği.
+            Geleneksel alışverişi ve KapKurtar tekliflerini birleştirerek tipik bir hafta örneği.
           </p>
 
           <div className="space-y-4 my-8">
             {[
-              { gun: 'Pazartesi', ogle: 'Mercimek salatası + TILKAPP tam buğday ekmek', aksam: 'Balık + TILKAPP buharda sebze' },
-              { gun: 'Salı', ogle: 'Balık artığı + pirinç', aksam: 'TILKAPP restoran menüsü (çorba + ana yemek)' },
-              { gun: 'Çarşamba', ogle: 'Yumurta + TILKAPP sote sebze', aksam: 'Makarna + ev yapımı domates sosu (TILKAPP domates)' },
-              { gun: 'Perşembe', ogle: 'TILKAPP ekmek + peynir + çiğ sebze sandviç', aksam: 'Fırında tavuk + patates püresi + salata' },
-              { gun: 'Cuma', ogle: 'TILKAPP sebze çorbası + ekmek', aksam: 'Ev yapımı pizza (taban olarak TILKAPP ekmek)' },
-              { gun: 'Cumartesi', ogle: 'Brunch (TILKAPP hamur işleri + yumurta + meyve)', aksam: 'Köfte + bulgur + yoğurt' },
-              { gun: 'Pazar', ogle: 'Geleneksel aile yemeği', aksam: 'Çorba + ekmek + TILKAPP peynir' }
+              { gun: 'Pazartesi', ogle: 'Mercimek salatası + KapKurtar tam buğday ekmek', aksam: 'Balık + KapKurtar buharda sebze' },
+              { gun: 'Salı', ogle: 'Balık artığı + pirinç', aksam: 'KapKurtar restoran menüsü (çorba + ana yemek)' },
+              { gun: 'Çarşamba', ogle: 'Yumurta + KapKurtar sote sebze', aksam: 'Makarna + ev yapımı domates sosu (KapKurtar domates)' },
+              { gun: 'Perşembe', ogle: 'KapKurtar ekmek + peynir + çiğ sebze sandviç', aksam: 'Fırında tavuk + patates püresi + salata' },
+              { gun: 'Cuma', ogle: 'KapKurtar sebze çorbası + ekmek', aksam: 'Ev yapımı pizza (taban olarak KapKurtar ekmek)' },
+              { gun: 'Cumartesi', ogle: 'Brunch (KapKurtar hamur işleri + yumurta + meyve)', aksam: 'Köfte + bulgur + yoğurt' },
+              { gun: 'Pazar', ogle: 'Geleneksel aile yemeği', aksam: 'Çorba + ekmek + KapKurtar peynir' }
             ].map((menu, i) => (
               <div key={i} className="bg-white border border-gray-200 rounded-lg p-4">
                 <h4 className="font-bold text-tilkapp-green mb-2">{menu.gun}</h4>
@@ -213,7 +213,7 @@ const BlogArticle9 = () => {
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 my-8">
             <h3 className="font-bold text-gray-900 mb-3">💡 Diyetisyen ipucu:</h3>
             <p className="text-gray-700 text-sm">
-              TILKAPP ürünleri pişmiş preparatlar (çorba, graten, komposto, smoothie) için mükemmel.
+              KapKurtar ürünleri pişmiş preparatlar (çorba, graten, komposto, smoothie) için mükemmel.
               Bir meyve veya sebze artık görsel olarak mükemmel olmasa bile, tüm besinlerini korur!
             </p>
           </div>
@@ -246,7 +246,7 @@ const BlogArticle9 = () => {
           <div className="bg-tilkapp-green text-white rounded-lg p-8 my-12 text-center">
             <h3 className="text-2xl font-bold mb-4">Bugünden daha iyisini daha ucuza yiyin</h3>
             <p className="mb-6 text-tilkapp-beige">
-              TILKAPP'ı indirin ve yakınınızdaki teklifleri keşfedin
+              KapKurtar'ı indirin ve yakınınızdaki teklifleri keşfedin
             </p>
             <a
               href="/download"

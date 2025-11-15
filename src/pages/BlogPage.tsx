@@ -55,11 +55,11 @@ const BlogPage = () => {
       external_url: 'https://www.risalehaber.com/korkunc-israf-turkiyede-her-yil-23-milyon-ton-gida-cope-gidiyor-447473h.htm'
     },
     
-    // 📝 TILKAPP MAKALELERİ (iç sayfalar)
+    // 📝 KapKurtar MAKALELERİ (iç sayfalar)
     {
       id: 4,
-      title: 'Görüş: "TILKAPP tüketim şeklimi değiştirdi"',
-      excerpt: '6 aydır TILKAPP\'ın sadık kullanıcısı Zeynep ile tanışın. İsrafla mücadele ederken nasıl tasarruf ettiğini keşfedin.',
+      title: 'Görüş: "KapKurtar tüketim şeklimi değiştirdi"',
+      excerpt: '6 aydır KapKurtar\'ın sadık kullanıcısı Zeynep ile tanışın. İsrafla mücadele ederken nasıl tasarruf ettiğini keşfedin.',
       category: 'Görüşler',
       author: 'Zeynep K.',
       published_at: '2024-11-01',
@@ -69,9 +69,9 @@ const BlogPage = () => {
     {
       id: 5,
       title: 'İsraf önleyici işletmeler için en iyi uygulamalar',
-      excerpt: 'TILKAPP ile satılmayan ürünlerinizi nasıl optimize edip karlılığınızı artırırsınız. İş ortağı işletmeler için kapsamlı rehber.',
+      excerpt: 'KapKurtar ile satılmayan ürünlerinizi nasıl optimize edip karlılığınızı artırırsınız. İş ortağı işletmeler için kapsamlı rehber.',
       category: 'Tavsiyeler',
-      author: 'TILKAPP Business',
+      author: 'KapKurtar Business',
       published_at: '2024-10-28',
       featured_image_url: 'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=800',
       reading_time: 8
@@ -89,9 +89,9 @@ const BlogPage = () => {
     {
       id: 7,
       title: 'Antalya\'da israf önleme hareketi ivme kazanıyor',
-      excerpt: 'Giderek daha fazla işletme israfla mücadele için TILKAPP\'a katılıyor. Harekete geçen bir şehrin portresi.',
+      excerpt: 'Giderek daha fazla işletme israfla mücadele için KapKurtar\'a katılıyor. Harekete geçen bir şehrin portresi.',
       category: 'Haberler',
-      author: 'TILKAPP Editörlüğü',
+      author: 'KapKurtar Editörlüğü',
       published_at: '2024-10-15',
       featured_image_url: 'https://images.pexels.com/photos/1388030/pexels-photo-1388030.jpeg?auto=compress&cs=tinysrgb&w=800',
       reading_time: 6
@@ -108,8 +108,8 @@ const BlogPage = () => {
     },
     {
       id: 9,
-      title: 'TILKAPP ile sağlıklı beslenirken tasarruf edin',
-      excerpt: 'TILKAPP bütçenizi patlatmadan dengeli beslenmenizi nasıl sağlar. Görüşler ve beslenme tavsiyeleri.',
+      title: 'KapKurtar ile sağlıklı beslenirken tasarruf edin',
+      excerpt: 'KapKurtar bütçenizi patlatmadan dengeli beslenmenizi nasıl sağlar. Görüşler ve beslenme tavsiyeleri.',
       category: 'İsraf Önleme',
       author: 'Diyetisyen Elif',
       published_at: '2024-09-30',
@@ -150,7 +150,7 @@ const BlogPage = () => {
       <div className="bg-tilkapp-green text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            TILKAPP Blog
+            KapKurtar Blog
           </h1>
           <p className="text-xl text-tilkapp-beige mb-8 max-w-2xl mx-auto">
             İsraf önleyici yaşam tarzı için haberler, tavsiyeler ve tarifler
