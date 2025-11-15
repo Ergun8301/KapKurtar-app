@@ -103,7 +103,6 @@ const Header = () => {
               alt="TILKAPP"
               className="h-16 w-auto"
             />
-            <span className="font-bold text-white text-2xl">TILKAPP</span>
           </a>
 
           <div className="hidden md:block">
