@@ -4,7 +4,7 @@ import { MessageCircle, MapPin } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-tilkapp-green text-white">
+    <footer className="bg-[#00615F] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           
@@ -17,7 +17,7 @@ const Footer = () => {
                 className="h-22 w-auto"
               />
             </Link>
-            <p className="text-tilkapp-beige text-sm leading-relaxed">
+            <p className="text-[#F3EACE] text-sm leading-relaxed">
               Gıda israfını azaltmak ve yerel işletmeleri desteklemek için tüccarları müşterilerle buluşturuyoruz.
             </p>
             {/* Réseaux sociaux */}
@@ -26,7 +26,7 @@ const Footer = () => {
                 href="https://facebook.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-tilkapp-beige hover:text-white transition-colors"
+                className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300"
                 aria-label="Facebook"
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -37,7 +37,7 @@ const Footer = () => {
                 href="https://twitter.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-tilkapp-beige hover:text-white transition-colors"
+                className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300"
                 aria-label="Twitter"
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -48,7 +48,7 @@ const Footer = () => {
                 href="https://instagram.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-tilkapp-beige hover:text-white transition-colors"
+                className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300"
                 aria-label="Instagram"
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -63,27 +63,27 @@ const Footer = () => {
             <h3 className="text-lg font-bold mb-4">Hızlı Bağlantılar</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
+                <Link to="/" className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300 text-sm">
                   Ana Sayfa
                 </Link>
               </li>
               <li>
-                <Link to="/offers" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
+                <Link to="/offers" className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300 text-sm">
                   Teklifleri Keşfet
                 </Link>
               </li>
               <li>
-                <Link to="/for-merchants" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
+                <Link to="/for-merchants" className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300 text-sm">
                   İşletmeler İçin
                 </Link>
               </li>
               <li>
-                <Link to="/download" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
+                <Link to="/download" className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300 text-sm">
                   Uygulamayı İndir
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
+                <Link to="/about" className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300 text-sm">
                   Hakkımızda
                 </Link>
               </li>
@@ -95,22 +95,22 @@ const Footer = () => {
             <h3 className="text-lg font-bold mb-4">Destek</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/faq" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
+                <Link to="/faq" className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300 text-sm">
                   SSS
                 </Link>
               </li>
               <li>
-                <Link to="/blog" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
+                <Link to="/blog" className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300 text-sm">
                   Blog
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
+                <Link to="/contact" className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300 text-sm">
                   Bize Ulaşın
                 </Link>
               </li>
               <li>
-                <Link to="/legal" className="text-tilkapp-beige hover:text-white transition-colors text-sm">
+                <Link to="/legal" className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300 text-sm">
                   Yasal Bilgiler
                 </Link>
               </li>
@@ -122,18 +122,18 @@ const Footer = () => {
             <h3 className="text-lg font-bold mb-4">Bize Ulaşın</h3>
             <div className="space-y-3">
               {/* WhatsApp Button */}
-              <a
+              
                 href="https://wa.me/33685507985?text=Merhaba%20TILKAPP"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2 text-tilkapp-beige hover:text-white transition-colors text-sm"
+                className="flex items-center space-x-2 text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300 text-sm"
               >
                 <MessageCircle className="w-5 h-5 flex-shrink-0" />
                 <span>WhatsApp'tan Bize Ulaşın</span>
               </a>
 
               {/* Address */}
-              <div className="flex items-start space-x-2 text-tilkapp-beige text-sm">
+              <div className="flex items-start space-x-2 text-[#F3EACE] text-sm">
                 <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
                 <div>
                   <p>Eski Hisar, 9501. Sk. No:3</p>
@@ -145,7 +145,7 @@ const Footer = () => {
               {/* Contact Form Link */}
               <Link
                 to="/contact"
-                className="inline-block bg-tilkapp-orange text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium mt-4"
+                className="inline-block bg-[#F75C00] text-white px-4 py-2 rounded-lg hover:bg-[#FF7A29] transition-colors duration-300 text-sm font-medium mt-4"
               >
                 İletişim Formu
               </Link>
@@ -158,14 +158,14 @@ const Footer = () => {
       <div className="border-t border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-tilkapp-beige text-sm">
+            <p className="text-[#F3EACE] text-sm">
               © 2025 TILKAPP. Tüm hakları saklıdır.
             </p>
             <div className="flex space-x-6 text-sm">
-              <Link to="/legal" className="text-tilkapp-beige hover:text-white transition-colors">
+              <Link to="/legal" className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300">
                 Gizlilik Politikası
               </Link>
-              <Link to="/legal" className="text-tilkapp-beige hover:text-white transition-colors">
+              <Link to="/legal" className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300">
                 Kullanım Koşulları
               </Link>
             </div>
