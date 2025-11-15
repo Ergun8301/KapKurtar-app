@@ -81,7 +81,7 @@ const Banner = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             
               href={currentSlideData.cta_link}
-              className="bg-[#00615F] text-white px-8 py-3 rounded-lg font-medium hover:bg-[#2DD4BF] transition-colors duration-300"
+              className="bg-[#2DD4BF] text-white px-8 py-3 rounded-lg font-medium hover:bg-[#2DD4BF] transition-colors duration-300"
             >
               {currentSlideData.cta_text}
             </a>
