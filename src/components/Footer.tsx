@@ -106,7 +106,7 @@ const Footer = () => {
         </div>
 
         {/* Description + Réseaux sociaux - centrés */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-4">
           <p className="text-[#F3EACE] text-sm leading-relaxed max-w-2xl mx-auto mb-4">
             Gıda israfını azaltmak ve yerel işletmeleri desteklemek için tüccarları müşterilerle buluşturuyoruz.
           </p>
