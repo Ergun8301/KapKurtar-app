@@ -56,14 +56,14 @@ const ImpactSection = () => {
               key={index}
               className="bg-white rounded-xl p-8 text-center shadow-sm hover:shadow-md transition-shadow border border-gray-100"
             >
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-tilkapp-beige rounded-full mb-4">
-                <stat.icon className="w-8 h-8 text-tilkapp-green" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-[#F3EACE] rounded-full mb-4">
+                <stat.icon className="w-8 h-8 text-[#00615F]" />
               </div>
-              <div className="text-4xl font-bold text-tilkapp-green mb-1">
+              <div className="text-4xl font-bold text-[#00615F] mb-1">
                 {stat.value}
               </div>
               {stat.unit && (
-                <div className="text-lg font-semibold text-tilkapp-orange mb-2">
+                <div className="text-lg font-semibold text-[#2DD4BF] mb-2">
                   {stat.unit}
                 </div>
               )}

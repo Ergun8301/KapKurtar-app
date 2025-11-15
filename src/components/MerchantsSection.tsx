@@ -56,7 +56,7 @@ const MerchantsSection = () => {
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 {merchant.verified && (
-                  <div className="absolute top-4 right-4 bg-tilkapp-green text-white p-2 rounded-full">
+                  <div className="absolute top-4 right-4 bg-[#00615F] text-white p-2 rounded-full">
                     <Award className="w-4 h-4" />
                   </div>
                 )}
@@ -74,17 +74,17 @@ const MerchantsSection = () => {
 
                 {merchant.verified && (
                   <div className="flex items-center mb-4">
-                    <Award className="w-4 h-4 text-tilkapp-green mr-1" />
-                    <span className="text-sm text-tilkapp-green">Verified Merchant</span>
+                    <Award className="w-4 h-4 text-[#00615F] mr-1" />
+                    <span className="text-sm text-[#00615F]">Verified Merchant</span>
                   </div>
                 )}
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center text-sm text-tilkapp-green">
+                  <div className="flex items-center text-sm text-[#00615F]">
                     <Clock className="w-4 h-4 mr-1" />
                     <span>Open now</span>
                   </div>
-                  <button className="bg-tilkapp-green text-white px-4 py-2 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors">
+                  <button className="bg-[#00615F] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#2DD4BF] transition-colors">
                     View Menu
                   </button>
                 </div>
@@ -96,7 +96,7 @@ const MerchantsSection = () => {
         <div className="text-center mt-12">
           <a
             href="/merchants"
-            className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
+            className="bg-[#00615F] text-white px-8 py-3 rounded-lg font-medium hover:bg-[#2DD4BF] transition-colors inline-block"
           >
             View All Merchants
           </a>

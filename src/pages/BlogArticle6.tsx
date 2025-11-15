@@ -6,7 +6,7 @@ const BlogArticle6 = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <a href="/blog" className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange transition-colors">
+          <a href="/blog" className="inline-flex items-center text-[#00615F] hover:text-[#2DD4BF] transition-colors">
             <ArrowLeft className="w-5 h-5 mr-2" />
             Bloga dön
           </a>
@@ -16,7 +16,7 @@ const BlogArticle6 = () => {
       <div className="bg-white py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
-            <span className="bg-tilkapp-green text-white px-4 py-2 rounded-full text-sm font-medium">
+            <span className="bg-[#00615F] text-white px-4 py-2 rounded-full text-sm font-medium">
               Tarifler
             </span>
           </div>
@@ -46,20 +46,20 @@ const BlogArticle6 = () => {
             yemeklere dönüştürmek için 5 tarif keşfedin.
           </p>
 
-          <blockquote className="border-l-4 border-tilkapp-green pl-6 my-8 italic text-gray-700">
+          <blockquote className="border-l-4 border-[#00615F] pl-6 my-8 italic text-gray-700">
             "Türkiye'de yılda ortalama 2,3 milyon ton gıda atıyoruz.
             Ekmek bu israfın önemli bir kısmını oluşturuyor. Oysa ona ikinci bir şans vermek için
             birkaç ipucu yeterli!"
           </blockquote>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4 flex items-center">
-            <ChefHat className="w-6 h-6 mr-2 text-tilkapp-green" />
+            <ChefHat className="w-6 h-6 mr-2 text-[#00615F]" />
             1. Süper çıtır ev yapımı krutonlar
           </h2>
           <p className="text-gray-700 mb-4 leading-relaxed">
             Ev yapımı krutonlar marketten alınanlara göre 10 kat daha iyi ve hazırlanması çok basit!
           </p>
-          <div className="bg-tilkapp-beige rounded-lg p-6 my-6">
+          <div className="bg-[#F3EACE] rounded-lg p-6 my-6">
             <h3 className="font-bold text-gray-900 mb-3">Malzemeler:</h3>
             <ul className="space-y-1 text-gray-700 mb-4">
               <li>• Bayat ekmek (istediğiniz kadar)</li>
@@ -81,14 +81,14 @@ const BlogArticle6 = () => {
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4 flex items-center">
-            <ChefHat className="w-6 h-6 mr-2 text-tilkapp-green" />
+            <ChefHat className="w-6 h-6 mr-2 text-[#00615F]" />
             2. Büyükanne usulü ekmek tatlısı
           </h2>
           <p className="text-gray-700 mb-4 leading-relaxed">
             Küçük büyük herkesi memnun edecek rahatlatıcı bir tatlı. Bu geleneksel Türk tatlısı (Ekmek Tatlısı)
             kuru ekmeği tatlı bir lezzete dönüştürür.
           </p>
-          <div className="bg-tilkapp-beige rounded-lg p-6 my-6">
+          <div className="bg-[#F3EACE] rounded-lg p-6 my-6">
             <h3 className="font-bold text-gray-900 mb-3">Malzemeler (4 kişilik):</h3>
             <ul className="space-y-1 text-gray-700 mb-4">
               <li>• 300g bayat ekmek</li>
@@ -114,14 +114,14 @@ const BlogArticle6 = () => {
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4 flex items-center">
-            <ChefHat className="w-6 h-6 mr-2 text-tilkapp-green" />
+            <ChefHat className="w-6 h-6 mr-2 text-[#00615F]" />
             3. Ev yapımı galeta unu
           </h2>
           <p className="text-gray-700 mb-4 leading-relaxed">
             Ev yapımı galeta unu market unu galeta unundan daha ekonomik ve lezzetli.
             Hava geçirmez bir kavanozda birkaç ay saklanabilir.
           </p>
-          <div className="bg-tilkapp-beige rounded-lg p-6 my-6">
+          <div className="bg-[#F3EACE] rounded-lg p-6 my-6">
             <h3 className="font-bold text-gray-900 mb-3">Çok basit yöntem:</h3>
             <ol className="space-y-2 text-gray-700">
               <li>1. Ekmeği 2-3 gün tamamen kurumaya bırakın</li>
@@ -135,13 +135,13 @@ const BlogArticle6 = () => {
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4 flex items-center">
-            <ChefHat className="w-6 h-6 mr-2 text-tilkapp-green" />
+            <ChefHat className="w-6 h-6 mr-2 text-[#00615F]" />
             4. Ekmekli köylü çorbası (Paçanga)
           </h2>
           <p className="text-gray-700 mb-4 leading-relaxed">
             Kış akşamları için mükemmel, kalın ve rahatlatıcı geleneksel bir Türk çorbası.
           </p>
-          <div className="bg-tilkapp-beige rounded-lg p-6 my-6">
+          <div className="bg-[#F3EACE] rounded-lg p-6 my-6">
             <h3 className="font-bold text-gray-900 mb-3">Malzemeler (4 kişilik):</h3>
             <ul className="space-y-1 text-gray-700 mb-4">
               <li>• 200g bayat ekmek</li>
@@ -168,13 +168,13 @@ const BlogArticle6 = () => {
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4 flex items-center">
-            <ChefHat className="w-6 h-6 mr-2 text-tilkapp-green" />
+            <ChefHat className="w-6 h-6 mr-2 text-[#00615F]" />
             5. Domatesli Türk bruschettası
           </h2>
           <p className="text-gray-700 mb-4 leading-relaxed">
             Aperitif veya garnitür için mükemmel, hızlı ve lezzetli bir Akdeniz mezesi.
           </p>
-          <div className="bg-tilkapp-beige rounded-lg p-6 my-6">
+          <div className="bg-[#F3EACE] rounded-lg p-6 my-6">
             <h3 className="font-bold text-gray-900 mb-3">Malzemeler (4 kişilik):</h3>
             <ul className="space-y-1 text-gray-700 mb-4">
               <li>• Dilimlenmiş bayat ekmek</li>
@@ -201,7 +201,7 @@ const BlogArticle6 = () => {
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Saklama tavsiyesi</h2>
-          <div className="bg-white border-2 border-tilkapp-green rounded-lg p-6 my-8">
+          <div className="bg-white border-2 border-[#00615F] rounded-lg p-6 my-8">
             <p className="text-gray-700 mb-4">
               <strong>Profesyonel ipucu:</strong> Bayat ekmeğinizi hemen kullanmayacaksanız,
               dilimler halinde dondurun. Birkaç ay sonra bile kruton veya galeta unu yapmak için mükemmel olacaktır!
@@ -219,7 +219,7 @@ const BlogArticle6 = () => {
             </p>
             <a
               href="/offers"
-              className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
+              className="bg-[#00615F] text-white px-8 py-3 rounded-lg font-medium hover:bg-[#2DD4BF] transition-colors inline-block"
             >
               Teklifleri görüntüle
             </a>

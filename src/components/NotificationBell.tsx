@@ -207,7 +207,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
           aria-label="Notifications"
         >
           <Bell
-            className="w-6 h-6 text-tilkapp-beige hover:text-tilkapp-orange transition-colors"
+            className="w-6 h-6 text-[#F3EACE] hover:text-[#2DD4BF] transition-colors"
           />
 
           {unreadCount > 0 && (
@@ -226,7 +226,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
               {notifications.length > 0 && unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-xs text-tilkapp-green hover:text-tilkapp-green font-medium hover:underline transition-colors"
+                  className="text-xs text-[#00615F] hover:text-[#00615F] font-medium hover:underline transition-colors"
                 >
                   Tümünü Okundu İşaretle
                 </button>
@@ -277,7 +277,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
                       </div>
 
                       {!n.is_read && (
-                        <div className="flex-shrink-0 w-2.5 h-2.5 bg-tilkapp-green rounded-full mt-1 shadow-sm"></div>
+                        <div className="flex-shrink-0 w-2.5 h-2.5 bg-[#00615F] rounded-full mt-1 shadow-sm"></div>
                       )}
                     </div>
                   </div>

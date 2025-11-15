@@ -95,12 +95,12 @@ const FAQPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-tilkapp-green text-white py-16">
+      <div className="bg-[#00615F] text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Sıkça Sorulan Sorular
           </h1>
-          <p className="text-xl text-tilkapp-beige mb-8">
+          <p className="text-xl text-[#F3EACE] mb-8">
             TILKAPP hakkındaki sorularınızın yanıtlarını hızlıca bulun
           </p>
 
@@ -136,7 +136,7 @@ const FAQPage = () => {
                     >
                       <span className="font-medium text-gray-900 pr-4">{faq.question}</span>
                       {openFAQ === globalIndex ? (
-                        <ChevronUp className="w-5 h-5 text-tilkapp-green flex-shrink-0" />
+                        <ChevronUp className="w-5 h-5 text-[#00615F] flex-shrink-0" />
                       ) : (
                         <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
                       )}
@@ -171,7 +171,7 @@ const FAQPage = () => {
           </p>
           <a
             href="/contact"
-            className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
+            className="bg-[#00615F] text-white px-8 py-3 rounded-lg font-medium hover:bg-[#2DD4BF] transition-colors inline-block"
           >
             Bize ulaşın
           </a>

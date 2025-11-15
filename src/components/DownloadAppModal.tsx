@@ -67,7 +67,7 @@ const DownloadAppModal: React.FC<DownloadAppModalProps> = ({ isOpen, onClose }) 
         <div className="p-8">
           {/* Header */}
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold text-tilkapp-green mb-2">
+            <h2 className="text-3xl font-bold text-[#00615F] mb-2">
               TILKAPP'ı İndirin
             </h2>
             <p className="text-gray-600 text-lg">
@@ -119,12 +119,12 @@ const DownloadAppModal: React.FC<DownloadAppModalProps> = ({ isOpen, onClose }) 
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@ornek.com"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tilkapp-green focus:border-transparent transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00615F] focus:border-transparent transition-all"
               />
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-tilkapp-green text-white px-6 py-3 rounded-lg font-bold hover:bg-tilkapp-orange transition-colors shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#F75C00] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#FF7A29] transition-colors duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Gönderiliyor...' : isSubmitted ? '✓ Teşekkürler!' : 'Beni Bilgilendir'}
               </button>

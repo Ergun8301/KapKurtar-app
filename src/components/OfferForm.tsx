@@ -318,7 +318,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
         <div
           className={
             'fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg ' +
-            (toast.type === 'success' ? 'bg-tilkapp-green' : 'bg-red-500') +
+            (toast.type === 'success' ? 'bg-[#00615F]' : 'bg-red-500') +
             ' text-white'
           }
         >
@@ -348,7 +348,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
               value={formData.title}
               onChange={handleInputChange}
               placeholder="Örn: Taze Kruvasan Kutusu"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00615F] focus:border-transparent"
             />
           </div>
 
@@ -360,7 +360,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
               onChange={handleInputChange}
               placeholder="Ürününüzü tanımlayın..."
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00615F] focus:border-transparent"
             />
           </div>
 
@@ -415,7 +415,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                 placeholder="600.00"
                 step="0.01"
                 min="0"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00615F] focus:border-transparent"
               />
             </div>
             <div>
@@ -428,14 +428,14 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                 placeholder="250.00"
                 step="0.01"
                 min="0"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00615F] focus:border-transparent"
               />
             </div>
           </div>
 
           {formData.price_before && formData.price_after && parseFloat(formData.price_before) > 0 && (
             <div className="bg-green-100 border border-green-300 rounded-lg p-3 text-center">
-              <span className="text-lg font-bold text-tilkapp-green">
+              <span className="text-lg font-bold text-[#00615F]">
                 -%{calculateDiscount(formData.price_before, formData.price_after)} indirim
               </span>
             </div>
@@ -452,7 +452,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
               onChange={handleInputChange}
               placeholder="10"
               min="0"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00615F] focus:border-transparent"
             />
           </div>
 
@@ -464,7 +464,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                   id="startNow"
                   checked={formData.startNow}
                   onChange={(e) => handleStartNowChange(e.target.checked)}
-                  className="w-4 h-4 text-tilkapp-green rounded focus:ring-tilkapp-green"
+                  className="w-4 h-4 text-[#00615F] rounded focus:ring-[#00615F]"
                 />
                 <label htmlFor="startNow" className="ml-2 text-sm font-medium text-gray-700">
                   Başlangıç: Şimdi
@@ -482,7 +482,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                     value={formData.available_from}
                     onChange={handleInputChange}
                     disabled={formData.startNow}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00615F] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -494,7 +494,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                     name="available_until"
                     value={formData.available_until}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00615F] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -505,7 +505,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                   name="duration"
                   value={formData.duration}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00615F] focus:border-transparent"
                 >
                   <option value="30min">30 dakika</option>
                   <option value="1h">1 saat</option>
@@ -528,7 +528,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                     onChange={handleInputChange}
                     placeholder="120"
                     min="1"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00615F] focus:border-transparent"
                   />
                 </div>
               )}
@@ -546,7 +546,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                   name="available_from"
                   value={formData.available_from}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00615F] focus:border-transparent"
                 />
               </div>
 
@@ -559,7 +559,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                   name="available_until"
                   value={formData.available_until}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00615F] focus:border-transparent"
                 />
               </div>
             </>
@@ -571,8 +571,8 @@ export const OfferForm: React.FC<OfferFormProps> = ({
             className={
               'w-full py-3 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ' +
               (mode === 'create'
-                ? 'bg-tilkapp-green hover:bg-tilkapp-orange'
-                : 'bg-green-100 hover:bg-tilkapp-orange')
+                ? 'bg-[#00615F] hover:bg-[#2DD4BF]'
+                : 'bg-green-100 hover:bg-[#FF7A29]')
             }
           >
             {isSubmitting

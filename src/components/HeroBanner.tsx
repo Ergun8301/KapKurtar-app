@@ -70,7 +70,7 @@ const HeroBanner = () => {
       <div className="relative h-full flex items-center justify-center">
         <div className="text-center text-white px-4 max-w-5xl">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-            Tasarruf Edin, <span className="text-tilkapp-orange">Gıdayı Kurtarın</span>, <br />Gezegeni Kurtarın
+            Tasarruf Edin, <span className="text-[#2DD4BF]">Gıdayı Kurtarın</span>, <br />Gezegeni Kurtarın
           </h1>
           <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed">
             Yerel restoranlardan lezzetli yemeklerde inanılmaz fırsatlar keşfedin ve gıda israfını azaltmaya yardımcı olun.
@@ -81,7 +81,7 @@ const HeroBanner = () => {
             {/* ✅ Corrected redirection here */}
             <a
               href="/offers"
-              className="bg-tilkapp-green text-white px-8 py-4 rounded-lg font-semibold hover:bg-tilkapp-orange transition-colors inline-flex items-center text-lg shadow-lg"
+              className="bg-[#F75C00] text-white px-8 py-4 rounded-lg font-semibold hover:bg-[#FF7A29] transition-colors duration-300 inline-flex items-center text-lg shadow-lg"
             >
               Teklifleri Keşfet
               <ArrowRight className="w-5 h-5 ml-2" />
@@ -89,13 +89,13 @@ const HeroBanner = () => {
 
             <a
               href="/for-merchants"
-              className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-gray-900 transition-colors text-lg"
+              className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-gray-900 transition-colors duration-300 text-lg"
             >
               İşletmeler İçin
             </a>
           </div>
 
-          <p className="text-tilkapp-beige text-lg flex items-center justify-center">
+          <p className="text-[#F3EACE] text-lg flex items-center justify-center">
             <Smartphone className="w-5 h-5 mr-2" />
             Gerçek zamanlı bildirimler almak için uygulamayı indirin
           </p>

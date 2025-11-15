@@ -37,8 +37,8 @@ const ForMerchantsSection = () => {
             <div className="space-y-6 mb-8">
               {benefits.map((benefit, index) => (
                 <div key={index} className="flex items-start space-x-4">
-                  <div className="bg-tilkapp-beige p-3 rounded-lg">
-                    <benefit.icon className="w-6 h-6 text-tilkapp-green" />
+                  <div className="bg-[#F3EACE] p-3 rounded-lg">
+                    <benefit.icon className="w-6 h-6 text-[#00615F]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
@@ -51,14 +51,14 @@ const ForMerchantsSection = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <a
                 href="/for-merchants"
-                className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-flex items-center"
+                className="bg-[#00615F] text-white px-8 py-3 rounded-lg font-medium hover:bg-[#2DD4BF] transition-colors duration-300 inline-flex items-center"
               >
                 Ortak Olun
                 <ArrowRight className="w-4 h-4 ml-2" />
               </a>
               <a
                 href="/for-merchants"
-                className="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                className="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-300"
               >
                 Daha Fazla Bilgi
               </a>
@@ -75,12 +75,12 @@ const ForMerchantsSection = () => {
             
             {/* Floating Stats */}
             <div className="absolute -bottom-6 -left-6 bg-white rounded-lg shadow-lg p-4">
-              <div className="text-2xl font-bold text-tilkapp-green">25%</div>
+              <div className="text-2xl font-bold text-[#00615F]">25%</div>
               <div className="text-sm text-gray-600">Ortalama Gelir Artışı</div>
             </div>
 
             <div className="absolute -top-6 -right-6 bg-white rounded-lg shadow-lg p-4">
-              <div className="text-2xl font-bold text-tilkapp-green">500+</div>
+              <div className="text-2xl font-bold text-[#00615F]">500+</div>
               <div className="text-sm text-gray-600">Ortak Restoran</div>
             </div>
           </div>
