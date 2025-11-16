@@ -730,7 +730,7 @@ export default function OffersPage() {
           />
         ) : (
   <img
-    src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON-rond-ss-fond.png"
+src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20rond%20fond%20vert.png"
     alt="KapKurtar"
     className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full object-cover mb-1 border-2 border-white shadow-sm`}
     crossOrigin="anonymous"
