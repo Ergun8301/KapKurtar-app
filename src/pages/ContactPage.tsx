@@ -69,7 +69,7 @@ const ContactPage = () => {
           <div className="lg:col-span-1 space-y-6">
             {/* WhatsApp */}
             <a
-              href="https://wa.me/33685507985?text=Merhaba%20KapKurtar,%20bir%20sorum%20var"
+              href="https://wa.me/33685507985?text=Merhaba%20TILKAPP,%20bir%20sorum%20var"
               target="_blank"
               rel="noopener noreferrer"
               className="block bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow group"
