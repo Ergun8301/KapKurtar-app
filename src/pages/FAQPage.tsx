@@ -10,8 +10,8 @@ const FAQPage = () => {
       name: 'Müşteriler İçin',
       faqs: [
         {
-          question: 'KapKurtar nasıl çalışır?',
-          answer: 'KapKurtar, israfı önlemek için indirimli fiyatlarla ürün sunan yerel işletmelerle sizi buluşturur. Mevcut tekliflere göz atın, işletmenin seçtiği moda göre rezervasyon yapın veya doğrudan mağazaya gelin.'
+          question: 'TILKAPP nasıl çalışır?',
+          answer: 'TILKAPP, israfı önlemek için indirimli fiyatlarla ürün sunan yerel işletmelerle sizi buluşturur. Mevcut tekliflere göz atın, işletmenin seçtiği moda göre rezervasyon yapın veya doğrudan mağazaya gelin.'
         },
         {
           question: 'Rezervasyon yapmam mı gerekiyor yoksa doğrudan gelebilir miyim?',
@@ -27,7 +27,7 @@ const FAQPage = () => {
         },
         {
           question: 'Arama yarıçapı nedir?',
-          answer: 'Varsayılan olarak, KapKurtar çevrenizdeki 0 ile 30 km arasındaki teklifleri gösterir. Aramanızı genişletmek isterseniz bu mesafenin ötesindeki tekliflere de bakabilirsiniz.'
+          answer: 'Varsayılan olarak, TILKAPP çevrenizdeki 0 ile 30 km arasındaki teklifleri gösterir. Aramanızı genişletmek isterseniz bu mesafenin ötesindeki tekliflere de bakabilirsiniz.'
         },
         {
           question: 'Rezervasyonumu iptal edebilir miyim?',
@@ -39,7 +39,7 @@ const FAQPage = () => {
       name: 'İşletmeler İçin',
       faqs: [
         {
-          question: 'KapKurtar ortağı nasıl olurum?',
+          question: 'TILKAPP ortağı nasıl olurum?',
           answer: 'İşletmeler, satıcı kayıt sürecimiz aracılığıyla kayıt olabilir. Her başvuruyu inceliyor ve kalite standartlarımızı karşılayan işletmelerle çalışıyoruz.'
         },
         {
@@ -51,8 +51,8 @@ const FAQPage = () => {
           answer: 'İndirimli fiyatlarınızı özgürce belirlersiniz. Satılmayan ürünlerinizin değerini artırırken müşterileri çekmek için %30 ile %70 arasında indirim öneriyoruz.'
         },
         {
-          question: 'KapKurtar komisyon alıyor mu?',
-          answer: 'Evet, KapKurtar platformu sürdürmek için her satıştan küçük bir komisyon alır. Fiyatlandırma detayları kayıt sırasında paylaşılır.'
+          question: 'TILKAPP komisyon alıyor mu?',
+          answer: 'Evet, TILKAPP platformu sürdürmek için her satıştan küçük bir komisyon alır. Fiyatlandırma detayları kayıt sırasında paylaşılır.'
         },
         {
           question: 'Satış modunu seçebilir miyim?',
@@ -61,14 +61,14 @@ const FAQPage = () => {
       ]
     },
     {
-      name: 'KapKurtar Hakkında',
+      name: 'TILKAPP Hakkında',
       faqs: [
         {
-          question: 'KapKurtar nerede kullanılabilir?',
-          answer: 'KapKurtar şu anda Antalya ve çevresinde kullanılabilir. Yakında hizmetlerimizi Türkiye\'nin diğer şehirlerine yaymayı planlıyoruz.'
+          question: 'TILKAPP nerede kullanılabilir?',
+          answer: 'TILKAPP şu anda Antalya ve çevresinde kullanılabilir. Yakında hizmetlerimizi Türkiye\'nin diğer şehirlerine yaymayı planlıyoruz.'
         },
         {
-          question: 'KapKurtar ücretsiz mi?',
+          question: 'TILKAPP ücretsiz mi?',
           answer: 'Evet, uygulamanın indirilmesi ve kullanımı müşteriler için tamamen ücretsizdir. Yalnızca satın aldığınız ürünler için ödeme yaparsınız.'
         },
         {
@@ -101,7 +101,7 @@ const FAQPage = () => {
             Sıkça Sorulan Sorular
           </h1>
           <p className="text-xl text-tilkapp-beige mb-8">
-            KapKurtar hakkındaki sorularınızın yanıtlarını hızlıca bulun
+            TILKAPP hakkındaki sorularınızın yanıtlarını hızlıca bulun
           </p>
 
           {/* Search Bar */}

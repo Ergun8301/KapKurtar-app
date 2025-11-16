@@ -25,7 +25,7 @@ const DownloadAppModal: React.FC<DownloadAppModalProps> = ({ isOpen, onClose }) 
         },
         body: JSON.stringify({
           email: email,
-          subject: 'KapKurtar - Notification lancement app',
+          subject: 'TILKAPP - Notification lancement app',
           message: `Nouvel utilisateur souhaite être notifié : ${email}`
         })
       });
@@ -68,7 +68,7 @@ const DownloadAppModal: React.FC<DownloadAppModalProps> = ({ isOpen, onClose }) 
           {/* Header */}
           <div className="text-center mb-6">
             <h2 className="text-3xl font-bold text-tilkapp-green mb-2">
-              KapKurtar'ı İndirin
+              TILKAPP'ı İndirin
             </h2>
             <p className="text-gray-600 text-lg">
               Yakınınızdaki gıdayı kurtarın
