@@ -101,7 +101,7 @@ const Header = () => {
             <img
               src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/KK%20fond%20blanc.png"
               alt="KapKurtar"
-              className="h-20 w-auto"
+              className="h-20 w-auto md:h-24 lg:h-32"
             />
           </a>
           <div className="hidden md:block">
