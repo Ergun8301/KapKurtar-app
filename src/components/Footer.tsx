@@ -82,7 +82,7 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                
+                <a
                   href="https://wa.me/33685507985?text=Merhaba%20KapKurtar"
                   target="_blank"
                   rel="noopener noreferrer"
