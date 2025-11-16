@@ -38,6 +38,12 @@ const ForMerchantsPage = () => {
           </p>
         </div>
 
+      </div>
+
+      {/* Pricing */}
+      <PricingSection3Plans />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Benefits Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           <div className="bg-white rounded-xl p-6 shadow-lg text-center">
@@ -220,9 +226,6 @@ const ForMerchantsPage = () => {
         </div>
 
       </div>
-
-      {/* Pricing */}
-      <PricingSection3Plans />
 
       {/* Final CTA */}
       <div className="bg-[#00A690] text-white py-16">
