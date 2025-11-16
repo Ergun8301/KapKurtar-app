@@ -154,3 +154,17 @@ h1, h2, h3, h4, h5, h6 {
 .animate-pulse-fast {
   animation: pulse-fast 0.8s ease-in-out infinite;
 }
+
+/* Footer wave animation */
+@keyframes wave {
+  0%, 100% {
+    d: path("M0,40 C240,10 480,70 720,40 C960,10 1200,70 1440,40 L1440,0 L0,0 Z");
+  }
+  50% {
+    d: path("M0,40 C240,70 480,10 720,40 C960,70 1200,10 1440,40 L1440,0 L0,0 Z");
+  }
+}
+
+.animate-wave {
+  animation: wave 6s ease-in-out infinite;
+}
