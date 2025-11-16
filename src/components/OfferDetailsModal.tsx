@@ -235,27 +235,27 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
           </button>
 
           <div className="border-b border-gray-200 p-4 md:p-6 bg-gray-50">
-            <div className="flex items-center gap-4 flex-wrap">
-              {offer.merchant_logo_url ? (
-                <img
-                  src={offer.merchant_logo_url}
-                  alt={offer.merchant_name}
-                  className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-white shadow-lg flex-shrink-0"
-                  crossOrigin="anonymous"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                ) : (
-  <img
-    src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON-rond-ss-fond.png"
-    alt="KapKurtar"
-    className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-white shadow-lg flex-shrink-0"
-    crossOrigin="anonymous"
-    referrerPolicy="no-referrer"
-  />
-)}
-              <div className="flex-1 min-w-0">
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">{offer.merchant_name}</h2>
+  <div className="flex items-center gap-4 flex-wrap">
+    {offer.merchant_logo_url ? (
+      <img
+        src={offer.merchant_logo_url}
+        alt={offer.merchant_name}
+        className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-white shadow-lg flex-shrink-0"
+        crossOrigin="anonymous"
+        referrerPolicy="no-referrer"
+      />
+    ) : (
+      <img
+        src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON-rond-ss-fond.png"
+        alt="KapKurtar"
+        className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-white shadow-lg flex-shrink-0"
+        crossOrigin="anonymous"
+        referrerPolicy="no-referrer"
+      />
+    )}
+
+    <div className="flex-1 min-w-0">
+      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">{offer.merchant_name}</h2>
                 
                 <div className="flex items-center gap-2 mb-2">
                   <div className="flex">
