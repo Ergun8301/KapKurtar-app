@@ -352,8 +352,9 @@ export default function OffersPage() {
       setUserLocation([lng, lat]);
       setCenter([lng, lat]);
       setViewMode("nearby");
-      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
-      
+      // 🔧 FIX : Suppression du map.flyTo() pour éviter le conflit avec drawRadius()
+      // Le useEffect du rayon se chargera de centrer la carte via fitBounds
+
       const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
       if (input) input.value = "";
     });
