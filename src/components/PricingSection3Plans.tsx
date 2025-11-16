@@ -79,7 +79,7 @@ const PricingSection3Plans = () => {
             Şeffaf ve Esnek Fiyatlandırma
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
-            Hemen kayıt olun ve ilk 3 ay tamamen ücretsiz kullanın!
+            Tüm planlar için 3 ay ücretsiz deneme! Planınızı sonra seçin.
           </p>
           <div className="bg-gradient-to-r from-[#00A690] to-[#008C7A] text-white px-10 py-4 rounded-2xl font-bold text-xl shadow-2xl inline-block">
             <div className="flex items-center gap-3">
@@ -138,7 +138,7 @@ const PricingSection3Plans = () => {
                 {/* Prix */}
                 <div className="mb-4">
                   <div className="flex items-baseline gap-2">
-                    <span className={`text-6xl font-black ${plan.highlight ? 'text-[#00A690]' : 'text-gray-900'}`}>
+                    <span className={`text-6xl font-black ${plan.highlight ? 'text-[#F75C00]' : 'text-gray-900'}`}>
                       {plan.price}
                     </span>
                     <div className="flex flex-col">
@@ -167,7 +167,7 @@ const PricingSection3Plans = () => {
 
               {/* Features */}
               <div className="p-8 bg-white">
-                <ul className="space-y-4 mb-8">
+                <ul className="space-y-4">
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
@@ -179,24 +179,26 @@ const PricingSection3Plans = () => {
                     </li>
                   ))}
                 </ul>
-
-                {/* CTA Button - TOUS vers /register */}
-                <a
-                  href="/register"
-                  className={`block w-full py-4 rounded-xl font-bold text-center transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-xl ${
-                    plan.highlight
-                      ? 'bg-gradient-to-r from-[#00A690] to-[#008C7A] text-white hover:from-[#008C7A] hover:to-[#00A690]'
-                      : index === 0
-                      ? 'bg-gray-800 text-white hover:bg-gray-900'
-                      : 'bg-gradient-to-r from-[#F75C00] to-[#FF6B1A] text-white hover:from-[#FF6B1A] hover:to-[#F75C00]'
-                  }`}
-                >
-                  🚀 Ücretsiz Başlayın
-                </a>
               </div>
             </div>
           ))}
         </div>
+
+        {/* Single Big CTA Button */}
+        <div className="flex justify-center mb-8">
+          <a
+            href="/merchant/auth"
+            className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#00A690] to-[#008C7A] text-white px-12 py-5 rounded-2xl font-bold text-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105"
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Ücretsiz Başlayın - 3 Ay Deneme
+          </a>
+        </div>
+        <p className="text-center text-gray-600 mb-8">
+          Planınızı 4. aydan önce seçeceksiniz. Şimdilik sadece başlayın!
+        </p>
 
         {/* Bottom Note Modernisée */}
         <div className="mt-16 max-w-4xl mx-auto">
@@ -216,7 +218,7 @@ const PricingSection3Plans = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <a
-                    href="/register"
+                    href="/merchant/auth"
                     className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#00A690] to-[#008C7A] text-white px-8 py-4 rounded-xl font-bold hover:from-[#008C7A] hover:to-[#00A690] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

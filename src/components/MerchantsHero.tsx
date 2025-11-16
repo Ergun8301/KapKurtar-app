@@ -11,7 +11,7 @@ const MerchantsHero = () => {
         <img
           src={heroImageUrl}
           alt="KapKurtar İşletmeler"
-          className="w-full h-full object-cover opacity-20"
+          className="w-full h-full object-cover opacity-35"
           onError={(e) => {
             e.currentTarget.src = fallbackImageUrl;
           }}
@@ -56,7 +56,7 @@ const MerchantsHero = () => {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <a
-                href="/register"
+                href="/merchant/auth"
                 className="inline-flex items-center justify-center gap-2 bg-[#F75C00] hover:bg-[#E54B00] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105"
               >
                 <Zap className="w-6 h-6" />
