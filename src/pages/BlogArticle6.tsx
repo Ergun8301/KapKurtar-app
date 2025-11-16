@@ -8,7 +8,7 @@ const BlogArticle6 = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <a href="/blog" className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange transition-colors">
             <ArrowLeft className="w-5 h-5 mr-2" />
-            Retour au blog
+            Bloga dön
           </a>
         </div>
       </div>
@@ -17,23 +17,23 @@ const BlogArticle6 = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
             <span className="bg-tilkapp-green text-white px-4 py-2 rounded-full text-sm font-medium">
-              Recettes
+              Tarifler
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Pain rassis : 5 façons créatives de le réutiliser
+            Bayat ekmek: Yeniden kullanmanın 5 yaratıcı yolu
           </h1>
           <div className="flex items-center text-gray-600 mb-8">
             <User className="w-5 h-5 mr-2" />
-            <span className="mr-6">Chef Ayşe</span>
+            <span className="mr-6">Şef Ayşe</span>
             <Calendar className="w-5 h-5 mr-2" />
-            <span>20 octobre 2024</span>
+            <span>20 Ekim 2024</span>
             <span className="mx-3">•</span>
-            <span>5 min de lecture</span>
+            <span>5 dk okuma</span>
           </div>
           <img
             src="https://images.pexels.com/photos/1775043/pexels-photo-1775043.jpeg?auto=compress&cs=tinysrgb&w=1200"
-            alt="Pain rassis transformé"
+            alt="Dönüştürülmüş bayat ekmek"
             className="w-full h-96 object-cover rounded-xl shadow-lg"
           />
         </div>
@@ -42,186 +42,186 @@ const BlogArticle6 = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="prose prose-lg max-w-none">
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            Ne jetez plus votre pain dur ! Découvrez 5 recettes délicieuses et économiques pour transformer 
-            votre pain rassis en véritables gourmandises.
+            Artık sert ekmeğinizi atmayın! Bayat ekmeği lezzetli ve ekonomik
+            yemeklere dönüştürmek için 5 tarif keşfedin.
           </p>
 
           <blockquote className="border-l-4 border-tilkapp-green pl-6 my-8 italic text-gray-700">
-            "En Turquie, nous jetons en moyenne 2,3 millions de tonnes de nourriture par an. 
-            Le pain représente une part importante de ce gaspillage. Pourtant, il suffit de quelques astuces 
-            pour lui donner une seconde vie !"
+            "Türkiye'de yılda ortalama 2,3 milyon ton gıda atıyoruz.
+            Ekmek bu israfın önemli bir kısmını oluşturuyor. Oysa ona ikinci bir şans vermek için
+            birkaç ipucu yeterli!"
           </blockquote>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4 flex items-center">
             <ChefHat className="w-6 h-6 mr-2 text-tilkapp-green" />
-            1. Croûtons maison ultra-croustillants
+            1. Süper çıtır ev yapımı krutonlar
           </h2>
           <p className="text-gray-700 mb-4 leading-relaxed">
-            Les croûtons faits maison sont 10x meilleurs que ceux du commerce, et tellement simples à préparer !
+            Ev yapımı krutonlar marketten alınanlara göre 10 kat daha iyi ve hazırlanması çok basit!
           </p>
           <div className="bg-tilkapp-beige rounded-lg p-6 my-6">
-            <h3 className="font-bold text-gray-900 mb-3">Ingrédients :</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Malzemeler:</h3>
             <ul className="space-y-1 text-gray-700 mb-4">
-              <li>• Pain rassis (quantité au choix)</li>
-              <li>• 3 cuillères à soupe d'huile d'olive</li>
-              <li>• 1 gousse d'ail</li>
-              <li>• Herbes de Provence</li>
-              <li>• Sel, poivre</li>
+              <li>• Bayat ekmek (istediğiniz kadar)</li>
+              <li>• 3 yemek kaşığı zeytinyağı</li>
+              <li>• 1 diş sarımsak</li>
+              <li>• Kekik</li>
+              <li>• Tuz, karabiber</li>
             </ul>
-            <h3 className="font-bold text-gray-900 mb-3">Préparation :</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Hazırlanışı:</h3>
             <ol className="space-y-2 text-gray-700">
-              <li>1. Coupez le pain en cubes de 2cm</li>
-              <li>2. Mélangez l'huile, l'ail écrasé et les herbes</li>
-              <li>3. Enrobez les cubes de pain</li>
-              <li>4. Enfournez 15 min à 180°C en remuant à mi-cuisson</li>
+              <li>1. Ekmeği 2cm küpler halinde kesin</li>
+              <li>2. Yağ, ezilmiş sarımsak ve kekiği karıştırın</li>
+              <li>3. Ekmek küplerini yağ karışımıyla kaplayın</li>
+              <li>4. 180°C'de yarı pişirme sırasında karıştırarak 15 dakika pişirin</li>
             </ol>
           </div>
           <p className="text-sm text-gray-600 italic">
-            💡 Parfaits pour les salades, soupes ou à grignoter à l'apéritif !
+            💡 Salatalar, çorbalar için veya aperitifde atıştırmak için mükemmel!
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4 flex items-center">
             <ChefHat className="w-6 h-6 mr-2 text-tilkapp-green" />
-            2. Pudding au pain façon grand-mère
+            2. Büyükanne usulü ekmek tatlısı
           </h2>
           <p className="text-gray-700 mb-4 leading-relaxed">
-            Un dessert réconfortant qui ravira petits et grands. Cette recette traditionnelle turque (Ekmek Tatlısı) 
-            transforme le pain sec en un délice sucré.
+            Küçük büyük herkesi memnun edecek rahatlatıcı bir tatlı. Bu geleneksel Türk tatlısı (Ekmek Tatlısı)
+            kuru ekmeği tatlı bir lezzete dönüştürür.
           </p>
           <div className="bg-tilkapp-beige rounded-lg p-6 my-6">
-            <h3 className="font-bold text-gray-900 mb-3">Ingrédients (4 personnes) :</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Malzemeler (4 kişilik):</h3>
             <ul className="space-y-1 text-gray-700 mb-4">
-              <li>• 300g de pain rassis</li>
-              <li>• 500ml de lait</li>
-              <li>• 3 œufs</li>
-              <li>• 100g de sucre</li>
-              <li>• 1 sachet de sucre vanillé</li>
-              <li>• Cannelle</li>
-              <li>• Beurre</li>
+              <li>• 300g bayat ekmek</li>
+              <li>• 500ml süt</li>
+              <li>• 3 yumurta</li>
+              <li>• 100g şeker</li>
+              <li>• 1 paket vanilya şekeri</li>
+              <li>• Tarçın</li>
+              <li>• Tereyağı</li>
             </ul>
-            <h3 className="font-bold text-gray-900 mb-3">Préparation :</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Hazırlanışı:</h3>
             <ol className="space-y-2 text-gray-700">
-              <li>1. Coupez le pain en tranches</li>
-              <li>2. Trempez-les rapidement dans du lait chaud sucré</li>
-              <li>3. Disposez dans un plat beurré</li>
-              <li>4. Battez œufs + sucre + vanille, versez sur le pain</li>
-              <li>5. Saupoudrez de cannelle</li>
-              <li>6. Enfournez 35 min à 170°C</li>
+              <li>1. Ekmeği dilimler halinde kesin</li>
+              <li>2. Sıcak şekerli süte hızlıca batırın</li>
+              <li>3. Yağlanmış bir tepsiye dizin</li>
+              <li>4. Yumurta + şeker + vanilyayı çırpın, ekmeğin üzerine dökün</li>
+              <li>5. Tarçın serpin</li>
+              <li>6. 170°C'de 35 dakika pişirin</li>
             </ol>
           </div>
           <p className="text-sm text-gray-600 italic">
-            🍯 Servez tiède avec une boule de glace vanille ou de la crème fraîche !
+            🍯 İlık olarak vanilyalı dondurma veya krema ile servis yapın!
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4 flex items-center">
             <ChefHat className="w-6 h-6 mr-2 text-tilkapp-green" />
-            3. Chapelure maison (Galeta Unu)
+            3. Ev yapımı galeta unu
           </h2>
           <p className="text-gray-700 mb-4 leading-relaxed">
-            La chapelure maison est plus économique et plus savoureuse que celle du commerce. 
-            Elle se conserve plusieurs mois dans un bocal hermétique.
+            Ev yapımı galeta unu market unu galeta unundan daha ekonomik ve lezzetli.
+            Hava geçirmez bir kavanozda birkaç ay saklanabilir.
           </p>
           <div className="bg-tilkapp-beige rounded-lg p-6 my-6">
-            <h3 className="font-bold text-gray-900 mb-3">Méthode ultra-simple :</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Çok basit yöntem:</h3>
             <ol className="space-y-2 text-gray-700">
-              <li>1. Laissez sécher complètement le pain 2-3 jours</li>
-              <li>2. Mixez au robot jusqu'à obtenir des miettes fines</li>
-              <li>3. Passez au tamis pour une texture uniforme</li>
-              <li>4. Conservez dans un bocal hermétique</li>
+              <li>1. Ekmeği 2-3 gün tamamen kurumaya bırakın</li>
+              <li>2. İnce kırıntılar elde edene kadar robotta çekin</li>
+              <li>3. Düzgün bir doku için elekten geçirin</li>
+              <li>4. Hava geçirmez bir kavanozda saklayın</li>
             </ol>
           </div>
           <p className="text-sm text-gray-600 italic">
-            🍗 Idéal pour paner viandes, poissons, légumes ou gratiner vos plats !
+            🍗 Et, balık, sebze panelemek veya yemeklerinizi gratinlemek için ideal!
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4 flex items-center">
             <ChefHat className="w-6 h-6 mr-2 text-tilkapp-green" />
-            4. Soupe paysanne au pain (Paçanga)
+            4. Ekmekli köylü çorbası (Paçanga)
           </h2>
           <p className="text-gray-700 mb-4 leading-relaxed">
-            Une soupe traditionnelle turque épaisse et réconfortante, parfaite pour les soirées d'hiver.
+            Kış akşamları için mükemmel, kalın ve rahatlatıcı geleneksel bir Türk çorbası.
           </p>
           <div className="bg-tilkapp-beige rounded-lg p-6 my-6">
-            <h3 className="font-bold text-gray-900 mb-3">Ingrédients (4 personnes) :</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Malzemeler (4 kişilik):</h3>
             <ul className="space-y-1 text-gray-700 mb-4">
-              <li>• 200g de pain rassis</li>
-              <li>• 1L de bouillon de légumes ou poulet</li>
-              <li>• 2 tomates</li>
-              <li>• 1 oignon</li>
-              <li>• 2 gousses d'ail</li>
-              <li>• Paprika, cumin</li>
-              <li>• Huile d'olive</li>
-              <li>• Persil frais</li>
+              <li>• 200g bayat ekmek</li>
+              <li>• 1L sebze veya tavuk suyu</li>
+              <li>• 2 domates</li>
+              <li>• 1 soğan</li>
+              <li>• 2 diş sarımsak</li>
+              <li>• Pul biber, kimyon</li>
+              <li>• Zeytinyağı</li>
+              <li>• Taze maydanoz</li>
             </ul>
-            <h3 className="font-bold text-gray-900 mb-3">Préparation :</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Hazırlanışı:</h3>
             <ol className="space-y-2 text-gray-700">
-              <li>1. Faites revenir oignon + ail dans l'huile d'olive</li>
-              <li>2. Ajoutez tomates concassées + épices</li>
-              <li>3. Versez le bouillon, portez à ébullition</li>
-              <li>4. Ajoutez le pain en morceaux</li>
-              <li>5. Laissez mijoter 20 min en remuant</li>
-              <li>6. Mixez partiellement pour une texture crémeuse</li>
+              <li>1. Soğan + sarımsağı zeytinyağında kavurun</li>
+              <li>2. Doğranmış domates + baharatları ekleyin</li>
+              <li>3. Suyu dökün, kaynatın</li>
+              <li>4. Parçalar halinde ekmeği ekleyin</li>
+              <li>5. Karıştırarak 20 dakika kaynatın</li>
+              <li>6. Kremsi bir doku için kısmen karıştırın</li>
             </ol>
           </div>
           <p className="text-sm text-gray-600 italic">
-            🥖 Servez avec un filet d'huile d'olive, du persil ciselé et du pain grillé !
+            🥖 Bir tutam zeytinyağı, doğranmış maydanoz ve kızarmış ekmekle servis edin!
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4 flex items-center">
             <ChefHat className="w-6 h-6 mr-2 text-tilkapp-green" />
-            5. Bruschetta turque aux tomates
+            5. Domatesli Türk bruschettası
           </h2>
           <p className="text-gray-700 mb-4 leading-relaxed">
-            Une entrée méditerranéenne rapide et savoureuse, parfaite pour l'apéritif ou en accompagnement.
+            Aperitif veya garnitür için mükemmel, hızlı ve lezzetli bir Akdeniz mezesi.
           </p>
           <div className="bg-tilkapp-beige rounded-lg p-6 my-6">
-            <h3 className="font-bold text-gray-900 mb-3">Ingrédients (4 personnes) :</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Malzemeler (4 kişilik):</h3>
             <ul className="space-y-1 text-gray-700 mb-4">
-              <li>• Pain rassis tranché</li>
-              <li>• 4 tomates bien mûres</li>
-              <li>• Fromage beyaz peynir ou feta</li>
-              <li>• Basilic frais</li>
-              <li>• 1 gousse d'ail</li>
-              <li>• Huile d'olive</li>
-              <li>• Vinaigre balsamique</li>
-              <li>• Sel, poivre</li>
+              <li>• Dilimlenmiş bayat ekmek</li>
+              <li>• 4 olgun domates</li>
+              <li>• Beyaz peynir veya feta</li>
+              <li>• Taze fesleğen</li>
+              <li>• 1 diş sarımsak</li>
+              <li>• Zeytinyağı</li>
+              <li>• Balzamik sirke</li>
+              <li>• Tuz, karabiber</li>
             </ul>
-            <h3 className="font-bold text-gray-900 mb-3">Préparation :</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Hazırlanışı:</h3>
             <ol className="space-y-2 text-gray-700">
-              <li>1. Grillez les tranches de pain (au four ou poêle)</li>
-              <li>2. Frottez-les avec la gousse d'ail coupée</li>
-              <li>3. Coupez les tomates en dés</li>
-              <li>4. Mélangez tomates + fromage émietté + basilic ciselé</li>
-              <li>5. Assaisonnez avec huile d'olive, vinaigre, sel, poivre</li>
-              <li>6. Déposez généreusement sur le pain grillé</li>
+              <li>1. Ekmek dilimlerini ızgara yapın (fırında veya tavada)</li>
+              <li>2. Kesilmiş sarımsak dişiyle ovun</li>
+              <li>3. Domatesleri küp şeklinde kesin</li>
+              <li>4. Domates + ufalanmış peynir + doğranmış fesleğeni karıştırın</li>
+              <li>5. Zeytinyağı, sirke, tuz, karabiber ile baharatlayın</li>
+              <li>6. Kızarmış ekmek üzerine bolca yerleştirin</li>
             </ol>
           </div>
           <p className="text-sm text-gray-600 italic">
-            🍅 À déguster immédiatement pour que le pain reste croustillant !
+            🍅 Ekmeğin çıtır kalması için hemen yiyin!
           </p>
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Conseil de conservation</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Saklama tavsiyesi</h2>
           <div className="bg-white border-2 border-tilkapp-green rounded-lg p-6 my-8">
             <p className="text-gray-700 mb-4">
-              <strong>Astuce pro :</strong> Si vous n'utilisez pas tout de suite votre pain rassis, 
-              congelez-le en tranches. Il sera parfait pour faire des croûtons ou de la chapelure même après plusieurs mois !
+              <strong>Profesyonel ipucu:</strong> Bayat ekmeğinizi hemen kullanmayacaksanız,
+              dilimler halinde dondurun. Birkaç ay sonra bile kruton veya galeta unu yapmak için mükemmel olacaktır!
             </p>
             <p className="text-gray-700">
-              <strong>Réhydratation express :</strong> Pour ramollir du pain très dur, passez-le 30 secondes sous l'eau 
-              puis 5 minutes au four à 150°C. Il retrouvera sa texture moelleuse !
+              <strong>Hızlı yumuşatma:</strong> Çok sert ekmeği yumuşatmak için 30 saniye su altında tutun
+              sonra 150°C'de fırında 5 dakika bekletin. Yumuşak dokusunu geri kazanacaktır!
             </p>
           </div>
 
           <div className="bg-gray-100 rounded-lg p-8 my-12 text-center">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Trouvez du pain à prix réduit près de chez vous</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Yakınınızda indirimli ekmek bulun</h3>
             <p className="text-gray-700 mb-6">
-              Avec TILKAPP, achetez du pain frais de boulangerie à -50% en fin de journée
+              TILKAPP ile gün sonunda fırın ekmeğini %50 indirimle satın alın
             </p>
             <a
               href="/offers"
               className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
             >
-              Voir les offres
+              Teklifleri görüntüle
             </a>
           </div>
         </div>

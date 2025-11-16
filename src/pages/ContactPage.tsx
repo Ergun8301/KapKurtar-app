@@ -54,10 +54,10 @@ const ContactPage = () => {
       <div className="bg-tilkapp-green text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Contactez-nous
+            Bize Ulaşın
           </h1>
           <p className="text-xl text-tilkapp-beige max-w-2xl mx-auto">
-            Une question ? Une suggestion ? Notre équipe est là pour vous aider.
+            Bir sorunuz mu var? Bir öneriniz mi? Ekibimiz size yardımcı olmak için burada.
           </p>
         </div>
       </div>
@@ -69,7 +69,7 @@ const ContactPage = () => {
           <div className="lg:col-span-1 space-y-6">
             {/* WhatsApp */}
             <a
-              href="https://wa.me/33685507985?text=Bonjour%20TILKAPP,%20j'ai%20une%20question"
+              href="https://wa.me/33685507985?text=Merhaba%20TILKAPP,%20bir%20sorum%20var"
               target="_blank"
               rel="noopener noreferrer"
               className="block bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow group"
@@ -81,10 +81,10 @@ const ContactPage = () => {
                 <div className="ml-4">
                   <h3 className="text-lg font-bold text-gray-900 mb-2">WhatsApp</h3>
                   <p className="text-gray-600 mb-3">
-                    Contactez-nous directement via WhatsApp pour une réponse rapide
+                    Hızlı yanıt için bize doğrudan WhatsApp üzerinden ulaşın
                   </p>
                   <span className="text-tilkapp-green font-medium group-hover:text-tilkapp-orange transition-colors">
-                    Envoyer un message →
+                    Mesaj gönder →
                   </span>
                 </div>
               </div>
@@ -97,9 +97,9 @@ const ContactPage = () => {
                   <Mail className="w-6 h-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Email</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">E-posta</h3>
                   <p className="text-gray-600 mb-3">
-                    Remplissez le formulaire ci-contre, nous vous répondrons sous 24h
+                    Karşıdaki formu doldurun, 24 saat içinde size yanıt vereceğiz
                   </p>
                 </div>
               </div>
@@ -112,7 +112,7 @@ const ContactPage = () => {
                   <MapPin className="w-6 h-6 text-red-600" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Adresse</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Adres</h3>
                   <p className="text-gray-600 text-sm">
                     Eski Hisar, 9501. Sk. No:3<br />
                     07600 Manavgat/Antalya<br />
@@ -129,22 +129,22 @@ const ContactPage = () => {
               {isSubmitted ? (
                 <div className="text-center py-12">
                   <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Message envoyé !</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Mesaj gönderildi!</h3>
                   <p className="text-gray-600 mb-6">
-                    Merci pour votre message. Nous vous répondrons dans les plus brefs délais.
+                    Mesajınız için teşekkürler. En kısa sürede size yanıt vereceğiz.
                   </p>
                   <button
                     onClick={() => setIsSubmitted(false)}
                     className="bg-tilkapp-green text-white px-6 py-2 rounded-lg hover:bg-tilkapp-orange transition-colors"
                   >
-                    Envoyer un autre message
+                    Başka bir mesaj gönder
                   </button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit}>
                   <div className="mb-6">
                     <label htmlFor="name" className="block text-gray-700 font-medium mb-2">
-                      Nom complet *
+                      Ad Soyad *
                     </label>
                     <input
                       type="text"
@@ -154,13 +154,13 @@ const ContactPage = () => {
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
-                      placeholder="Votre nom"
+                      placeholder="Adınız"
                     />
                   </div>
 
                   <div className="mb-6">
                     <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
-                      Email *
+                      E-posta *
                     </label>
                     <input
                       type="email"
@@ -170,13 +170,13 @@ const ContactPage = () => {
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
-                      placeholder="votre@email.com"
+                      placeholder="eposta@ornek.com"
                     />
                   </div>
 
                   <div className="mb-6">
                     <label htmlFor="subject" className="block text-gray-700 font-medium mb-2">
-                      Sujet *
+                      Konu *
                     </label>
                     <select
                       id="subject"
@@ -186,18 +186,18 @@ const ContactPage = () => {
                       required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
                     >
-                      <option value="">Sélectionnez un sujet</option>
-                      <option value="question_client">Question client</option>
-                      <option value="question_marchand">Question marchand</option>
-                      <option value="probleme_technique">Problème technique</option>
-                      <option value="partenariat">Proposition de partenariat</option>
-                      <option value="autre">Autre</option>
+                      <option value="">Bir konu seçin</option>
+                      <option value="question_client">Müşteri sorusu</option>
+                      <option value="question_marchand">İşletme sorusu</option>
+                      <option value="probleme_technique">Teknik sorun</option>
+                      <option value="partenariat">Ortaklık teklifi</option>
+                      <option value="autre">Diğer</option>
                     </select>
                   </div>
 
                   <div className="mb-6">
                     <label htmlFor="message" className="block text-gray-700 font-medium mb-2">
-                      Message *
+                      Mesaj *
                     </label>
                     <textarea
                       id="message"
@@ -207,7 +207,7 @@ const ContactPage = () => {
                       required
                       rows={6}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
-                      placeholder="Votre message..."
+                      placeholder="Mesajınız..."
                     />
                   </div>
 
@@ -217,11 +217,11 @@ const ContactPage = () => {
                     className="w-full bg-tilkapp-green text-white px-6 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {isSubmitting ? (
-                      'Envoi en cours...'
+                      'Gönderiliyor...'
                     ) : (
                       <>
                         <Send className="w-5 h-5 mr-2" />
-                        Envoyer le message
+                        Mesajı gönder
                       </>
                     )}
                   </button>

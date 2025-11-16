@@ -44,13 +44,13 @@ const ResetPasswordPage = () => {
 
     // Validation
     if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
+      setError('Şifre en az 6 karakter içermelidir');
       setIsLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      setError('Şifreler eşleşmiyor');
       setIsLoading(false);
       return;
     }
@@ -99,10 +99,10 @@ const ResetPasswordPage = () => {
               </div>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Nouveau mot de passe
+              Yeni Şifre
             </h1>
             <p className="text-gray-600">
-              Choisissez un nouveau mot de passe sécurisé
+              Güvenli yeni bir şifre seçin
             </p>
           </div>
 
@@ -111,9 +111,9 @@ const ResetPasswordPage = () => {
               <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded-lg flex items-start">
                 <CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-green-700">Mot de passe mis à jour !</p>
+                  <p className="text-sm font-semibold text-green-700">Şifre Güncellendi!</p>
                   <p className="text-sm text-green-600 mt-1">
-                    Redirection en cours...
+                    Yönlendiriliyor...
                   </p>
                 </div>
               </div>
@@ -128,7 +128,7 @@ const ResetPasswordPage = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Nouveau mot de passe
+                  Yeni Şifre
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -154,7 +154,7 @@ const ResetPasswordPage = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Confirmer le mot de passe
+                  Şifreyi Onayla
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -186,19 +186,19 @@ const ResetPasswordPage = () => {
                 {isLoading ? (
                   <div className="flex items-center justify-center">
                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Mise à jour...
+                    Güncelleniyor...
                   </div>
                 ) : success ? (
-                  'Mot de passe mis à jour ✓'
+                  'Şifre Güncellendi ✓'
                 ) : (
-                  'Réinitialiser le mot de passe'
+                  'Şifreyi Sıfırla'
                 )}
               </button>
             </form>
 
             <div className="text-center text-sm text-gray-600">
               <p className="mt-4">
-                Minimum 6 caractères requis
+                En az 6 karakter gerekli
               </p>
             </div>
           </div>

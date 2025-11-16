@@ -5,18 +5,18 @@ const ForMerchantsSection = () => {
   const benefits = [
     {
       icon: TrendingUp,
-      title: 'Increase Revenue',
-      description: 'Turn surplus food into profit instead of waste'
+      title: 'Geliri Artırın',
+      description: 'Fazla gıdayı israf yerine kâra dönüştürün'
     },
     {
       icon: Users,
-      title: 'Attract New Customers',
-      description: 'Reach food-conscious consumers in your area'
+      title: 'Yeni Müşteriler Kazanın',
+      description: 'Bölgenizdeki bilinçli tüketicilere ulaşın'
     },
     {
       icon: Leaf,
-      title: 'Reduce Waste',
-      description: 'Make a positive environmental impact'
+      title: 'İsrafı Azaltın',
+      description: 'Çevre üzerinde olumlu etki yaratın'
     }
   ];
 
@@ -27,11 +27,11 @@ const ForMerchantsSection = () => {
           {/* Left side - Content */}
           <div>
             <h2 className="text-3xl font-bold text-gray-900 mb-6">
-              For Merchants: Turn Waste into Revenue
+              İşletmeler İçin: İsrafı Gelire Dönüştürün
             </h2>
             <p className="text-xl text-gray-600 mb-8">
-              Join our network of forward-thinking restaurants. Reduce food waste, 
-              attract new customers, and boost your bottom line with TILKAPP.
+              İlerici düşünen restoranlar ağımıza katılın. Gıda israfını azaltın,
+              yeni müşteriler çekin ve TILKAPP ile kârınızı artırın.
             </p>
 
             <div className="space-y-6 mb-8">
@@ -53,14 +53,14 @@ const ForMerchantsSection = () => {
                 href="/for-merchants"
                 className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-flex items-center"
               >
-                Become a Partner
+                Ortak Olun
                 <ArrowRight className="w-4 h-4 ml-2" />
               </a>
               <a
                 href="/for-merchants"
                 className="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors"
               >
-                Learn More
+                Daha Fazla Bilgi
               </a>
             </div>
           </div>
@@ -76,12 +76,12 @@ const ForMerchantsSection = () => {
             {/* Floating Stats */}
             <div className="absolute -bottom-6 -left-6 bg-white rounded-lg shadow-lg p-4">
               <div className="text-2xl font-bold text-tilkapp-green">25%</div>
-              <div className="text-sm text-gray-600">Average Revenue Increase</div>
+              <div className="text-sm text-gray-600">Ortalama Gelir Artışı</div>
             </div>
-            
+
             <div className="absolute -top-6 -right-6 bg-white rounded-lg shadow-lg p-4">
               <div className="text-2xl font-bold text-tilkapp-green">500+</div>
-              <div className="text-sm text-gray-600">Partner Restaurants</div>
+              <div className="text-sm text-gray-600">Ortak Restoran</div>
             </div>
           </div>
         </div>

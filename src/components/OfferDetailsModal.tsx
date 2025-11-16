@@ -99,28 +99,28 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
   const getTimeRemaining = (until?: string) => {
     if (!until) return '';
     const diff = new Date(until).getTime() - Date.now();
-    if (diff <= 0) return 'Expirée';
-    
+    if (diff <= 0) return 'Süresi Doldu';
+
     const totalMinutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     const days = Math.floor(hours / 24);
-    
+
     if (hours >= 48) {
       const remainingHours = hours % 24;
-      return `${days} jour${days > 1 ? 's' : ''} ${remainingHours}h`;
+      return `${days} gün ${remainingHours}s`;
     }
-    
+
     if (hours >= 24) {
       const remainingHours = hours % 24;
-      return `${days} jour ${remainingHours}h`;
+      return `${days} gün ${remainingHours}s`;
     }
-    
+
     if (hours > 0) {
-      return `${hours}h ${minutes}min`;
+      return `${hours}s ${minutes}dk`;
     }
-    
-    return `${minutes} min`;
+
+    return `${minutes} dk`;
   };
 
   const getProgressPercent = () => {
@@ -169,7 +169,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
         .maybeSingle();
 
       if (profileError || !profileData) {
-        setToast({ message: '❌ Profil client introuvable', type: 'error' });
+        setToast({ message: '❌ Müşteri profili bulunamadı', type: 'error' });
         setIsReserving(false);
         return;
       }
@@ -182,14 +182,14 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
       if (reservationError) throw reservationError;
 
-      setToast({ message: '✅ Réservation confirmée !', type: 'success' });
+      setToast({ message: '✅ Rezervasyon onaylandı!', type: 'success' });
 
       setTimeout(() => {
         onClose();
       }, 1500);
     } catch (error: any) {
       console.error('❌ Erreur réservation:', error);
-      setToast({ message: error.message || '❌ Erreur lors de la réservation', type: 'error' });
+      setToast({ message: error.message || '❌ Rezervasyon sırasında hata oluştu', type: 'error' });
     } finally {
       setIsReserving(false);
     }
@@ -259,7 +259,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                       <Star key={star} className="w-4 h-4 fill-gray-300 text-gray-300" />
                     ))}
                   </div>
-                  <span className="text-xs text-gray-500">Bientôt disponible</span>
+                  <span className="text-xs text-gray-500">Yakında kullanılabilir</span>
                 </div>
 
                 <div className="flex items-center gap-4 flex-wrap text-sm text-gray-600">
@@ -289,10 +289,10 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
               <button
                 onClick={handleGetDirections}
-                className="flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-tilkapp-orange text-white rounded-lg font-semibold transition-colors shadow-md flex-shrink-0"
+                className="flex items-center gap-2 px-4 py-2 bg-tilkapp-green hover:bg-tilkapp-orange text-tilkapp-beige rounded-lg font-semibold transition-colors shadow-md flex-shrink-0"
               >
                 <Navigation className="w-4 h-4" />
-                <span className="hidden md:inline">Itinéraire</span>
+                <span className="hidden md:inline">Yol Tarifi</span>
               </button>
             </div>
           </div>
@@ -314,7 +314,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                     </div>
                     <button
                       className="absolute top-4 left-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors opacity-50 cursor-not-allowed"
-                      title="Bientôt disponible"
+                      title="Yakında kullanılabilir"
                     >
                       <Heart className="w-5 h-5 text-gray-400" />
                     </button>
@@ -333,10 +333,10 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
                 <div className="flex items-baseline gap-3 bg-green-100 rounded-lg p-4 mb-4">
                   <span className="text-3xl md:text-4xl font-bold text-tilkapp-green">
-                    {offer.price_after.toFixed(2)}€
+                    {(offer.price_after * 49).toFixed(2)}₺
                   </span>
                   <span className="text-lg md:text-xl text-gray-400 line-through">
-                    {offer.price_before.toFixed(2)}€
+                    {(offer.price_before * 49).toFixed(2)}₺
                   </span>
                 </div>
 
@@ -345,11 +345,11 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 text-gray-700">
                         <Clock className="w-4 h-4" />
-                        <span className="font-semibold">{getTimeRemaining(offer.available_until)} restantes</span>
+                        <span className="font-semibold">{getTimeRemaining(offer.available_until)} kalan</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-700">
                         <Package className="w-4 h-4" />
-                        <span className="font-semibold">Stock: {offer.quantity}</span>
+                        <span className="font-semibold">Stok: {offer.quantity}</span>
                       </div>
                     </div>
 
@@ -367,10 +367,9 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                   </div>
                 )}
 
-                {/* ✅ Sélecteur de quantité */}
                 <div className="mb-4 bg-gray-50 p-4 rounded-lg">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Quantité
+                    Miktar
                   </label>
                   <div className="flex items-center justify-between">
                     <button
@@ -387,7 +386,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                         {reservationQuantity}
                       </span>
                       <span className="text-xs text-gray-500">
-                        sur {offer.quantity} disponibles
+                        {offer.quantity} adet mevcut
                       </span>
                     </div>
 
@@ -414,12 +413,12 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                   {isReserving ? (
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Réservation en cours...
+                      Rezervasyon yapılıyor...
                     </div>
                   ) : offer.quantity && offer.quantity <= 0 ? (
-                    'Rupture de stock'
+                    'Stokta yok'
                   ) : (
-                    '🛒 Réserver maintenant'
+                    '🛒 Şimdi Rezerve Et'
                   )}
                 </button>
               </div>
@@ -430,7 +429,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             <div className="border-t border-gray-200 px-4 md:px-6 py-6 bg-gray-50">
               <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Package className="w-5 h-5 text-tilkapp-green" />
-                Autres produits disponibles
+                Diğer mevcut ürünler
               </h4>
 
               <div className="overflow-x-auto md:overflow-x-scroll pb-2">
@@ -458,10 +457,10 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-bold text-tilkapp-green text-lg">
-                            {otherOffer.price_after.toFixed(2)}€
+                            {(otherOffer.price_after * 49).toFixed(2)}₺
                           </span>
                           <span className="line-through text-gray-400 text-xs">
-                            {otherOffer.price_before.toFixed(2)}€
+                            {(otherOffer.price_before * 49).toFixed(2)}₺
                           </span>
                           <span className="text-xs text-red-600 font-semibold bg-red-50 px-1.5 py-0.5 rounded">
                             -{getDiscountPercent(otherOffer.price_before, otherOffer.price_after)}%
@@ -475,7 +474,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                               {getTimeRemaining(otherOffer.available_until)}
                             </span>
                           )}
-                          <span>Stock: {otherOffer.quantity}</span>
+                          <span>Stok: {otherOffer.quantity}</span>
                         </div>
                       </div>
                     </div>
@@ -488,7 +487,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
           {loadingOtherOffers && (
             <div className="border-t border-gray-200 px-6 md:px-8 py-6 bg-gray-50 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tilkapp-green mx-auto"></div>
-              <p className="text-sm text-gray-600 mt-2">Chargement des autres produits...</p>
+              <p className="text-sm text-gray-600 mt-2">Diğer ürünler yükleniyor...</p>
             </div>
           )}
         </div>
@@ -507,22 +506,22 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
               <div className="w-16 h-16 bg-tilkapp-beige rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">🔒</span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Connexion requise</h3>
-              <p className="text-gray-600">Connectez-vous pour :</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Giriş gerekli</h3>
+              <p className="text-gray-600">Giriş yapın:</p>
             </div>
 
             <ul className="space-y-2 mb-6">
               <li className="flex items-center gap-2 text-gray-700">
                 <span className="text-tilkapp-green">✓</span>
-                <span>Réserver des offres</span>
+                <span>Teklifleri rezerve edin</span>
               </li>
               <li className="flex items-center gap-2 text-gray-700">
                 <span className="text-tilkapp-green">✓</span>
-                <span>Recevoir des notifications</span>
+                <span>Bildirimler alın</span>
               </li>
               <li className="flex items-center gap-2 text-gray-700">
                 <span className="text-tilkapp-green">✓</span>
-                <span>Suivre vos réservations</span>
+                <span>Rezervasyonlarınızı takip edin</span>
               </li>
             </ul>
 
@@ -531,23 +530,23 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                 onClick={() => navigate('/customer/auth')}
                 className="w-full py-3 bg-tilkapp-green hover:bg-tilkapp-orange text-white rounded-lg font-semibold transition-colors shadow-md"
               >
-                Se connecter
+                Giriş Yap
               </button>
               <button
                 onClick={() => setShowLoginModal(false)}
                 className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-colors"
               >
-                Plus tard
+                Daha Sonra
               </button>
             </div>
 
             <div className="mt-6 pt-6 border-t border-gray-200 text-center">
-              <p className="text-sm text-gray-600 mb-2">💼 Vous êtes commerçant ?</p>
+              <p className="text-sm text-gray-600 mb-2">💼 İşletme sahibi misiniz?</p>
               <button
                 onClick={() => navigate('/merchant/auth')}
                 className="text-tilkapp-green hover:text-tilkapp-green font-semibold text-sm"
               >
-                Rejoignez SEPET gratuitement
+                SEPET'e ücretsiz katılın
               </button>
             </div>
           </div>
