@@ -109,6 +109,7 @@ export default function OffersPage() {
   const { user } = useAuth();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
+  const isDrawingRef = useRef(false); // 🔧 FIX : Protection contre race conditions dans drawRadius()
   const [offers, setOffers] = useState<Offer[]>([]);
   const [userLocation, setUserLocation] = useState<[number, number]>(DEFAULT_LOCATION);
   const [center, setCenter] = useState<[number, number]>(DEFAULT_LOCATION);
@@ -352,8 +353,9 @@ export default function OffersPage() {
       setUserLocation([lng, lat]);
       setCenter([lng, lat]);
       setViewMode("nearby");
-      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
-      
+      // 🔧 FIX : Suppression du map.flyTo() pour éviter le conflit avec drawRadius()
+      // Le useEffect du rayon se chargera de centrer la carte via fitBounds
+
       const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
       if (input) input.value = "";
     });
@@ -387,34 +389,56 @@ export default function OffersPage() {
     const map = mapRef.current;
     if (!map) return;
 
-    const updateRadius = () => {
-      if (viewMode === "nearby") {
-        drawRadius(map, center, radiusKm);
-      } else {
-        removeRadius(map);
-      }
-    };
+    // 🔧 FIX : Débounce de 100ms pour éviter les appels multiples rapides
+    const timeoutId = setTimeout(() => {
+      const updateRadius = () => {
+        if (viewMode === "nearby") {
+          drawRadius(map, center, radiusKm);
+        } else {
+          removeRadius(map);
+        }
+      };
 
-    if (!map.isStyleLoaded()) {
-      map.once("load", updateRadius);
-    } else {
-      updateRadius();
-    }
+      if (!map.isStyleLoaded()) {
+        map.once("load", updateRadius);
+      } else {
+        updateRadius();
+      }
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [center, radiusKm, viewMode]);
 
   function drawRadius(map: Map, center: [number, number], radiusKm: number) {
+    // 🔧 FIX : Protection contre les appels simultanés (race condition)
+    if (isDrawingRef.current) {
+      console.warn("⚠️ drawRadius déjà en cours, skipping pour éviter race condition");
+      return;
+    }
+
+    isDrawingRef.current = true;
+
     try {
       removeRadius(map);
 
       const circle = createGeoJSONCircle(center, radiusKm * 1000);
-      
-      map.addSource("radius", { type: "geojson", data: circle });
-      map.addLayer({
-        id: "radius",
-        type: "fill",
-        source: "radius",
-        paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
-      });
+
+      // 🔧 FIX : Vérifier si la source existe avant de l'ajouter
+      if (!map.getSource("radius")) {
+        map.addSource("radius", { type: "geojson", data: circle });
+      } else {
+        (map.getSource("radius") as mapboxgl.GeoJSONSource).setData(circle);
+      }
+
+      // 🔧 FIX : Vérifier si le layer existe avant de l'ajouter
+      if (!map.getLayer("radius")) {
+        map.addLayer({
+          id: "radius",
+          type: "fill",
+          source: "radius",
+          paint: { "fill-color": "#22c55e", "fill-opacity": 0.15 },
+        });
+      }
 
       const outerPolygon = {
         type: "Feature",
@@ -433,19 +457,32 @@ export default function OffersPage() {
         },
       };
 
-      map.addSource("outside-mask", { type: "geojson", data: outerPolygon });
-      map.addLayer({
-        id: "outside-mask",
-        type: "fill",
-        source: "outside-mask",
-        paint: { "fill-color": "rgba(0,0,0,0.35)", "fill-opacity": 0.35 },
-      });
+      // 🔧 FIX : Vérifier si la source existe avant de l'ajouter
+      if (!map.getSource("outside-mask")) {
+        map.addSource("outside-mask", { type: "geojson", data: outerPolygon });
+      } else {
+        (map.getSource("outside-mask") as mapboxgl.GeoJSONSource).setData(outerPolygon);
+      }
+
+      // 🔧 FIX : Vérifier si le layer existe avant de l'ajouter
+      if (!map.getLayer("outside-mask")) {
+        map.addLayer({
+          id: "outside-mask",
+          type: "fill",
+          source: "outside-mask",
+          paint: { "fill-color": "rgba(0,0,0,0.35)", "fill-opacity": 0.35 },
+        });
+      }
 
       const bounds = new mapboxgl.LngLatBounds();
       circle.geometry.coordinates[0].forEach(([lng, lat]) => bounds.extend([lng, lat]));
-      map.fitBounds(bounds, { padding: 50, duration: 800 });
+      // 🔧 FIX : Réduction de la durée (800→300ms) et ajout essential: true pour éviter interruption
+      map.fitBounds(bounds, { padding: 50, duration: 300, essential: true });
     } catch (err) {
-      console.warn("Erreur drawRadius :", err);
+      console.error("❌ Erreur drawRadius :", err);
+    } finally {
+      // 🔧 FIX : Toujours débloquer, même en cas d'erreur
+      isDrawingRef.current = false;
     }
   }
 
