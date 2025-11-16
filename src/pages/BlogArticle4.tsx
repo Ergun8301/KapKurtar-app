@@ -9,7 +9,7 @@ const BlogArticle4 = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <a href="/blog" className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange transition-colors">
             <ArrowLeft className="w-5 h-5 mr-2" />
-            Bloga dön
+            Retour au blog
           </a>
         </div>
       </div>
@@ -19,23 +19,23 @@ const BlogArticle4 = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
             <span className="bg-tilkapp-green text-white px-4 py-2 rounded-full text-sm font-medium">
-              Referanslar
+              Témoignages
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            "TILKAPP tüketim şeklimi değiştirdi"
+            "TILKAPP a changé ma façon de consommer"
           </h1>
           <div className="flex items-center text-gray-600 mb-8">
             <User className="w-5 h-5 mr-2" />
             <span className="mr-6">Zeynep K.</span>
             <Calendar className="w-5 h-5 mr-2" />
-            <span>1 Kasım 2024</span>
+            <span>1 novembre 2024</span>
             <span className="mx-3">•</span>
-            <span>4 dk okuma</span>
+            <span>4 min de lecture</span>
           </div>
           <img
             src="https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=1200"
-            alt="Zeynep TILKAPP alışverişleriyle"
+            alt="Zeynep avec ses courses TILKAPP"
             className="w-full h-96 object-cover rounded-xl shadow-lg"
           />
         </div>
@@ -45,85 +45,85 @@ const BlogArticle4 = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="prose prose-lg max-w-none">
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            32 yaşındaki iki çocuk annesi ve Antalya'da öğretmen olan Zeynep, TILKAPP'ı 6 aydır kullanıyor.
-            Uygulamanın tüketim alışkanlıklarını ve aile bütçesini nasıl dönüştürdüğünü anlatıyor.
+            Zeynep, 32 ans, mère de deux enfants et professeure à Antalya, utilise TILKAPP depuis 6 mois. 
+            Elle nous raconte comment l'application a transformé ses habitudes de consommation et son budget familial.
           </p>
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">TILKAPP'ı keşfetmek</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">La découverte de TILKAPP</h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            "TILKAPP'ı tesadüfen, gıda harcamalarımı azaltmak için çözüm ararken keşfettim.
-            İki çocukla market bütçesi hızla artabiliyor! Başta şüpheliydim: %50 indirimli ürünler,
-            gerçek olamayacak kadar güzel görünüyordu."
+            "J'ai découvert TILKAPP par hasard, en cherchant des solutions pour réduire mes dépenses alimentaires. 
+            Avec deux enfants, le budget courses peut vite grimper ! Au début, j'étais sceptique : des produits à -50%, 
+            ça paraissait trop beau pour être vrai."
           </p>
 
           <blockquote className="border-l-4 border-tilkapp-green pl-6 my-8 italic text-gray-700">
-            "İlk siparişimi aldığımda kaliteye şaşırdım.
-            Aynı sabah tam fiyata satılan ürünlerle tamamen aynıydılar!"
+            "La première fois que j'ai récupéré une commande, j'ai été surprise par la qualité. 
+            C'étaient exactement les mêmes produits que ceux vendus au prix fort le matin même !"
           </blockquote>
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Önemli tasarruflar</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Des économies significatives</h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            Altı ayda Zeynep, aile gıda bütçesinden yaklaşık 2.000 TL tasarruf ettiğini tahmin ediyor.
-            "Haftada 2-3 kez sipariş veriyorum, çoğunlukla taze ekmek, hamur işleri ve bazen hazır yemekler.
-            İşten geç geldiğim akşamlar için mükemmel."
+            En six mois, Zeynep estime avoir économisé près de 2 000 TL sur son budget alimentaire familial. 
+            "Je commande 2 à 3 fois par semaine, principalement du pain frais, des pâtisseries et parfois des plats préparés. 
+            C'est parfait pour les soirs où je rentre tard du travail."
           </p>
 
           <div className="bg-tilkapp-beige rounded-lg p-6 my-8">
-            <h3 className="font-bold text-gray-900 mb-3">Zeynep'in TILKAPP ile aylık bütçesi:</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Le budget mensuel de Zeynep avec TILKAPP :</h3>
             <ul className="space-y-2 text-gray-700">
-              <li>• Ekmek ve hamur işleri: Ayda 150 TL tasarruf</li>
-              <li>• Meyve ve sebzeler: Ayda 200 TL tasarruf</li>
-              <li>• Hazır yemekler: Ayda 100 TL tasarruf</li>
-              <li>• <strong>Toplam: Ayda ~450 TL tasarruf</strong></li>
+              <li>• Pain et viennoiseries : 150 TL économisés/mois</li>
+              <li>• Fruits et légumes : 200 TL économisés/mois</li>
+              <li>• Plats préparés : 100 TL économisés/mois</li>
+              <li>• <strong>Total : ~450 TL d'économies par mois</strong></li>
             </ul>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Olumlu çevresel etki</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Un impact environnemental positif</h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            Mali yönün ötesinde Zeynep, gıda israfıyla mücadeleye katkıda bulunmaktan gurur duyuyor.
-            "Çocuklarım yiyecek atmamanın önemini anladılar. Artık evde sık sık bunun hakkında konuşuyoruz."
+            Au-delà de l'aspect financier, Zeynep est fière de contribuer à la lutte contre le gaspillage alimentaire. 
+            "Mes enfants ont compris l'importance de ne pas jeter la nourriture. On en parle souvent à la maison maintenant."
           </p>
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Favori işletmeleri</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Ses commerçants préférés</h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            Zeynep'in alışkanlıkları var: "Okulun yakınındaki fırın her zaman gün sonunda mükemmel ürünler sunuyor.
-            Pazardaki manav da hafif solmuş meyve ve sebzelerini rakipsiz fiyatlarla satışa çıkarıyor.
-            Smoothie'lerim ve çorbalarım için mükemmel!"
+            Zeynep a ses habitudes : "La boulangerie près de l'école propose toujours d'excellents produits en fin de journée. 
+            Et le primeur du marché met en vente ses fruits et légumes légèrement défraîchis à des prix imbattables. 
+            Parfaits pour mes smoothies et soupes !"
           </p>
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">İyi başlamak için tavsiyeleri</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Ses conseils pour bien débuter</h2>
           <div className="bg-white border-2 border-tilkapp-green rounded-lg p-6 my-8">
-            <h3 className="font-bold text-gray-900 mb-4">Zeynep'in 5 tavsiyesi:</h3>
+            <h3 className="font-bold text-gray-900 mb-4">Les 5 conseils de Zeynep :</h3>
             <ol className="space-y-3 text-gray-700">
-              <li><strong>1. Bildirimleri açın</strong> - Favori işletmelerinizin hiçbir teklifini kaçırmamak için</li>
-              <li><strong>2. Menülerinizi planlayın</strong> - TILKAPP'ı alışverişlerinizi tamamlamak için kullanın, değiştirmek için değil</li>
-              <li><strong>3. Esnek olun</strong> - Teklifler her gün değişir, yemeklerinizi buna göre uyarlayın</li>
-              <li><strong>4. Birkaç işletme deneyin</strong> - Favorilerinizi hızlıca bulacaksınız</li>
-              <li><strong>5. Çevrenizle paylaşın</strong> - Ne kadar çok olursak, o kadar çok gıdayı kurtarırız!</li>
+              <li><strong>1. Activez les notifications</strong> - Pour ne rater aucune offre de vos commerces préférés</li>
+              <li><strong>2. Planifiez vos menus</strong> - Utilisez TILKAPP pour compléter vos courses, pas les remplacer</li>
+              <li><strong>3. Soyez flexible</strong> - Les offres changent chaque jour, adaptez vos repas en conséquence</li>
+              <li><strong>4. Testez plusieurs commerces</strong> - Vous trouverez rapidement vos favoris</li>
+              <li><strong>5. Partagez autour de vous</strong> - Plus on est nombreux, plus on sauve de nourriture !</li>
             </ol>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">TILKAPP ile gelecek</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">L'avenir avec TILKAPP</h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            "Artık onsuz yapamıyorum! TILKAPP artık günlük rutinimin bir parçası.
-            Her sabah kahvemi içerken uygulamayı kontrol ediyorum ve akşam için ilgimi çeken şeyleri ayırtıyorum."
+            "Je ne peux plus m'en passer ! TILKAPP fait maintenant partie de ma routine quotidienne. 
+            Je consulte l'app tous les matins en buvant mon café, et je réserve ce qui m'intéresse pour le soir."
           </p>
 
           <blockquote className="border-l-4 border-tilkapp-green pl-6 my-8 italic text-gray-700">
-            "Tüm bunlardaki en güzel şey? Çocuklarım gerçek israf karşıtı elçiler oldular.
-            Okuldaki arkadaşlarına bundan bahsediyorlar!"
+            "Le plus beau dans tout ça ? Mes enfants sont devenus de véritables ambassadeurs anti-gaspi. 
+            Ils en parlent à leurs copains à l'école !"
           </blockquote>
 
           <div className="bg-gray-100 rounded-lg p-8 my-12 text-center">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Siz de harekete katılın!</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Vous aussi, rejoignez le mouvement !</h3>
             <p className="text-gray-700 mb-6">
-              TILKAPP'ı indirin ve gezegeni kurtarırken tasarruf etmeye başlayın
+              Téléchargez TILKAPP et commencez à économiser tout en sauvant la planète
             </p>
             <a
               href="/download"
               className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
             >
-              Uygulamayı indir
+              Télécharger l'application
             </a>
           </div>
         </div>

@@ -84,7 +84,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
         
         // ✅ Informer l'utilisateur
         setToast({
-          message: '⏰ Süresi dolmuş teklif → Tarihler sıfırlandı (şimdi + 2s)',
+          message: '⏰ Offre expirée → Dates réinitialisées (maintenant + 2h)',
           type: 'success',
         });
       } else {
@@ -253,7 +253,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
     if (file.size > MAX_SIZE) {
       setToast({
         message:
-          'Görsel çok büyük (maks. 5 MB). Göndermeden önce boyutunu küçült veya sıkıştır.',
+          "Image trop volumineuse (max. 5 Mo). Réduis la taille ou compresse-la avant d'envoyer.",
         type: 'error',
       });
       return;
@@ -262,7 +262,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
     if (!validTypes.includes(file.type.toLowerCase())) {
       setToast({
         message:
-          'Desteklenmeyen format. Kabul edilen formatlar: JPG, PNG, WEBP, HEIC, HEIF, AVIF.',
+          'Format non pris en charge. Formats acceptés : JPG, PNG, WEBP, HEIC, HEIF, AVIF.',
         type: 'error',
       });
       return;
@@ -278,7 +278,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
       } catch (error) {
         setToast({
           message:
-            'HEIC dönüştürme hatası. Görselinizi manuel olarak JPG formatına dönüştürmeyi deneyin.',
+            'Erreur lors de la conversion HEIC. Essaie de convertir ton image en JPG manuellement.',
           type: 'error',
         });
         return;
@@ -332,7 +332,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
 >
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
-            {mode === 'create' ? 'Yeni Ürün Ekle' : 'Ürünü Düzenle'}
+            {mode === 'create' ? 'Add New Product' : 'Edit Product'}
           </h2>
           <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
             <X className="w-6 h-6" />
@@ -341,24 +341,24 @@ export const OfferForm: React.FC<OfferFormProps> = ({
 
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Ürün Adı</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
             <input
               type="text"
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              placeholder="Örn: Taze Kruvasan Kutusu"
+              placeholder="e.g., Fresh Croissants Box"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Açıklama</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleInputChange}
-              placeholder="Ürününüzü tanımlayın..."
+              placeholder="Describe your product..."
               rows={3}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
             />
@@ -366,14 +366,14 @@ export const OfferForm: React.FC<OfferFormProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              📸 Ürün Fotoğrafı
+              📸 Photo du produit
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
               {formData.imagePreview ? (
                 <div className="relative">
                   <img
                     src={formData.imagePreview}
-                    alt="Önizleme"
+                    alt="Preview"
                     className="max-h-48 mx-auto rounded"
                   />
                   <button
@@ -387,9 +387,9 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                 <label className="cursor-pointer">
                   <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                   <p className="text-sm text-gray-600">
-                    {mode === 'create'
-                      ? 'Fotoğraf çek veya görsel seç'
-                      : 'Fotoğrafı değiştir (isteğe bağlı)'}
+                    {mode === 'create' 
+                      ? 'Prendre une photo ou choisir une image'
+                      : 'Changer la photo (optionnel)'}
                   </p>
                   <input
                     type="file"
@@ -405,27 +405,27 @@ export const OfferForm: React.FC<OfferFormProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Orijinal Fiyat (₺)
+                Original Price (€)
               </label>
               <input
                 type="number"
                 name="price_before"
                 value={formData.price_before}
                 onChange={handleInputChange}
-                placeholder="600.00"
+                placeholder="12.00"
                 step="0.01"
                 min="0"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">İndirimli Fiyat (₺)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Sale Price (€)</label>
               <input
                 type="number"
                 name="price_after"
                 value={formData.price_after}
                 onChange={handleInputChange}
-                placeholder="250.00"
+                placeholder="5.00"
                 step="0.01"
                 min="0"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
@@ -436,14 +436,14 @@ export const OfferForm: React.FC<OfferFormProps> = ({
           {formData.price_before && formData.price_after && parseFloat(formData.price_before) > 0 && (
             <div className="bg-green-100 border border-green-300 rounded-lg p-3 text-center">
               <span className="text-lg font-bold text-tilkapp-green">
-                -%{calculateDiscount(formData.price_before, formData.price_after)} indirim
+                -{calculateDiscount(formData.price_before, formData.price_after)}% discount
               </span>
             </div>
           )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mevcut Miktar
+              Quantity Available
             </label>
             <input
               type="number"
@@ -467,14 +467,14 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                   className="w-4 h-4 text-tilkapp-green rounded focus:ring-tilkapp-green"
                 />
                 <label htmlFor="startNow" className="ml-2 text-sm font-medium text-gray-700">
-                  Başlangıç: Şimdi
+                  Start: Now
                 </label>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Başlangıç Tarihi ve Saati
+                    Start Date and Time
                   </label>
                   <input
                     type="datetime-local"
@@ -487,7 +487,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bitiş Tarihi ve Saati
+                    End Date and Time
                   </label>
                   <input
                     type="datetime-local"
@@ -500,26 +500,26 @@ export const OfferForm: React.FC<OfferFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Süre</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
                 <select
                   name="duration"
                   value={formData.duration}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
                 >
-                  <option value="30min">30 dakika</option>
-                  <option value="1h">1 saat</option>
-                  <option value="2h">2 saat</option>
-                  <option value="4h">4 saat</option>
-                  <option value="allday">Tüm gün (bugün)</option>
-                  <option value="custom">Özel</option>
+                  <option value="30min">30 minutes</option>
+                  <option value="1h">1 hour</option>
+                  <option value="2h">2 hours</option>
+                  <option value="4h">4 hours</option>
+                  <option value="allday">All day (today)</option>
+                  <option value="custom">Custom</option>
                 </select>
               </div>
 
               {formData.duration === 'custom' && (
                 <div className="mt-3">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Özel Süre (dakika)
+                    Custom Duration (minutes)
                   </label>
                   <input
                     type="number"
@@ -539,7 +539,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Başlangıç
+                  Available From
                 </label>
                 <input
                   type="datetime-local"
@@ -552,7 +552,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bitiş
+                  Available Until
                 </label>
                 <input
                   type="datetime-local"
@@ -577,11 +577,11 @@ export const OfferForm: React.FC<OfferFormProps> = ({
           >
             {isSubmitting
               ? mode === 'create'
-                ? 'Yayınlanıyor...'
-                : 'Güncelleniyor...'
+                ? 'Publishing...'
+                : 'Updating...'
               : mode === 'create'
-              ? 'Ürünü Yayınla'
-              : 'Ürünü Güncelle'}
+              ? 'Publish Product'
+              : 'Update Product'}
           </button>
         </div>
       </div>

@@ -51,7 +51,7 @@ export const QuantityModal: React.FC<QuantityModalProps> = ({
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-bold text-gray-900">Teklifi Rezerve Et</h3>
+            <h3 className="text-2xl font-bold text-gray-900">Reserve Offer</h3>
             <button
               onClick={onClose}
               className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
@@ -66,13 +66,13 @@ export const QuantityModal: React.FC<QuantityModalProps> = ({
           <div className="mb-6">
             <h4 className="font-semibold text-gray-900 mb-2">{safeOfferTitle}</h4>
             <p className="text-sm text-gray-600">
-              {safeAvailableQuantity} adet mevcut
+              {safeAvailableQuantity} unit{safeAvailableQuantity !== 1 ? 's' : ''} available
             </p>
           </div>
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Miktar Seçin
+              Select Quantity
             </label>
             <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4">
               <button
@@ -99,12 +99,12 @@ export const QuantityModal: React.FC<QuantityModalProps> = ({
 
           <div className="bg-green-100 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600">Birim fiyat:</span>
-              <span className="font-semibold text-gray-900">{((safePrice ?? 0) * 49).toFixed(2)}₺</span>
+              <span className="text-gray-600">Price per unit:</span>
+              <span className="font-semibold text-gray-900">${(safePrice ?? 0).toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between border-t border-green-300 pt-2">
-              <span className="text-lg font-semibold text-gray-900">Toplam:</span>
-              <span className="text-2xl font-bold text-tilkapp-green">{((safePrice ?? 0) * quantity * 49).toFixed(2)}₺</span>
+              <span className="text-lg font-semibold text-gray-900">Total:</span>
+              <span className="text-2xl font-bold text-tilkapp-green">${totalPrice}</span>
             </div>
           </div>
 
@@ -114,7 +114,7 @@ export const QuantityModal: React.FC<QuantityModalProps> = ({
               disabled={loading}
               className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50"
             >
-              İptal
+              Cancel
             </button>
             <button
               onClick={handleConfirm}
@@ -124,12 +124,12 @@ export const QuantityModal: React.FC<QuantityModalProps> = ({
               {loading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Rezerve ediliyor...
+                  Reserving...
                 </>
               ) : (
                 <>
                   <ShoppingCart className="w-5 h-5" />
-                  Rezervasyonu Onayla
+                  Confirm Reservation
                 </>
               )}
             </button>

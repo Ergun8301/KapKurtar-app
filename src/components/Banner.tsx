@@ -7,6 +7,7 @@ const Banner = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
     const fetchSlides = async () => {
       try {
@@ -69,7 +70,7 @@ const Banner = () => {
             {currentSlideData.title.split(' ').map((word, index) => (
               <span
                 key={index}
-                className={word.toLowerCase() === 'save' || word.toLowerCase() === 'together' ? 'text-[#2DD4BF]' : ''}
+                className={word.toLowerCase() === 'save' || word.toLowerCase() === 'together' ? 'text-green-400' : ''}
               >
                 {word}{' '}
               </span>
@@ -79,15 +80,15 @@ const Banner = () => {
             {currentSlideData.subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            
+            <a
               href={currentSlideData.cta_link}
-              className="bg-[#2DD4BF] text-white px-8 py-3 rounded-lg font-medium hover:bg-[#2DD4BF] transition-colors duration-300"
+              className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors"
             >
               {currentSlideData.cta_text}
             </a>
-            
+            <a
               href="/merchants"
-              className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg font-medium hover:bg-[#2DD4BF] hover:border-[#2DD4BF] hover:text-white transition-colors duration-300"
+              className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-colors"
             >
               For Merchants
             </a>
@@ -100,13 +101,13 @@ const Banner = () => {
         <>
           <button
             onClick={prevSlide}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-[#2DD4BF] hover:bg-opacity-90 transition-all duration-300"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
           <button
             onClick={nextSlide}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-[#2DD4BF] hover:bg-opacity-90 transition-all duration-300"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all"
           >
             <ChevronRight className="w-6 h-6" />
           </button>
@@ -121,7 +122,7 @@ const Banner = () => {
               key={index}
               onClick={() => setCurrentSlide(index)}
               className={`w-3 h-3 rounded-full transition-all ${
-                index === currentSlide ? 'bg-[#2DD4BF]' : 'bg-white bg-opacity-50'
+                index === currentSlide ? 'bg-white' : 'bg-white bg-opacity-50'
               }`}
             />
           ))}

@@ -133,7 +133,7 @@ export default function OffersPage() {
   const getTimeRemaining = (until?: string) => {
     if (!until) return "";
     const diff = new Date(until).getTime() - Date.now();
-    if (diff <= 0) return "⏰ Süresi Doldu";
+    if (diff <= 0) return "⏰ Expirée";
 
     const totalMinutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(totalMinutes / 60);
@@ -142,19 +142,19 @@ export default function OffersPage() {
 
     if (hours >= 48) {
       const remainingHours = hours % 24;
-      return `⏰ ${days} gün ${remainingHours}s`;
+      return `⏰ ${days} jour${days > 1 ? 's' : ''} ${remainingHours}h`;
     }
 
     if (hours >= 24) {
       const remainingHours = hours % 24;
-      return `⏰ ${days} gün ${remainingHours}s`;
+      return `⏰ ${days} jour ${remainingHours}h`;
     }
 
     if (hours > 0) {
-      return `⏰ ${hours}s ${minutes}dk`;
+      return `⏰ ${hours}h ${minutes}min`;
     }
 
-    return `⏰ ${minutes} dk`;
+    return `⏰ ${minutes} min`;
   };
 
   const getProgressPercent = (availableFrom?: string, availableUntil?: string) => {
@@ -675,10 +675,10 @@ export default function OffersPage() {
 
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`font-bold text-tilkapp-green ${isMobile ? "text-base" : "text-lg"}`}>
-            {(offer.price_after * 49).toFixed(2)}₺
+            {offer.price_after.toFixed(2)}€
           </span>
           <span className={`line-through text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
-            {(offer.price_before * 49).toFixed(2)}₺
+            {offer.price_before.toFixed(2)}€
           </span>
           <span className="text-xs text-red-600 font-semibold bg-red-50 px-1.5 py-0.5 rounded whitespace-nowrap">
             -{getDiscountPercent(offer.price_before, offer.price_after)}%
@@ -784,7 +784,7 @@ export default function OffersPage() {
               }`}
               onClick={() => handleViewModeChange("nearby")}
             >
-              📍 Yakındaki Teklifler
+              📍 Offres à proximité
             </button>
             <button
               className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
@@ -794,7 +794,7 @@ export default function OffersPage() {
               }`}
               onClick={() => handleViewModeChange("all")}
             >
-              🌍 Tüm Teklifler
+              🌍 Toutes les offres
             </button>
           </div>
         </div>
@@ -802,8 +802,8 @@ export default function OffersPage() {
         {offers.length === 0 ? (
           <p className="text-gray-500 text-center mt-10">
             {viewMode === "nearby"
-              ? "Bu yarıçapta teklif bulunmuyor. Mesafeyi artırmayı deneyin!"
-              : "Şu anda teklif bulunmuyor."}
+              ? "Aucune offre disponible dans ce rayon. Essayez d'augmenter la distance !"
+              : "Aucune offre disponible pour le moment."}
           </p>
         ) : (
           <div className="space-y-4">

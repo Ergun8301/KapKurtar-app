@@ -87,8 +87,8 @@ const Header = () => {
   const getUserDisplayName = () => user?.email?.split("@")[0] || "User";
 
   const navigation = [
-    { name: "Teklifleri Keşfet", href: "/offers" },
-    { name: "İşletmeler İçin", href: "/for-merchants" },
+    { name: "Explore Offers", href: "/offers" },
+    { name: "For Merchants", href: "/for-merchants" },
   ];
 
   if (user && isMerchant === null) return null;
@@ -118,7 +118,7 @@ const Header = () => {
                 className="bg-tilkapp-green text-white hover:bg-tilkapp-orange px-4 py-2 rounded-md text-sm font-medium transition-colors border border-white/20 flex items-center space-x-2"
               >
                 <Download className="w-4 h-4" />
-                <span>Uygulamayı İndir</span>
+                <span>Download App</span>
               </button>
             </div>
           </div>
@@ -143,11 +143,11 @@ const Header = () => {
                         <>
                           <button onClick={() => { setIsUserMenuOpen(false); navigate("/merchant/dashboard"); }} className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                             <LayoutDashboard className="w-4 h-4 mr-2" />
-                            Kontrol Paneli
+                            Dashboard
                           </button>
                           <button onClick={() => { setIsUserMenuOpen(false); window.dispatchEvent(new CustomEvent("openMerchantProfileModal")); }} className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                             <Settings className="w-4 h-4 mr-2" />
-                            Ayarlar
+                            Settings
                           </button>
                         </>
                       ) : (
@@ -160,7 +160,7 @@ const Header = () => {
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <Package className="w-4 h-4 mr-2" />
-                            Rezervasyonlarım
+                            Mes Réservations
                           </button>
                           <button
                             onClick={() => {
@@ -170,14 +170,14 @@ const Header = () => {
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <User className="w-4 h-4 mr-2" />
-                            Profilim
+                            Mon Profil
                           </button>
                         </>
                       )}
                       <hr className="my-1" />
                       <button onClick={handleSignOut} className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                         <LogOut className="w-4 h-4 mr-2" />
-                        Çıkış Yap
+                        Sign Out
                       </button>
                     </div>
                   )}
@@ -186,20 +186,20 @@ const Header = () => {
             ) : (
               <div className="relative" ref={userMenuRef}>
                 <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="bg-tilkapp-beige text-tilkapp-green px-4 py-2 rounded-lg font-bold hover:bg-tilkapp-orange hover:text-white transition-colors inline-flex items-center">
-                  Giriş Yap
+                  Sign In
                   <ChevronDown className="w-4 h-4 ml-1" />
                 </button>
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                    <div className="px-4 py-2 text-xs text-gray-500 uppercase tracking-wide font-semibold">Hesap Türünü Seçin</div>
+                    <div className="px-4 py-2 text-xs text-gray-500 uppercase tracking-wide font-semibold">Choose Account Type</div>
                     <button onClick={() => { setIsUserMenuOpen(false); navigate("/customer/auth"); }} className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
                       <User className="w-4 h-4 mr-3" />
-                      Müşteri Girişi
+                      Customer Login
                       <ArrowRight className="w-4 h-4 ml-auto" />
                     </button>
                     <button onClick={() => { setIsUserMenuOpen(false); navigate("/merchant/auth"); }} className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
                       <Store className="w-4 h-4 mr-3" />
-                      İşletme Girişi
+                      Merchant Login
                       <ArrowRight className="w-4 h-4 ml-auto" />
                     </button>
                   </div>
@@ -236,7 +236,7 @@ const Header = () => {
               className="w-full text-left px-3 py-2 text-tilkapp-beige hover:text-white hover:bg-white/10 rounded-lg transition-colors flex items-center space-x-2"
             >
               <Download className="w-4 h-4" />
-              <span>Uygulamayı İndir</span>
+              <span>Download App</span>
             </button>
 
             {!user && (
@@ -247,14 +247,14 @@ const Header = () => {
                   onClick={() => setIsMenuOpen(false)}
                   className="block px-3 py-2 text-tilkapp-beige hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                 >
-                  Müşteri Girişi
+                  Customer Login
                 </a>
                 <a
                   href="/merchant/auth"
                   onClick={() => setIsMenuOpen(false)}
                   className="block px-3 py-2 text-tilkapp-beige hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                 >
-                  İşletme Girişi
+                  Merchant Login
                 </a>
               </>
             )}

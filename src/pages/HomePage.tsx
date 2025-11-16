@@ -13,49 +13,34 @@ const HomePage = () => {
   return (
     <div>
       <HeroBanner />
-      
-      {/* Section HowItWorks - fond turquoise clair */}
-      <div className="bg-[#2DD4BF]/10">
-        <HowItWorks />
-      </div>
+      <HowItWorks />
+      <FeaturedOffers onOpenDownloadModal={() => setShowDownloadModal(true)} />
+      <ImpactSection />
 
-      {/* Section FeaturedOffers - fond blanc */}
-      <div className="bg-white">
-        <FeaturedOffers onOpenDownloadModal={() => setShowDownloadModal(true)} />
-      </div>
-
-      {/* Section ImpactSection - fond turquoise clair */}
-      <div className="bg-[#2DD4BF]/10">
-        <ImpactSection />
-      </div>
-
-      {/* CTA Download Section - fond crème */}
-      <div className="bg-[#F3EACE] py-16">
+      {/* CTA Download Section */}
+      <div className="bg-tilkapp-beige py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="flex justify-center mb-6">
-            <div className="bg-[#00615F] rounded-full p-4">
+            <div className="bg-tilkapp-green rounded-full p-4">
               <Smartphone className="w-12 h-12 text-white" />
             </div>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            TILKAPP Uygulamasını İndirin
+            Téléchargez l'application TILKAPP
           </h2>
           <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
-            Gerçek zamanlı bildirimler alın ve yakınınızdaki hiçbir teklifi kaçırmayın
+            Recevez des notifications en temps réel et ne ratez plus aucune offre près de chez vous
           </p>
           <button
             onClick={() => setShowDownloadModal(true)}
-            className="bg-[#F75C00] text-white px-8 py-4 rounded-lg font-bold hover:bg-[#FF7A29] transition-colors duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+            className="bg-tilkapp-green text-white px-8 py-4 rounded-lg font-bold hover:bg-tilkapp-orange transition-colors text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
           >
-            Şimdi İndir
+            Télécharger maintenant
           </button>
         </div>
       </div>
 
-      {/* Section ForMerchants - fond turquoise clair */}
-      <div className="bg-[#2DD4BF]/10">
-        <ForMerchantsSection />
-      </div>
+      <ForMerchantsSection />
 
       {/* Download App Modal */}
       <DownloadAppModal

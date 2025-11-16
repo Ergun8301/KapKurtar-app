@@ -8,7 +8,7 @@ const BlogArticle5 = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <a href="/blog" className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange transition-colors">
             <ArrowLeft className="w-5 h-5 mr-2" />
-            Bloga dön
+            Retour au blog
           </a>
         </div>
       </div>
@@ -17,23 +17,23 @@ const BlogArticle5 = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
             <span className="bg-tilkapp-green text-white px-4 py-2 rounded-full text-sm font-medium">
-              Tavsiyeler
+              Conseils
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            İsraf karşıtı işletmeler için en iyi uygulamalar
+            Les meilleures pratiques pour les commerçants anti-gaspi
           </h1>
           <div className="flex items-center text-gray-600 mb-8">
             <User className="w-5 h-5 mr-2" />
-            <span className="mr-6">TILKAPP İşletme</span>
+            <span className="mr-6">TILKAPP Business</span>
             <Calendar className="w-5 h-5 mr-2" />
-            <span>28 Ekim 2024</span>
+            <span>28 octobre 2024</span>
             <span className="mx-3">•</span>
-            <span>8 dk okuma</span>
+            <span>8 min de lecture</span>
           </div>
           <img
             src="https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=1200"
-            alt="TILKAPP partner işletmesi"
+            alt="Commerce partenaire TILKAPP"
             className="w-full h-96 object-cover rounded-xl shadow-lg"
           />
         </div>
@@ -42,182 +42,182 @@ const BlogArticle5 = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="prose prose-lg max-w-none">
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            İşletme sahibisiniz ve karlılığınızı artırırken satılmayan ürünlerinizi nasıl optimize edeceğinizi mi merak ediyorsunuz?
-            TILKAPP partner işletmelerinin kazanan stratejilerini keşfedin.
+            Vous êtes commerçant et vous vous demandez comment optimiser vos invendus tout en augmentant votre rentabilité ? 
+            Découvrez les stratégies gagnantes des commerçants partenaires TILKAPP.
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">
             <TrendingUp className="inline w-6 h-6 mr-2 text-tilkapp-green" />
-            Kayıplarınızı kara dönüştürün
+            Transformez vos pertes en profits
           </h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            Ortalama olarak bir gıda işletmesi her gün stokunun %5 ile %15'i arasını atıyor.
-            TILKAPP ile bu kayıplar ek gelir fırsatlarına dönüşüyor.
+            En moyenne, un commerce alimentaire jette entre 5% et 15% de son stock chaque jour. 
+            Avec TILKAPP, ces pertes deviennent des opportunités de revenus supplémentaires.
           </p>
 
           <div className="bg-tilkapp-beige rounded-lg p-6 my-8">
-            <h3 className="font-bold text-gray-900 mb-3">Somut örnek: Antalya'da bir fırın</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Exemple concret : Une boulangerie à Antalya</h3>
             <ul className="space-y-2 text-gray-700">
-              <li>• <strong>TILKAPP öncesi:</strong> Günde 50 satılmayan ekmek = 200 TL kayıp</li>
-              <li>• <strong>TILKAPP ile:</strong> %40 indirimle satılan 45 ekmek = 108 TL gelir</li>
-              <li>• <strong>Aylık kazanç:</strong> -6.000 TL yerine +3.240 TL</li>
+              <li>• <strong>Avant TILKAPP :</strong> 50 pains invendus/jour = 200 TL de perte</li>
+              <li>• <strong>Avec TILKAPP :</strong> 45 pains vendus à -40% = 108 TL de revenus</li>
+              <li>• <strong>Gain mensuel :</strong> +3 240 TL au lieu de -6 000 TL</li>
             </ul>
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">
             <BarChart3 className="inline w-6 h-6 mr-2 text-tilkapp-green" />
-            Başarının 5 temel ilkesi
+            Les 5 piliers du succès
           </h2>
 
-          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">1. Cazip (ama karlı) fiyatlar belirleyin</h3>
+          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">1. Fixez des prix attractifs (mais rentables)</h3>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            Yaygın hata: sadece %10 veya %20 indirim sunmak. TILKAPP kullanıcıları gerçek fırsatlar arıyor.
+            L'erreur courante : proposer seulement -10% ou -20%. Les utilisateurs TILKAPP recherchent des vraies bonnes affaires.
           </p>
           <div className="bg-white border-2 border-tilkapp-green rounded-lg p-6 my-6">
-            <p className="font-bold text-gray-900 mb-2">Önerimiz:</p>
+            <p className="font-bold text-gray-900 mb-2">Notre recommandation :</p>
             <ul className="space-y-2 text-gray-700">
-              <li>• Hamur işleri/Ekmek: %40 ila %60 indirim</li>
-              <li>• Meyve ve sebzeler: %50 ila %70 indirim</li>
-              <li>• Hazır yemekler: %40 ila %50 indirim</li>
-              <li>• Süt ürünleri: %30 ila %40 indirim</li>
+              <li>• Pâtisseries/Pain : -40% à -60%</li>
+              <li>• Fruits et légumes : -50% à -70%</li>
+              <li>• Plats préparés : -40% à -50%</li>
+              <li>• Produits laitiers : -30% à -40%</li>
             </ul>
           </div>
 
-          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">2. Tekliflerinizi doğru zamanda yayınlayın</h3>
+          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">2. Publiez vos offres au bon moment</h3>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            TILKAPP istatistikleri, sabahın sonlarında (10:00-12:00) yayınlanan tekliflerin
-            öğleden sonra yayınlananlardan 3 kat daha fazla rezervasyon sağladığını gösteriyor.
+            Les statistiques TILKAPP montrent que les offres publiées en fin de matinée (10h-12h) génèrent 3x plus de réservations 
+            que celles publiées en fin d'après-midi.
           </p>
           <blockquote className="border-l-4 border-tilkapp-green pl-6 my-8 italic text-gray-700">
-            "Saat 11:00 civarında tekliflerimi 18:00'de teslim için yayınlamaya başladığımdan beri,
-            satılmayan ürünlerimin %90'ını satıyorum, eskiden %40'tı." - Ahmet, Konyaaltı'nda manav
+            "Depuis que je publie mes offres vers 11h pour une récupération à 18h, 
+            je vends 90% de mes invendus contre 40% avant." - Ahmet, primeur à Konyaaltı
           </blockquote>
 
-          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">3. Fotoğraflarınıza özen gösterin</h3>
+          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">3. Soignez vos photos</h3>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            İştah açıcı bir fotoğraf satış şansını 4 kat artırıyor. Güzel bir fotoğraf için 2 dakika ayırın:
+            Une photo appétissante multiplie par 4 les chances de vente. Investissez 2 minutes pour prendre une belle photo :
           </p>
           <ul className="space-y-2 text-gray-700 ml-6 mb-6">
-            <li>• Doğal ışık (pencere yakını)</li>
-            <li>• Temiz ve nötr arka plan</li>
-            <li>• Ürüne yakın kadraj</li>
-            <li>• Telefon flaşından kaçının</li>
+            <li>• Lumière naturelle (près d'une fenêtre)</li>
+            <li>• Fond propre et neutre</li>
+            <li>• Cadrage serré sur le produit</li>
+            <li>• Évitez le flash du téléphone</li>
           </ul>
 
-          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">4. Doğru satış modunu seçin</h3>
+          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">4. Choisissez le bon mode de vente</h3>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            TILKAPP iki mod sunuyor: rezervasyon veya "ilk gelen". Faaliyet alanınıza göre seçin:
+            TILKAPP propose deux modes : réservation ou "premier arrivé". Choisissez selon votre activité :
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
             <div className="bg-green-50 rounded-lg p-6">
-              <h4 className="font-bold text-gray-900 mb-3">✅ Rezervasyon</h4>
-              <p className="text-sm text-gray-700 mb-2"><strong>İdeal olduğu durumlar:</strong></p>
+              <h4 className="font-bold text-gray-900 mb-3">✅ Réservation</h4>
+              <p className="text-sm text-gray-700 mb-2"><strong>Idéal pour :</strong></p>
               <ul className="text-sm text-gray-700 space-y-1">
-                <li>• Hazır yemekler</li>
-                <li>• Büyük hacimler</li>
-                <li>• Hassas ürünler</li>
+                <li>• Plats préparés</li>
+                <li>• Gros volumes</li>
+                <li>• Produits fragiles</li>
               </ul>
               <p className="text-sm text-gray-700 mt-3">
-                <strong>Avantaj:</strong> Sıfır israf garantisi
+                <strong>Avantage :</strong> Zéro gaspillage garanti
               </p>
             </div>
             <div className="bg-blue-50 rounded-lg p-6">
-              <h4 className="font-bold text-gray-900 mb-3">⚡ İlk gelen</h4>
-              <p className="text-sm text-gray-700 mb-2"><strong>İdeal olduğu durumlar:</strong></p>
+              <h4 className="font-bold text-gray-900 mb-3">⚡ Premier arrivé</h4>
+              <p className="text-sm text-gray-700 mb-2"><strong>Idéal pour :</strong></p>
               <ul className="text-sm text-gray-700 space-y-1">
-                <li>• Ekmek/hamur işleri</li>
-                <li>• Küçük hacimler</li>
-                <li>• Gelip geçen müşteriler</li>
+                <li>• Pain/viennoiseries</li>
+                <li>• Petits volumes</li>
+                <li>• Clients de passage</li>
               </ul>
               <p className="text-sm text-gray-700 mt-3">
-                <strong>Avantaj:</strong> Daha fazla esneklik
+                <strong>Avantage :</strong> Plus de flexibilité
               </p>
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">5. TILKAPP müşterilerinizi sadık hale getirin</h3>
+          <h3 className="text-xl font-bold text-gray-900 mt-8 mb-3">5. Fidélisez vos clients TILKAPP</h3>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            Memnun müşteri geri gelir! Ara sıra alışveriş yapanı sadık müşteriye dönüştürmek için birkaç ipucu:
+            Un client satisfait revient ! Quelques astuces pour transformer un acheteur occasionnel en habitué :
           </p>
           <ul className="space-y-3 text-gray-700 ml-6 mb-6">
-            <li>• <strong>Sıcak karşılama:</strong> Bir gülümseme ve teşekkür fark yaratır</li>
-            <li>• <strong>Düzenlilik:</strong> Her gün teklif yayınlayın (küçük de olsa)</li>
-            <li>• <strong>Sürpriz bonus:</strong> Ara sıra küçük bir ekstra ekleyin</li>
-            <li>• <strong>İletişim:</strong> Sadık müşterilerinizi en iyi tekliflerinizden haberdar edin</li>
+            <li>• <strong>Accueil chaleureux :</strong> Un sourire et un merci font la différence</li>
+            <li>• <strong>Régularité :</strong> Publiez des offres tous les jours (même petites)</li>
+            <li>• <strong>Bonus surprise :</strong> Ajoutez occasionnellement un petit extra</li>
+            <li>• <strong>Communication :</strong> Prévenez vos habitués de vos meilleures offres</li>
           </ul>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">
             <Users className="inline w-6 h-6 mr-2 text-tilkapp-green" />
-            Partner işletme referansları
+            Témoignages de commerçants partenaires
           </h2>
 
           <div className="bg-gray-100 rounded-lg p-6 my-8">
             <p className="text-gray-700 italic mb-3">
-              "TILKAPP kayıplarımı %70 azaltmamı sağladı. Ayrıca düzenli müşterilerim
-              normal fiyattan asla almayacakları yeni ürünleri keşfediyorlar."
+              "TILKAPP m'a permis de réduire mes pertes de 70%. En plus, mes clients réguliers découvrent 
+              de nouveaux produits qu'ils n'auraient jamais achetés au prix normal."
             </p>
-            <p className="text-sm text-gray-600">- Fatma, Lara'da şarküteri</p>
+            <p className="text-sm text-gray-600">- Fatma, épicerie fine à Lara</p>
           </div>
 
           <div className="bg-gray-100 rounded-lg p-6 my-8">
             <p className="text-gray-700 italic mb-3">
-              "Başta ürünlerimi değersizleştirmekten korkuyordum. Şimdi anlıyorum:
-              %50 indirimle satmak %100 kayıpla atmaktan sonsuz kat daha iyi!"
+              "Au début, j'avais peur de dévaloriser mes produits. Maintenant je comprends : 
+              vendre à -50% c'est infiniment mieux que jeter à -100% !"
             </p>
-            <p className="text-sm text-gray-600">- Mehmet, Muratpaşa'da fırın-pastane</p>
+            <p className="text-sm text-gray-600">- Mehmet, boulangerie-pâtisserie à Muratpaşa</p>
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">
             <Smartphone className="inline w-6 h-6 mr-2 text-tilkapp-green" />
-            İşletme uygulamasını etkili kullanın
+            Utilisez l'app marchand efficacement
           </h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            TILKAPP işletme uygulaması hızlı ve sezgisel olacak şekilde tasarlandı.
-            2 dakikadan kısa sürede eksiksiz bir teklif yayınlayabilirsiniz.
+            L'application marchand TILKAPP est conçue pour être rapide et intuitive. 
+            En moins de 2 minutes, vous pouvez publier une offre complète.
           </p>
 
           <div className="bg-white border-2 border-tilkapp-green rounded-lg p-6 my-8">
-            <h3 className="font-bold text-gray-900 mb-4">Mükemmel bir teklif için kontrol listesi:</h3>
+            <h3 className="font-bold text-gray-900 mb-4">Checklist pour une offre parfaite :</h3>
             <ul className="space-y-2 text-gray-700">
-              <li>✓ Kaliteli fotoğraf</li>
-              <li>✓ Açıklayıcı başlık (örn: "Hamur işleri" yerine "5 tereyağlı kruvasan")</li>
-              <li>✓ Cazip fiyat (minimum %40 indirim önerilir)</li>
-              <li>✓ Net teslimat saati</li>
-              <li>✓ Mevcut miktar belirtilmiş</li>
-              <li>✓ Rezervasyon/direkt modu seçilmiş</li>
+              <li>✓ Photo de qualité</li>
+              <li>✓ Titre descriptif (ex: "5 croissants pur beurre" plutôt que "Viennoiseries")</li>
+              <li>✓ Prix attractif (-40% minimum recommandé)</li>
+              <li>✓ Heure de retrait claire</li>
+              <li>✓ Quantité disponible précisée</li>
+              <li>✓ Mode réservation/direct choisi</li>
             </ul>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Kaçınılması gereken hatalar</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Erreurs à éviter</h2>
           <div className="space-y-4 my-8">
             <div className="border-l-4 border-red-500 pl-4">
-              <p className="font-bold text-gray-900">❌ Çok yüksek fiyatlar</p>
-              <p className="text-sm text-gray-600">Kullanıcılar gerçek indirimler arıyor</p>
+              <p className="font-bold text-gray-900">❌ Prix trop élevés</p>
+              <p className="text-sm text-gray-600">Les utilisateurs cherchent de vraies réductions</p>
             </div>
             <div className="border-l-4 border-red-500 pl-4">
-              <p className="font-bold text-gray-900">❌ Düşük kaliteli fotoğraflar</p>
-              <p className="text-sm text-gray-600">Güzel bir fotoğraf için 30 saniye ayırın</p>
+              <p className="font-bold text-gray-900">❌ Photos de mauvaise qualité</p>
+              <p className="text-sm text-gray-600">Prenez 30 secondes pour une belle photo</p>
             </div>
             <div className="border-l-4 border-red-500 pl-4">
-              <p className="font-bold text-gray-900">❌ Pratik olmayan teslimat saatleri</p>
-              <p className="text-sm text-gray-600">Müşterilerinizin saatlerine uyum sağlayın (17:00-20:00 ideal)</p>
+              <p className="font-bold text-gray-900">❌ Horaires de retrait peu pratiques</p>
+              <p className="text-sm text-gray-600">Adaptez-vous aux horaires de vos clients (17h-20h idéal)</p>
             </div>
             <div className="border-l-4 border-red-500 pl-4">
-              <p className="font-bold text-gray-900">❌ Düzensizlik</p>
-              <p className="text-sm text-gray-600">Müşterilerinizde alışkanlık oluşturmak için her gün yayınlayın</p>
+              <p className="font-bold text-gray-900">❌ Irrégularité</p>
+              <p className="text-sm text-gray-600">Publiez tous les jours pour créer une habitude chez vos clients</p>
             </div>
           </div>
 
           <div className="bg-tilkapp-green text-white rounded-lg p-8 my-12 text-center">
-            <h3 className="text-2xl font-bold mb-4">TILKAPP'a katılmaya hazır mısınız?</h3>
+            <h3 className="text-2xl font-bold mb-4">Prêt à rejoindre TILKAPP ?</h3>
             <p className="mb-6 text-tilkapp-beige">
-              Ücretsiz kayıt olun ve satılmayan ürünlerinizi bugünden değerlendirmeye başlayın
+              Inscrivez-vous gratuitement et commencez à valoriser vos invendus dès aujourd'hui
             </p>
             <a
               href="/merchant/auth"
               className="bg-white text-tilkapp-green px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-beige transition-colors inline-block"
             >
-              Partner ol
+              Devenir partenaire
             </a>
           </div>
         </div>

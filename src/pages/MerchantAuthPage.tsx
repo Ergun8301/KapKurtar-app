@@ -94,7 +94,7 @@ const MerchantAuthPage = () => {
       } else {
         // ----------- REGISTER -----------
         if (formData.password.length < 6)
-          throw new Error("Şifre en az 6 karakter içermelidir");
+          throw new Error("Le mot de passe doit contenir au moins 6 caractères");
 
         // 🔹 Crée un flow_state avant signup
         const { data: flow, error: flowError } = await supabase
@@ -104,7 +104,7 @@ const MerchantAuthPage = () => {
           .single();
 
         if (flowError || !flow)
-          throw flowError || new Error("Flow state oluşturulamadı");
+          throw flowError || new Error("Échec création flow_state");
 
         const { data: signUpData, error: signUpError } =
           await supabase.auth.signUp({
@@ -119,7 +119,7 @@ const MerchantAuthPage = () => {
           });
         if (signUpError) throw signUpError;
 
-        alert("✅ Hesabınızı doğrulamak için e-postanızı kontrol edin.");
+        alert("✅ Vérifiez votre e-mail pour confirmer votre compte.");
       }
     } catch (err) {
       setError((err as Error).message);
@@ -139,7 +139,7 @@ const MerchantAuthPage = () => {
         .single();
 
       if (flowError || !flow)
-        throw flowError || new Error("Flow state oluşturulamadı");
+        throw flowError || new Error("Échec création flow_state");
 
       console.log("🎟️ Flow token créé :", flow.token);
 
@@ -179,7 +179,7 @@ const MerchantAuthPage = () => {
             className="inline-flex items-center text-[#FF6B35] hover:text-[#e55a28] font-medium mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Geri
+            Retour
           </button>
 
           <div className="text-center mb-8">
@@ -190,13 +190,13 @@ const MerchantAuthPage = () => {
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {mode === "login"
-                ? "İşletme Alanı"
-                : "Ortak Olun"}
+                ? "Espace Commerçant"
+                : "Devenez Partenaire"}
             </h1>
             <p className="text-gray-600">
               {mode === "login"
-                ? "Tekliflerinizi yönetin ve israfı azaltın"
-                : "SEPET'e katılın ve satılmayan ürünlerinizi değerlendirin"}
+                ? "Gérez vos offres et réduisez le gaspillage"
+                : "Rejoignez SEPET et valorisez vos invendus"}
             </p>
           </div>
 
@@ -210,7 +210,7 @@ const MerchantAuthPage = () => {
                     : "text-gray-500"
                 }`}
               >
-                Giriş
+                Connexion
               </button>
               <button
                 onClick={() => setMode("register")}
@@ -220,7 +220,7 @@ const MerchantAuthPage = () => {
                     : "text-gray-500"
                 }`}
               >
-                Kayıt
+                Inscription
               </button>
             </div>
 
@@ -233,7 +233,7 @@ const MerchantAuthPage = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  E-posta
+                  Email
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -243,7 +243,7 @@ const MerchantAuthPage = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent text-base"
-                    placeholder="isletme@ornek.com"
+                    placeholder="commerce@example.com"
                     required
                   />
                 </div>
@@ -251,7 +251,7 @@ const MerchantAuthPage = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Şifre
+                  Mot de passe
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -284,7 +284,7 @@ const MerchantAuthPage = () => {
                       onClick={() => navigate("/merchant/forgot-password")}
                       className="text-sm text-[#FF6B35] hover:text-[#e55a28] font-medium"
                     >
-                      Şifremi unuttum?
+                      Mot de passe oublié ?
                     </button>
                   </div>
                 )}
@@ -298,12 +298,12 @@ const MerchantAuthPage = () => {
                 {isLoading ? (
                   <div className="flex items-center justify-center">
                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Yükleniyor...
+                    Chargement...
                   </div>
                 ) : mode === "login" ? (
-                  "Giriş Yap"
+                  "Se connecter"
                 ) : (
-                  "Hesap Oluştur"
+                  "Créer mon espace"
                 )}
               </button>
             </form>
@@ -314,7 +314,7 @@ const MerchantAuthPage = () => {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-4 bg-white text-gray-500 font-medium">
-                  Veya şununla devam edin
+                  Ou continuer avec
                 </span>
               </div>
             </div>

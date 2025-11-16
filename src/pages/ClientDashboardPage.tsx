@@ -93,7 +93,7 @@ const ClientDashboardPage = () => {
         setReservations(data || []);
       } catch (error) {
         console.error('Erreur chargement réservations:', error);
-        setToast({ message: '❌ Rezervasyonlar yüklenirken hata oluştu', type: 'error' });
+        setToast({ message: '❌ Erreur chargement réservations', type: 'error' });
       } finally {
         setLoading(false);
       }
@@ -186,10 +186,10 @@ const ClientDashboardPage = () => {
       );
 
       setCancelConfirm(null);
-      setToast({ message: '✅ Rezervasyon iptal edildi, stok serbest bırakıldı', type: 'success' });
+      setToast({ message: '✅ Réservation annulée, stock libéré', type: 'success' });
     } catch (error) {
       console.error('Erreur annulation:', error);
-      setToast({ message: '❌ İptal edilirken hata oluştu', type: 'error' });
+      setToast({ message: '❌ Erreur lors de l\'annulation', type: 'error' });
     }
   };
 
@@ -204,30 +204,30 @@ const ClientDashboardPage = () => {
 
       setReservations(prev => prev.filter(r => r.reservation_id !== reservationId));
 
-      setToast({ message: '✅ Rezervasyon arşivlendi', type: 'success' });
+      setToast({ message: '✅ Réservation archivée', type: 'success' });
     } catch (error) {
       console.error('Erreur archivage:', error);
-      setToast({ message: '❌ Arşivlenirken hata oluştu', type: 'error' });
+      setToast({ message: '❌ Erreur lors de l\'archivage', type: 'error' });
     }
   };
 
   const getTimeRemaining = (until: string) => {
     const diff = new Date(until).getTime() - Date.now();
-    if (diff <= 0) return 'Süresi Doldu';
-
+    if (diff <= 0) return 'Expirée';
+    
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
+    
     if (hours > 24) {
       const days = Math.floor(hours / 24);
-      return `${days} gün ${hours % 24}s`;
+      return `${days}j ${hours % 24}h`;
     }
-    if (hours > 0) return `${hours}s ${minutes}dk`;
-    return `${minutes} dk`;
+    if (hours > 0) return `${hours}h ${minutes}min`;
+    return `${minutes} min`;
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('tr-TR', {
+    return new Date(date).toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: '2-digit',
       hour: '2-digit',
@@ -269,7 +269,7 @@ const ClientDashboardPage = () => {
                 {reservation.offer_title}
               </h3>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-base font-bold text-tilkapp-green">{(reservation.total_price * 49).toFixed(2)}₺</span>
+                <span className="text-base font-bold text-tilkapp-green">{reservation.total_price.toFixed(2)}€</span>
                 <span className="text-xs text-gray-400">×{reservation.quantity}</span>
               </div>
               <div className="text-xs text-gray-500 space-y-0.5">
@@ -291,19 +291,19 @@ const ClientDashboardPage = () => {
           {isCompleted && (
             <div className="mb-3 flex items-center gap-2 text-xs text-tilkapp-green bg-green-100 px-3 py-2 rounded-lg">
               <CheckCircle className="w-4 h-4" />
-              <span className="font-medium">Rezervasyon Teslim Alındı</span>
+              <span className="font-medium">Réservation récupérée</span>
             </div>
           )}
           {isExpired && (
             <div className="mb-3 flex items-center gap-2 text-xs text-gray-700 bg-gray-50 px-3 py-2 rounded-lg">
               <XCircle className="w-4 h-4" />
-              <span className="font-medium">Rezervasyon Süresi Doldu</span>
+              <span className="font-medium">Réservation expirée</span>
             </div>
           )}
           {isCancelled && (
             <div className="mb-3 flex items-center gap-2 text-xs text-tilkapp-green bg-green-100 px-3 py-2 rounded-lg">
               <X className="w-4 h-4" />
-              <span className="font-medium">Rezervasyon İptal Edildi</span>
+              <span className="font-medium">Réservation annulée</span>
             </div>
           )}
 
@@ -342,7 +342,7 @@ const ClientDashboardPage = () => {
                 className="flex flex-col items-center justify-center gap-1 p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors"
               >
                 <Navigation className="w-4 h-4 text-tilkapp-green" />
-                <span className="text-xs text-gray-700 font-medium">Yol</span>
+                <span className="text-xs text-gray-700 font-medium">Itin.</span>
               </button>
               {reservation.merchant_phone && (
                 <a
@@ -350,7 +350,7 @@ const ClientDashboardPage = () => {
                   className="flex flex-col items-center justify-center gap-1 p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors"
                 >
                   <Phone className="w-4 h-4 text-tilkapp-green" />
-                  <span className="text-xs text-gray-700 font-medium">Ara</span>
+                  <span className="text-xs text-gray-700 font-medium">Appel</span>
                 </a>
               )}
               <button
@@ -358,7 +358,7 @@ const ClientDashboardPage = () => {
                 className="flex flex-col items-center justify-center gap-1 p-2 bg-white hover:bg-gray-50 border border-red-200 rounded-lg transition-colors"
               >
                 <X className="w-4 h-4 text-red-600" />
-                <span className="text-xs text-gray-700 font-medium">İptal</span>
+                <span className="text-xs text-gray-700 font-medium">Annuler</span>
               </button>
             </div>
           ) : (
@@ -367,7 +367,7 @@ const ClientDashboardPage = () => {
               className="w-full flex items-center justify-center gap-1 p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors"
             >
               <Archive className="w-4 h-4 text-gray-600" />
-              <span className="text-xs text-gray-700 font-medium">Arşivle</span>
+              <span className="text-xs text-gray-700 font-medium">Archiver</span>
             </button>
           )}
         </div>
@@ -394,8 +394,8 @@ const ClientDashboardPage = () => {
                   {reservation.offer_title}
                 </h3>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg font-bold text-tilkapp-green">{(reservation.total_price * 49).toFixed(2)}₺</span>
-                  <span className="text-xs text-gray-400">{(reservation.offer_price * 49).toFixed(2)}₺ × {reservation.quantity}</span>
+                  <span className="text-lg font-bold text-tilkapp-green">{reservation.total_price.toFixed(2)}€</span>
+                  <span className="text-xs text-gray-400">{reservation.offer_price.toFixed(2)}€ × {reservation.quantity}</span>
                 </div>
               </div>
               <div className="space-y-0.5 text-xs text-gray-500">
@@ -422,7 +422,7 @@ const ClientDashboardPage = () => {
                   className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors"
                 >
                   <Navigation className="w-4 h-4 text-tilkapp-green" />
-                  <span className="text-sm text-gray-700 font-medium">Yol Tarifi</span>
+                  <span className="text-sm text-gray-700 font-medium">Itinéraire</span>
                 </button>
                 {reservation.merchant_phone && (
                   <a
@@ -430,7 +430,7 @@ const ClientDashboardPage = () => {
                     className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors"
                   >
                     <Phone className="w-4 h-4 text-tilkapp-green" />
-                    <span className="text-sm text-gray-700 font-medium">Ara</span>
+                    <span className="text-sm text-gray-700 font-medium">Appeler</span>
                   </a>
                 )}
                 <button
@@ -438,7 +438,7 @@ const ClientDashboardPage = () => {
                   className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white hover:bg-gray-50 border border-red-200 rounded-lg transition-colors"
                 >
                   <X className="w-4 h-4 text-red-600" />
-                  <span className="text-sm text-gray-700 font-medium">İptal Et</span>
+                  <span className="text-sm text-gray-700 font-medium">Annuler</span>
                 </button>
               </>
             ) : (
@@ -447,7 +447,7 @@ const ClientDashboardPage = () => {
                 className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors"
               >
                 <Archive className="w-4 h-4 text-gray-600" />
-                <span className="text-sm text-gray-700 font-medium">Arşivle</span>
+                <span className="text-sm text-gray-700 font-medium">Archiver</span>
               </button>
             )}
           </div>
@@ -496,19 +496,19 @@ const ClientDashboardPage = () => {
           {isCompleted && (
             <div className="col-span-12 -mt-2 flex items-center gap-2 text-xs text-tilkapp-green bg-green-100 px-3 py-2 rounded-lg">
               <CheckCircle className="w-4 h-4" />
-              <span className="font-medium">Rezervasyon Başarıyla Teslim Alındı</span>
+              <span className="font-medium">Réservation récupérée avec succès</span>
             </div>
           )}
           {isExpired && (
             <div className="col-span-12 -mt-2 flex items-center gap-2 text-xs text-gray-700 bg-gray-50 px-3 py-2 rounded-lg">
               <XCircle className="w-4 h-4" />
-              <span className="font-medium">Rezervasyon Süresi Doldu - Stok Otomatik Serbest Bırakıldı</span>
+              <span className="font-medium">Réservation expirée - Stock libéré automatiquement</span>
             </div>
           )}
           {isCancelled && (
             <div className="col-span-12 -mt-2 flex items-center gap-2 text-xs text-tilkapp-green bg-green-100 px-3 py-2 rounded-lg">
               <X className="w-4 h-4" />
-              <span className="font-medium">Rezervasyon İptal Edildi - Stok Serbest Bırakıldı</span>
+              <span className="font-medium">Réservation annulée - Stock libéré</span>
             </div>
           )}
         </div>
@@ -521,7 +521,7 @@ const ClientDashboardPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tilkapp-green mx-auto mb-4"></div>
-          <p className="text-gray-600">Yükleniyor...</p>
+          <p className="text-gray-600">Chargement...</p>
         </div>
       </div>
     );
@@ -546,23 +546,23 @@ const ClientDashboardPage = () => {
               <div className="w-12 h-12 bg-tilkapp-beige rounded-full flex items-center justify-center flex-shrink-0">
                 <X className="w-6 h-6 text-tilkapp-green" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Rezervasyonu İptal Et?</h3>
+              <h3 className="text-lg font-bold text-gray-900">Annuler la réservation ?</h3>
             </div>
             <p className="text-sm text-gray-600 mb-6">
-              Stok serbest bırakılacak ve işletme bilgilendirilecek. Fikrinizi değiştirirseniz tekrar rezervasyon yapabilirsiniz.
+              Le stock sera libéré et le marchand sera notifié. Vous pourrez réserver à nouveau si vous changez d'avis.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setCancelConfirm(null)}
                 className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors text-sm"
               >
-                Hayır, Tut
+                Non, garder
               </button>
               <button
                 onClick={() => handleCancelReservation(cancelConfirm)}
                 className="flex-1 px-4 py-2.5 bg-tilkapp-green hover:bg-tilkapp-orange text-white rounded-lg font-medium transition-colors text-sm"
               >
-                Evet, İptal Et
+                Oui, annuler
               </button>
             </div>
           </div>
@@ -577,7 +577,7 @@ const ClientDashboardPage = () => {
               {user?.email?.[0].toUpperCase()}
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">Hesabım</h1>
+              <h1 className="text-lg font-bold text-gray-900">Mon Compte</h1>
               <p className="text-sm text-gray-600">{user?.email}</p>
             </div>
           </div>
@@ -587,23 +587,23 @@ const ClientDashboardPage = () => {
         <div>
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Package className="w-5 h-5 text-tilkapp-green" />
-            Rezervasyonlarım ({reservations.length})
+            Mes Réservations ({reservations.length})
           </h2>
 
           {reservations.length === 0 ? (
             <div className="bg-white rounded-lg shadow-sm border-2 border-dashed border-gray-300 p-8 text-center">
               <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Rezervasyon Yok
+                Aucune réservation
               </h3>
               <p className="text-sm text-gray-600 mb-4">
-                Henüz hiçbir teklif rezerve etmediniz
+                Vous n'avez pas encore réservé d'offres
               </p>
               <button
                 onClick={() => navigate('/offers')}
                 className="px-6 py-2.5 bg-tilkapp-green hover:bg-tilkapp-orange text-white rounded-lg font-semibold transition-colors"
               >
-                Teklifleri Keşfet
+                Découvrir les offres
               </button>
             </div>
           ) : (
@@ -613,7 +613,7 @@ const ClientDashboardPage = () => {
                 <div>
                   <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-tilkapp-green" />
-                    Beklemede ({pendingReservations.length})
+                    En attente ({pendingReservations.length})
                   </h3>
                   <div className="space-y-3">
                     {pendingReservations.map(reservation => (
@@ -628,7 +628,7 @@ const ClientDashboardPage = () => {
                 <div>
                   <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-tilkapp-green" />
-                    Teslim Alındı ({completedReservations.length})
+                    Récupérées ({completedReservations.length})
                   </h3>
                   <div className="space-y-3">
                     {completedReservations.map(reservation => (
@@ -643,7 +643,7 @@ const ClientDashboardPage = () => {
                 <div>
                   <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <X className="w-4 h-4 text-tilkapp-green" />
-                    İptal Edildi ({cancelledReservations.length})
+                    Annulées ({cancelledReservations.length})
                   </h3>
                   <div className="space-y-3 opacity-75">
                     {cancelledReservations.map(reservation => (
@@ -658,7 +658,7 @@ const ClientDashboardPage = () => {
                 <div>
                   <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <XCircle className="w-4 h-4 text-gray-600" />
-                    Süresi Doldu ({expiredReservations.length})
+                    Expirées ({expiredReservations.length})
                   </h3>
                   <div className="space-y-3 opacity-60">
                     {expiredReservations.map(reservation => (

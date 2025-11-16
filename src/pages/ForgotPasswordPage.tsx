@@ -41,7 +41,7 @@ const ForgotPasswordPage = () => {
             className="inline-flex items-center text-[#3A6932] hover:text-[#2d5226] font-medium mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Girişe Dön
+            Retour à la connexion
           </button>
 
           <div className="text-center mb-8">
@@ -51,10 +51,10 @@ const ForgotPasswordPage = () => {
               </div>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Şifremi unuttum?
+              Mot de passe oublié ?
             </h1>
             <p className="text-gray-600">
-              Şifrenizi sıfırlamak için e-posta adresinizi girin
+              Entrez votre email pour recevoir un lien de réinitialisation
             </p>
           </div>
 
@@ -63,9 +63,9 @@ const ForgotPasswordPage = () => {
               <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded-lg flex items-start">
                 <CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-green-700">E-posta Gönderildi!</p>
+                  <p className="text-sm font-semibold text-green-700">Email envoyé !</p>
                   <p className="text-sm text-green-600 mt-1">
-                    E-postanızı kontrol edin ve şifrenizi sıfırlamak için talimatları izleyin.
+                    Vérifiez votre boîte mail et suivez les instructions pour réinitialiser votre mot de passe.
                   </p>
                 </div>
               </div>
@@ -80,7 +80,7 @@ const ForgotPasswordPage = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  E-posta Adresi
+                  Adresse email
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -89,7 +89,7 @@ const ForgotPasswordPage = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A6932] focus:border-transparent text-base"
-                    placeholder="email@ornek.com"
+                    placeholder="votre@email.com"
                     required
                     disabled={isLoading || success}
                   />
@@ -104,12 +104,12 @@ const ForgotPasswordPage = () => {
                 {isLoading ? (
                   <div className="flex items-center justify-center">
                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Gönderiliyor...
+                    Envoi en cours...
                   </div>
                 ) : success ? (
-                  'E-posta Gönderildi ✓'
+                  'Email envoyé ✓'
                 ) : (
-                  'Sıfırlama Bağlantısını Gönder'
+                  'Envoyer le lien de réinitialisation'
                 )}
               </button>
             </form>
@@ -120,7 +120,7 @@ const ForgotPasswordPage = () => {
                   onClick={() => navigate('/customer/auth')}
                   className="text-[#3A6932] hover:text-[#2d5226] font-semibold text-sm"
                 >
-                  Girişe Dön →
+                  Retour à la connexion →
                 </button>
               </div>
             )}
@@ -128,12 +128,12 @@ const ForgotPasswordPage = () => {
 
           <div className="text-center text-sm text-gray-600">
             <p>
-              E-postayı almadınız mı?{' '}
+              Vous n'avez pas reçu l'email ?{' '}
               <button
                 onClick={() => setSuccess(false)}
                 className="text-[#3A6932] hover:text-[#2d5226] font-semibold"
               >
-                Tekrar Dene
+                Réessayer
               </button>
             </p>
           </div>

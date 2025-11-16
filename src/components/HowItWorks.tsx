@@ -5,20 +5,20 @@ const HowItWorks = () => {
   const steps = [
     {
       icon: Search,
-      title: 'Teklifleri Keşfet',
-      description: 'Yakınınızdaki yerel restoranlardan harika fırsatlar görün. Favori yerlerinizden indirimli yemekler bulun.',
+      title: 'Discover Offers',
+      description: 'Browse amazing deals from local restaurants near you. Find discounted meals from your favorite places.',
       step: '01'
     },
     {
       icon: ShoppingCart,
-      title: 'Yemeğinizi Rezerve Edin',
-      description: 'İstediğiniz teklifleri seçin ve anında rezerve edin. Platformumuz üzerinden güvenli ödeme yapın.',
+      title: 'Reserve Your Meal',
+      description: 'Select the offers you want and reserve them instantly. Pay securely through our platform.',
       step: '02'
     },
     {
       icon: MapPin,
-      title: 'Alın ve Tadını Çıkarın',
-      description: 'Seçtiğiniz saatte restorana gidin, yemeğinizi alın ve harika fiyatlarla lezzetli yemeklerin tadını çıkarın.',
+      title: 'Pick Up & Enjoy',
+      description: 'Head to the restaurant at your chosen time, pick up your meal, and enjoy delicious food at great prices.',
       step: '03'
     }
   ];
@@ -27,9 +27,9 @@ const HowItWorks = () => {
     <div className="bg-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Nasıl Çalışır</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Üç basit adımda tasarruf edin ve gıda israfını azaltın
+            Save money and reduce food waste in three simple steps
           </p>
         </div>
 
@@ -63,7 +63,7 @@ const HowItWorks = () => {
             href="/customer/teaser"
             className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
           >
-            Hemen Tasarruf Etmeye Başlayın
+            Start Saving Now
           </a>
         </div>
       </div>

@@ -90,7 +90,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
   const getTimeRemaining = (until?: string) => {
     if (!until) return '';
     const diff = new Date(until).getTime() - Date.now();
-    if (diff <= 0) return 'Süresi Doldu';
+    if (diff <= 0) return 'Expirée';
 
     const totalMinutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(totalMinutes / 60);
@@ -99,19 +99,19 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
 
     if (hours >= 48) {
       const remainingHours = hours % 24;
-      return `${days} gün ${remainingHours}s`;
+      return `${days} jour${days > 1 ? 's' : ''} ${remainingHours}h`;
     }
 
     if (hours >= 24) {
       const remainingHours = hours % 24;
-      return `${days} gün ${remainingHours}s`;
+      return `${days} jour ${remainingHours}h`;
     }
 
     if (hours > 0) {
-      return `${hours}s ${minutes}dk`;
+      return `${hours}h ${minutes}min`;
     }
 
-    return `${minutes} dk`;
+    return `${minutes} min`;
   };
 
   const getProgressPercent = (availableFrom?: string, availableUntil?: string) => {
@@ -203,7 +203,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
                     <Star key={star} className="w-4 h-4 fill-gray-300 text-gray-300" />
                   ))}
                 </div>
-                <span className="text-xs text-gray-500">Yakında kullanılabilir</span>
+                <span className="text-xs text-gray-500">Bientôt disponible</span>
               </div>
 
               {/* Adresse */}
@@ -233,11 +233,11 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
 
               {/* Bouton Itinéraire */}
               <button
-  onClick={handleGetDirections}
-  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-tilkapp-green hover:bg-tilkapp-orange text-tilkapp-beige rounded-lg font-semibold transition-colors shadow-md"
->
+                onClick={handleGetDirections}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-100 hover:bg-tilkapp-orange text-white rounded-lg font-semibold transition-colors shadow-md"
+              >
                 <Navigation className="w-4 h-4" />
-                Yol Tarifi
+                Itinéraire
               </button>
             </div>
           </div>
@@ -247,7 +247,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
         <div className="p-4 md:p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Package className="w-5 h-5 text-tilkapp-green" />
-            {offers.length} teklif mevcut
+            {offers.length} offre{offers.length > 1 ? 's' : ''} disponible{offers.length > 1 ? 's' : ''}
           </h3>
 
           <div className="space-y-3">
@@ -287,10 +287,10 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
                     {/* Prix */}
                     <div className="flex items-center gap-2 mb-2">
                       <span className="font-bold text-tilkapp-green text-lg">
-                        {(offer.price_after * 49).toFixed(2)}₺
+                        {offer.price_after.toFixed(2)}€
                       </span>
                       <span className="line-through text-gray-400 text-sm">
-                        {(offer.price_before * 49).toFixed(2)}₺
+                        {offer.price_before.toFixed(2)}€
                       </span>
                     </div>
 
@@ -304,7 +304,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
                         )}
                         <span className="flex items-center gap-1 text-gray-600">
                           <Package className="w-3 h-3" />
-                          Stok: {offer.quantity}
+                          Stock: {offer.quantity}
                         </span>
                       </div>
                       {offer.available_until && (
