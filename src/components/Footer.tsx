@@ -15,14 +15,13 @@ const Footer = () => {
           />
         </div>
       </div>
-{/* ÉNORME texte KapKurtar au centre */}
+{/* ÉNORME logo KAPKURTAR au centre */}
 <div className="max-w-7xl mx-auto px-4 py-12">
-  <h2 
-    className="text-[120px] md:text-[200px] lg:text-[250px] text-white text-center leading-none"
-    style={{ fontFamily: 'Montserrat', fontWeight: '400' }}
-  >
-    KapKurtar
-  </h2>
+  <img 
+    src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/KK%20fond%20vert%20(1).png" 
+    alt="KapKurtar" 
+    className="w-full max-w-4xl mx-auto"
+  />
 </div>
       {/* Liens + Boutons téléchargement */}
       <div className="max-w-7xl mx-auto px-4 py-8">
