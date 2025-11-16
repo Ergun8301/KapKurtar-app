@@ -515,6 +515,68 @@ export default function OffersPage() {
     fetchOffers();
   }, [center, clientId, viewMode, radiusKm]);
 
+  // 🔔 Refresh offres en temps réel via notifications
+  useEffect(() => {
+    if (!clientId) return;
+
+    const channel = supabase
+      .channel(`client_offers_refresh_${clientId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_id=eq.${clientId}`,
+        },
+        (payload: any) => {
+          const notification = payload.new;
+
+          // Si notification d'offre, recharger la liste
+          if (notification.type === 'offer' || notification.type === 'offer_nearby') {
+            console.log('🔔 Nouvelle offre → Refresh automatique');
+
+            const fetchOffersRefresh = async () => {
+              try {
+                let data, error;
+
+                if (viewMode === "all") {
+                  const [lng, lat] = center;
+                  const result = await supabase.rpc("get_offers_nearby_public", {
+                    user_lng: lng,
+                    user_lat: lat,
+                    radius_meters: 2000000,
+                  });
+                  data = result.data;
+                  error = result.error;
+                } else {
+                  const result = await supabase.rpc("get_offers_nearby_dynamic_secure", {
+                    client_id: clientId,
+                    radius_meters: radiusKm * 1000,
+                  });
+                  data = result.data;
+                  error = result.error;
+                }
+
+                if (!error) {
+                  setOffers(data || []);
+                }
+              } catch (error) {
+                console.error('Erreur refresh offres:', error);
+              }
+            };
+
+            fetchOffersRefresh();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [clientId, center, viewMode, radiusKm]);
+
   useEffect(() => {
     const offerId = searchParams.get('offer_id');
     
