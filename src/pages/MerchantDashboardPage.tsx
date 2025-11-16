@@ -386,6 +386,45 @@ const MerchantDashboardPage = () => {
     return () => clearInterval(interval);
   }, [merchantId]);
 
+  // 🔔 Refresh réservations en temps réel via notifications
+  useEffect(() => {
+    if (!merchantId) return;
+
+    const channel = supabase
+      .channel(`merchant_reservations_refresh_${merchantId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_id=eq.${merchantId}`,
+        },
+        (payload: any) => {
+          const notification = payload.new;
+
+          // Si notification de réservation, recharger la liste
+          if (notification.type === 'reservation') {
+            console.log('🔔 Nouvelle réservation → Refresh automatique');
+
+            supabase
+              .rpc('get_merchant_reservations', { p_merchant_id: merchantId })
+              .then(({ data, error }) => {
+                if (!error && data) {
+                  const pendingOnly = data.filter((r: any) => r.status === 'pending');
+                  setReservations(pendingOnly);
+                }
+              });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [merchantId]);
+
   // Fetch ALL reservations (including archived) for history modal
   // MAIS on exclut les PENDING (qui sont déjà dans la section principale)
   const fetchAllReservations = async () => {
