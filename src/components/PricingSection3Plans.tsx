@@ -199,47 +199,6 @@ const PricingSection3Plans = () => {
         <p className="text-center text-gray-600 mb-8">
           Planınızı 4. aydan önce seçeceksiniz. Şimdilik sadece başlayın!
         </p>
-
-        {/* Bottom Note Modernisée */}
-        <div className="mt-16 max-w-4xl mx-auto">
-          <div className="bg-gradient-to-r from-[#F7F2E7] to-[#FFF9F0] rounded-2xl p-8 shadow-lg border-2 border-[#00A690]/20">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-[#00A690] rounded-full flex items-center justify-center text-2xl">
-                ⚡
-              </div>
-              <div>
-                <h4 className="font-bold text-gray-900 text-lg mb-2">Hemen Başlayın - Onay Gerektirmez!</h4>
-                <p className="text-gray-700 leading-relaxed mb-4">
-                  <strong>1️⃣ Kayıt olun</strong> (2 dakika) → <strong>2️⃣ Tekliflerinizi ekleyin</strong> → <strong>3️⃣ Satış yapın!</strong>
-                  <br/><br/>
-                  <span className="text-[#00A690] font-bold text-lg">İlk 3 ay:</span> %0 komisyon + 0₺ aylık ücret = <strong>TAMAMEN ÜCRETSİZ</strong>
-                  <br/>
-                  <span className="text-gray-600">4. aydan itibaren seçtiğiniz plana göre ücretlendirme başlar. İstediğiniz zaman iptal edebilirsiniz.</span>
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <a
-                    href="/merchant/auth"
-                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#00A690] to-[#008C7A] text-white px-8 py-4 rounded-xl font-bold hover:from-[#008C7A] hover:to-[#00A690] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Hemen Kayıt Olun
-                  </a>
-                  <a
-                    href="/contact"
-                    className="inline-flex items-center justify-center gap-2 bg-white border-2 border-[#00A690] text-[#00A690] px-6 py-3 rounded-lg font-semibold hover:bg-[#00A690] hover:text-white transition-all duration-300 shadow-md hover:shadow-lg"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    Sorularınız mı var?
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
