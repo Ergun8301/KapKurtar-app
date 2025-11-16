@@ -5,7 +5,7 @@ import { MessageCircle, MapPin } from 'lucide-react';
 const Footer = () => {
   return (
     <footer className="bg-[#00615F] text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         
         {/* 3 Colonnes de liens - alignées en haut */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
@@ -106,7 +106,7 @@ const Footer = () => {
         </div>
 
         {/* Description + Réseaux sociaux - centrés */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-8">
           <p className="text-[#F3EACE] text-sm leading-relaxed max-w-2xl mx-auto mb-4">
             Gıda israfını azaltmak ve yerel işletmeleri desteklemek için tüccarları müşterilerle buluşturuyoruz.
           </p>
@@ -150,12 +150,12 @@ const Footer = () => {
         </div>
 
         {/* Logo KapKurtar centré */}
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center mb-8">
           <Link to="/" className="inline-block">
             <img 
               src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/KK%20ORANGE%20CREME.png" 
               alt="KapKurtar" 
-              className="h-[200px] w-auto"
+              className="h-16 w-auto"
             />
           </Link>
         </div>
