@@ -31,19 +31,13 @@ const ForMerchantsPage = () => {
 
         {/* Solution Section */}
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">TILKAPP Çözümü</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">KapKurtar Çözümü</h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             Satılmayan ürünlerinizi atmak yerine, motive müşterilere indirimli fiyatlarla satın.
             Her şeyi kaybetmek yerine değerinin %50'sine kadar geri kazanın.
           </p>
         </div>
 
-      </div>
-
-      {/* Pricing */}
-      <PricingSection3Plans />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Benefits Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           <div className="bg-white rounded-xl p-6 shadow-lg text-center">
@@ -117,6 +111,12 @@ const ForMerchantsPage = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* Pricing */}
+      <PricingSection3Plans />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Testimonials */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Bize Güvenenler</h2>
@@ -132,7 +132,7 @@ const ForMerchantsPage = () => {
                 </div>
               </div>
               <p className="text-gray-700 italic">
-                "TILKAPP'tan önce günde 50 ekmek atıyordum. Şimdi sadece 5 tane atıyorum.
+                "KapKurtar'tan önce günde 50 ekmek atıyordum. Şimdi sadece 5 tane atıyorum.
                 İşletmem için gerçek bir değişiklik!"
               </p>
             </div>
@@ -148,7 +148,7 @@ const ForMerchantsPage = () => {
                 </div>
               </div>
               <p className="text-gray-700 italic">
-                "TILKAPP kayıplarımı %70 azaltmamı sağladı. Ayrıca, müşterilerim
+                "KapKurtar kayıplarımı %70 azaltmamı sağladı. Ayrıca, müşterilerim
                 daha sonra normal fiyattan satın aldıkları yeni ürünleri keşfediyorlar."
               </p>
             </div>
@@ -227,22 +227,51 @@ const ForMerchantsPage = () => {
 
       </div>
 
+      {/* Download App Section */}
+      <div className="bg-gradient-to-br from-[#F7F2E7] to-white py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            📱 Mobil Uygulamamızı İndirin
+          </h2>
+          <p className="text-lg text-gray-600 mb-8">
+            Tekliflerinizi her yerden yönetin. Yakında Google Play ve App Store'da!
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              disabled
+              className="inline-flex items-center justify-center gap-2 bg-gray-800/10 border-2 border-gray-300 text-gray-500 px-8 py-4 rounded-xl font-semibold opacity-60 cursor-not-allowed"
+            >
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
+              </svg>
+              Google Play'de Yakında
+            </button>
+            <button
+              disabled
+              className="inline-flex items-center justify-center gap-2 bg-gray-800/10 border-2 border-gray-300 text-gray-500 px-8 py-4 rounded-xl font-semibold opacity-60 cursor-not-allowed"
+            >
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.09,16.67C20.06,16.74 19.67,18.11 18.71,19.5M13,3.5C13.73,2.67 14.94,2.04 15.94,2C16.07,3.17 15.6,4.35 14.9,5.19C14.21,6.04 13.07,6.7 11.95,6.61C11.8,5.46 12.36,4.26 13,3.5Z"/>
+              </svg>
+              App Store'da Yakında
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Final CTA */}
       <div className="bg-[#00A690] text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">Satılmayan Ürünlerinizi Gelire Dönüştürmeye Hazır mısınız?</h2>
+          <h2 className="text-3xl font-bold mb-4">Sorularınız mı var?</h2>
           <p className="text-xl text-[#F7F2E7] mb-8">
-            TILKAPP'a ücretsiz katılın ve bugün satmaya başlayın
+            Ekibimiz size yardımcı olmaktan mutluluk duyar
           </p>
           <a
-            href="/merchant/auth"
-            className="inline-block bg-[#F75C00] text-white px-8 py-4 rounded-lg hover:bg-orange-600 transition-colors font-bold text-lg"
+            href="/contact"
+            className="inline-block bg-white text-[#00A690] px-8 py-4 rounded-lg hover:bg-[#F7F2E7] transition-colors font-bold text-lg"
           >
-            İşletme Hesabımı Oluştur
+            Bize Ulaşın
           </a>
-          <p className="text-sm text-[#F7F2E7] mt-4">
-            5 dakikada kayıt • Kredi kartı gerektirmez
-          </p>
         </div>
       </div>
     </div>
