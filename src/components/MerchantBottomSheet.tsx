@@ -185,10 +185,14 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-green-400 to-green-700 flex items-center justify-center text-2xl md:text-3xl flex-shrink-0 shadow-lg border-4 border-white">
-                🏪
-              </div>
-            )}
+  <img
+    src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20rond%20noir%20(1).png"
+    alt="KapKurtar"
+    className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-white shadow-lg flex-shrink-0"
+    crossOrigin="anonymous"
+    referrerPolicy="no-referrer"
+  />
+)}
 
             {/* Infos */}
             <div className="flex-1 min-w-0">
