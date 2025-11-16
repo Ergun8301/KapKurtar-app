@@ -25,7 +25,7 @@ const BlogArticle7 = () => {
           </h1>
           <div className="flex items-center text-gray-600 mb-8">
             <User className="w-5 h-5 mr-2" />
-            <span className="mr-6">TILKAPP Editörlüğü</span>
+            <span className="mr-6">KapKurtar Editörlüğü</span>
             <Calendar className="w-5 h-5 mr-2" />
             <span>15 Ekim 2024</span>
             <span className="mx-3">•</span>
@@ -42,7 +42,7 @@ const BlogArticle7 = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="prose prose-lg max-w-none">
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            TILKAPP'ın lansmanından altı ay sonra, Antalya'da 150'den fazla işletme harekete katıldı.
+            KapKurtar'ın lansmanından altı ay sonra, Antalya'da 150'den fazla işletme harekete katıldı.
             Gıda israfıyla aktif olarak mücadele eden bir şehrin portresi.
           </p>
 
@@ -51,7 +51,7 @@ const BlogArticle7 = () => {
             Cesaret verici rakamlar
           </h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            Nisan 2024'te TILKAPP'ın lansmanından bu yana, Antalya bölgesinde israf karşıtı dinamik hızlanıyor.
+            Nisan 2024'te KapKurtar'ın lansmanından bu yana, Antalya bölgesinde israf karşıtı dinamik hızlanıyor.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
@@ -73,7 +73,7 @@ const BlogArticle7 = () => {
             "Bu rakamlar tüm beklentilerimizi aşıyor. Antalya sakinlerinin daha sorumlu
             tüketim alışkanlıkları benimsemeye hazır olduğunu kanıtlıyor."
             <br />
-            <span className="text-sm not-italic">- TILKAPP Ekibi</span>
+            <span className="text-sm not-italic">- KapKurtar Ekibi</span>
           </blockquote>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">
@@ -81,7 +81,7 @@ const BlogArticle7 = () => {
             Tüm sektörlerden işletmeler
           </h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            Partner işletmelerin çeşitliliği TILKAPP'ın zenginliğini oluşturuyor. Fırınlar, manavlar,
+            Partner işletmelerin çeşitliliği KapKurtar'ın zenginliğini oluşturuyor. Fırınlar, manavlar,
             restoranlar, bakkallar... gıda sektörünün tüm aktörleri harekete geçiyor.
           </p>
 
@@ -103,7 +103,7 @@ const BlogArticle7 = () => {
 
           <div className="bg-gray-100 rounded-lg p-6 my-6">
             <p className="text-gray-700 italic mb-3">
-              "TILKAPP öncesinde günde kolayca 40-50 ekmek atıyordum. Bugün sadece 5-10 ekmek atıyorum.
+              "KapKurtar öncesinde günde kolayca 40-50 ekmek atıyordum. Bugün sadece 5-10 ekmek atıyorum.
               İşletmem için gerçek bir devrim!"
             </p>
             <p className="text-sm text-gray-600">- Ahmet, Ekmek Fırını, Konyaaltı</p>
@@ -114,7 +114,7 @@ const BlogArticle7 = () => {
             Çeşitli kullanıcı profili
           </h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            Yaygın kanaatin aksine, TILKAPP sadece düşük bütçeli kişileri çekmiyor.
+            Yaygın kanaatin aksine, KapKurtar sadece düşük bütçeli kişileri çekmiyor.
             Kullanıcı profili şaşırtıcı derecede çeşitli.
           </p>
 
@@ -183,7 +183,7 @@ const BlogArticle7 = () => {
           <div className="bg-green-50 rounded-lg p-6 my-6">
             <p className="text-gray-700 mb-3">
               <strong className="text-tilkapp-green">İşletme tarafından:</strong><br />
-              "TILKAPP bize yeni bir müşteri kitlesine ulaşmamızı sağladı. Teklif için gelen bazı müşteriler
+              "KapKurtar bize yeni bir müşteri kitlesine ulaşmamızı sağladı. Teklif için gelen bazı müşteriler
               daha sonra normal fiyattan almak için geri geliyor. Aynı zamanda bir pazarlama aracı!"
             </p>
             <p className="text-sm text-gray-600">- Fatma, şarküteri, Lara</p>
@@ -200,7 +200,7 @@ const BlogArticle7 = () => {
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Peki ya yarın?</h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            TILKAPP ekibi burada durmayı planlamıyor. 2025 için birkaç proje geliştiriliyor:
+            KapKurtar ekibi burada durmayı planlamıyor. 2025 için birkaç proje geliştiriliyor:
           </p>
 
           <ul className="space-y-3 text-gray-700 ml-6 mb-8">

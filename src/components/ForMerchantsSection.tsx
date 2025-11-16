@@ -31,7 +31,7 @@ const ForMerchantsSection = () => {
             </h2>
             <p className="text-xl text-gray-600 mb-8">
               İlerici düşünen restoranlar ağımıza katılın. Gıda israfını azaltın,
-              yeni müşteriler çekin ve TILKAPP ile kârınızı artırın.
+              yeni müşteriler çekin ve KapKurtar ile kârınızı artırın.
             </p>
 
             <div className="space-y-6 mb-8">

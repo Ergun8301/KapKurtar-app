@@ -25,7 +25,7 @@ const DownloadPage = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">Download the TILKAPP App</h1>
+          <h1 className="text-5xl font-bold text-gray-900 mb-6">Download the KapKurtar App</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
             Get the best food rescue experience on your mobile device. Never miss a deal again!
           </p>
@@ -125,7 +125,7 @@ const DownloadPage = () => {
 
         {/* Phone Mockup Section */}
         <div className="bg-white rounded-2xl p-12 text-center shadow-lg">
-          <h2 className="text-3xl font-bold text-gray-900 mb-12">Experience TILKAPP on Mobile</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-12">Experience KapKurtar on Mobile</h2>
           
           <div className="flex justify-center relative">
             <div className="mx-auto w-64 h-96 bg-gray-900 rounded-3xl p-2 shadow-2xl">
@@ -136,7 +136,7 @@ const DownloadPage = () => {
                     <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
                       <span className="text-white font-bold">R</span>
                     </div>
-                    <span className="font-bold text-lg">TILKAPP</span>
+                    <span className="font-bold text-lg">KapKurtar</span>
                   </div>
                 </div>
                 

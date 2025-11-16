@@ -11,9 +11,9 @@ const Footer = () => {
           {/* Logo + Description */}
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center mb-4">
-              <img 
-                src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20ss%20fond.png" 
-                alt="TILKAPP" 
+              <img
+                src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20ss%20fond.png"
+                alt="KapKurtar"
                 className="h-22 w-auto"
               />
             </Link>
@@ -123,7 +123,7 @@ const Footer = () => {
             <div className="space-y-3">
               {/* WhatsApp Button */}
               <a
-                href="https://wa.me/33685507985?text=Merhaba%20TILKAPP"
+                href="https://wa.me/33685507985?text=Merhaba%20KapKurtar"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center space-x-2 text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300 text-sm"
@@ -159,7 +159,7 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-[#F3EACE] text-sm">
-              © 2025 TILKAPP. Tüm hakları saklıdır.
+              © 2025 KapKurtar. Tüm hakları saklıdır.
             </p>
             <div className="flex space-x-6 text-sm">
               <Link to="/legal" className="text-[#F3EACE] hover:text-[#2DD4BF] transition-colors duration-300">
