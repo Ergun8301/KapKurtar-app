@@ -254,7 +254,6 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
     referrerPolicy="no-referrer"
   />
 )}
-
               <div className="flex-1 min-w-0">
                 <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">{offer.merchant_name}</h2>
                 
