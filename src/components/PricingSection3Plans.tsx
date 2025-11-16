@@ -1,0 +1,246 @@
+import React from 'react';
+import { Check, Star, Zap, TrendingUp, Award } from 'lucide-react';
+
+const PricingSection3Plans = () => {
+  const plans = [
+    {
+      name: 'TEMEL',
+      price: '0',
+      commission: '20',
+      badge: null,
+      icon: Zap,
+      iconBg: 'bg-gray-100',
+      iconColor: 'text-gray-600',
+      gradient: 'from-gray-50 to-white',
+      features: [
+        'Sınırsız teklifler',
+        'Temel istatistikler',
+        'E-posta desteği',
+        'Sadece satışta komisyon',
+        'Risk sıfır',
+      ],
+      description: 'Küçük işletmeler için',
+      ideal: '1-7 paket/gün',
+      highlight: false
+    },
+    {
+      name: 'İŞLETME',
+      price: '349',
+      commission: '12',
+      badge: 'ÖNERİLEN',
+      icon: TrendingUp,
+      iconBg: 'bg-[#F75C00]',
+      iconColor: 'text-white',
+      gradient: 'from-[#00A690] via-[#00B89F] to-[#00A690]',
+      features: [
+        'Tüm Temel özellikler',
+        'Gelişmiş istatistikler',
+        'Öncelikli destek',
+        'Performans raporları',
+        'Daha iyi marj',
+      ],
+      description: 'Orta ölçekli işletmeler için',
+      ideal: '8-14 paket/gün',
+      highlight: true
+    },
+    {
+      name: 'PREMİUM',
+      price: '799',
+      commission: '8',
+      badge: null,
+      icon: Award,
+      iconBg: 'bg-[#F75C00]',
+      iconColor: 'text-white',
+      gradient: 'from-orange-50 to-white',
+      features: [
+        'Tüm İşletme özellikler',
+        'Özel hesap yöneticisi',
+        'Özel pazarlama desteği',
+        'API erişimi',
+        'Maksimum marj',
+      ],
+      description: 'Yüksek hacimli işletmeler için',
+      ideal: '15+ paket/gün',
+      highlight: false
+    }
+  ];
+
+  return (
+    <div className="bg-gradient-to-b from-white via-gray-50 to-white py-20" id="pricing">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <div className="inline-block mb-4">
+            <span className="bg-[#F7F2E7] text-[#00A690] px-4 py-1 rounded-full text-sm font-semibold">
+              💰 Fiyatlandırma
+            </span>
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Şeffaf ve Esnek Fiyatlandırma
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
+            Hemen kayıt olun ve ilk 3 ay tamamen ücretsiz kullanın!
+          </p>
+          <div className="bg-gradient-to-r from-[#00A690] to-[#008C7A] text-white px-10 py-4 rounded-2xl font-bold text-xl shadow-2xl inline-block">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🎉</span>
+              <div>
+                <div className="text-2xl">İLK 3 AY TAMAMEN ÜCRETSİZ</div>
+                <div className="text-sm font-normal opacity-90">%0 komisyon + 0₺ abonelik • Hemen başlayın!</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pricing Cards - Grid 3 colonnes */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-12">
+          {plans.map((plan, index) => (
+            <div
+              key={index}
+              className={`relative rounded-3xl overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl ${
+                plan.highlight
+                  ? 'shadow-2xl ring-4 ring-[#00A690] ring-offset-4'
+                  : 'shadow-lg'
+              }`}
+              style={{
+                background: plan.highlight
+                  ? 'linear-gradient(135deg, #ffffff 0%, #f0fffe 100%)'
+                  : 'white'
+              }}
+            >
+              {/* Badge Recommandé */}
+              {plan.badge && (
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                  <div className="bg-gradient-to-r from-[#F75C00] to-[#FF6B1A] text-white px-6 py-2 rounded-full font-bold text-sm flex items-center gap-2 shadow-lg">
+                    <Star className="w-4 h-4" fill="currentColor" />
+                    {plan.badge}
+                    <Star className="w-4 h-4" fill="currentColor" />
+                  </div>
+                </div>
+              )}
+
+              {/* Header avec gradient */}
+              <div className={`relative pt-${plan.badge ? '12' : '8'} pb-8 px-8 bg-gradient-to-br ${plan.gradient}`}>
+                {plan.highlight && (
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#00A690]/10 to-transparent"></div>
+                )}
+
+                {/* Icon */}
+                <div className={`inline-flex ${plan.iconBg} ${plan.iconColor} p-3 rounded-xl mb-4 shadow-md`}>
+                  <plan.icon className="w-8 h-8" />
+                </div>
+
+                <h3 className="text-3xl font-bold mb-2 text-gray-900">{plan.name}</h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  {plan.description}
+                </p>
+
+                {/* Prix */}
+                <div className="mb-4">
+                  <div className="flex items-baseline gap-2">
+                    <span className={`text-6xl font-black ${plan.highlight ? 'text-[#00A690]' : 'text-gray-900'}`}>
+                      {plan.price}
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-xl font-semibold text-gray-700">TRY</span>
+                      <span className="text-sm text-gray-500">/ay</span>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-baseline gap-1">
+                    <span className="text-gray-600">+</span>
+                    <span className={`text-3xl font-bold ${plan.highlight ? 'text-[#F75C00]' : 'text-gray-700'}`}>
+                      {plan.commission}%
+                    </span>
+                    <span className="text-sm text-gray-600">komisyon satışta</span>
+                  </div>
+                </div>
+
+                {/* Idéal pour */}
+                <div className={`inline-block px-4 py-2 rounded-lg text-sm font-medium ${
+                  plan.highlight
+                    ? 'bg-[#F75C00]/10 text-[#F75C00]'
+                    : 'bg-gray-100 text-gray-700'
+                }`}>
+                  📦 {plan.ideal}
+                </div>
+              </div>
+
+              {/* Features */}
+              <div className="p-8 bg-white">
+                <ul className="space-y-4 mb-8">
+                  {plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-3">
+                      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+                        plan.highlight ? 'bg-[#00A690]' : 'bg-gray-200'
+                      }`}>
+                        <Check className={`w-4 h-4 ${plan.highlight ? 'text-white' : 'text-gray-600'}`} strokeWidth={3} />
+                      </div>
+                      <span className="text-gray-700 leading-tight">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA Button - TOUS vers /register */}
+                <a
+                  href="/register"
+                  className={`block w-full py-4 rounded-xl font-bold text-center transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-xl ${
+                    plan.highlight
+                      ? 'bg-gradient-to-r from-[#00A690] to-[#008C7A] text-white hover:from-[#008C7A] hover:to-[#00A690]'
+                      : index === 0
+                      ? 'bg-gray-800 text-white hover:bg-gray-900'
+                      : 'bg-gradient-to-r from-[#F75C00] to-[#FF6B1A] text-white hover:from-[#FF6B1A] hover:to-[#F75C00]'
+                  }`}
+                >
+                  🚀 Ücretsiz Başlayın
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom Note Modernisée */}
+        <div className="mt-16 max-w-4xl mx-auto">
+          <div className="bg-gradient-to-r from-[#F7F2E7] to-[#FFF9F0] rounded-2xl p-8 shadow-lg border-2 border-[#00A690]/20">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-[#00A690] rounded-full flex items-center justify-center text-2xl">
+                ⚡
+              </div>
+              <div>
+                <h4 className="font-bold text-gray-900 text-lg mb-2">Hemen Başlayın - Onay Gerektirmez!</h4>
+                <p className="text-gray-700 leading-relaxed mb-4">
+                  <strong>1️⃣ Kayıt olun</strong> (2 dakika) → <strong>2️⃣ Tekliflerinizi ekleyin</strong> → <strong>3️⃣ Satış yapın!</strong>
+                  <br/><br/>
+                  <span className="text-[#00A690] font-bold text-lg">İlk 3 ay:</span> %0 komisyon + 0₺ aylık ücret = <strong>TAMAMEN ÜCRETSİZ</strong>
+                  <br/>
+                  <span className="text-gray-600">4. aydan itibaren seçtiğiniz plana göre ücretlendirme başlar. İstediğiniz zaman iptal edebilirsiniz.</span>
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <a
+                    href="/register"
+                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#00A690] to-[#008C7A] text-white px-8 py-4 rounded-xl font-bold hover:from-[#008C7A] hover:to-[#00A690] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Hemen Kayıt Olun
+                  </a>
+                  <a
+                    href="/contact"
+                    className="inline-flex items-center justify-center gap-2 bg-white border-2 border-[#00A690] text-[#00A690] px-6 py-3 rounded-lg font-semibold hover:bg-[#00A690] hover:text-white transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    Sorularınız mı var?
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PricingSection3Plans;

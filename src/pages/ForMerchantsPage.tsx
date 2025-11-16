@@ -1,28 +1,13 @@
 import React from 'react';
 import { TrendingUp, Clock, Users, Smartphone, CheckCircle, BarChart3, Shield, Zap } from 'lucide-react';
+import MerchantsHero from '../components/MerchantsHero';
+import PricingSection3Plans from '../components/PricingSection3Plans';
 
 const ForMerchantsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-[#00A690] text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Satılmayan Ürünlerinizi Gelire Dönüştürün
-            </h1>
-            <p className="text-xl text-[#F7F2E7] mb-8 max-w-2xl mx-auto">
-              TILKAPP ile israfı azaltmış ve gelirlerini artırmış 150'den fazla işletmeye katılın
-            </p>
-            <a
-              href="/merchant/auth"
-              className="inline-block bg-[#F75C00] text-white px-8 py-4 rounded-lg hover:bg-orange-600 transition-colors font-bold text-lg"
-            >
-              Ücretsiz Ortak Olun
-            </a>
-          </div>
-        </div>
-      </div>
+      <MerchantsHero />
 
       {/* Problem Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -234,27 +219,10 @@ const ForMerchantsPage = () => {
           </div>
         </div>
 
-        {/* Pricing */}
-        <div className="bg-white rounded-xl shadow-lg p-8 md:p-12 mb-16 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Şeffaf Fiyatlandırma</h2>
-          <div className="flex items-center justify-center mb-6">
-            <div className="text-6xl font-bold text-[#00A690]">0₺</div>
-            <div className="text-left ml-4">
-              <div className="text-xl font-bold text-gray-900">Kayıt</div>
-              <div className="text-gray-600">%100 ücretsiz</div>
-            </div>
-          </div>
-          <p className="text-lg text-gray-700 mb-6">
-            TILKAPP sadece gerçekleştirilen satışlardan küçük bir komisyon alır.
-            Satış yok = ücret yok. Bu kadar basit!
-          </p>
-          <div className="inline-block bg-[#F7F2E7] rounded-lg px-6 py-3">
-            <p className="text-gray-900">
-              <span className="font-bold text-2xl text-[#00A690]">%15</span> her satıştan komisyon
-            </p>
-          </div>
-        </div>
       </div>
+
+      {/* Pricing */}
+      <PricingSection3Plans />
 
       {/* Final CTA */}
       <div className="bg-[#00A690] text-white py-16">
