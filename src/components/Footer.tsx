@@ -15,10 +15,13 @@ const Footer = () => {
           />
         </div>
       </div>
-{/* ÉNORME texte KAPKURTAR au centre */}
+{/* ÉNORME texte KapKurtar au centre */}
 <div className="max-w-7xl mx-auto px-4 py-12">
-  <h2 className="text-[120px] md:text-[180px] font-bold text-white text-center tracking-tight leading-none" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-    KAPKURTAR
+  <h2 
+    className="text-[120px] md:text-[200px] lg:text-[250px] text-white text-center leading-none"
+    style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: '400' }}
+  >
+    KapKurtar
   </h2>
 </div>
       {/* Liens + Boutons téléchargement */}
