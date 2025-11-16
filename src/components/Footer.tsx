@@ -19,7 +19,7 @@ const Footer = () => {
 <div className="max-w-7xl mx-auto px-4 py-12">
   <h2 
     className="text-[120px] md:text-[200px] lg:text-[250px] text-white text-center leading-none"
-    style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: '400' }}
+    style={{ fontFamily: 'Montserrat', fontWeight: '400' }}
   >
     KapKurtar
   </h2>
