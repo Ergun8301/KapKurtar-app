@@ -186,7 +186,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
               />
             ) : (
   <img
-    src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20rond%20noir%20(1).png"
+    src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20rond%20noir.png"
     alt="KapKurtar"
     className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-white shadow-lg flex-shrink-0"
     crossOrigin="anonymous"
