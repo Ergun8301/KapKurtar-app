@@ -23,7 +23,7 @@ const BlogArticle4 = () => {
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            "TILKAPP tüketim şeklimi değiştirdi"
+            "KapKurtar tüketim şeklimi değiştirdi"
           </h1>
           <div className="flex items-center text-gray-600 mb-8">
             <User className="w-5 h-5 mr-2" />
@@ -35,7 +35,7 @@ const BlogArticle4 = () => {
           </div>
           <img
             src="https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=1200"
-            alt="Zeynep TILKAPP alışverişleriyle"
+            alt="Zeynep KapKurtar alışverişleriyle"
             className="w-full h-96 object-cover rounded-xl shadow-lg"
           />
         </div>
@@ -45,13 +45,13 @@ const BlogArticle4 = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="prose prose-lg max-w-none">
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            32 yaşındaki iki çocuk annesi ve Antalya'da öğretmen olan Zeynep, TILKAPP'ı 6 aydır kullanıyor.
+            32 yaşındaki iki çocuk annesi ve Antalya'da öğretmen olan Zeynep, KapKurtar'ı 6 aydır kullanıyor.
             Uygulamanın tüketim alışkanlıklarını ve aile bütçesini nasıl dönüştürdüğünü anlatıyor.
           </p>
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">TILKAPP'ı keşfetmek</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">KapKurtar'ı keşfetmek</h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            "TILKAPP'ı tesadüfen, gıda harcamalarımı azaltmak için çözüm ararken keşfettim.
+            "KapKurtar'ı tesadüfen, gıda harcamalarımı azaltmak için çözüm ararken keşfettim.
             İki çocukla market bütçesi hızla artabiliyor! Başta şüpheliydim: %50 indirimli ürünler,
             gerçek olamayacak kadar güzel görünüyordu."
           </p>
@@ -69,7 +69,7 @@ const BlogArticle4 = () => {
           </p>
 
           <div className="bg-tilkapp-beige rounded-lg p-6 my-8">
-            <h3 className="font-bold text-gray-900 mb-3">Zeynep'in TILKAPP ile aylık bütçesi:</h3>
+            <h3 className="font-bold text-gray-900 mb-3">Zeynep'in KapKurtar ile aylık bütçesi:</h3>
             <ul className="space-y-2 text-gray-700">
               <li>• Ekmek ve hamur işleri: Ayda 150 TL tasarruf</li>
               <li>• Meyve ve sebzeler: Ayda 200 TL tasarruf</li>
@@ -96,16 +96,16 @@ const BlogArticle4 = () => {
             <h3 className="font-bold text-gray-900 mb-4">Zeynep'in 5 tavsiyesi:</h3>
             <ol className="space-y-3 text-gray-700">
               <li><strong>1. Bildirimleri açın</strong> - Favori işletmelerinizin hiçbir teklifini kaçırmamak için</li>
-              <li><strong>2. Menülerinizi planlayın</strong> - TILKAPP'ı alışverişlerinizi tamamlamak için kullanın, değiştirmek için değil</li>
+              <li><strong>2. Menülerinizi planlayın</strong> - KapKurtar'ı alışverişlerinizi tamamlamak için kullanın, değiştirmek için değil</li>
               <li><strong>3. Esnek olun</strong> - Teklifler her gün değişir, yemeklerinizi buna göre uyarlayın</li>
               <li><strong>4. Birkaç işletme deneyin</strong> - Favorilerinizi hızlıca bulacaksınız</li>
               <li><strong>5. Çevrenizle paylaşın</strong> - Ne kadar çok olursak, o kadar çok gıdayı kurtarırız!</li>
             </ol>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">TILKAPP ile gelecek</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">KapKurtar ile gelecek</h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            "Artık onsuz yapamıyorum! TILKAPP artık günlük rutinimin bir parçası.
+            "Artık onsuz yapamıyorum! KapKurtar artık günlük rutinimin bir parçası.
             Her sabah kahvemi içerken uygulamayı kontrol ediyorum ve akşam için ilgimi çeken şeyleri ayırtıyorum."
           </p>
 
@@ -117,7 +117,7 @@ const BlogArticle4 = () => {
           <div className="bg-gray-100 rounded-lg p-8 my-12 text-center">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Siz de harekete katılın!</h3>
             <p className="text-gray-700 mb-6">
-              TILKAPP'ı indirin ve gezegeni kurtarırken tasarruf etmeye başlayın
+              KapKurtar'ı indirin ve gezegeni kurtarırken tasarruf etmeye başlayın
             </p>
             <a
               href="/download"
