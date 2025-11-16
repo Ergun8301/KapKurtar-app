@@ -18,7 +18,7 @@ const Footer = () => {
 {/* ÉNORME logo KAPKURTAR au centre */}
 <div className="max-w-7xl mx-auto px-4 py-12">
   <img 
-    src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/KK%20fond%20vert%20(2).png" 
+    src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/KK%20fond%20vert%20(3).png" 
     alt="KapKurtar" 
     className="w-full max-w-4xl mx-auto"
   />
