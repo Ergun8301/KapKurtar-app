@@ -9,7 +9,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 pt-8">
         <div className="flex justify-center mb-8">
           <img 
-            src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/KK%20fond%20vert.png" 
+            src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/Favicon-carre-ssfond.png" 
             alt="KapKurtar" 
             className="h-16 w-auto"
           />
