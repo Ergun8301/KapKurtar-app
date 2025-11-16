@@ -99,8 +99,8 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           <a href="/" className="flex items-center space-x-3">
             <img
-              src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/TILKAPP%209.png"
-              alt="TILKAPP"
+              src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/8.png"
+              alt="KapKurtar"
               className="h-16 w-auto"
             />
             <span className="font-bold text-white text-2xl">TILKAPP</span>
