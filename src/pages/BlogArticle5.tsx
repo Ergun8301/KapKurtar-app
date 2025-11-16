@@ -6,7 +6,7 @@ const BlogArticle5 = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <a href="/blog" className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange transition-colors">
+          <a href="/blog" className="inline-flex items-center text-[#00A690] hover:text-[#F75C00] transition-colors duration-300">
             <ArrowLeft className="w-5 h-5 mr-2" />
             Bloga dön
           </a>
@@ -16,7 +16,7 @@ const BlogArticle5 = () => {
       <div className="bg-white py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
-            <span className="bg-tilkapp-green text-white px-4 py-2 rounded-full text-sm font-medium">
+            <span className="bg-[#00A690] text-white px-4 py-2 rounded-full text-sm font-medium">
               Tavsiyeler
             </span>
           </div>
@@ -47,7 +47,7 @@ const BlogArticle5 = () => {
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">
-            <TrendingUp className="inline w-6 h-6 mr-2 text-tilkapp-green" />
+            <TrendingUp className="inline w-6 h-6 mr-2 text-[#00A690]" />
             Kayıplarınızı kara dönüştürün
           </h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
@@ -55,7 +55,7 @@ const BlogArticle5 = () => {
             TILKAPP ile bu kayıplar ek gelir fırsatlarına dönüşüyor.
           </p>
 
-          <div className="bg-tilkapp-beige rounded-lg p-6 my-8">
+          <div className="bg-[#F7F2E7] rounded-lg p-6 my-8">
             <h3 className="font-bold text-gray-900 mb-3">Somut örnek: Antalya'da bir fırın</h3>
             <ul className="space-y-2 text-gray-700">
               <li>• <strong>TILKAPP öncesi:</strong> Günde 50 satılmayan ekmek = 200 TL kayıp</li>
@@ -65,7 +65,7 @@ const BlogArticle5 = () => {
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">
-            <BarChart3 className="inline w-6 h-6 mr-2 text-tilkapp-green" />
+            <BarChart3 className="inline w-6 h-6 mr-2 text-[#00A690]" />
             Başarının 5 temel ilkesi
           </h2>
 
@@ -73,7 +73,7 @@ const BlogArticle5 = () => {
           <p className="text-gray-700 mb-6 leading-relaxed">
             Yaygın hata: sadece %10 veya %20 indirim sunmak. TILKAPP kullanıcıları gerçek fırsatlar arıyor.
           </p>
-          <div className="bg-white border-2 border-tilkapp-green rounded-lg p-6 my-6">
+          <div className="bg-white border-2 border-[#00A690] rounded-lg p-6 my-6">
             <p className="font-bold text-gray-900 mb-2">Önerimiz:</p>
             <ul className="space-y-2 text-gray-700">
               <li>• Hamur işleri/Ekmek: %40 ila %60 indirim</li>
@@ -88,7 +88,7 @@ const BlogArticle5 = () => {
             TILKAPP istatistikleri, sabahın sonlarında (10:00-12:00) yayınlanan tekliflerin
             öğleden sonra yayınlananlardan 3 kat daha fazla rezervasyon sağladığını gösteriyor.
           </p>
-          <blockquote className="border-l-4 border-tilkapp-green pl-6 my-8 italic text-gray-700">
+          <blockquote className="border-l-4 border-[#00A690] pl-6 my-8 italic text-gray-700">
             "Saat 11:00 civarında tekliflerimi 18:00'de teslim için yayınlamaya başladığımdan beri,
             satılmayan ürünlerimin %90'ını satıyorum, eskiden %40'tı." - Ahmet, Konyaaltı'nda manav
           </blockquote>
@@ -147,7 +147,7 @@ const BlogArticle5 = () => {
           </ul>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">
-            <Users className="inline w-6 h-6 mr-2 text-tilkapp-green" />
+            <Users className="inline w-6 h-6 mr-2 text-[#00A690]" />
             Partner işletme referansları
           </h2>
 
@@ -168,7 +168,7 @@ const BlogArticle5 = () => {
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">
-            <Smartphone className="inline w-6 h-6 mr-2 text-tilkapp-green" />
+            <Smartphone className="inline w-6 h-6 mr-2 text-[#00A690]" />
             İşletme uygulamasını etkili kullanın
           </h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
@@ -176,7 +176,7 @@ const BlogArticle5 = () => {
             2 dakikadan kısa sürede eksiksiz bir teklif yayınlayabilirsiniz.
           </p>
 
-          <div className="bg-white border-2 border-tilkapp-green rounded-lg p-6 my-8">
+          <div className="bg-white border-2 border-[#00A690] rounded-lg p-6 my-8">
             <h3 className="font-bold text-gray-900 mb-4">Mükemmel bir teklif için kontrol listesi:</h3>
             <ul className="space-y-2 text-gray-700">
               <li>✓ Kaliteli fotoğraf</li>
@@ -208,14 +208,14 @@ const BlogArticle5 = () => {
             </div>
           </div>
 
-          <div className="bg-tilkapp-green text-white rounded-lg p-8 my-12 text-center">
+          <div className="bg-[#00A690] text-white rounded-lg p-8 my-12 text-center">
             <h3 className="text-2xl font-bold mb-4">TILKAPP'a katılmaya hazır mısınız?</h3>
-            <p className="mb-6 text-tilkapp-beige">
+            <p className="mb-6 text-[#F7F2E7]">
               Ücretsiz kayıt olun ve satılmayan ürünlerinizi bugünden değerlendirmeye başlayın
             </p>
             <a
               href="/merchant/auth"
-              className="bg-white text-tilkapp-green px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-beige transition-colors inline-block"
+              className="bg-white text-[#00A690] px-8 py-3 rounded-lg font-medium hover:bg-[#F7F2E7] transition-colors duration-300 inline-block"
             >
               Partner ol
             </a>

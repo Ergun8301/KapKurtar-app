@@ -182,11 +182,11 @@ export function NotificationBell({ userType }: NotificationBellProps) {
     switch (type) {
       case "offer":
       case "offer_nearby":
-        return "border-l-tilkapp-green";
+        return "border-l-[#00A690]";
       case "reservation":
         return "border-l-blue-500";
       case "offer_expired":
-        return "border-l-tilkapp-green";
+        return "border-l-[#00A690]";
       case "stock_empty":
         return "border-l-red-500";
       case "system":
@@ -207,7 +207,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
           aria-label="Notifications"
         >
           <Bell
-            className="w-6 h-6 text-tilkapp-beige hover:text-tilkapp-orange transition-colors"
+            className="w-6 h-6 text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300"
           />
 
           {unreadCount > 0 && (
@@ -226,7 +226,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
               {notifications.length > 0 && unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-xs text-tilkapp-green hover:text-tilkapp-green font-medium hover:underline transition-colors"
+                  className="text-xs text-[#00A690] hover:text-[#F75C00] font-medium hover:underline transition-colors duration-300"
                 >
                   Tümünü Okundu İşaretle
                 </button>
@@ -277,7 +277,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
                       </div>
 
                       {!n.is_read && (
-                        <div className="flex-shrink-0 w-2.5 h-2.5 bg-tilkapp-green rounded-full mt-1 shadow-sm"></div>
+                        <div className="flex-shrink-0 w-2.5 h-2.5 bg-[#00A690] rounded-full mt-1 shadow-sm"></div>
                       )}
                     </div>
                   </div>

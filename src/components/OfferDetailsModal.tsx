@@ -220,7 +220,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
           {toast && (
             <div
               className={`fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg ${
-                toast.type === 'success' ? 'bg-tilkapp-green' : 'bg-red-500'
+                toast.type === 'success' ? 'bg-[#00A690]' : 'bg-red-500'
               } text-white`}
             >
               {toast.message}
@@ -229,7 +229,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+            className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-300"
           >
             <X className="w-5 h-5 text-gray-600" />
           </button>
@@ -271,7 +271,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                    offer.merchant_street !== 'Position GPS' && 
                    offer.merchant_street !== 'À définir' && (
                     <div className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4 text-tilkapp-green flex-shrink-0" />
+                      <MapPin className="w-4 h-4 text-[#00A690] flex-shrink-0" />
                       <span className="truncate">
                         {offer.merchant_city && offer.merchant_city !== 'À définir' 
                           ? offer.merchant_city 
@@ -282,7 +282,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                   {offer.merchant_phone && (
                     <a
                       href={`tel:${offer.merchant_phone}`}
-                      className="flex items-center gap-1 text-tilkapp-green hover:text-tilkapp-green font-medium"
+                      className="flex items-center gap-1 text-[#00A690] hover:text-[#00A690] font-medium"
                     >
                       <Phone className="w-4 h-4" />
                       {offer.merchant_phone}
@@ -293,7 +293,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
               <button
                 onClick={handleGetDirections}
-                className="flex items-center gap-2 px-4 py-2 bg-tilkapp-green hover:bg-tilkapp-orange text-tilkapp-beige rounded-lg font-semibold transition-colors shadow-md flex-shrink-0"
+                className="flex items-center gap-2 px-4 py-2 bg-[#00A690] hover:bg-[#F75C00] text-[#F7F2E7] rounded-lg font-semibold transition-colors duration-300 shadow-md flex-shrink-0"
               >
                 <Navigation className="w-4 h-4" />
                 <span className="hidden md:inline">Yol Tarifi</span>
@@ -336,7 +336,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                 </div>
 
                 <div className="flex items-baseline gap-3 bg-green-100 rounded-lg p-4 mb-4">
-                  <span className="text-3xl md:text-4xl font-bold text-tilkapp-green">
+                  <span className="text-3xl md:text-4xl font-bold text-[#00A690]">
                     {(offer.price_after * 49).toFixed(2)}₺
                   </span>
                   <span className="text-lg md:text-xl text-gray-400 line-through">
@@ -386,7 +386,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                     </button>
 
                     <div className="flex flex-col items-center">
-                      <span className="text-2xl font-bold text-tilkapp-green">
+                      <span className="text-2xl font-bold text-[#00A690]">
                         {reservationQuantity}
                       </span>
                       <span className="text-xs text-gray-500">
@@ -411,7 +411,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                   className={`w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all ${
                     isReserving || (offer.quantity && offer.quantity <= 0)
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-tilkapp-green hover:bg-tilkapp-orange text-white hover:shadow-xl'
+                      : 'bg-[#00A690] hover:bg-[#F75C00] text-white hover:shadow-xl'
                   }`}
                 >
                   {isReserving ? (
@@ -432,7 +432,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
           {merchantOffers.length > 0 && (
             <div className="border-t border-gray-200 px-4 md:px-6 py-6 bg-gray-50">
               <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Package className="w-5 h-5 text-tilkapp-green" />
+                <Package className="w-5 h-5 text-[#00A690]" />
                 Diğer mevcut ürünler
               </h4>
 
@@ -460,7 +460,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                         </h5>
 
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="font-bold text-tilkapp-green text-lg">
+                          <span className="font-bold text-[#00A690] text-lg">
                             {(otherOffer.price_after * 49).toFixed(2)}₺
                           </span>
                           <span className="line-through text-gray-400 text-xs">
@@ -490,7 +490,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
           {loadingOtherOffers && (
             <div className="border-t border-gray-200 px-6 md:px-8 py-6 bg-gray-50 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tilkapp-green mx-auto"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00A690] mx-auto"></div>
               <p className="text-sm text-gray-600 mt-2">Diğer ürünler yükleniyor...</p>
             </div>
           )}
@@ -507,7 +507,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-tilkapp-beige rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[#F7F2E7] rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">🔒</span>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Giriş gerekli</h3>
@@ -516,15 +516,15 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
             <ul className="space-y-2 mb-6">
               <li className="flex items-center gap-2 text-gray-700">
-                <span className="text-tilkapp-green">✓</span>
+                <span className="text-[#00A690]">✓</span>
                 <span>Teklifleri rezerve edin</span>
               </li>
               <li className="flex items-center gap-2 text-gray-700">
-                <span className="text-tilkapp-green">✓</span>
+                <span className="text-[#00A690]">✓</span>
                 <span>Bildirimler alın</span>
               </li>
               <li className="flex items-center gap-2 text-gray-700">
-                <span className="text-tilkapp-green">✓</span>
+                <span className="text-[#00A690]">✓</span>
                 <span>Rezervasyonlarınızı takip edin</span>
               </li>
             </ul>
@@ -532,13 +532,13 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             <div className="space-y-3">
               <button
                 onClick={() => navigate('/customer/auth')}
-                className="w-full py-3 bg-tilkapp-green hover:bg-tilkapp-orange text-white rounded-lg font-semibold transition-colors shadow-md"
+                className="w-full py-3 bg-[#00A690] hover:bg-[#F75C00] text-white rounded-lg font-semibold transition-colors duration-300 shadow-md"
               >
                 Giriş Yap
               </button>
               <button
                 onClick={() => setShowLoginModal(false)}
-                className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-colors"
+                className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-colors duration-300"
               >
                 Daha Sonra
               </button>
@@ -548,7 +548,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
               <p className="text-sm text-gray-600 mb-2">💼 İşletme sahibi misiniz?</p>
               <button
                 onClick={() => navigate('/merchant/auth')}
-                className="text-tilkapp-green hover:text-tilkapp-green font-semibold text-sm"
+                className="text-[#00A690] hover:text-[#F75C00] font-semibold text-sm"
               >
                 SEPET'e ücretsiz katılın
               </button>

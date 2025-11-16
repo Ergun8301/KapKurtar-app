@@ -86,7 +86,7 @@ const ReviewsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="p-6 flex flex-col items-center justify-center text-center">
-        <Loader2 className="animate-spin w-6 h-6 text-tilkapp-green mb-2" />
+        <Loader2 className="animate-spin w-6 h-6 text-[#00A690] mb-2" />
         <p>Chargement de vos avis...</p>
       </div>
     );
@@ -95,7 +95,7 @@ const ReviewsPage: React.FC = () => {
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <h1 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-        <MessageCircle className="w-6 h-6 text-tilkapp-green" /> Mes avis
+        <MessageCircle className="w-6 h-6 text-[#00A690]" /> Mes avis
       </h1>
 
       {/* Formulaire de nouvel avis */}
@@ -135,9 +135,9 @@ const ReviewsPage: React.FC = () => {
 
           <button
             type="submit"
-            className="bg-tilkapp-green text-white px-4 py-2 rounded-lg hover:bg-tilkapp-orange transition"
+            className="bg-[#00A690] text-white px-4 py-2 rounded-lg hover:bg-[#F75C00] transition"
           >
-            Envoyer l’avis
+            Envoyer l'avis
           </button>
         </div>
       </form>

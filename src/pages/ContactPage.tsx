@@ -51,12 +51,12 @@ const ContactPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-tilkapp-green text-white py-16">
+      <div className="bg-[#00A690] text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Bize Ulaşın
           </h1>
-          <p className="text-xl text-tilkapp-beige max-w-2xl mx-auto">
+          <p className="text-xl text-[#F7F2E7] max-w-2xl mx-auto">
             Bir sorunuz mu var? Bir öneriniz mi? Ekibimiz size yardımcı olmak için burada.
           </p>
         </div>
@@ -75,7 +75,7 @@ const ContactPage = () => {
               className="block bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow group"
             >
               <div className="flex items-start">
-                <div className="bg-green-100 rounded-full p-3 group-hover:bg-green-200 transition-colors">
+                <div className="bg-green-100 rounded-full p-3 group-hover:bg-green-200 transition-colors duration-300">
                   <MessageSquare className="w-6 h-6 text-green-600" />
                 </div>
                 <div className="ml-4">
@@ -83,7 +83,7 @@ const ContactPage = () => {
                   <p className="text-gray-600 mb-3">
                     Hızlı yanıt için bize doğrudan WhatsApp üzerinden ulaşın
                   </p>
-                  <span className="text-tilkapp-green font-medium group-hover:text-tilkapp-orange transition-colors">
+                  <span className="text-[#00A690] font-medium group-hover:text-[#F75C00] transition-colors duration-300">
                     Mesaj gönder →
                   </span>
                 </div>
@@ -135,7 +135,7 @@ const ContactPage = () => {
                   </p>
                   <button
                     onClick={() => setIsSubmitted(false)}
-                    className="bg-tilkapp-green text-white px-6 py-2 rounded-lg hover:bg-tilkapp-orange transition-colors"
+                    className="bg-[#00A690] text-white px-6 py-2 rounded-lg hover:bg-[#F75C00] transition-colors duration-300"
                   >
                     Başka bir mesaj gönder
                   </button>
@@ -153,7 +153,7 @@ const ContactPage = () => {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
                       placeholder="Adınız"
                     />
                   </div>
@@ -169,7 +169,7 @@ const ContactPage = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
                       placeholder="eposta@ornek.com"
                     />
                   </div>
@@ -184,7 +184,7 @@ const ContactPage = () => {
                       value={formData.subject}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
                     >
                       <option value="">Bir konu seçin</option>
                       <option value="question_client">Müşteri sorusu</option>
@@ -206,7 +206,7 @@ const ContactPage = () => {
                       onChange={handleChange}
                       required
                       rows={6}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
                       placeholder="Mesajınız..."
                     />
                   </div>
@@ -214,7 +214,7 @@ const ContactPage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-tilkapp-green text-white px-6 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="w-full bg-[#00A690] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#F75C00] transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {isSubmitting ? (
                       'Gönderiliyor...'

@@ -6,7 +6,7 @@ const BlogArticle8 = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <a href="/blog" className="inline-flex items-center text-tilkapp-green hover:text-tilkapp-orange transition-colors">
+          <a href="/blog" className="inline-flex items-center text-[#00A690] hover:text-[#F75C00] transition-colors duration-300">
             <ArrowLeft className="w-5 h-5 mr-2" />
             Bloga dön
           </a>
@@ -16,7 +16,7 @@ const BlogArticle8 = () => {
       <div className="bg-white py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
-            <span className="bg-tilkapp-green text-white px-4 py-2 rounded-full text-sm font-medium">
+            <span className="bg-[#00A690] text-white px-4 py-2 rounded-full text-sm font-medium">
               Tavsiyeler
             </span>
           </div>
@@ -190,7 +190,7 @@ const BlogArticle8 = () => {
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">
-            <Leaf className="inline w-6 h-6 mr-2 text-tilkapp-green" />
+            <Leaf className="inline w-6 h-6 mr-2 text-[#00A690]" />
             Gelişmiş saklama teknikleri
           </h2>
 
@@ -198,7 +198,7 @@ const BlogArticle8 = () => {
           <p className="text-gray-700 mb-4 leading-relaxed">
             Yumuşamış salata ve yapraklı sebzelere gevrekliğini geri kazandırmak için.
           </p>
-          <div className="bg-tilkapp-beige rounded p-4 mb-6">
+          <div className="bg-[#F7F2E7] rounded p-4 mb-6">
             <p className="text-sm text-gray-700">
               <strong>Yöntem:</strong> Sebzeleri buz kalıplarıyla çok soğuk suyla dolu büyük bir kaseye
               15-30 dakika batırın. Süzün ve nazikçe kurulayın.
@@ -209,7 +209,7 @@ const BlogArticle8 = () => {
           <p className="text-gray-700 mb-4 leading-relaxed">
             Yapraklı sebzelerin ve mantarların raf ömrünü uzatmak için ideal.
           </p>
-          <div className="bg-tilkapp-beige rounded p-4 mb-6">
+          <div className="bg-[#F7F2E7] rounded p-4 mb-6">
             <p className="text-sm text-gray-700">
               <strong>Yöntem:</strong> Sebzeleri buzdolabına koymadan önce hafifçe nemli emici kağıda sarın,
               sonra delikli plastik torbaya koyun.
@@ -220,7 +220,7 @@ const BlogArticle8 = () => {
           <p className="text-gray-700 mb-4 leading-relaxed">
             Kırmızı meyvelerin tazeliğini birkaç gün uzatır.
           </p>
-          <div className="bg-tilkapp-beige rounded p-4 mb-6">
+          <div className="bg-[#F7F2E7] rounded p-4 mb-6">
             <p className="text-sm text-gray-700">
               <strong>Yöntem:</strong> 3 ölçü suya 1 ölçü beyaz sirke karıştırın.
               Kırmızı meyveleri hızlıca batırın, temiz suyla durulayın ve nazikçe kurulayın.
@@ -232,7 +232,7 @@ const BlogArticle8 = () => {
           <p className="text-gray-700 mb-4 leading-relaxed">
             Çok fazla meyve veya sebzeniz mi var? Akıllıca dondurun!
           </p>
-          <div className="bg-tilkapp-beige rounded p-4 mb-6">
+          <div className="bg-[#F7F2E7] rounded p-4 mb-6">
             <p className="text-sm text-gray-700 mb-3">
               <strong>Meyveler:</strong> Yıkayın, kurulayın ve bir tepsiye yayın. 2 saat dondurun,
               sonra dondurma torbasına aktarın. Smoothie ve kompostolar için mükemmel!
@@ -246,7 +246,7 @@ const BlogArticle8 = () => {
           <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">Özet tablo</h2>
           <div className="overflow-x-auto my-8">
             <table className="min-w-full bg-white border border-gray-200 text-sm">
-              <thead className="bg-tilkapp-green text-white">
+              <thead className="bg-[#00A690] text-white">
                 <tr>
                   <th className="px-4 py-3 text-left">Gıda</th>
                   <th className="px-4 py-3 text-left">Nerede?</th>
@@ -296,7 +296,7 @@ const BlogArticle8 = () => {
             </p>
             <a
               href="/offers"
-              className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
+              className="bg-[#00A690] text-white px-8 py-3 rounded-lg font-medium hover:bg-[#F75C00] transition-colors duration-300 inline-block"
             >
               Günün tekliflerini görüntüle
             </a>
