@@ -352,8 +352,9 @@ export default function OffersPage() {
       setUserLocation([lng, lat]);
       setCenter([lng, lat]);
       setViewMode("nearby");
-      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
-      
+      // 🔧 FIX : Suppression du map.flyTo() pour éviter le conflit avec drawRadius()
+      // Le useEffect du rayon se chargera de centrer la carte via fitBounds
+
       const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
       if (input) input.value = "";
     });
@@ -576,8 +577,8 @@ export default function OffersPage() {
       if (offer.merchant_logo_url) {
         el.innerHTML = `<img src="${offer.merchant_logo_url}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null; this.src='/logo-tilkapp.png' || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏪</text></svg>';" />`;
       } else {
-        el.innerHTML = `<img src="/logo-tilkapp.png" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=font-size:24px>🏪</span>';" />`;
-      }
+  el.innerHTML = `<img src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20rond%20fond%20vert.png" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=font-size:24px>🏪</span>';" />`;
+}
 
       el.addEventListener('click', () => {
         const merchantId = offer.merchant_id || offer.merchant_name;
@@ -729,10 +730,14 @@ export default function OffersPage() {
             }}
           />
         ) : (
-          <div className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full bg-gray-200 flex items-center justify-center mb-1`}>
-            <span className={isMobile ? "text-base" : "text-lg"}>🏪</span>
-          </div>
-        )}
+  <img
+src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20rond%20fond%20vert.png"
+    alt="KapKurtar"
+    className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full object-cover mb-1 border-2 border-white shadow-sm`}
+    crossOrigin="anonymous"
+    referrerPolicy="no-referrer"
+  />
+)}
 
         <p className={`font-semibold text-gray-900 ${isMobile ? "text-[10px]" : "text-xs"} line-clamp-2 mb-1 w-full px-1`}>
           {offer.merchant_name}

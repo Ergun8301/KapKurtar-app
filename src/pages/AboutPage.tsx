@@ -8,7 +8,7 @@ const AboutPage = () => {
       <div className="bg-tilkapp-green text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            TILKAPP Hakkında
+            KapKurtar Hakkında
           </h1>
           <p className="text-xl text-tilkapp-beige max-w-2xl mx-auto">
             Gıda israfıyla mücadele etmek için işletmeleri ve tüketicileri birbirine bağlayan bir platform
@@ -21,7 +21,7 @@ const AboutPage = () => {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Misyonumuz</h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            TILKAPP basit bir tespitle doğdu: her gün binlerce mükemmel tüketilebilir gıda ürünü
+            KapKurtar basit bir tespitle doğdu: her gün binlerce mükemmel tüketilebilir gıda ürünü
             çöpe atılıyor. Misyonumuz, satılmayan ürünleri olan işletmelerle indirimli fiyatlarla
             kaliteli ürün arayan tüketiciler arasında bir köprü kurmaktır.
           </p>
@@ -65,7 +65,7 @@ const AboutPage = () => {
           <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">Hikayemiz</h2>
           <div className="prose prose-lg max-w-none text-gray-700">
             <p className="mb-4">
-              TILKAPP, 2024 yılında Antalya'da net bir vizyonla başlatıldı: işletmelere ve tüketicilere
+              KapKurtar, 2024 yılında Antalya'da net bir vizyonla başlatıldı: işletmelere ve tüketicilere
               hizmet ederken gıda israfı sorununu çözmek için teknolojiyi kullanmak.
             </p>
             <p className="mb-4">
@@ -111,9 +111,9 @@ const AboutPage = () => {
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Tutkulu Bir Ekip</h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
-            TILKAPP, her şeyden önce yerel olarak hareket ederek işleri değiştirebileceğine inanan
+            KapKurtar, her şeyden önce yerel olarak hareket ederek işleri değiştirebileceğine inanan
             tutkulu bir ekiptir. Geliştiriciler, tasarımcılar, ticaret ve lojistik uzmanları:
-            TILKAPP'ı günlük hayatta basit, etkili ve kullanışlı bir araç haline getirmek için birlikte çalışıyoruz.
+            KapKurtar'ı günlük hayatta basit, etkili ve kullanışlı bir araç haline getirmek için birlikte çalışıyoruz.
           </p>
         </div>
 
@@ -125,7 +125,7 @@ const AboutPage = () => {
           </div>
           <div className="text-center mb-8">
             <p className="text-lg text-gray-600 mb-6">
-              Şu anda Antalya ve çevresinde aktif olan TILKAPP, Türk Akdeniz bölgesinde
+              Şu anda Antalya ve çevresinde aktif olan KapKurtar, Türk Akdeniz bölgesinde
               hızlı bir genişleme planlıyor.
             </p>
           </div>
