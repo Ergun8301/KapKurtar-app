@@ -259,14 +259,14 @@ const BlogArticle10 = () => {
             </div>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">KapKurtar ve son kullanma tarihleri</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">TILKAPP ve son kullanma tarihleri</h2>
           <p className="text-gray-700 mb-6 leading-relaxed">
-            KapKurtar'ta sunulan ürünler genellikle TETT'ye yakın veya hafifçe geçmiş.
+            TILKAPP'ta sunulan ürünler genellikle TETT'ye yakın veya hafifçe geçmiş.
             Rahat olun: tamamen tüketilebilir ve kontrol edilmiştir!
           </p>
 
           <div className="bg-tilkapp-beige rounded-lg p-6 my-8">
-            <h3 className="font-bold text-gray-900 mb-4">🛡️ KapKurtar garantileri:</h3>
+            <h3 className="font-bold text-gray-900 mb-4">🛡️ TILKAPP garantileri:</h3>
             <ul className="space-y-2 text-gray-700">
               <li>• ✅ Tüm partner işletmeler doğrulanmış ve sertifikalıdır</li>
               <li>• ✅ SKT ürünleri son kullanma tarihlerine kesinlikle uyar</li>
@@ -276,7 +276,7 @@ const BlogArticle10 = () => {
           </div>
 
           <blockquote className="border-l-4 border-tilkapp-green pl-6 my-8 italic text-gray-700">
-            "KapKurtar'ta TETT'si geçmiş bir ürün almak, akıllı bir israf karşıtı harekettir.
+            "TILKAPP'ta TETT'si geçmiş bir ürün almak, akıllı bir israf karşıtı harekettir.
             Ürün sağlıklı, kalite yerinde, sadece büyük marketlerin pazarlaması
             bizi çok çabuk atmaya alıştırdı!"
           </blockquote>
@@ -284,7 +284,7 @@ const BlogArticle10 = () => {
           <div className="bg-gray-100 rounded-lg p-8 my-12 text-center">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Hala mükemmel ürünleri kurtarın</h3>
             <p className="text-gray-700 mb-6">
-              KapKurtar tekliflerini keşfedin ve satılmayan ürünlere ikinci bir şans verin
+              TILKAPP tekliflerini keşfedin ve satılmayan ürünlere ikinci bir şans verin
             </p>
             <a
               href="/offers"
