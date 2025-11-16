@@ -80,15 +80,15 @@ const DownloadPage = () => {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-tilkapp-green">4.8★</div>
+                <div className="text-2xl font-bold text-[#00A690]">4.8★</div>
                 <div className="text-sm text-gray-600">App Rating</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-tilkapp-green">50K+</div>
+                <div className="text-2xl font-bold text-[#00A690]">50K+</div>
                 <div className="text-sm text-gray-600">Downloads</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-tilkapp-green">1M+</div>
+                <div className="text-2xl font-bold text-[#00A690]">1M+</div>
                 <div className="text-sm text-gray-600">Meals Saved</div>
               </div>
             </div>
@@ -103,8 +103,8 @@ const DownloadPage = () => {
             <div className="space-y-8 mb-8">
               {features.map((feature, index) => (
                 <div key={index} className="flex items-start space-x-4">
-                  <div className="bg-tilkapp-beige p-4 rounded-lg">
-                    <feature.icon className="w-8 h-8 text-tilkapp-green" />
+                  <div className="bg-[#F7F2E7] p-4 rounded-lg">
+                    <feature.icon className="w-8 h-8 text-[#00A690]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2 text-lg">{feature.title}</h3>
@@ -114,9 +114,9 @@ const DownloadPage = () => {
               ))}
             </div>
 
-            <div className="bg-tilkapp-green py-16">
-              <h3 className="font-semibold text-tilkapp-green mb-2">📱 Activate Notifications</h3>
-              <p className="text-tilkapp-green leading-relaxed">
+            <div className="bg-[#00A690] py-16">
+              <h3 className="font-semibold text-[#00A690] mb-2">📱 Activate Notifications</h3>
+              <p className="text-[#00A690] leading-relaxed">
                 Enable push notifications to never miss a deal. Get alerted when your favorite restaurants post new offers!
               </p>
             </div>
@@ -143,7 +143,7 @@ const DownloadPage = () => {
                 <div className="p-4 space-y-3">
                   <div className="bg-gray-100 rounded-lg p-3">
                     <div className="flex items-center space-x-2 mb-2">
-                      <div className="w-8 h-8 bg-tilkapp-green rounded-full"></div>
+                      <div className="w-8 h-8 bg-[#00A690] rounded-full"></div>
                       <div>
                         <div className="h-2 bg-gray-300 rounded w-20"></div>
                         <div className="h-2 bg-gray-200 rounded w-16 mt-1"></div>
@@ -165,9 +165,9 @@ const DownloadPage = () => {
                 </div>
 
                 {/* Floating notification */}
-                <div className="absolute top-32 left-2 right-2 bg-white rounded-lg shadow-lg p-3 border-l-4 border-tilkapp-green">
+                <div className="absolute top-32 left-2 right-2 bg-white rounded-lg shadow-lg p-3 border-l-4 border-[#00A690]">
                   <div className="flex items-center space-x-2">
-                    <Bell className="w-4 h-4 text-tilkapp-green" />
+                    <Bell className="w-4 h-4 text-[#00A690]" />
                     <div>
                       <div className="text-xs font-semibold text-gray-900">New offer nearby!</div>
                       <div className="text-xs text-gray-600">50% off at Green Kitchen</div>
@@ -184,7 +184,7 @@ const DownloadPage = () => {
           <p className="text-gray-600 mb-6 text-lg">Ready to start saving money and reducing waste?</p>
           <a
             href="/"
-            className="bg-tilkapp-green text-white px-8 py-4 rounded-lg font-semibold hover:bg-tilkapp-orange transition-colors inline-block text-lg"
+            className="bg-[#00A690] text-white px-8 py-4 rounded-lg font-semibold hover:bg-[#F75C00] transition-colors inline-block text-lg"
           >
             Explore Offers Now
           </a>

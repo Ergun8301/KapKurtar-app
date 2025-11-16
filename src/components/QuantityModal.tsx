@@ -54,7 +54,7 @@ export const QuantityModal: React.FC<QuantityModalProps> = ({
             <h3 className="text-2xl font-bold text-gray-900">Teklifi Rezerve Et</h3>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-300"
               disabled={loading}
             >
               <X className="w-6 h-6" />
@@ -104,7 +104,7 @@ export const QuantityModal: React.FC<QuantityModalProps> = ({
             </div>
             <div className="flex items-center justify-between border-t border-green-300 pt-2">
               <span className="text-lg font-semibold text-gray-900">Toplam:</span>
-              <span className="text-2xl font-bold text-tilkapp-green">{((safePrice ?? 0) * quantity * 49).toFixed(2)}₺</span>
+              <span className="text-2xl font-bold text-[#00A690]">{((safePrice ?? 0) * quantity * 49).toFixed(2)}₺</span>
             </div>
           </div>
 
@@ -112,14 +112,14 @@ export const QuantityModal: React.FC<QuantityModalProps> = ({
             <button
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-300 disabled:opacity-50"
             >
               İptal
             </button>
             <button
               onClick={handleConfirm}
               disabled={loading || quantity < 1 || quantity > safeAvailableQuantity}
-              className="flex-1 px-4 py-3 bg-tilkapp-green text-white rounded-lg font-medium hover:bg-tilkapp-orange transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 bg-[#00A690] text-white rounded-lg font-medium hover:bg-[#F75C00] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

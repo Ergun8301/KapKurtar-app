@@ -37,14 +37,14 @@ const HowItWorks = () => {
           {steps.map((step, index) => (
             <div key={index} className="text-center relative">
               {/* Step Number */}
-              <div className="absolute -top-4 -left-4 bg-tilkapp-green text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg z-10">
+              <div className="absolute -top-4 -left-4 bg-[#00A690] text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg z-10">
                 {step.step}
               </div>
-              
+
               {/* Card */}
-              <div className="bg-gray-50 rounded-xl p-8 hover:bg-gray-100 transition-colors h-full">
-                <div className="bg-tilkapp-beige w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <step.icon className="w-8 h-8 text-tilkapp-green" />
+              <div className="bg-gray-50 rounded-xl p-8 hover:bg-gray-100 transition-colors duration-300 h-full">
+                <div className="bg-[#F7F2E7] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <step.icon className="w-8 h-8 text-[#00A690]" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">{step.title}</h3>
                 <p className="text-gray-600">{step.description}</p>
@@ -61,7 +61,7 @@ const HowItWorks = () => {
         <div className="text-center mt-12">
           <a
             href="/customer/teaser"
-            className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-medium hover:bg-tilkapp-orange transition-colors inline-block"
+            className="bg-[#00A690] text-white px-8 py-3 rounded-lg font-medium hover:bg-[#F75C00] transition-colors duration-300 inline-block"
           >
             Hemen Tasarruf Etmeye Başlayın
           </a>

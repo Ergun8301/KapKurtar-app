@@ -150,7 +150,7 @@ const ClientProfilePage = () => {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tilkapp-green"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00A690]"></div>
       </div>
     );
   }
@@ -165,7 +165,7 @@ const ClientProfilePage = () => {
         {toast && (
           <div
             className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-              toast.type === 'success' ? 'bg-tilkapp-green' : 'bg-red-500'
+              toast.type === 'success' ? 'bg-[#00A690]' : 'bg-red-500'
             } text-white`}
           >
             {toast.message}
@@ -175,7 +175,7 @@ const ClientProfilePage = () => {
         {/* Bouton retour */}
         <button
           onClick={() => navigate('/offers')}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors duration-300"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Retour aux offres
@@ -185,8 +185,8 @@ const ClientProfilePage = () => {
         <div className="bg-white rounded-lg shadow-md p-8">
           {/* Header */}
           <div className="flex items-center mb-8">
-            <div className="w-12 h-12 bg-tilkapp-beige rounded-full flex items-center justify-center mr-4">
-              <User className="w-6 h-6 text-tilkapp-green" />
+            <div className="w-12 h-12 bg-[#F7F2E7] rounded-full flex items-center justify-center mr-4">
+              <User className="w-6 h-6 text-[#00A690]" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
           </div>
@@ -202,7 +202,7 @@ const ClientProfilePage = () => {
                 )}
               </div>
               <label
-                className={`absolute bottom-0 right-0 bg-tilkapp-green rounded-full p-2 cursor-pointer hover:bg-tilkapp-orange transition-colors shadow-lg ${
+                className={`absolute bottom-0 right-0 bg-[#00A690] rounded-full p-2 cursor-pointer hover:bg-[#F75C00] transition-colors duration-300 shadow-lg ${
                   isUploadingPhoto ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
@@ -252,7 +252,7 @@ const ClientProfilePage = () => {
                   name="first_name"
                   value={editedProfile?.first_name || ''}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
                   placeholder="Prénom"
                   required
                 />
@@ -271,7 +271,7 @@ const ClientProfilePage = () => {
                   name="last_name"
                   value={editedProfile?.last_name || ''}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
                   placeholder="Nom"
                   required
                 />
@@ -290,7 +290,7 @@ const ClientProfilePage = () => {
                   name="phone"
                   value={editedProfile?.phone || ''}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
                   placeholder="Ex: 06 12 34 56 78"
                 />
               </div>
@@ -301,14 +301,14 @@ const ClientProfilePage = () => {
               <div className="flex gap-4 pt-6 border-t border-gray-200">
                 <button
                   onClick={handleCancel}
-                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-300 font-medium"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleSaveChanges}
                   disabled={isSaving}
-                  className="flex-1 px-6 py-3 bg-tilkapp-green text-white rounded-lg hover:bg-tilkapp-orange transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="flex-1 px-6 py-3 bg-[#00A690] text-white rounded-lg hover:bg-[#F75C00] transition-colors duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {isSaving ? (
                     <>

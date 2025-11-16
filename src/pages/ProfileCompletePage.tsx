@@ -98,7 +98,7 @@ const ProfileCompletePage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tilkapp-green"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00A690]"></div>
       </div>
     );
   }
@@ -113,7 +113,7 @@ const ProfileCompletePage = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-6">
-            <div className="w-12 h-12 bg-tilkapp-green rounded-lg flex items-center justify-center mr-3">
+            <div className="w-12 h-12 bg-[#00A690] rounded-lg flex items-center justify-center mr-3">
               <span className="text-white font-bold text-xl">R</span>
             </div>
             <span className="font-bold text-2xl text-gray-900">TILKAPP</span>
@@ -132,7 +132,7 @@ const ProfileCompletePage = () => {
             </div>
           )}
           {success && (
-            <div className="bg-green-100 border border-green-300 text-tilkapp-green px-4 py-3 rounded-lg mb-6">
+            <div className="bg-green-100 border border-green-300 text-[#00A690] px-4 py-3 rounded-lg mb-6">
               {success}
             </div>
           )}
@@ -152,7 +152,7 @@ const ProfileCompletePage = () => {
                     <User className="w-12 h-12 text-gray-400" />
                   )}
                 </div>
-                <label className="absolute bottom-0 right-0 bg-tilkapp-green text-white p-2 rounded-full cursor-pointer hover:bg-tilkapp-orange transition-colors">
+                <label className="absolute bottom-0 right-0 bg-[#00A690] text-white p-2 rounded-full cursor-pointer hover:bg-[#F75C00] transition-colors duration-300">
                   <Camera className="w-4 h-4" />
                   <input
                     type="file"
@@ -175,7 +175,7 @@ const ProfileCompletePage = () => {
                   placeholder="First Name"
                   value={profileData.first_name}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
                   required
                 />
               </div>
@@ -187,7 +187,7 @@ const ProfileCompletePage = () => {
                   placeholder="Last Name"
                   value={profileData.last_name}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
                   required
                 />
               </div>
@@ -202,7 +202,7 @@ const ProfileCompletePage = () => {
                 placeholder="Phone Number"
                 value={profileData.phone}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
               />
             </div>
 
@@ -222,7 +222,7 @@ const ProfileCompletePage = () => {
             {/* Address Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-tilkapp-green" />
+                <MapPin className="w-5 h-5 mr-2 text-[#00A690]" />
                 Address Information
               </h3>
               
@@ -233,7 +233,7 @@ const ProfileCompletePage = () => {
                   placeholder="Street Address"
                   value={profileData.street}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
                 />
               </div>
 
@@ -244,7 +244,7 @@ const ProfileCompletePage = () => {
                   placeholder="City"
                   value={profileData.city}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
                 />
                 <input
                   type="text"
@@ -252,7 +252,7 @@ const ProfileCompletePage = () => {
                   placeholder="Postal Code"
                   value={profileData.postal_code}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
                 />
               </div>
 
@@ -260,7 +260,7 @@ const ProfileCompletePage = () => {
                 name="country"
                 value={profileData.country}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tilkapp-green focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
               >
                 <option value="FR">France</option>
                 <option value="US">United States</option>
@@ -284,7 +284,7 @@ const ProfileCompletePage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="bg-tilkapp-green text-white px-8 py-3 rounded-lg font-semibold hover:bg-tilkapp-orange transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+                className="bg-[#00A690] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#F75C00] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
               >
                 <Save className="w-5 h-5 mr-2" />
                 {isLoading ? 'Saving...' : 'Complete Profile'}
