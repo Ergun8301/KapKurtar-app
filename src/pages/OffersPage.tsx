@@ -729,10 +729,14 @@ export default function OffersPage() {
             }}
           />
         ) : (
-          <div className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full bg-gray-200 flex items-center justify-center mb-1`}>
-            <span className={isMobile ? "text-base" : "text-lg"}>🏪</span>
-          </div>
-        )}
+  <img
+    src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON-rond-ss-fond.png"
+    alt="KapKurtar"
+    className={`${isMobile ? "w-10 h-10" : "w-12 h-12"} rounded-full object-cover mb-1 border-2 border-white shadow-sm`}
+    crossOrigin="anonymous"
+    referrerPolicy="no-referrer"
+  />
+)}
 
         <p className={`font-semibold text-gray-900 ${isMobile ? "text-[10px]" : "text-xs"} line-clamp-2 mb-1 w-full px-1`}>
           {offer.merchant_name}
