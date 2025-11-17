@@ -44,43 +44,12 @@ const AuthCallbackPage = () => {
             .eq("token", flowToken);
         }
 
-        // 2️⃣ Vérifier si un profil existe déjà pour préserver le rôle
-        const { data: existingProfile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("auth_id", user.id)
-          .maybeSingle();
-
-        // 🔐 Pour nouveaux utilisateurs: récupérer rôle depuis flow_states (sécurisé)
-        let roleToUse = role;
-
-        if (!existingProfile && flowToken) {
-          const { data: flowData } = await supabase
-            .from("flow_states")
-            .select("desired_role")
-            .eq("token", flowToken)
-            .single();
-
-          if (flowData?.desired_role) {
-            roleToUse = flowData.desired_role;
-            console.log(`🎟️ Rôle sécurisé depuis flow_state: "${roleToUse}"`);
-          }
-        }
-
-        // Préserver le rôle existant pour empêcher le changement non autorisé
-        const finalRole = existingProfile?.role || roleToUse;
-
-        // Log de sécurité si tentative de changement de rôle
-        if (existingProfile?.role && existingProfile.role !== role) {
-          console.log(`🔒 Profil existant détecté avec rôle "${existingProfile.role}" - Conservation du rôle original`);
-        }
-
-        // 3️⃣ Mise à jour / création du profil
+        // 2️⃣ Mise à jour / création du profil
         const { error: profileError } = await supabase.from("profiles").upsert(
           {
             auth_id: user.id,
             email: user.email,
-            role: finalRole,
+            role,
           },
           { onConflict: "auth_id" }
         );
@@ -91,7 +60,7 @@ const AuthCallbackPage = () => {
           console.log("✅ Profil OK:", user.email);
         }
 
-        // 4️⃣ Vérifier si le profil est complet (pour les clients)
+        // 3️⃣ Vérifier si le profil est complet (pour les clients)
         const { data: profileData, error: fetchError } = await supabase
           .from("profiles")
           .select("role, first_name, last_name")
@@ -102,12 +71,11 @@ const AuthCallbackPage = () => {
           console.warn("⚠️ Impossible de récupérer le profil:", fetchError.message);
         }
 
-        // 5️⃣ Redirection selon rôle ET complétude du profil
+        // 4️⃣ Redirection selon rôle ET complétude du profil
         setIsRedirecting(true);
-        const actualRole = profileData?.role || finalRole;
-        if (actualRole === "merchant") {
+        if (role === "merchant") {
           navigate("/merchant/dashboard");
-        } else if (actualRole === "client") {
+        } else if (role === "client") {
           // ✅ Vérifier si le profil client est complet
           if (!profileData?.first_name || !profileData?.last_name) {
             console.log("⚠️ Profil incomplet → redirection vers /customer/auth");
