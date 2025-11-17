@@ -572,7 +572,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
               'w-full py-3 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ' +
               (mode === 'create'
                 ? 'bg-[#00A690] hover:bg-[#F75C00]'
-                : 'bg-green-100 hover:bg-[#F75C00]')
+                : 'bg-[#00A690] hover:bg-[#F75C00]')
             }
           >
             {isSubmitting
