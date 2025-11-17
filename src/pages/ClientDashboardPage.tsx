@@ -269,7 +269,7 @@ const ClientDashboardPage = () => {
                 {reservation.offer_title}
               </h3>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-base font-bold text-[#00A690]">{(reservation.total_price * 49).toFixed(2)}₺</span>
+                <span className="text-base font-bold text-[#00A690]">{reservation.total_price.toFixed(2)}₺</span>
                 <span className="text-xs text-gray-400">×{reservation.quantity}</span>
               </div>
               <div className="text-xs text-gray-500 space-y-0.5">
@@ -394,8 +394,8 @@ const ClientDashboardPage = () => {
                   {reservation.offer_title}
                 </h3>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg font-bold text-[#00A690]">{(reservation.total_price * 49).toFixed(2)}₺</span>
-                  <span className="text-xs text-gray-400">{(reservation.offer_price * 49).toFixed(2)}₺ × {reservation.quantity}</span>
+                  <span className="text-lg font-bold text-[#00A690]">{reservation.total_price.toFixed(2)}₺</span>
+                  <span className="text-xs text-gray-400">{reservation.offer_price.toFixed(2)}₺ × {reservation.quantity}</span>
                 </div>
               </div>
               <div className="space-y-0.5 text-xs text-gray-500">

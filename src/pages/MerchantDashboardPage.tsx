@@ -1044,7 +1044,7 @@ const MerchantDashboardPage = () => {
                 {reservation.offer_title}
               </p>
               <p className="text-xs text-gray-900 font-bold mb-1">
-                💰 {(reservation.total_price * 49).toFixed(2)}₺
+                💰 {reservation.total_price.toFixed(2)}₺
               </p>
               {isPending && (
                 <p className="text-xs text-[#00A690] font-semibold">
@@ -1114,8 +1114,8 @@ const MerchantDashboardPage = () => {
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="flex items-baseline space-x-2">
-                <span className="text-xs text-gray-500 line-through">{(offer.price_before * 49).toFixed(2)} ₺</span>
-                <span className="text-lg font-bold text-[#00A690]">{(offer.price_after * 49).toFixed(2)} ₺</span>
+                <span className="text-xs text-gray-500 line-through">{offer.price_before.toFixed(2)} ₺</span>
+                <span className="text-lg font-bold text-[#00A690]">{offer.price_after.toFixed(2)} ₺</span>
               </div>
               {offer.discount_percent && (
                 <span className="text-xs font-medium text-[#00A690]">

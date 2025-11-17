@@ -337,10 +337,10 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
                 <div className="flex items-baseline gap-3 bg-green-100 rounded-lg p-4 mb-4">
                   <span className="text-3xl md:text-4xl font-bold text-[#00A690]">
-                    {(offer.price_after * 49).toFixed(2)}₺
+                    {offer.price_after.toFixed(2)}₺
                   </span>
                   <span className="text-lg md:text-xl text-gray-400 line-through">
-                    {(offer.price_before * 49).toFixed(2)}₺
+                    {offer.price_before.toFixed(2)}₺
                   </span>
                 </div>
 
@@ -461,10 +461,10 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-bold text-[#00A690] text-lg">
-                            {(otherOffer.price_after * 49).toFixed(2)}₺
+                            {otherOffer.price_after.toFixed(2)}₺
                           </span>
                           <span className="line-through text-gray-400 text-xs">
-                            {(otherOffer.price_before * 49).toFixed(2)}₺
+                            {otherOffer.price_before.toFixed(2)}₺
                           </span>
                           <span className="text-xs text-red-600 font-semibold bg-red-50 px-1.5 py-0.5 rounded">
                             -{getDiscountPercent(otherOffer.price_before, otherOffer.price_after)}%
