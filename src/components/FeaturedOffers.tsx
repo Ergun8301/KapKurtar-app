@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock, MapPin, Star, Heart, ArrowRight, MapPinOff } from 'lucide-react';
 import { getActiveOffers, type Offer } from '../api/offers';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { QuantityModal } from './QuantityModal';
 import { createReservation } from '../api/reservations';
 import { supabase } from '../lib/supabaseClient';
@@ -9,17 +10,16 @@ import { useNearbyOffers } from '../hooks/useNearbyOffers';
 import { useClientLocation } from '../hooks/useClientLocation';
 import { getPublicImageUrl } from '../lib/supabasePublic';
 
-interface FeaturedOffersProps {
-  onOpenDownloadModal?: () => void;
-}
+interface FeaturedOffersProps {}
 
-const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) => {
+const FeaturedOffers: React.FC<FeaturedOffersProps> = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [reserving, setReserving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { location: clientLocation } = useClientLocation(user?.id || null);
 
   // Use nearby offers for authenticated users, all offers for guests
@@ -288,7 +288,7 @@ const FeaturedOffers: React.FC<FeaturedOffersProps> = ({ onOpenDownloadModal }) 
                     </button>
                   ) : (
                     <button
-                      onClick={onOpenDownloadModal}
+                      onClick={() => navigate('/offers')}
                       className="bg-[#00A690] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#F75C00] transition-colors"
                     >
                       Rezerve Etmek İçin Giriş Yapın
