@@ -869,6 +869,8 @@ const MerchantDashboardPage = () => {
         const randomId = crypto.randomUUID();
         const path = `${merchantId}/${randomId}.jpg`;
         logoUrl = await uploadImageToSupabase(logoFile, 'merchant-logos', path);
+      } else if (!logoUrl) {
+        logoUrl = 'https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20rond%20fond%20vert.png';
       }
 
       const { latitude, longitude } = onboardingData;
@@ -1337,7 +1339,7 @@ const MerchantDashboardPage = () => {
                   accept="image/*"
                   onChange={handleLogoChange}
                   className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-sm text-gray-500 cursor-pointer hover:border-[#00A690]"
-                  required={!onboardingData.logo_url}
+                  required={false}
                 />
                 {onboardingData.logo_url && (
                   <div className="mt-3 flex justify-center">
