@@ -11,7 +11,7 @@ const MerchantsHero = () => {
         <img
           src={heroImageUrl}
           alt="KapKurtar İşletmeler"
-          className="w-full h-full object-cover opacity-10"
+          className="w-full h-full object-cover opacity-70"
           onError={(e) => {
             e.currentTarget.src = fallbackImageUrl;
           }}
