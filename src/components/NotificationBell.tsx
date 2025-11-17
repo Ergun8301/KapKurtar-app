@@ -219,7 +219,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
 
         {open && (
           <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-[9999] overflow-hidden">
-            <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50">
+            <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100 bg-[#F5E6D3]">
               <h3 className="text-sm font-bold text-gray-800">
                 Bildirimler {unreadCount > 0 && `(${unreadCount})`}
               </h3>
@@ -249,12 +249,12 @@ export function NotificationBell({ userType }: NotificationBellProps) {
                     onClick={() => handleNotificationClick(n)}
                     className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition-all hover:bg-gray-50 ${
                       !n.is_read
-                        ? `bg-green-100 border-l-4 ${getNotificationBorderColor(n.type)}`
+                        ? `bg-[#F5E6D3] border-l-4 ${getNotificationBorderColor(n.type)}`
                         : "bg-white border-l-4 border-l-transparent"
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-700 flex items-center justify-center text-lg shadow-sm">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#00A690] flex items-center justify-center text-lg shadow-sm">
                         {getNotificationIcon(n.type)}
                       </div>
 
