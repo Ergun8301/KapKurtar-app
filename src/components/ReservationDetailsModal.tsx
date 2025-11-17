@@ -262,7 +262,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
           <div className="border-t border-gray-200 p-4 bg-gray-50 rounded-b-2xl">
             <button
               onClick={onClose}
-              className="w-full py-3 bg-green-100 hover:bg-[#F75C00] text-white rounded-lg font-semibold transition-colors duration-300"
+              className="w-full py-3 bg-[#00A690] hover:bg-[#F75C00] text-white rounded-lg font-semibold transition-colors duration-300"
             >
               Fermer
             </button>
