@@ -23,9 +23,14 @@ const MerchantsHero = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
             <div className="inline-block mb-6">
-              <span className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold border border-white/30">
-                🏪 İşletmeler İçin
-              </span>
+              <span className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold border border-white/30 flex items-center gap-2">
+  <img 
+    src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20rond%20noir%20(1).png" 
+    alt="KapKurtar" 
+    className="w-5 h-5" 
+  />
+  İşletmeler İçin
+</span>
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-6 leading-tight">
