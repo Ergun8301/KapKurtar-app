@@ -130,7 +130,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-t-2xl relative">
+        <div className="bg-gradient-to-r from-[#00A690] to-[#00615F] p-6 rounded-t-2xl relative">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-colors duration-300"
