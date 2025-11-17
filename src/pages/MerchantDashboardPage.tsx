@@ -1081,7 +1081,7 @@ const MerchantDashboardPage = () => {
             {(isCompleted || isExpired) && (
               <button
                 onClick={() => handleArchiveReservation(reservation.reservation_id)}
-                className="w-full flex items-center justify-center gap-1 px-2 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-medium transition-colors duration-300"
+                className="w-full flex items-center justify-center gap-1 px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-medium transition-colors duration-300"
               >
                 <Archive className="w-3 h-3" />
                 Arşivle
