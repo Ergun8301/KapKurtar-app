@@ -51,8 +51,24 @@ const AuthCallbackPage = () => {
           .eq("auth_id", user.id)
           .maybeSingle();
 
+        // 🔐 Pour nouveaux utilisateurs: récupérer rôle depuis flow_states (sécurisé)
+        let roleToUse = role;
+
+        if (!existingProfile && flowToken) {
+          const { data: flowData } = await supabase
+            .from("flow_states")
+            .select("desired_role")
+            .eq("token", flowToken)
+            .single();
+
+          if (flowData?.desired_role) {
+            roleToUse = flowData.desired_role;
+            console.log(`🎟️ Rôle sécurisé depuis flow_state: "${roleToUse}"`);
+          }
+        }
+
         // Préserver le rôle existant pour empêcher le changement non autorisé
-        const finalRole = existingProfile?.role || role;
+        const finalRole = existingProfile?.role || roleToUse;
 
         // Log de sécurité si tentative de changement de rôle
         if (existingProfile?.role && existingProfile.role !== role) {
