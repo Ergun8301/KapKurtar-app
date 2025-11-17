@@ -100,11 +100,11 @@ export const QuantityModal: React.FC<QuantityModalProps> = ({
           <div className="bg-green-100 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-600">Birim fiyat:</span>
-              <span className="font-semibold text-gray-900">{((safePrice ?? 0) * 49).toFixed(2)}₺</span>
+              <span className="font-semibold text-gray-900">{(safePrice ?? 0).toFixed(2)}₺</span>
             </div>
             <div className="flex items-center justify-between border-t border-green-300 pt-2">
               <span className="text-lg font-semibold text-gray-900">Toplam:</span>
-              <span className="text-2xl font-bold text-[#00A690]">{((safePrice ?? 0) * quantity * 49).toFixed(2)}₺</span>
+              <span className="text-2xl font-bold text-[#00A690]">{((safePrice ?? 0) * quantity).toFixed(2)}₺</span>
             </div>
           </div>
 
