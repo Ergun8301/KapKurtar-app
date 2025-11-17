@@ -44,12 +44,27 @@ const AuthCallbackPage = () => {
             .eq("token", flowToken);
         }
 
-        // 2️⃣ Mise à jour / création du profil
+        // 2️⃣ Vérifier si un profil existe déjà pour préserver le rôle
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("auth_id", user.id)
+          .maybeSingle();
+
+        // Préserver le rôle existant pour empêcher le changement non autorisé
+        const finalRole = existingProfile?.role || role;
+
+        // Log de sécurité si tentative de changement de rôle
+        if (existingProfile?.role && existingProfile.role !== role) {
+          console.log(`🔒 Profil existant détecté avec rôle "${existingProfile.role}" - Conservation du rôle original`);
+        }
+
+        // 3️⃣ Mise à jour / création du profil
         const { error: profileError } = await supabase.from("profiles").upsert(
           {
             auth_id: user.id,
             email: user.email,
-            role,
+            role: finalRole,
           },
           { onConflict: "auth_id" }
         );
@@ -60,7 +75,7 @@ const AuthCallbackPage = () => {
           console.log("✅ Profil OK:", user.email);
         }
 
-        // 3️⃣ Vérifier si le profil est complet (pour les clients)
+        // 4️⃣ Vérifier si le profil est complet (pour les clients)
         const { data: profileData, error: fetchError } = await supabase
           .from("profiles")
           .select("role, first_name, last_name")
@@ -71,11 +86,12 @@ const AuthCallbackPage = () => {
           console.warn("⚠️ Impossible de récupérer le profil:", fetchError.message);
         }
 
-        // 4️⃣ Redirection selon rôle ET complétude du profil
+        // 5️⃣ Redirection selon rôle ET complétude du profil
         setIsRedirecting(true);
-        if (role === "merchant") {
+        const actualRole = profileData?.role || finalRole;
+        if (actualRole === "merchant") {
           navigate("/merchant/dashboard");
-        } else if (role === "client") {
+        } else if (actualRole === "client") {
           // ✅ Vérifier si le profil client est complet
           if (!profileData?.first_name || !profileData?.last_name) {
             console.log("⚠️ Profil incomplet → redirection vers /customer/auth");
