@@ -118,325 +118,18 @@ const ForMerchantsPage = () => {
       {/* Hero Section */}
       <MerchantsHero />
 
-      {/* Calculatrice Interactive */}
-      <div id="calculator" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="bg-gradient-to-br from-[#00A690] to-[#008C7A] rounded-2xl shadow-2xl overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-
-            {/* Gauche - Photo Impact */}
-            <div className="relative h-64 lg:h-auto">
-              <img
-                src="https://images.pexels.com/photos/3737581/pexels-photo-3737581.jpeg?auto=compress&cs=tinysrgb&w=800"
-                alt="Gaspillage alimentaire"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center p-8">
-                <div className="text-white">
-                  <h3 className="text-3xl font-bold mb-4">Dur Gıda İsrafına</h3>
-                  <p className="text-lg text-white/90 mb-4">
-                    Her gün çöpe atılan ürünlerinizi gelire dönüştürün
-                  </p>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-                      🌍 Çevreyi koruyun
-                    </span>
-                    <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-                      💰 Para kazanın
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Droite - Calculatrice */}
-            <div className="p-8 lg:p-12 bg-white">
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                🧮 Kazanç Hesaplayıcı
-              </h2>
-              <p className="text-gray-600 mb-8">
-                Günlük kayıplarınızı gelire dönüştürün
-              </p>
-
-              <CalculatorWidget />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Exemples Concrets par Type de Commerce */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-white">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            💼 İşletme Tipi'nize Göre Kazanç Örnekleri
-          </h2>
-          <p className="text-lg text-gray-600">
-            Sizin gibi işletmeler ne kadar kazanıyor?
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-
-          {/* Exemple 1 - Petit Boulanger */}
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 border-2 border-amber-200 hover:shadow-xl transition-shadow">
-            <div className="text-center mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
-                🥖
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Küçük Fırın</h3>
-              <p className="text-sm text-gray-600">Konyaaltı, Antalya</p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="bg-white/80 rounded-lg p-4">
-                <p className="text-xs text-gray-600 mb-1">Günlük atılan ürün</p>
-                <p className="text-lg font-bold text-gray-900">15 ekmek × 20 TRY</p>
-              </div>
-
-              <div className="bg-red-100 rounded-lg p-4">
-                <p className="text-xs text-red-700 mb-1">❌ Önceki kayıp</p>
-                <p className="text-2xl font-bold text-red-600">7,500 TRY/ay</p>
-              </div>
-
-              <div className="bg-green-100 rounded-lg p-4">
-                <p className="text-xs text-green-700 mb-1">✅ KapKurtar ile kazanç</p>
-                <p className="text-2xl font-bold text-green-600">+6,000 TRY/ay</p>
-                <p className="text-xs text-green-600 mt-1">(80% sizin)</p>
-              </div>
-
-              <div className="bg-gradient-to-r from-[#00A690] to-[#008C7A] rounded-lg p-4 text-white text-center">
-                <p className="text-sm mb-1">Yıllık kazanç</p>
-                <p className="text-3xl font-bold">72,000 TRY</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Exemple 2 - Restaurant Moyen */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 border-2 border-green-200 hover:shadow-xl transition-shadow ring-4 ring-[#F75C00] ring-offset-2 relative">
-            <div className="absolute top-2 right-2">
-              <span className="bg-[#F75C00] text-white text-xs font-bold px-3 py-1 rounded-full">
-                EN POPÜLER
-              </span>
-            </div>
-
-            <div className="text-center mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
-                🍽️
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Orta Boy Restoran</h3>
-              <p className="text-sm text-gray-600">Muratpaşa, Antalya</p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="bg-white/80 rounded-lg p-4">
-                <p className="text-xs text-gray-600 mb-1">Günlük atılan porsiyon</p>
-                <p className="text-lg font-bold text-gray-900">20 porsiyon × 80 TRY</p>
-              </div>
-
-              <div className="bg-red-100 rounded-lg p-4">
-                <p className="text-xs text-red-700 mb-1">❌ Önceki kayıp</p>
-                <p className="text-2xl font-bold text-red-600">40,000 TRY/ay</p>
-              </div>
-
-              <div className="bg-green-100 rounded-lg p-4">
-                <p className="text-xs text-green-700 mb-1">✅ KapKurtar ile kazanç</p>
-                <p className="text-2xl font-bold text-green-600">+32,000 TRY/ay</p>
-                <p className="text-xs text-green-600 mt-1">(80% sizin)</p>
-              </div>
-
-              <div className="bg-gradient-to-r from-[#00A690] to-[#008C7A] rounded-lg p-4 text-white text-center">
-                <p className="text-sm mb-1">Yıllık kazanç</p>
-                <p className="text-3xl font-bold">384,000 TRY</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Exemple 3 - Grand Supermarché */}
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border-2 border-blue-200 hover:shadow-xl transition-shadow">
-            <div className="text-center mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
-                🏪
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Süpermarket</h3>
-              <p className="text-sm text-gray-600">Lara, Antalya</p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="bg-white/80 rounded-lg p-4">
-                <p className="text-xs text-gray-600 mb-1">Günlük atılan ürün</p>
-                <p className="text-lg font-bold text-gray-900">50 ürün × 120 TRY</p>
-              </div>
-
-              <div className="bg-red-100 rounded-lg p-4">
-                <p className="text-xs text-red-700 mb-1">❌ Önceki kayıp</p>
-                <p className="text-2xl font-bold text-red-600">150,000 TRY/ay</p>
-              </div>
-
-              <div className="bg-green-100 rounded-lg p-4">
-                <p className="text-xs text-green-700 mb-1">✅ KapKurtar ile kazanç</p>
-                <p className="text-2xl font-bold text-green-600">+120,000 TRY/ay</p>
-                <p className="text-xs text-green-600 mt-1">(80% sizin)</p>
-              </div>
-
-              <div className="bg-gradient-to-r from-[#00A690] to-[#008C7A] rounded-lg p-4 text-white text-center">
-                <p className="text-sm mb-1">Yıllık kazanç</p>
-                <p className="text-3xl font-bold">1,440,000 TRY</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Call to action sous les exemples */}
-        <div className="text-center mt-12">
-          <p className="text-lg text-gray-600 mb-6">
-            Hangisine benziyorsunuz? Hemen hesaplayın! 👆
-          </p>
-          <a
-            href="#calculator"
-            className="inline-block bg-[#F75C00] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#FF6B1A] transition-colors shadow-lg"
-          >
-            Kendi Kazancımı Hesapla 🧮
-          </a>
-        </div>
-      </div>
-
-      {/* FAQ Commission */}
-      <div className="bg-[#F7F2E7] py-16">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Comment ça marche - Design minimal */}
+      <div className="bg-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              ❓ Neden Abonelik Değil, Komisyon?
-            </h2>
-            <p className="text-lg text-gray-600">
-              Başarınız bizim başarımız - Siz kazanırsanız biz kazanırız
-            </p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Nasıl Çalışır?</h2>
+            <p className="text-lg text-gray-600">4 basit adımda gelir elde edin</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Abonnement */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border-2 border-gray-200">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
-                  <span className="text-2xl">❌</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">Abonelik Modeli</h3>
-              </div>
-              <ul className="space-y-3 text-gray-600">
-                <li className="flex items-start">
-                  <span className="text-red-500 mr-2">•</span>
-                  Sabit aylık maliyet (500-1000 TRY)
-                </li>
-                <li className="flex items-start">
-                  <span className="text-red-500 mr-2">•</span>
-                  Az satış olsa bile ödeme
-                </li>
-                <li className="flex items-start">
-                  <span className="text-red-500 mr-2">•</span>
-                  Mali baskı ve risk
-                </li>
-                <li className="flex items-start">
-                  <span className="text-red-500 mr-2">•</span>
-                  Küçük işletmeler için ağır
-                </li>
-              </ul>
-            </div>
-
-            {/* Commission */}
-            <div className="bg-gradient-to-br from-[#00A690] to-[#008C7A] rounded-2xl p-8 shadow-2xl text-white">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mr-4">
-                  <span className="text-2xl">✅</span>
-                </div>
-                <h3 className="text-xl font-bold">Komisyon Modeli</h3>
-              </div>
-              <ul className="space-y-3">
-                <li className="flex items-start">
-                  <span className="text-[#F7F2E7] mr-2">•</span>
-                  Sadece sattığınızda ödeme (%20)
-                </li>
-                <li className="flex items-start">
-                  <span className="text-[#F7F2E7] mr-2">•</span>
-                  Satış yok = Maliyet yok
-                </li>
-                <li className="flex items-start">
-                  <span className="text-[#F7F2E7] mr-2">•</span>
-                  Sıfır risk - Tam güvenlik
-                </li>
-                <li className="flex items-start">
-                  <span className="text-[#F7F2E7] mr-2">•</span>
-                  Başarınızla ölçeklenir
-                </li>
-              </ul>
-
-              <div className="mt-6 pt-6 border-t border-white/20">
-                <p className="text-sm font-semibold mb-2">Örnek:</p>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Satış: 10,000 TRY</span>
-                    <span className="font-bold">✓</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Size: 8,000 TRY (80%)</span>
-                    <span className="font-bold text-[#F7F2E7]">💰</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Komisyon: 2,000 TRY (20%)</span>
-                    <span className="font-bold">✓</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Impact écologique */}
-          <div className="mt-12 bg-white rounded-2xl p-8 shadow-lg">
-            <div className="flex items-center mb-6">
-              <img
-                src="https://images.pexels.com/photos/1072179/pexels-photo-1072179.jpeg?auto=compress&cs=tinysrgb&w=400"
-                alt="Nature"
-                className="w-24 h-24 rounded-full object-cover mr-6"
-              />
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  🌍 Para Kazanın + Dünyayı Kurtarın
-                </h3>
-                <p className="text-gray-600">
-                  Her kaydettiğiniz ürün çevreye katkı sağlar
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-[#00A690] mb-2">-150 kg</div>
-                <p className="text-sm text-gray-600">CO₂ tasarrufu/yıl</p>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-[#00A690] mb-2">-12,000 L</div>
-                <p className="text-sm text-gray-600">Su tasarrufu/yıl</p>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-[#00A690] mb-2">= 15 🌳</div>
-                <p className="text-sm text-gray-600">Ağaç eşdeğeri</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* How it Works - Version améliorée */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Nasıl Çalışır?</h2>
-          <p className="text-lg text-gray-600">4 basit adımda gelir elde edin</p>
-        </div>
-
-        <div className="relative">
-          {/* Ligne de connexion */}
-          <div className="hidden md:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-[#00A690] via-[#F75C00] to-[#00A690] transform -translate-y-1/2"></div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Étape 1 */}
-            <div className="relative bg-white rounded-2xl p-6 shadow-lg text-center hover:shadow-2xl transition-shadow">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#00A690] to-[#008C7A] rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
+            <div className="bg-white border border-gray-200 rounded-xl p-6 text-center hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-[#00A690] rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
                 1
               </div>
               <h3 className="font-bold text-lg text-gray-900 mb-2">Kayıt Olun</h3>
@@ -444,8 +137,8 @@ const ForMerchantsPage = () => {
             </div>
 
             {/* Étape 2 */}
-            <div className="relative bg-white rounded-2xl p-6 shadow-lg text-center hover:shadow-2xl transition-shadow">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#F75C00] to-[#FF6B1A] rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
+            <div className="bg-white border border-gray-200 rounded-xl p-6 text-center hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-[#F75C00] rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
                 2
               </div>
               <h3 className="font-bold text-lg text-gray-900 mb-2">Teklif Yayınlayın</h3>
@@ -453,8 +146,8 @@ const ForMerchantsPage = () => {
             </div>
 
             {/* Étape 3 */}
-            <div className="relative bg-white rounded-2xl p-6 shadow-lg text-center hover:shadow-2xl transition-shadow">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
+            <div className="bg-white border border-gray-200 rounded-xl p-6 text-center hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-[#00A690] rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
                 3
               </div>
               <h3 className="font-bold text-lg text-gray-900 mb-2">Müşteri Rezerve Eder</h3>
@@ -462,8 +155,8 @@ const ForMerchantsPage = () => {
             </div>
 
             {/* Étape 4 */}
-            <div className="relative bg-white rounded-2xl p-6 shadow-lg text-center hover:shadow-2xl transition-shadow">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold shadow-lg">
+            <div className="bg-white border border-gray-200 rounded-xl p-6 text-center hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-[#F75C00] rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
                 4
               </div>
               <h3 className="font-bold text-lg text-gray-900 mb-2">Para Kazanın</h3>
@@ -473,11 +166,302 @@ const ForMerchantsPage = () => {
         </div>
       </div>
 
+      {/* Calculatrice Interactive */}
+      <div className="bg-gray-50 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+
+              {/* Gauche - Photo */}
+              <div className="relative h-64 lg:h-auto">
+                <img
+                  src="https://images.pexels.com/photos/205961/pexels-photo-205961.jpeg?auto=compress&cs=tinysrgb&w=800"
+                  alt="Gaspillage alimentaire"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex items-center p-8">
+                  <div className="text-white">
+                    <h3 className="text-3xl font-bold mb-4">Dur Gıda İsrafına</h3>
+                    <p className="text-lg text-white/90 mb-4">
+                      Her gün çöpe atılan ürünlerinizi gelire dönüştürün
+                    </p>
+                    <div className="flex flex-wrap gap-2 text-sm">
+                      <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                        🌍 Çevreyi koruyun
+                      </span>
+                      <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                        💰 Para kazanın
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Droite - Calculatrice */}
+              <div className="p-8 lg:p-12 bg-white">
+                <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                  🧮 Kazanç Hesaplayıcı
+                </h2>
+                <p className="text-gray-600 mb-8">
+                  Günlük kayıplarınızı gelire dönüştürün
+                </p>
+
+                <CalculatorWidget />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Exemples Types - Design sobre */}
+      <div className="bg-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              💼 İşletme Tipine Göre Kazanç Örnekleri
+            </h2>
+            <p className="text-lg text-gray-600">
+              Sizin gibi işletmeler ne kadar kazanıyor?
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+            {/* Exemple 1 - Petit Boulanger */}
+            <div className="bg-white border-2 border-gray-200 rounded-xl p-8 hover:border-[#00A690] transition-colors">
+              <div className="text-center mb-6">
+                <div className="text-6xl mb-4">🥖</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-1">Küçük Fırın</h3>
+                <p className="text-sm text-gray-500">Konyaaltı, Antalya</p>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="text-center py-2 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-600 mb-1">Günlük atılan ürün</p>
+                  <p className="font-semibold text-gray-900">15 ekmek × 20 TRY</p>
+                </div>
+
+                <div className="text-center py-3 bg-red-50 rounded-lg border-l-4 border-red-400">
+                  <p className="text-xs text-red-600 mb-1">❌ Önceki kayıp</p>
+                  <p className="text-xl font-bold text-red-600">7,500 TRY/ay</p>
+                </div>
+
+                <div className="text-center py-3 bg-green-50 rounded-lg border-l-4 border-green-400">
+                  <p className="text-xs text-green-600 mb-1">✅ KapKurtar ile</p>
+                  <p className="text-xl font-bold text-green-600">+6,000 TRY/ay</p>
+                  <p className="text-xs text-green-600">(80% sizin)</p>
+                </div>
+              </div>
+
+              <div className="text-center py-4 bg-[#00A690] rounded-lg text-white">
+                <p className="text-xs mb-1">Yıllık kazanç</p>
+                <p className="text-2xl font-bold">72,000 TRY</p>
+              </div>
+            </div>
+
+            {/* Exemple 2 - Restaurant Moyen */}
+            <div className="bg-white border-2 border-gray-200 rounded-xl p-8 hover:border-[#00A690] transition-colors">
+              <div className="text-center mb-6">
+                <div className="text-6xl mb-4">🍽️</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-1">Orta Boy Restoran</h3>
+                <p className="text-sm text-gray-500">Muratpaşa, Antalya</p>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="text-center py-2 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-600 mb-1">Günlük atılan porsiyon</p>
+                  <p className="font-semibold text-gray-900">20 porsiyon × 80 TRY</p>
+                </div>
+
+                <div className="text-center py-3 bg-red-50 rounded-lg border-l-4 border-red-400">
+                  <p className="text-xs text-red-600 mb-1">❌ Önceki kayıp</p>
+                  <p className="text-xl font-bold text-red-600">40,000 TRY/ay</p>
+                </div>
+
+                <div className="text-center py-3 bg-green-50 rounded-lg border-l-4 border-green-400">
+                  <p className="text-xs text-green-600 mb-1">✅ KapKurtar ile</p>
+                  <p className="text-xl font-bold text-green-600">+32,000 TRY/ay</p>
+                  <p className="text-xs text-green-600">(80% sizin)</p>
+                </div>
+              </div>
+
+              <div className="text-center py-4 bg-[#00A690] rounded-lg text-white">
+                <p className="text-xs mb-1">Yıllık kazanç</p>
+                <p className="text-2xl font-bold">384,000 TRY</p>
+              </div>
+            </div>
+
+            {/* Exemple 3 - Grand Supermarché */}
+            <div className="bg-white border-2 border-gray-200 rounded-xl p-8 hover:border-[#00A690] transition-colors">
+              <div className="text-center mb-6">
+                <div className="text-6xl mb-4">🏪</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-1">Süpermarket</h3>
+                <p className="text-sm text-gray-500">Lara, Antalya</p>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="text-center py-2 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-600 mb-1">Günlük atılan ürün</p>
+                  <p className="font-semibold text-gray-900">50 ürün × 120 TRY</p>
+                </div>
+
+                <div className="text-center py-3 bg-red-50 rounded-lg border-l-4 border-red-400">
+                  <p className="text-xs text-red-600 mb-1">❌ Önceki kayıp</p>
+                  <p className="text-xl font-bold text-red-600">150,000 TRY/ay</p>
+                </div>
+
+                <div className="text-center py-3 bg-green-50 rounded-lg border-l-4 border-green-400">
+                  <p className="text-xs text-green-600 mb-1">✅ KapKurtar ile</p>
+                  <p className="text-xl font-bold text-green-600">+120,000 TRY/ay</p>
+                  <p className="text-xs text-green-600">(80% sizin)</p>
+                </div>
+              </div>
+
+              <div className="text-center py-4 bg-[#00A690] rounded-lg text-white">
+                <p className="text-xs mb-1">Yıllık kazanç</p>
+                <p className="text-2xl font-bold">1,440,000 TRY</p>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA sous les exemples */}
+          <div className="text-center mt-12">
+            <p className="text-lg text-gray-600 mb-6">
+              Kendi kazancınızı hesaplamak ister misiniz? 👆
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Pricing */}
       <PricingSection3Plans />
 
+      {/* FAQ Commission - Design cohérent */}
+      <div className="bg-gray-50 py-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              ❓ Neden Abonelik Değil, Komisyon?
+            </h2>
+            <p className="text-lg text-gray-600">
+              Başarınız bizim başarımız - Siz kazanırsanız biz kazanırız
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            {/* Abonnement - Même style que Commission */}
+            <div className="bg-white border-2 border-gray-200 rounded-xl p-8">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-2xl">❌</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Abonelik Modeli</h3>
+              </div>
+              <ul className="space-y-3 text-gray-600">
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-3 mt-1">•</span>
+                  <span>Sabit aylık maliyet (500-1000 TRY)</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-3 mt-1">•</span>
+                  <span>Az satış olsa bile ödeme</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-3 mt-1">•</span>
+                  <span>Mali baskı ve risk</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-3 mt-1">•</span>
+                  <span>Küçük işletmeler için ağır</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Commission - Même style mais avec border verte */}
+            <div className="bg-white border-2 border-[#00A690] rounded-xl p-8">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-[#00A690] rounded-full flex items-center justify-center mr-4">
+                  <span className="text-2xl text-white">✅</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Komisyon Modeli</h3>
+              </div>
+              <ul className="space-y-3 text-gray-700">
+                <li className="flex items-start">
+                  <span className="text-[#00A690] mr-3 mt-1">•</span>
+                  <span>Sadece sattığınızda ödeme (%20)</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-[#00A690] mr-3 mt-1">•</span>
+                  <span>Satış yok = Maliyet yok</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-[#00A690] mr-3 mt-1">•</span>
+                  <span>Sıfır risk - Tam güvenlik</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-[#00A690] mr-3 mt-1">•</span>
+                  <span>Başarınızla ölçeklenir</span>
+                </li>
+              </ul>
+
+              {/* Exemple dans la card */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <p className="text-sm font-semibold mb-3 text-gray-700">Örnek:</p>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Satış: 10,000 TRY</span>
+                    <span className="font-bold text-gray-900">✓</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Size: 8,000 TRY (80%)</span>
+                    <span className="text-2xl">💰</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Komisyon: 2,000 TRY (20%)</span>
+                    <span className="font-bold text-gray-900">✓</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Impact écologique */}
+          <div className="bg-white border border-gray-200 rounded-xl p-8">
+            <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
+              <img
+                src="https://images.pexels.com/photos/1072179/pexels-photo-1072179.jpeg?auto=compress&cs=tinysrgb&w=200"
+                alt="Nature"
+                className="w-24 h-24 rounded-full object-cover"
+              />
+              <div className="text-center md:text-left">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  🌍 Para Kazanın + Dünyayı Kurtarın
+                </h3>
+                <p className="text-gray-600">
+                  Her kaydettiğiniz ürün çevreye katkı sağlar
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <div className="text-3xl font-bold text-[#00A690] mb-2">-150 kg</div>
+                <p className="text-sm text-gray-600">CO₂ tasarrufu/yıl</p>
+              </div>
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <div className="text-3xl font-bold text-[#00A690] mb-2">-12,000 L</div>
+                <p className="text-sm text-gray-600">Su tasarrufu/yıl</p>
+              </div>
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <div className="text-3xl font-bold text-[#00A690] mb-2">= 15 🌳</div>
+                <p className="text-sm text-gray-600">Ağaç eşdeğeri</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {/* Testimonials - Version améliorée */}
+        {/* Testimonials */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Bize Güvenenler</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
