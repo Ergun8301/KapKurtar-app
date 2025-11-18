@@ -702,7 +702,7 @@ export default function OffersPage() {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-100px)] bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-kapkurtar-green mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00A690] mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement de la carte...</p>
         </div>
       </div>
@@ -736,7 +736,7 @@ export default function OffersPage() {
         </h3>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`font-bold text-kapkurtar-green ${isMobile ? "text-base" : "text-lg"}`}>
+          <span className={`font-bold text-[#00A690] ${isMobile ? "text-base" : "text-lg"}`}>
             {offer.price_after.toFixed(2)}₺
           </span>
           <span className={`line-through text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
@@ -811,7 +811,7 @@ export default function OffersPage() {
         )}
 
         {viewMode === "nearby" && offer.distance_meters > 0 && (
-          <p className={`text-kapkurtar-green font-semibold ${isMobile ? "text-[10px]" : "text-xs"}`}>
+          <p className={`text-[#00A690] font-semibold ${isMobile ? "text-[10px]" : "text-xs"}`}>
             {(offer.distance_meters / 1000).toFixed(1)} km
           </p>
         )}
@@ -825,14 +825,14 @@ export default function OffersPage() {
         <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
         {viewMode === "nearby" && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[900] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-kapkurtar-green/20">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[900] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-[#00A690]/20">
             <input
               type="range"
               min={1}
               max={30}
               value={radiusKm}
               onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
-              className="w-32 md:w-36 accent-kapkurtar-green cursor-pointer focus:outline-none"
+              className="w-32 md:w-36 accent-[#00A690] cursor-pointer focus:outline-none"
             />
             <span className="text-sm text-gray-900 font-bold whitespace-nowrap">{radiusKm} km</span>
           </div>
@@ -845,8 +845,8 @@ export default function OffersPage() {
             <button
               className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
                 viewMode === "nearby"
-                  ? "bg-white text-kapkurtar-green shadow"
-                  : "text-gray-500 hover:text-kapkurtar-green"
+                  ? "bg-white text-[#00A690] shadow"
+                  : "text-gray-500 hover:text-[#00A690]"
               }`}
               onClick={() => handleViewModeChange("nearby")}
             >
@@ -855,8 +855,8 @@ export default function OffersPage() {
             <button
               className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
                 viewMode === "all"
-                  ? "bg-white text-kapkurtar-green shadow"
-                  : "text-gray-500 hover:text-kapkurtar-green"
+                  ? "bg-white text-[#00A690] shadow"
+                  : "text-gray-500 hover:text-[#00A690]"
               }`}
               onClick={() => handleViewModeChange("all")}
             >

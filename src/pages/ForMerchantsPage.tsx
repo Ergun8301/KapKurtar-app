@@ -41,7 +41,7 @@ const ForMerchantsPage = () => {
         {/* Benefits Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           <div className="bg-white rounded-xl p-6 shadow-lg text-center">
-            <div className="bg-kapkurtar-green rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <div className="bg-[#00A690] rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
               <TrendingUp className="w-8 h-8 text-white" />
             </div>
             <h3 className="font-bold text-lg text-gray-900 mb-2">+%30 Gelir</h3>
@@ -49,8 +49,8 @@ const ForMerchantsPage = () => {
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-lg text-center">
-            <div className="bg-kapkurtar-yellow rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-8 h-8 text-kapkurtar-gray" />
+            <div className="bg-[#F75C00] rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-8 h-8 text-white" />
             </div>
             <h3 className="font-bold text-lg text-gray-900 mb-2">2 Dakika</h3>
             <p className="text-sm text-gray-600">Akıllı telefonunuzdan teklif yayınlamak için</p>
@@ -78,7 +78,7 @@ const ForMerchantsPage = () => {
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Nasıl Çalışır?</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="bg-kapkurtar-green text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+              <div className="bg-[#00A690] text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 1
               </div>
               <h3 className="font-bold text-lg text-gray-900 mb-2">Kayıt</h3>
@@ -86,7 +86,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="text-center">
-              <div className="bg-kapkurtar-green text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+              <div className="bg-[#00A690] text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 2
               </div>
               <h3 className="font-bold text-lg text-gray-900 mb-2">Yayınlama</h3>
@@ -94,7 +94,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="text-center">
-              <div className="bg-kapkurtar-green text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+              <div className="bg-[#00A690] text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 3
               </div>
               <h3 className="font-bold text-lg text-gray-900 mb-2">Rezervasyon</h3>
@@ -102,7 +102,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="text-center">
-              <div className="bg-kapkurtar-green text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+              <div className="bg-[#00A690] text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 4
               </div>
               <h3 className="font-bold text-lg text-gray-900 mb-2">Teslim Alma</h3>
@@ -123,7 +123,7 @@ const ForMerchantsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <div className="flex items-center mb-4">
-                <div className="bg-kapkurtar-green text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl mr-3">
+                <div className="bg-[#00A690] text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl mr-3">
                   A
                 </div>
                 <div>
@@ -139,7 +139,7 @@ const ForMerchantsPage = () => {
 
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <div className="flex items-center mb-4">
-                <div className="bg-kapkurtar-yellow text-kapkurtar-gray rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl mr-3">
+                <div className="bg-[#F75C00] text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl mr-3">
                   F
                 </div>
                 <div>
@@ -172,11 +172,11 @@ const ForMerchantsPage = () => {
         </div>
 
         {/* Features List */}
-        <div className="bg-kapkurtar-green-light rounded-xl p-8 md:p-12 mb-16">
+        <div className="bg-[#F7F2E7] rounded-xl p-8 md:p-12 mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">İhtiyacınız Olan Tüm Özellikler</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-kapkurtar-green flex-shrink-0 mr-3 mt-1" />
+              <CheckCircle className="w-6 h-6 text-[#00A690] flex-shrink-0 mr-3 mt-1" />
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">Basit Arayüz</h3>
                 <p className="text-sm text-gray-700">Sezgisel mobil uygulama, eğitim gerektirmez</p>
@@ -184,7 +184,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-kapkurtar-green flex-shrink-0 mr-3 mt-1" />
+              <CheckCircle className="w-6 h-6 text-[#00A690] flex-shrink-0 mr-3 mt-1" />
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">Güvenli Ödeme</h3>
                 <p className="text-sm text-gray-700">Müşteriler online öder, otomatik olarak ödeme alırsınız</p>
@@ -192,7 +192,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-kapkurtar-green flex-shrink-0 mr-3 mt-1" />
+              <CheckCircle className="w-6 h-6 text-[#00A690] flex-shrink-0 mr-3 mt-1" />
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">Gerçek Zamanlı Bildirimler</h3>
                 <p className="text-sm text-gray-700">Sipariş verilir verilmez bildirim alın</p>
@@ -200,7 +200,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-kapkurtar-green flex-shrink-0 mr-3 mt-1" />
+              <CheckCircle className="w-6 h-6 text-[#00A690] flex-shrink-0 mr-3 mt-1" />
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">Detaylı İstatistikler</h3>
                 <p className="text-sm text-gray-700">Satışlarınızı ve israf önleme etkinizi takip edin</p>
@@ -208,7 +208,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-kapkurtar-green flex-shrink-0 mr-3 mt-1" />
+              <CheckCircle className="w-6 h-6 text-[#00A690] flex-shrink-0 mr-3 mt-1" />
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">Esnek Saatler</h3>
                 <p className="text-sm text-gray-700">Teslim alma zamanlarını istediğiniz gibi belirleyin</p>
@@ -216,7 +216,7 @@ const ForMerchantsPage = () => {
             </div>
 
             <div className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-kapkurtar-green flex-shrink-0 mr-3 mt-1" />
+              <CheckCircle className="w-6 h-6 text-[#00A690] flex-shrink-0 mr-3 mt-1" />
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">Hızlı Destek</h3>
                 <p className="text-sm text-gray-700">Ekibimiz her adımda size eşlik eder</p>
@@ -228,7 +228,7 @@ const ForMerchantsPage = () => {
       </div>
 
       {/* Download App Section */}
-      <div className="bg-gradient-to-br from-kapkurtar-green-light to-white py-16">
+      <div className="bg-gradient-to-br from-[#F7F2E7] to-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
             📱 Mobil Uygulamamızı İndirin
@@ -260,15 +260,15 @@ const ForMerchantsPage = () => {
       </div>
 
       {/* Final CTA */}
-      <div className="bg-kapkurtar-green text-white py-16">
+      <div className="bg-[#00A690] text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">Sorularınız mı var?</h2>
-          <p className="text-xl text-kapkurtar-green-light mb-8">
+          <p className="text-xl text-[#F7F2E7] mb-8">
             Ekibimiz size yardımcı olmaktan mutluluk duyar
           </p>
           <a
             href="/contact"
-            className="inline-block bg-white text-kapkurtar-green px-8 py-4 rounded-lg hover:bg-kapkurtar-green-light transition-colors font-bold text-lg"
+            className="inline-block bg-white text-[#00A690] px-8 py-4 rounded-lg hover:bg-[#F7F2E7] transition-colors font-bold text-lg"
           >
             Bize Ulaşın
           </a>
