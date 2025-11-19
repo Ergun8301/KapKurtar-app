@@ -72,10 +72,6 @@ const HeroBanner = () => {
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
             Tasarruf Edin, <span className="text-[#F75C00]">Gıdayı Kurtarın</span>, <br />Gezegeni Kurtarın
           </h1>
-          <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Yerel restoranlardan inanılmaz fırsatlar keşfedin ve gıda israfını azaltmaya yardımcı olun.
-            Bugün gıda kurtarma hareketine katılın!
-          </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
             {/* ✅ Corrected redirection here */}
