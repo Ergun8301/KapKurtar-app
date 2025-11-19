@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="flex justify-center">
             <img
-              src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/Large.png"
+              src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/KK%20fond%20vert%20(3)%20(1).png"
               alt="KapKurtar"
               className="h-auto w-full object-cover"
 style={{ maxHeight: '150px' }}
