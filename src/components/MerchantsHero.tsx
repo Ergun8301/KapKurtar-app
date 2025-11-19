@@ -6,7 +6,7 @@ const MerchantsHero = () => {
   const fallbackImageUrl = "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1200";
 
   return (
-    <div className="relative bg-gradient-to-br from-[#00A690] via-[#00B89F] to-[#008C7A] text-white overflow-hidden pb-16">
+    <div className="relative bg-gradient-to-br from-[#00A690] via-[#00B89F] to-[#008C7A] text-white overflow-hidden">
       <div className="absolute inset-0">
         <img
           src={heroImageUrl}
