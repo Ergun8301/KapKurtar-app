@@ -33,7 +33,7 @@ const HomePage = () => {
       <div className="bg-[#F3EACE] py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="flex justify-center mb-6">
-            <div className="bg-[#00615F] rounded-full p-4">
+            <div className="bg-[#fffff0] rounded-full p-4">
               <Smartphone className="w-12 h-12 text-white" />
             </div>
           </div>
