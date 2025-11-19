@@ -73,7 +73,7 @@ const HeroBanner = () => {
             Tasarruf Edin, <span className="text-[#F75C00]">Gıdayı Kurtarın</span>, <br />Gezegeni Kurtarın
           </h1> 
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
             {/* ✅ Corrected redirection here */}
             <a
               href="/offers"
