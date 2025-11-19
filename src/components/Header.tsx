@@ -183,7 +183,7 @@ const Header = () => {
               </>
             ) : (
               <div className="relative" ref={userMenuRef}>
-                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="bg-[#FFFFF0] text-[#00A690] px-4 py-2 rounded-lg font-bold hover:bg-[#F75C00] hover:text-white transition-colors duration-300 inline-flex items-center">
+                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="bg-[#FFFFF0] text-[#00A690] px-3 py-2 rounded-lg text-sm font-bold hover:bg-[#F75C00] hover:text-white transition-colors duration-300 inline-flex items-center whitespace-nowrap">
                   Giriş Yap
                   <ChevronDown className="w-4 h-4 ml-1" />
                 </button>
