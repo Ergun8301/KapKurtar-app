@@ -45,7 +45,7 @@ const HomePage = () => {
           </p>
           <button
             onClick={() => setShowDownloadModal(true)}
-            className="bg-[#F75C00] text-white px-8 py-4 rounded-lg font-bold hover:bg-[#FF7A29] transition-colors duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+            className="bg-[#fffff0] text-white px-8 py-4 rounded-lg font-bold hover:bg-[#FF7A29] transition-colors duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
           >
             Şimdi İndir
           </button>
