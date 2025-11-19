@@ -12,8 +12,8 @@ const Footer = () => {
             <img
               src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/Large.png"
               alt="KapKurtar"
-              className="h-auto w-full max-w-5xl object-contain"
-              style={{ maxHeight: '200px' }}
+              className="h-auto w-full object-cover"
+style={{ maxHeight: '150px' }}
             />
           </div>
         </div>
