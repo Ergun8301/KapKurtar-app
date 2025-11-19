@@ -19,7 +19,7 @@ const MerchantsHero = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-[#00A690]/90 to-[#008C7A]/80"></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
             <div className="inline-block mb-6">
