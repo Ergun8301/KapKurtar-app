@@ -7,6 +7,7 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
+import { HelmetProvider } from 'react-helmet-async';
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop"; // ← AJOUTE CETTE LIGNE
@@ -40,6 +41,7 @@ import ContactPage from "./pages/ContactPage";
 import AboutPage from "./pages/AboutPage";
 import ForMerchantsPage from "./pages/ForMerchantsPage";
 import LegalPage from "./pages/LegalPage";
+import CityPage from "./pages/CityPage";
 
 // ✅ Articles blog
 import BlogArticle4 from "./pages/BlogArticle4";
@@ -114,14 +116,15 @@ function SessionRedirect() {
 
 function App() {
   return (
-    <AddProductProvider>
-      <Router>
-        <div className="flex flex-col min-h-screen bg-white">
-          <Header />
-          <ScrollToTop />
-          <main className="flex-grow">
-            <SessionRedirect />
-            <Routes>
+    <HelmetProvider>
+      <AddProductProvider>
+        <Router>
+          <div className="flex flex-col min-h-screen bg-white">
+            <Header />
+            <ScrollToTop />
+            <main className="flex-grow">
+              <SessionRedirect />
+              <Routes>
               {/* 🏠 Accueil */}
               <Route path="/" element={<HomePage />} />
 
@@ -162,7 +165,14 @@ function App() {
               <Route path="/about" element={<AboutPage />} />
               <Route path="/for-merchants" element={<ForMerchantsPage />} />
               <Route path="/legal" element={<LegalPage />} />
-              
+
+              {/* 🏙️ Pages villes (SEO local) */}
+              <Route path="/istanbul" element={<CityPage city="istanbul" cityTurkish="İstanbul" />} />
+              <Route path="/ankara" element={<CityPage city="ankara" cityTurkish="Ankara" />} />
+              <Route path="/izmir" element={<CityPage city="izmir" cityTurkish="İzmir" />} />
+              <Route path="/antalya" element={<CityPage city="antalya" cityTurkish="Antalya" />} />
+              <Route path="/bursa" element={<CityPage city="bursa" cityTurkish="Bursa" />} />
+
               {/* 📰 Articles blog individuels */}
               <Route path="/blog/4" element={<BlogArticle4 />} />
               <Route path="/blog/5" element={<BlogArticle5 />} />
@@ -186,6 +196,7 @@ function App() {
         </div>
       </Router>
     </AddProductProvider>
+    </HelmetProvider>
   );
 }
 
