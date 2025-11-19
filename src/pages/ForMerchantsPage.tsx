@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SEO from '../components/SEO';
 import MerchantsHero from '../components/MerchantsHero';
 import PricingSection3Plans from '../components/PricingSection3Plans';
 
@@ -115,6 +116,12 @@ const CalculatorWidget = () => {
 const ForMerchantsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title="İşletmeler İçin - KapKurtar"
+        description="Gıda israfını önle, gelir elde et. %80 kazanç garantisi, sadece sattığınızda komisyon. Restoran, fırın ve marketler için ideal çözüm."
+        canonical="/for-merchants"
+        keywords="işletme gelir, gıda israfı önleme, restoran, fırın, market"
+      />
       {/* Hero Section */}
       <MerchantsHero />
 

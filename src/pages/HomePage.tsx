@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import SEO from '../components/SEO';
+import StructuredData from '../components/StructuredData';
 import HeroBanner from '../components/HeroBanner';
 import HowItWorks from '../components/HowItWorks';
 import FeaturedOffers from '../components/FeaturedOffers';
@@ -12,8 +14,36 @@ const HomePage = () => {
 
   return (
     <div>
+      <SEO
+        title="Ucuz Yemek ve Fazla Gıda: %70 İndirim - KapKurtar Türkiye"
+        description="Türkiye'nin #1 gıda israfı önleme platformu. Restoranlar, fırınlar ve marketlerden %70 indirimli yemek fırsatları. Gıda israfını önle, tasarruf et!"
+        canonical="/"
+        keywords="ucuz yemek, indirimli yemek, fazla gıda, gıda israfı, KapKurtar, yemek fırsatları, Türkiye"
+      />
+      <StructuredData type="organization" />
       <HeroBanner />
-      
+
+      {/*
+        TODO: SEO Content Section (Optionnel mais recommandé)
+
+        Pour améliorer le référencement, vous pouvez ajouter une section de contenu textuel ici:
+        - 150-200 mots minimum
+        - Mots-clés: "ucuz yemek", "indirimli yemek", "gıda israfı", "Türkiye"
+        - Structure H2 + paragraphes
+
+        Exemple:
+        <div className="bg-white py-12">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+              Türkiye'nin En İyi Ucuz Yemek Platformu
+            </h2>
+            <p className="text-lg text-gray-700 leading-relaxed mb-4">
+              [Votre contenu unique ici...]
+            </p>
+          </div>
+        </div>
+      */}
+
       {/* Section HowItWorks - fond turquoise clair */}
       <div className="bg-[#2DD4BF]/10">
         <HowItWorks />

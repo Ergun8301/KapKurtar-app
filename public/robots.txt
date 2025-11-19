@@ -1,0 +1,16 @@
+# robots.txt pour KapKurtar
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /merchant/dashboard
+Disallow: /customer/dashboard
+Disallow: /client/profile
+Disallow: /customer/auth
+Disallow: /merchant/auth
+Disallow: /auth/callback
+Disallow: /reset-password
+Disallow: /profile/complete
+
+# Sitemap
+Sitemap: https://kapkurtar.com/sitemap.xml

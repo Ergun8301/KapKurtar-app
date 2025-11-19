@@ -5,6 +5,7 @@ import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { Clock } from "lucide-react";
+import SEO from "../components/SEO";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { OfferDetailsModal } from "../components/OfferDetailsModal";
@@ -820,9 +821,16 @@ export default function OffersPage() {
   );
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
-      <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
-        <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
+    <>
+      <SEO
+        title="İndirimli Yemek Fırsatları - KapKurtar"
+        description="Yakınınızdaki restoranlar, fırınlar ve marketlerden %70 indirimli yemek fırsatları. Haritada keşfet, rezerve et, kazan!"
+        canonical="/offers"
+        keywords="indirimli yemek, ucuz yemek harita, yakındaki fırsatlar, fazla gıda"
+      />
+      <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
+        <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
+          <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
         {viewMode === "nearby" && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[900] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-[#00A690]/20">
@@ -896,6 +904,7 @@ export default function OffersPage() {
         onOfferChange={(newOffer) => setSelectedOffer(newOffer)}
       />
     </div>
+    </>
   );
 }
 
