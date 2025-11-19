@@ -121,11 +121,7 @@ const MerchantsHero = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0">
-  <svg className="w-full h-16" viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M0 0 L1440 0 L1440 48 L0 48 Z" fill="#F9FAFB"/>
-  </svg>
-</div>
+      <div className="absolute bottom-0 left-0 right-0 h-16 bg-white"></div>
     </div>
   );
 };
