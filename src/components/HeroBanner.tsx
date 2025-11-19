@@ -70,7 +70,7 @@ const HeroBanner = () => {
       <div className="relative h-full flex items-center justify-center">
         <div className="text-center text-white px-4 max-w-5xl">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-16 md:mb-20 lg:mb-24 leading-tight">
-            Tasarruf Edin, <span className="text-[#F75C00]">Gıdayı Kurtarın</span>, <br />Gezegeni Kurtarın
+            Tasarruf Et, <span className="text-[#F75C00]">İsrafı Önle</span>, <br />Dünyayı Kurtar
           </h1> 
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
@@ -79,7 +79,7 @@ const HeroBanner = () => {
               href="/offers"
               className="bg-[#00A690] text-white px-8 py-4 rounded-lg font-semibold hover:bg-[#F75C00] transition-colors duration-300 inline-flex items-center text-lg shadow-lg"
             >
-              Teklifleri Keşfet
+              Kap Kurtar
               <ArrowRight className="w-5 h-5 ml-2" />
             </a>
 
@@ -87,7 +87,7 @@ const HeroBanner = () => {
               href="/for-merchants"
               className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-gray-900 transition-colors text-lg"
             >
-              İşletmeler İçin
+              Sat Kurtar
             </a>
           </div>
         </div>
