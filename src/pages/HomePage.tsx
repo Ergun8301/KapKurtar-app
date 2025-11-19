@@ -15,7 +15,7 @@ const HomePage = () => {
   return (
     <div>
       <SEO
-        title="Ucuz Yemek ve Fazla Gıda: %70 İndirim - KapKurtar Türkiye"
+        title="KapKurtar"
         description="Türkiye'nin #1 gıda israfı önleme platformu. Restoranlar, fırınlar ve marketlerden %70 indirimli yemek fırsatları. Gıda israfını önle, tasarruf et!"
         canonical="/"
         keywords="ucuz yemek, indirimli yemek, fazla gıda, gıda israfı, KapKurtar, yemek fırsatları, Türkiye"
