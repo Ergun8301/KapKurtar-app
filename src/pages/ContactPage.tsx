@@ -56,7 +56,7 @@ const ContactPage = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Bize Ulaşın
           </h1>
-          <p className="text-xl text-[#F7F2E7] max-w-2xl mx-auto">
+          <p className="text-xl text-[#FFFFF0] max-w-2xl mx-auto">
             Bir sorunuz mu var? Bir öneriniz mi? Ekibimiz size yardımcı olmak için burada.
           </p>
         </div>

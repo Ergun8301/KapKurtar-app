@@ -12,7 +12,7 @@ const LegalPage = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Yasal Bildirim
           </h1>
-          <p className="text-xl text-[#F7F2E7]">
+          <p className="text-xl text-[#FFFFF0]">
             Kullanım koşulları, gizlilik politikası ve yasal bildirim
           </p>
         </div>

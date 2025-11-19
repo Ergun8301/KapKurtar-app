@@ -55,7 +55,7 @@ const BlogArticle5 = () => {
             TILKAPP ile bu kayıplar ek gelir fırsatlarına dönüşüyor.
           </p>
 
-          <div className="bg-[#F7F2E7] rounded-lg p-6 my-8">
+          <div className="bg-[#FFFFF0] rounded-lg p-6 my-8">
             <h3 className="font-bold text-gray-900 mb-3">Somut örnek: Antalya'da bir fırın</h3>
             <ul className="space-y-2 text-gray-700">
               <li>• <strong>TILKAPP öncesi:</strong> Günde 50 satılmayan ekmek = 200 TL kayıp</li>
@@ -210,12 +210,12 @@ const BlogArticle5 = () => {
 
           <div className="bg-[#00A690] text-white rounded-lg p-8 my-12 text-center">
             <h3 className="text-2xl font-bold mb-4">TILKAPP'a katılmaya hazır mısınız?</h3>
-            <p className="mb-6 text-[#F7F2E7]">
+            <p className="mb-6 text-[#FFFFF0]">
               Ücretsiz kayıt olun ve satılmayan ürünlerinizi bugünden değerlendirmeye başlayın
             </p>
             <a
               href="/merchant/auth"
-              className="bg-white text-[#00A690] px-8 py-3 rounded-lg font-medium hover:bg-[#F7F2E7] transition-colors duration-300 inline-block"
+              className="bg-white text-[#00A690] px-8 py-3 rounded-lg font-medium hover:bg-[#FFFFF0] transition-colors duration-300 inline-block"
             >
               Partner ol
             </a>

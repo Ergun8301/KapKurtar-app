@@ -198,7 +198,7 @@ const BlogArticle8 = () => {
           <p className="text-gray-700 mb-4 leading-relaxed">
             Yumuşamış salata ve yapraklı sebzelere gevrekliğini geri kazandırmak için.
           </p>
-          <div className="bg-[#F7F2E7] rounded p-4 mb-6">
+          <div className="bg-[#FFFFF0] rounded p-4 mb-6">
             <p className="text-sm text-gray-700">
               <strong>Yöntem:</strong> Sebzeleri buz kalıplarıyla çok soğuk suyla dolu büyük bir kaseye
               15-30 dakika batırın. Süzün ve nazikçe kurulayın.
@@ -209,7 +209,7 @@ const BlogArticle8 = () => {
           <p className="text-gray-700 mb-4 leading-relaxed">
             Yapraklı sebzelerin ve mantarların raf ömrünü uzatmak için ideal.
           </p>
-          <div className="bg-[#F7F2E7] rounded p-4 mb-6">
+          <div className="bg-[#FFFFF0] rounded p-4 mb-6">
             <p className="text-sm text-gray-700">
               <strong>Yöntem:</strong> Sebzeleri buzdolabına koymadan önce hafifçe nemli emici kağıda sarın,
               sonra delikli plastik torbaya koyun.
@@ -220,7 +220,7 @@ const BlogArticle8 = () => {
           <p className="text-gray-700 mb-4 leading-relaxed">
             Kırmızı meyvelerin tazeliğini birkaç gün uzatır.
           </p>
-          <div className="bg-[#F7F2E7] rounded p-4 mb-6">
+          <div className="bg-[#FFFFF0] rounded p-4 mb-6">
             <p className="text-sm text-gray-700">
               <strong>Yöntem:</strong> 3 ölçü suya 1 ölçü beyaz sirke karıştırın.
               Kırmızı meyveleri hızlıca batırın, temiz suyla durulayın ve nazikçe kurulayın.
@@ -232,7 +232,7 @@ const BlogArticle8 = () => {
           <p className="text-gray-700 mb-4 leading-relaxed">
             Çok fazla meyve veya sebzeniz mi var? Akıllıca dondurun!
           </p>
-          <div className="bg-[#F7F2E7] rounded p-4 mb-6">
+          <div className="bg-[#FFFFF0] rounded p-4 mb-6">
             <p className="text-sm text-gray-700 mb-3">
               <strong>Meyveler:</strong> Yıkayın, kurulayın ve bir tepsiye yayın. 2 saat dondurun,
               sonra dondurma torbasına aktarın. Smoothie ve kompostolar için mükemmel!

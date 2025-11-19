@@ -238,7 +238,7 @@ export const MerchantBottomSheet: React.FC<MerchantBottomSheetProps> = ({
               {/* Bouton Itinéraire */}
               <button
   onClick={handleGetDirections}
-  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#00A690] hover:bg-[#F75C00] text-[#F7F2E7] rounded-lg font-semibold transition-colors duration-300 shadow-md"
+  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#00A690] hover:bg-[#F75C00] text-[#FFFFF0] rounded-lg font-semibold transition-colors duration-300 shadow-md"
 >
                 <Navigation className="w-4 h-4" />
                 Yol Tarifi

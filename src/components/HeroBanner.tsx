@@ -95,7 +95,7 @@ const HeroBanner = () => {
             </a>
           </div>
 
-          <p className="text-[#F7F2E7] text-lg flex items-center justify-center">
+          <p className="text-[#FFFFF0] text-lg flex items-center justify-center">
             <Smartphone className="w-5 h-5 mr-2" />
             Gerçek zamanlı bildirimler almak için uygulamayı indirin
           </p>

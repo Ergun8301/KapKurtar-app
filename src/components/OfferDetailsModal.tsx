@@ -293,7 +293,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 
               <button
                 onClick={handleGetDirections}
-                className="flex items-center gap-2 px-4 py-2 bg-[#00A690] hover:bg-[#F75C00] text-[#F7F2E7] rounded-lg font-semibold transition-colors duration-300 shadow-md flex-shrink-0"
+                className="flex items-center gap-2 px-4 py-2 bg-[#00A690] hover:bg-[#F75C00] text-[#FFFFF0] rounded-lg font-semibold transition-colors duration-300 shadow-md flex-shrink-0"
               >
                 <Navigation className="w-4 h-4" />
                 <span className="hidden md:inline">Yol Tarifi</span>
@@ -507,7 +507,7 @@ export const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-[#F7F2E7] rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[#FFFFF0] rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">🔒</span>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Giriş gerekli</h3>

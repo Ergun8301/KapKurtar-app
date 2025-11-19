@@ -10,7 +10,7 @@ const AboutPage = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             KapKurtar Hakkında
           </h1>
-          <p className="text-xl text-[#F7F2E7] max-w-2xl mx-auto">
+          <p className="text-xl text-[#FFFFF0] max-w-2xl mx-auto">
             Gıda israfıyla mücadele etmek için işletmeleri ve tüketicileri birbirine bağlayan bir platform
           </p>
         </div>
@@ -90,19 +90,19 @@ const AboutPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="text-4xl font-bold mb-2">150+</div>
-              <div className="text-[#F7F2E7]">Ortak işletme</div>
+              <div className="text-[#FFFFF0]">Ortak işletme</div>
             </div>
             <div>
               <div className="text-4xl font-bold mb-2">8 000+</div>
-              <div className="text-[#F7F2E7]">Aktif kullanıcı</div>
+              <div className="text-[#FFFFF0]">Aktif kullanıcı</div>
             </div>
             <div>
               <div className="text-4xl font-bold mb-2">25 ton</div>
-              <div className="text-[#F7F2E7]">Kurtarılan gıda</div>
+              <div className="text-[#FFFFF0]">Kurtarılan gıda</div>
             </div>
             <div>
               <div className="text-4xl font-bold mb-2">5 şehir</div>
-              <div className="text-[#F7F2E7]">2025'te planlanıyor</div>
+              <div className="text-[#FFFFF0]">2025'te planlanıyor</div>
             </div>
           </div>
         </div>

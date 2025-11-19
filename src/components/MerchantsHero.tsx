@@ -36,7 +36,7 @@ const MerchantsHero = () => {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-6 leading-tight">
               İsrafı Gelire
               <br />
-              <span className="text-[#F7F2E7]">Dönüştürün</span>
+              <span className="text-[#FFFFF0]">Dönüştürün</span>
             </h1>
 
             <p className="text-xl md:text-2xl mb-8 text-white/90 leading-relaxed">
@@ -46,15 +46,15 @@ const MerchantsHero = () => {
 
             <div className="grid grid-cols-3 gap-6 mb-8">
               <div className="text-center">
-                <div className="text-3xl font-black text-[#F7F2E7]">500+</div>
+                <div className="text-3xl font-black text-[#FFFFF0]">500+</div>
                 <div className="text-sm text-white/80">Ortak İşletme</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-black text-[#F7F2E7]">10K+</div>
+                <div className="text-3xl font-black text-[#FFFFF0]">10K+</div>
                 <div className="text-sm text-white/80">Kurtarılan Paket</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-black text-[#F7F2E7]">%0</div>
+                <div className="text-3xl font-black text-[#FFFFF0]">%0</div>
                 <div className="text-sm text-white/80">İlk 3 Ay</div>
               </div>
             </div>

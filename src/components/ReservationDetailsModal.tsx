@@ -144,7 +144,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">Détails de la réservation</h2>
-              <p className="text-[#F7F2E7] text-sm">Nouvelle commande client</p>
+              <p className="text-[#FFFFF0] text-sm">Nouvelle commande client</p>
             </div>
           </div>
         </div>

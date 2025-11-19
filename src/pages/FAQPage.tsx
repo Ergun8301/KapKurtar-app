@@ -100,7 +100,7 @@ const FAQPage = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Sıkça Sorulan Sorular
           </h1>
-          <p className="text-xl text-[#F7F2E7] mb-8">
+          <p className="text-xl text-[#FFFFF0] mb-8">
             KapKurtar hakkındaki sorularınızın yanıtlarını hızlıca bulun
           </p>
 
