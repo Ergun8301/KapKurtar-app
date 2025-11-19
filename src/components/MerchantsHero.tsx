@@ -6,7 +6,7 @@ const MerchantsHero = () => {
   const fallbackImageUrl = "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1200";
 
   return (
-    <div className="relative bg-gradient-to-br from-[#00A690] via-[#00B89F] to-[#008C7A] text-white overflow-hidden">
+    <div className="relative bg-gradient-to-br from-[#00A690] via-[#00B89F] to-[#008C7A] text-white overflow-hidden pb-16">
       <div className="absolute inset-0">
         <img
           src={heroImageUrl}
@@ -24,13 +24,13 @@ const MerchantsHero = () => {
           <div>
             <div className="inline-block mb-6">
               <span className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold border border-white/30 flex items-center gap-2">
-  <img 
-    src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20rond%20noir%20(1).png" 
-    alt="KapKurtar" 
-    className="w-5 h-5" 
-  />
-  İşletmeler İçin
-</span>
+                <img 
+                  src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20rond%20noir%20(1).png" 
+                  alt="KapKurtar" 
+                  className="w-5 h-5" 
+                />
+                İşletmeler İçin
+              </span>
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-6 leading-tight">
@@ -60,14 +60,14 @@ const MerchantsHero = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <a
+              
                 href="/merchant/auth"
                 className="inline-flex items-center justify-center gap-2 bg-[#F75C00] hover:bg-[#E54B00] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105"
               >
                 <Zap className="w-6 h-6" />
                 Hemen Başlayın
               </a>
-              <a
+              
                 href="#pricing"
                 className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border-2 border-white/30 px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300"
               >
@@ -120,8 +120,6 @@ const MerchantsHero = () => {
           </div>
         </div>
       </div>
-
-      <div className="absolute bottom-0 left-0 right-0 h-16 bg-white"></div>
     </div>
   );
 };
