@@ -19,18 +19,18 @@ const MerchantsHero = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-[#00A690]/90 to-[#008C7A]/80"></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
             <div className="inline-block mb-6">
               <span className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold border border-white/30 flex items-center gap-2">
-                <img 
-                  src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20rond%20noir%20(1).png" 
-                  alt="KapKurtar" 
-                  className="w-5 h-5" 
-                />
-                İşletmeler İçin
-              </span>
+  <img 
+    src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/FAVICON%20MINI%20rond%20noir%20(1).png" 
+    alt="KapKurtar" 
+    className="w-5 h-5" 
+  />
+  İşletmeler İçin
+</span>
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-6 leading-tight">
@@ -119,6 +119,12 @@ const MerchantsHero = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0">
+        <svg className="w-full h-16" viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 48h1440V0s-187.5 48-360 48S720 0 720 0 532.5 48 360 48 0 0 0 0v48z" fill="#F9FAFB"/>
+        </svg>
       </div>
     </div>
   );
