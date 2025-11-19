@@ -60,14 +60,14 @@ const MerchantsHero = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              
+              <a
                 href="/merchant/auth"
                 className="inline-flex items-center justify-center gap-2 bg-[#F75C00] hover:bg-[#E54B00] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105"
               >
                 <Zap className="w-6 h-6" />
                 Hemen Başlayın
               </a>
-              
+              <a
                 href="#pricing"
                 className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border-2 border-white/30 px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300"
               >
