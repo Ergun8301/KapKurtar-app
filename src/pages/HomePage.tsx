@@ -30,7 +30,7 @@ const HomePage = () => {
       </div>
 
       {/* CTA Download Section - fond crème */}
-      <div className="bg-[#F3EACE] py-16">
+      <div className="bg-[#fffff0] py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="flex justify-center mb-6">
             <div className="bg-[#00615f] rounded-full p-4">
