@@ -73,7 +73,7 @@ const HeroBanner = () => {
             Tasarruf Edin, <span className="text-[#F75C00]">Gıdayı Kurtarın</span>, <br />Gezegeni Kurtarın
           </h1>
           <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Yerel restoranlardan lezzetli yemeklerde inanılmaz fırsatlar keşfedin ve gıda israfını azaltmaya yardımcı olun.
+            Yerel restoranlardan inanılmaz fırsatlar keşfedin ve gıda israfını azaltmaya yardımcı olun.
             Bugün gıda kurtarma hareketine katılın!
           </p>
           
