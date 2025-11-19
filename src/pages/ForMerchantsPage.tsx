@@ -527,7 +527,7 @@ const ForMerchantsPage = () => {
       </div>
 
       {/* Download App Section */}
-      <div className="bg-gradient-to-br from-[#F7F2E7] to-white py-16">
+      <div className="bg-gradient-to-br from-[#FFFFF0] to-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
             📱 Mobil Uygulamamızı İndirin
@@ -562,12 +562,12 @@ const ForMerchantsPage = () => {
       <div className="bg-[#00A690] text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">Sorularınız mı var?</h2>
-          <p className="text-xl text-[#F7F2E7] mb-8">
+          <p className="text-xl text-[#FFFFF0] mb-8">
             Ekibimiz size yardımcı olmaktan mutluluk duyar
           </p>
           <a
             href="/contact"
-            className="inline-block bg-white text-[#00A690] px-8 py-4 rounded-lg hover:bg-[#F7F2E7] transition-colors font-bold text-lg"
+            className="inline-block bg-white text-[#00A690] px-8 py-4 rounded-lg hover:bg-[#FFFFF0] transition-colors font-bold text-lg"
           >
             Bize Ulaşın
           </a>

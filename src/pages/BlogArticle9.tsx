@@ -80,7 +80,7 @@ const BlogArticle9 = () => {
             dengeli bir tabağın ne olduğunu hatırlayalım.
           </p>
 
-          <div className="bg-[#F7F2E7] rounded-lg p-6 my-8">
+          <div className="bg-[#FFFFF0] rounded-lg p-6 my-8">
             <h3 className="font-bold text-gray-900 mb-4">🍽️ İdeal tabak:</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -245,12 +245,12 @@ const BlogArticle9 = () => {
 
           <div className="bg-[#00A690] text-white rounded-lg p-8 my-12 text-center">
             <h3 className="text-2xl font-bold mb-4">Bugünden daha iyisini daha ucuza yiyin</h3>
-            <p className="mb-6 text-[#F7F2E7]">
+            <p className="mb-6 text-[#FFFFF0]">
               KapKurtar'ı indirin ve yakınınızdaki teklifleri keşfedin
             </p>
             <a
               href="/download"
-              className="bg-white text-[#00A690] px-8 py-3 rounded-lg font-medium hover:bg-[#F7F2E7] transition-colors inline-block"
+              className="bg-white text-[#00A690] px-8 py-3 rounded-lg font-medium hover:bg-[#FFFFF0] transition-colors inline-block"
             >
               Uygulamayı indir
             </a>

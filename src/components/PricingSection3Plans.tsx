@@ -71,7 +71,7 @@ const PricingSection3Plans = () => {
         {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-block mb-4">
-            <span className="bg-[#F7F2E7] text-[#00A690] px-4 py-1 rounded-full text-sm font-semibold">
+            <span className="bg-[#FFFFF0] text-[#00A690] px-4 py-1 rounded-full text-sm font-semibold">
               💰 Fiyatlandırma
             </span>
           </div>

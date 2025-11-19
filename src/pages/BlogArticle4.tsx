@@ -68,7 +68,7 @@ const BlogArticle4 = () => {
             İşten geç geldiğim akşamlar için mükemmel."
           </p>
 
-          <div className="bg-[#F7F2E7] rounded-lg p-6 my-8">
+          <div className="bg-[#FFFFF0] rounded-lg p-6 my-8">
             <h3 className="font-bold text-gray-900 mb-3">Zeynep'in KapKurtar ile aylık bütçesi:</h3>
             <ul className="space-y-2 text-gray-700">
               <li>• Ekmek ve hamur işleri: Ayda 150 TL tasarruf</li>

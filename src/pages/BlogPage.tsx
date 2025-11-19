@@ -152,7 +152,7 @@ const BlogPage = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             TILKAPP Blog
           </h1>
-          <p className="text-xl text-[#F7F2E7] mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-[#FFFFF0] mb-8 max-w-2xl mx-auto">
             İsraf önleyici yaşam tarzı için haberler, tavsiyeler ve tarifler
           </p>
 

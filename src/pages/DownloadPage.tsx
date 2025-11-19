@@ -103,7 +103,7 @@ const DownloadPage = () => {
             <div className="space-y-8 mb-8">
               {features.map((feature, index) => (
                 <div key={index} className="flex items-start space-x-4">
-                  <div className="bg-[#F7F2E7] p-4 rounded-lg">
+                  <div className="bg-[#FFFFF0] p-4 rounded-lg">
                     <feature.icon className="w-8 h-8 text-[#00A690]" />
                   </div>
                   <div>

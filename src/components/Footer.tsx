@@ -29,27 +29,27 @@ style={{ maxHeight: '150px' }}
               <h3 className="text-lg font-bold mb-4">Hızlı Bağlantılar</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/" className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300 text-sm">
+                  <Link to="/" className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300 text-sm">
                     Ana Sayfa
                   </Link>
                 </li>
                 <li>
-                  <Link to="/offers" className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300 text-sm">
+                  <Link to="/offers" className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300 text-sm">
                     Teklifleri Keşfet
                   </Link>
                 </li>
                 <li>
-                  <Link to="/for-merchants" className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300 text-sm">
+                  <Link to="/for-merchants" className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300 text-sm">
                     İşletmeler İçin
                   </Link>
                 </li>
                 <li>
-                  <Link to="/download" className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300 text-sm">
+                  <Link to="/download" className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300 text-sm">
                     Uygulamayı İndir
                   </Link>
                 </li>
                 <li>
-                  <Link to="/about" className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300 text-sm">
+                  <Link to="/about" className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300 text-sm">
                     Hakkımızda
                   </Link>
                 </li>
@@ -61,7 +61,7 @@ style={{ maxHeight: '150px' }}
                   href="https://facebook.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300"
+                  className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300"
                   aria-label="Facebook"
                 >
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -72,7 +72,7 @@ style={{ maxHeight: '150px' }}
                   href="https://twitter.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300"
+                  className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300"
                   aria-label="Twitter"
                 >
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -83,7 +83,7 @@ style={{ maxHeight: '150px' }}
                   href="https://instagram.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300"
+                  className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300"
                   aria-label="Instagram"
                 >
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -98,22 +98,22 @@ style={{ maxHeight: '150px' }}
               <h3 className="text-lg font-bold mb-4">Destek</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/faq" className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300 text-sm">
+                  <Link to="/faq" className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300 text-sm">
                     SSS
                   </Link>
                 </li>
                 <li>
-                  <Link to="/blog" className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300 text-sm">
+                  <Link to="/blog" className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300 text-sm">
                     Blog
                   </Link>
                 </li>
                 <li>
-                  <Link to="/contact" className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300 text-sm">
+                  <Link to="/contact" className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300 text-sm">
                     Bize Ulaşın
                   </Link>
                 </li>
                 <li>
-                  <Link to="/legal" className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300 text-sm">
+                  <Link to="/legal" className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300 text-sm">
                     Yasal Bilgiler
                   </Link>
                 </li>
@@ -129,14 +129,14 @@ style={{ maxHeight: '150px' }}
                   href="https://wa.me/33685507985?text=Merhaba%20KapKurtar"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center space-x-2 text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300 text-sm"
+                  className="flex items-center space-x-2 text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300 text-sm"
                 >
                   <MessageCircle className="w-5 h-5 flex-shrink-0" />
                   <span>WhatsApp'tan Bize Ulaşın</span>
                 </a>
 
                 {/* Adresse */}
-                <div className="flex items-start space-x-2 text-[#F7F2E7] text-sm">
+                <div className="flex items-start space-x-2 text-[#FFFFF0] text-sm">
                   <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <div>
                     <p>Eski Hisar, 9501. Sk. No:3</p>
@@ -177,14 +177,14 @@ style={{ maxHeight: '150px' }}
       <div className="bg-[#004D4A]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-sm">
-            <p className="text-[#F7F2E7]">
+            <p className="text-[#FFFFF0]">
               © 2025 KapKurtar. Tüm hakları saklıdır.
             </p>
             <div className="flex space-x-6 text-sm">
-              <Link to="/legal" className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300">
+              <Link to="/legal" className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300">
                 Gizlilik Politikası
               </Link>
-              <Link to="/legal" className="text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300">
+              <Link to="/legal" className="text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300">
                 Kullanım Koşulları
               </Link>
             </div>

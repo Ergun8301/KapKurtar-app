@@ -55,15 +55,15 @@ const BlogArticle7 = () => {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
-            <div className="bg-[#F7F2E7] rounded-lg p-6 text-center">
+            <div className="bg-[#FFFFF0] rounded-lg p-6 text-center">
               <div className="text-4xl font-bold text-[#00A690] mb-2">150+</div>
               <div className="text-gray-700">Partner işletme</div>
             </div>
-            <div className="bg-[#F7F2E7] rounded-lg p-6 text-center">
+            <div className="bg-[#FFFFF0] rounded-lg p-6 text-center">
               <div className="text-4xl font-bold text-[#00A690] mb-2">8.000+</div>
               <div className="text-gray-700">Aktif kullanıcı</div>
             </div>
-            <div className="bg-[#F7F2E7] rounded-lg p-6 text-center">
+            <div className="bg-[#FFFFF0] rounded-lg p-6 text-center">
               <div className="text-4xl font-bold text-[#00A690] mb-2">25 ton</div>
               <div className="text-gray-700">Kurtarılan gıda</div>
             </div>
@@ -119,28 +119,28 @@ const BlogArticle7 = () => {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-            <div className="bg-[#F7F2E7] rounded-lg p-6">
+            <div className="bg-[#FFFFF0] rounded-lg p-6">
               <h4 className="font-bold text-gray-900 mb-3">👨‍👩‍👧‍👦 Profil 1: Aileler</h4>
               <p className="text-sm text-gray-700">
                 <strong>Kullanıcıların %35'i</strong><br />
                 Motivasyon: tasarruf + çocukları israf karşıtı eğitme
               </p>
             </div>
-            <div className="bg-[#F7F2E7] rounded-lg p-6">
+            <div className="bg-[#FFFFF0] rounded-lg p-6">
               <h4 className="font-bold text-gray-900 mb-3">👩‍💼 Profil 2: Yoğun çalışanlar</h4>
               <p className="text-sm text-gray-700">
                 <strong>Kullanıcıların %30'u</strong><br />
                 Motivasyon: işten sonra hızlı ve ekonomik yemekler
               </p>
             </div>
-            <div className="bg-[#F7F2E7] rounded-lg p-6">
+            <div className="bg-[#FFFFF0] rounded-lg p-6">
               <h4 className="font-bold text-gray-900 mb-3">👵 Profil 3: Emekliler</h4>
               <p className="text-sm text-gray-700">
                 <strong>Kullanıcıların %20'si</strong><br />
                 Motivasyon: indirimli kaliteli ürünler
               </p>
             </div>
-            <div className="bg-[#F7F2E7] rounded-lg p-6">
+            <div className="bg-[#FFFFF0] rounded-lg p-6">
               <h4 className="font-bold text-gray-900 mb-3">🎓 Profil 4: Öğrenciler</h4>
               <p className="text-sm text-gray-700">
                 <strong>Kullanıcıların %15'i</strong><br />
@@ -217,13 +217,13 @@ const BlogArticle7 = () => {
 
           <div className="bg-[#00A690] text-white rounded-lg p-8 my-12 text-center">
             <h3 className="text-2xl font-bold mb-4">Harekete katılın!</h3>
-            <p className="mb-6 text-[#F7F2E7]">
+            <p className="mb-6 text-[#FFFFF0]">
               İster işletme sahibi ister tüketici olun, israf karşıtı devrime katılın
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/merchant/auth"
-                className="bg-white text-[#00A690] px-6 py-3 rounded-lg font-medium hover:bg-[#F7F2E7] transition-colors inline-block"
+                className="bg-white text-[#00A690] px-6 py-3 rounded-lg font-medium hover:bg-[#FFFFF0] transition-colors inline-block"
               >
                 İşletme sahibiyim
               </a>

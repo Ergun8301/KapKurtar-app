@@ -543,7 +543,7 @@ const ClientDashboardPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-[#F7F2E7] rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-[#FFFFF0] rounded-full flex items-center justify-center flex-shrink-0">
                 <X className="w-6 h-6 text-[#00A690]" />
               </div>
               <h3 className="text-lg font-bold text-gray-900">Rezervasyonu İptal Et?</h3>

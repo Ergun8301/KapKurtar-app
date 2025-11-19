@@ -107,7 +107,7 @@ const Header = () => {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               {navigation.map((item) => (
-                <a key={item.name} href={item.href} className="text-[#F7F2E7] hover:text-[#F75C00] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">
+                <a key={item.name} href={item.href} className="text-[#FFFFF0] hover:text-[#F75C00] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">
                   {item.name}
                 </a>
               ))}
@@ -128,8 +128,8 @@ const Header = () => {
               <>
                 <NotificationBell userType={isMerchant ? "merchant" : "client"} />
                 <div className="relative" ref={userMenuRef}>
-                  <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center space-x-2 text-[#F7F2E7] hover:text-[#F75C00] transition-colors duration-300">
-                    <div className="w-8 h-8 bg-[#F7F2E7] rounded-full flex items-center justify-center">
+                  <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center space-x-2 text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300">
+                    <div className="w-8 h-8 bg-[#FFFFF0] rounded-full flex items-center justify-center">
                       {isMerchant ? <Store className="w-4 h-4 text-[#00A690]" /> : <User className="w-4 h-4 text-[#00A690]" />}
                     </div>
                     <span className="hidden sm:block font-medium">{getUserDisplayName()}</span>
@@ -183,7 +183,7 @@ const Header = () => {
               </>
             ) : (
               <div className="relative" ref={userMenuRef}>
-                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="bg-[#F7F2E7] text-[#00A690] px-4 py-2 rounded-lg font-bold hover:bg-[#F75C00] hover:text-white transition-colors duration-300 inline-flex items-center">
+                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="bg-[#FFFFF0] text-[#00A690] px-4 py-2 rounded-lg font-bold hover:bg-[#F75C00] hover:text-white transition-colors duration-300 inline-flex items-center">
                   Giriş Yap
                   <ChevronDown className="w-4 h-4 ml-1" />
                 </button>
@@ -204,7 +204,7 @@ const Header = () => {
                 )}
               </div>
             )}
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-md text-[#F7F2E7] hover:text-white transition-colors duration-300">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-md text-[#FFFFF0] hover:text-white transition-colors duration-300">
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
@@ -220,7 +220,7 @@ const Header = () => {
                <a key={item.name}
                 href={item.href}
                 onClick={() => setIsMenuOpen(false)}
-                className="block px-3 py-2 text-[#F7F2E7] hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-300"
+                className="block px-3 py-2 text-[#FFFFF0] hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-300"
               >
                 {item.name}
               </a>
@@ -231,7 +231,7 @@ const Header = () => {
                 setShowDownloadModal(true);
                 setIsMenuOpen(false);
               }}
-              className="w-full text-left px-3 py-2 text-[#F7F2E7] hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-300 flex items-center space-x-2"
+              className="w-full text-left px-3 py-2 text-[#FFFFF0] hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-300 flex items-center space-x-2"
             >
               <Download className="w-4 h-4" />
               <span>Uygulamayı İndir</span>
@@ -243,14 +243,14 @@ const Header = () => {
                 <a
                   href="/customer/auth"
                   onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-2 text-[#F7F2E7] hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-300"
+                  className="block px-3 py-2 text-[#FFFFF0] hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-300"
                 >
                   Müşteri Girişi
                 </a>
                 <a
                   href="/merchant/auth"
                   onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-2 text-[#F7F2E7] hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-300"
+                  className="block px-3 py-2 text-[#FFFFF0] hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-300"
                 >
                   İşletme Girişi
                 </a>

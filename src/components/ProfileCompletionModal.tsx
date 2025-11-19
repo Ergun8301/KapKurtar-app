@@ -98,7 +98,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-[#F7F2E7] rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#FFFFF0] rounded-full flex items-center justify-center">
               <User className="w-6 h-6 text-[#00A690]" />
             </div>
             <div className="flex-1">

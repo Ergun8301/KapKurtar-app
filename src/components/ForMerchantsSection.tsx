@@ -37,7 +37,7 @@ const ForMerchantsSection = () => {
             <div className="space-y-6 mb-8">
               {benefits.map((benefit, index) => (
                 <div key={index} className="flex items-start space-x-4">
-                  <div className="bg-[#F7F2E7] p-3 rounded-lg">
+                  <div className="bg-[#FFFFF0] p-3 rounded-lg">
                     <benefit.icon className="w-6 h-6 text-[#00A690]" />
                   </div>
                   <div>

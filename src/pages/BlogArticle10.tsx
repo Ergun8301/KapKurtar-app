@@ -265,7 +265,7 @@ const BlogArticle10 = () => {
             Rahat olun: tamamen tüketilebilir ve kontrol edilmiştir!
           </p>
 
-          <div className="bg-[#F7F2E7] rounded-lg p-6 my-8">
+          <div className="bg-[#FFFFF0] rounded-lg p-6 my-8">
             <h3 className="font-bold text-gray-900 mb-4">🛡️ TILKAPP garantileri:</h3>
             <ul className="space-y-2 text-gray-700">
               <li>• ✅ Tüm partner işletmeler doğrulanmış ve sertifikalıdır</li>

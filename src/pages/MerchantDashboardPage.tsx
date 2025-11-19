@@ -981,7 +981,7 @@ const MerchantDashboardPage = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-[#F7F2E7] text-[#00A690]';
+      case 'active': return 'bg-[#FFFFF0] text-[#00A690]';
       case 'paused': return 'bg-yellow-100 text-yellow-800';
       case 'expired': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -998,12 +998,12 @@ const MerchantDashboardPage = () => {
       <div className={`bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow ${compact ? 'p-2' : 'p-3'}`}>
         <div className="flex items-center justify-between mb-2">
           {isPending && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#00A690] bg-[#F7F2E7] px-2 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#00A690] bg-[#FFFFF0] px-2 py-1 rounded-full">
               🟠 En attente
             </span>
           )}
           {isCompleted && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#00A690] bg-[#F7F2E7] px-2 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#00A690] bg-[#FFFFF0] px-2 py-1 rounded-full">
               🟢 Récupérée
             </span>
           )}
@@ -1144,7 +1144,7 @@ const MerchantDashboardPage = () => {
                   ? 'bg-gray-200 text-gray-500 cursor-wait opacity-60'
                   : offer.is_active
                     ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    : 'bg-[#F7F2E7] text-[#00A690] hover:bg-green-300')}
+                    : 'bg-[#FFFFF0] text-[#00A690] hover:bg-green-300')}
               disabled={togglingOfferId === offer.id}
             >
               {togglingOfferId === offer.id ? (
@@ -1165,7 +1165,7 @@ const MerchantDashboardPage = () => {
 
             <button
               onClick={() => openEditModal(offer)}
-              className="p-2 bg-[#F7F2E7] text-[#00A690] rounded-lg hover:bg-green-300 transition-colors duration-300"
+              className="p-2 bg-[#FFFFF0] text-[#00A690] rounded-lg hover:bg-green-300 transition-colors duration-300"
               title="Düzenle"
             >
               <Edit className="w-4 h-4" />
@@ -1204,7 +1204,7 @@ const MerchantDashboardPage = () => {
           >
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-[#F7F2E7] rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-[#FFFFF0] rounded-full flex items-center justify-center">
                   <History className="w-6 h-6 text-[#00A690]" />
                 </div>
                 <div>
@@ -1258,7 +1258,7 @@ const MerchantDashboardPage = () => {
           >
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-[#F7F2E7] rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-[#FFFFF0] rounded-full flex items-center justify-center">
                   <Building2 className="w-6 h-6 text-[#00A690]" />
                 </div>
                 <div>
@@ -1390,7 +1390,7 @@ const MerchantDashboardPage = () => {
                 className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#F7F2E7] rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-[#FFFFF0] rounded-full flex items-center justify-center">
                     <Package className="w-5 h-5 text-[#00A690]" />
                   </div>
                   <div className="text-left">
@@ -1466,12 +1466,12 @@ const MerchantDashboardPage = () => {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-[#F7F2E7] rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-[#FFFFF0] rounded-full flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-[#00A690]" />
               </div>
               <h3 className="text-xl font-bold text-gray-900">✅ Aktif Teklifler</h3>
             </div>
-            <span className="bg-[#F7F2E7] text-[#00A690] px-3 py-1 rounded-full text-sm font-semibold">
+            <span className="bg-[#FFFFF0] text-[#00A690] px-3 py-1 rounded-full text-sm font-semibold">
               {activeOffers.length}
             </span>
           </div>

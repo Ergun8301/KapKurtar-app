@@ -59,7 +59,7 @@ const BlogArticle6 = () => {
           <p className="text-gray-700 mb-4 leading-relaxed">
             Ev yapımı krutonlar marketten alınanlara göre 10 kat daha iyi ve hazırlanması çok basit!
           </p>
-          <div className="bg-[#F7F2E7] rounded-lg p-6 my-6">
+          <div className="bg-[#FFFFF0] rounded-lg p-6 my-6">
             <h3 className="font-bold text-gray-900 mb-3">Malzemeler:</h3>
             <ul className="space-y-1 text-gray-700 mb-4">
               <li>• Bayat ekmek (istediğiniz kadar)</li>
@@ -88,7 +88,7 @@ const BlogArticle6 = () => {
             Küçük büyük herkesi memnun edecek rahatlatıcı bir tatlı. Bu geleneksel Türk tatlısı (Ekmek Tatlısı)
             kuru ekmeği tatlı bir lezzete dönüştürür.
           </p>
-          <div className="bg-[#F7F2E7] rounded-lg p-6 my-6">
+          <div className="bg-[#FFFFF0] rounded-lg p-6 my-6">
             <h3 className="font-bold text-gray-900 mb-3">Malzemeler (4 kişilik):</h3>
             <ul className="space-y-1 text-gray-700 mb-4">
               <li>• 300g bayat ekmek</li>
@@ -121,7 +121,7 @@ const BlogArticle6 = () => {
             Ev yapımı galeta unu market unu galeta unundan daha ekonomik ve lezzetli.
             Hava geçirmez bir kavanozda birkaç ay saklanabilir.
           </p>
-          <div className="bg-[#F7F2E7] rounded-lg p-6 my-6">
+          <div className="bg-[#FFFFF0] rounded-lg p-6 my-6">
             <h3 className="font-bold text-gray-900 mb-3">Çok basit yöntem:</h3>
             <ol className="space-y-2 text-gray-700">
               <li>1. Ekmeği 2-3 gün tamamen kurumaya bırakın</li>
@@ -141,7 +141,7 @@ const BlogArticle6 = () => {
           <p className="text-gray-700 mb-4 leading-relaxed">
             Kış akşamları için mükemmel, kalın ve rahatlatıcı geleneksel bir Türk çorbası.
           </p>
-          <div className="bg-[#F7F2E7] rounded-lg p-6 my-6">
+          <div className="bg-[#FFFFF0] rounded-lg p-6 my-6">
             <h3 className="font-bold text-gray-900 mb-3">Malzemeler (4 kişilik):</h3>
             <ul className="space-y-1 text-gray-700 mb-4">
               <li>• 200g bayat ekmek</li>
@@ -174,7 +174,7 @@ const BlogArticle6 = () => {
           <p className="text-gray-700 mb-4 leading-relaxed">
             Aperitif veya garnitür için mükemmel, hızlı ve lezzetli bir Akdeniz mezesi.
           </p>
-          <div className="bg-[#F7F2E7] rounded-lg p-6 my-6">
+          <div className="bg-[#FFFFF0] rounded-lg p-6 my-6">
             <h3 className="font-bold text-gray-900 mb-3">Malzemeler (4 kişilik):</h3>
             <ul className="space-y-1 text-gray-700 mb-4">
               <li>• Dilimlenmiş bayat ekmek</li>
