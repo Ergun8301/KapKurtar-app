@@ -71,10 +71,7 @@ const HeroBanner = () => {
         <div className="text-center text-white px-4 max-w-5xl">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
             Tasarruf Edin, <span className="text-[#F75C00]">Gıdayı Kurtarın</span>, <br />Gezegeni Kurtarın
-          </h1>
-
-
-          
+          </h1> 
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
             {/* ✅ Corrected redirection here */}
