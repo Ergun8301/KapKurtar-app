@@ -5,12 +5,12 @@ export default {
     extend: {
       colors: {
         'tilkapp-green': '#00A690',
-        'tilkapp-beige': '#F7F2E7',
+        'tilkapp-beige': '#FFFFF0',
         'tilkapp-orange': '#F75C00',
         'kapkurtar-verdigris': '#00A690',
         'kapkurtar-teal': '#00615F',
         'kapkurtar-orange': '#F75C00',
-        'kapkurtar-cream': '#F7F2E7',
+        'kapkurtar-cream': '#FFFFF0',
       }
     },
   },
