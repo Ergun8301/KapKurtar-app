@@ -7,6 +7,16 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
+import { SplashScreen } from '@capacitor/splash-screen';
+import { Capacitor } from '@capacitor/core';
+
+// Initialiser le splash screen sur les plateformes natives
+if (Capacitor.isNativePlatform()) {
+  SplashScreen.show({
+    showDuration: 2500,
+    autoHide: true
+  });
+}
 import { HelmetProvider } from 'react-helmet-async';
 import Header from "./components/Header";
 import Footer from "./components/Footer";
