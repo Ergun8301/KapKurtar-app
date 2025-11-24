@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">KapKurtar</string>
+    <string name="title_activity_main">KapKurtar</string>
+    <string name="package_name">com.kapkurtar.app</string>
+    <string name="custom_url_scheme">com.kapkurtar.app</string>
+</resources>
