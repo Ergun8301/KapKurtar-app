@@ -6,7 +6,7 @@
     <color name="colorAccent">#FF5722</color>
 
     <!-- Splash Screen -->
-    <color name="splashBackground">#00A690</color>
+    <color name="splashBackground">#FFFFFF</color>
 
     <!-- Icon Background -->
     <color name="ic_launcher_background">#00A690</color>
