@@ -29,6 +29,7 @@ import ProfileCompletePage from "./pages/ProfileCompletePage";
 import MerchantDashboardPage from "./pages/MerchantDashboardPage";
 import ClientProfilePage from "./pages/ClientProfilePage";
 import ClientDashboardPage from "./pages/ClientDashboardPage";
+import UserTypeSelectionPage from "./pages/UserTypeSelectionPage";
 
 // ✅ Pages utilisateurs
 import FavoritesPage from "./pages/FavoritesPage";
@@ -136,8 +137,8 @@ function App() {
             >
               <SessionRedirect />
               <Routes>
-              {/* 🏠 Accueil */}
-              <Route path="/" element={<HomePage />} />
+              {/* 🏠 Accueil - Page de sélection sur mobile natif, HomePage sur web */}
+              <Route path="/" element={isNative ? <UserTypeSelectionPage /> : <HomePage />} />
 
               {/* 🗺️ Offres */}
               <Route path="/offers" element={<OffersPage />} />
