@@ -14,6 +14,11 @@ const config: CapacitorConfig = {
       showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true
+    },
+    StatusBar: {
+      overlaysWebView: true,
+      backgroundColor: '#00A690',
+      style: 'LIGHT'
     }
   }
 };

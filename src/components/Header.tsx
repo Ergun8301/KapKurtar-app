@@ -20,6 +20,8 @@ import { NotificationBell } from "./NotificationBell";
 import { logoutUser } from "../lib/logout";
 import { useAddProduct } from "../contexts/AddProductContext";
 import DownloadAppModal from "./DownloadAppModal";
+import { Capacitor } from "@capacitor/core";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -33,6 +35,22 @@ const Header = () => {
   const hasCheckedRef = useRef(false);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Configuration StatusBar pour mobile natif
+  useEffect(() => {
+    const setupStatusBar = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await StatusBar.setStyle({ style: Style.Light });
+          await StatusBar.setBackgroundColor({ color: '#00A690' });
+          await StatusBar.setOverlaysWebView({ overlay: true });
+        } catch (error) {
+          console.warn('StatusBar setup error:', error);
+        }
+      }
+    };
+    setupStatusBar();
+  }, []);
 
   useEffect(() => {
     if (!user || hasCheckedRef.current) return;
@@ -94,7 +112,7 @@ const Header = () => {
   if (user && isMerchant === null) return null;
 
   return (
-    <header className="bg-[#00A690] shadow-sm border-b border-[#00A690] sticky top-0 z-40">
+    <header className="bg-[#00A690] shadow-sm border-b border-[#00A690] sticky top-0 z-40 header-safe">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <a href="/" className="flex items-center space-x-3">
