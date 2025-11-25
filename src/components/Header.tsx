@@ -227,15 +227,18 @@ const Header = () => {
                 )}
               </div>
             )}
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-md text-[#FFFFF0] hover:text-white transition-colors duration-300">
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            {/* Bouton hamburger visible uniquement sur web mobile (pas sur natif) */}
+            {!isNative && (
+              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-md text-[#FFFFF0] hover:text-white transition-colors duration-300">
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            )}
           </div>
         </div>
       </nav>
 
-      {/* ✅ MENU MOBILE - C'ÉTAIT ÇA QUI MANQUAIT */}
-      {isMenuOpen && (
+      {/* Menu mobile déroulant - visible uniquement sur web (pas sur natif) */}
+      {!isNative && isMenuOpen && (
         <div className="md:hidden bg-[#00A690] border-t border-white/20">
           <div className="px-4 py-4 space-y-3">
             {navigation.map((item) => (

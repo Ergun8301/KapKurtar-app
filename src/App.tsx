@@ -8,9 +8,11 @@ import {
   useLocation,
 } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
+import { Capacitor } from "@capacitor/core";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import ScrollToTop from "./components/ScrollToTop"; // ← AJOUTE CETTE LIGNE
+import ScrollToTop from "./components/ScrollToTop";
+import BottomNav from "./components/navigation/BottomNav";
 import { AddProductProvider } from "./contexts/AddProductContext";
 import { supabase } from "./lib/supabaseClient";
 
@@ -115,6 +117,9 @@ function SessionRedirect() {
 }
 
 function App() {
+  // Détecter si on est sur mobile natif (Android/iOS via Capacitor)
+  const isNative = Capacitor.isNativePlatform();
+
   return (
     <HelmetProvider>
       <AddProductProvider>
@@ -122,7 +127,11 @@ function App() {
           <div className="flex flex-col min-h-screen bg-white">
             <Header />
             <ScrollToTop />
-            <main className="flex-grow">
+            {/* Main avec padding-bottom pour la BottomNav sur mobile natif */}
+            <main
+              className="flex-grow"
+              style={{ paddingBottom: isNative ? '80px' : '0px' }}
+            >
               <SessionRedirect />
               <Routes>
               {/* 🏠 Accueil */}
@@ -192,7 +201,10 @@ function App() {
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </main>
-          <Footer />
+          {/* Footer visible uniquement sur web (pas sur mobile natif) */}
+          {!isNative && <Footer />}
+          {/* BottomNav visible uniquement sur mobile natif */}
+          {isNative && <BottomNav />}
         </div>
       </Router>
     </AddProductProvider>
