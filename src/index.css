@@ -42,6 +42,23 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   ANTI-OVERSCROLL - Désactiver le bounce effect Android/iOS
+   ═══════════════════════════════════════════════════════════ */
+
+html, body {
+  overscroll-behavior: none;
+  overflow-x: hidden;
+}
+
+/* Forcer les éléments fixed à rester absolument fixes */
+.fixed {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
 @keyframes scroll {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }

@@ -4,6 +4,9 @@ const config: CapacitorConfig = {
   appId: 'com.kapkurtar.app',
   appName: 'KapKurtar',
   webDir: 'dist',
+  android: {
+    overScrollMode: 'never'
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
