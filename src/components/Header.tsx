@@ -32,6 +32,7 @@ const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMerchant, setIsMerchant] = useState<boolean | null>(null);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [isNative, setIsNative] = useState(false);
   const hasCheckedRef = useRef(false);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -40,6 +41,7 @@ const Header = () => {
   useEffect(() => {
     const setupStatusBar = async () => {
       if (Capacitor.isNativePlatform()) {
+        setIsNative(true);
         try {
           await StatusBar.setStyle({ style: Style.Light });
           await StatusBar.setBackgroundColor({ color: '#00A690' });
@@ -112,7 +114,10 @@ const Header = () => {
   if (user && isMerchant === null) return null;
 
   return (
-    <header className="bg-[#00A690] shadow-sm border-b border-[#00A690] sticky top-0 z-40 header-safe">
+    <header
+      className="bg-[#00A690] shadow-sm border-b border-[#00A690] sticky top-0 z-40"
+      style={{ paddingTop: isNative ? '35px' : '0px' }}
+    >
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <a href="/" className="flex items-center space-x-3">
