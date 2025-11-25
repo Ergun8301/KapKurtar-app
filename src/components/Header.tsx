@@ -115,7 +115,7 @@ const Header = () => {
 
   return (
     <header
-      className="bg-[#00A690] shadow-sm border-b border-[#00A690] sticky top-0 z-40"
+      className="bg-[#00A690] shadow-sm border-b border-[#00A690] fixed top-0 left-0 right-0 z-40"
       style={{ paddingTop: isNative ? '25px' : '0px' }}
     >
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

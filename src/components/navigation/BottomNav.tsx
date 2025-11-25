@@ -94,7 +94,7 @@ const BottomNav: React.FC = () => {
     <nav
       className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50"
       style={{
-        paddingBottom: "35px", // Safe area bottom pour Android
+        paddingBottom: "45px", // Safe area bottom pour Android + espace boutons système
         boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.1)",
       }}
     >
