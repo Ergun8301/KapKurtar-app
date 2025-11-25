@@ -126,11 +126,13 @@ function App() {
         <Router>
           <div className="flex flex-col min-h-screen bg-white">
             <Header />
+            {/* Spacer pour compenser le header fixe (64px + 25px safe area sur natif) */}
+            <div style={{ height: isNative ? '89px' : '64px' }} />
             <ScrollToTop />
             {/* Main avec padding-bottom pour la BottomNav sur mobile natif */}
             <main
               className="flex-grow"
-              style={{ paddingBottom: isNative ? '80px' : '0px' }}
+              style={{ paddingBottom: isNative ? '95px' : '0px' }}
             >
               <SessionRedirect />
               <Routes>
