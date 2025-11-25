@@ -31,28 +31,28 @@ const BottomNav: React.FC = () => {
     // Utilisateur non connecté
     if (!user) {
       return [
-        { icon: Home, label: "Accueil", path: "/" },
-        { icon: Search, label: "Offres", path: "/offers" },
-        { icon: LogIn, label: "Connexion", path: "/customer/auth" },
-        { icon: Store, label: "Marchands", path: "/for-merchants" },
+        { icon: Home, label: "Ana Sayfa", path: "/" },
+        { icon: Search, label: "Teklifler", path: "/offers" },
+        { icon: LogIn, label: "Giriş", path: "/customer/auth" },
+        { icon: Store, label: "İşletmeler", path: "/for-merchants" },
       ];
     }
 
     // Marchand connecté
     if (userType === "merchant") {
       return [
-        { icon: LayoutDashboard, label: "Dashboard", path: "/merchant/dashboard" },
-        { icon: ShoppingBag, label: "Mes Offres", path: "/merchant/dashboard?tab=offers" },
-        { icon: ClipboardList, label: "Commandes", path: "/merchant/dashboard?tab=orders" },
+        { icon: LayoutDashboard, label: "Panel", path: "/merchant/dashboard" },
+        { icon: ShoppingBag, label: "Tekliflerim", path: "/merchant/dashboard?tab=offers" },
+        { icon: ClipboardList, label: "Siparişler", path: "/merchant/dashboard?tab=orders" },
         { icon: User, label: "Profil", path: "/merchant/dashboard?tab=profile" },
       ];
     }
 
     // Client connecté (par défaut)
     return [
-      { icon: Home, label: "Accueil", path: "/" },
-      { icon: Search, label: "Offres", path: "/offers" },
-      { icon: Package, label: "Réservations", path: "/customer/dashboard" },
+      { icon: Home, label: "Ana Sayfa", path: "/" },
+      { icon: Search, label: "Teklifler", path: "/offers" },
+      { icon: Package, label: "Rezervasyonlar", path: "/customer/dashboard" },
       { icon: User, label: "Profil", path: "/client/profile" },
     ];
   };
@@ -94,7 +94,7 @@ const BottomNav: React.FC = () => {
     <nav
       className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50"
       style={{
-        paddingBottom: "20px", // Safe area bottom pour Android
+        paddingBottom: "35px", // Safe area bottom pour Android
         boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.1)",
       }}
     >

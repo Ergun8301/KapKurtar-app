@@ -22,8 +22,9 @@ const BottomNavItem: React.FC<BottomNavItemProps> = ({
     <button
       onClick={onClick}
       className={`flex flex-col items-center justify-center flex-1 py-2 transition-colors duration-200 ${
-        isActive ? "text-[#00A690]" : "text-gray-500"
+        isActive ? "text-[#00A690]" : "text-[#00615F]"
       }`}
+      style={{ WebkitTapHighlightColor: "transparent" }}
     >
       <Icon
         className={`w-6 h-6 ${isActive ? "stroke-[2.5px]" : "stroke-[1.5px]"}`}
