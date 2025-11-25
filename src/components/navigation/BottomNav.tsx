@@ -26,6 +26,11 @@ const BottomNav: React.FC = () => {
   const location = useLocation();
   const { user, userType } = useAuthStore();
 
+  // Cacher la BottomNav sur la page de sélection (route "/")
+  if (location.pathname === "/") {
+    return null;
+  }
+
   // Configuration des onglets selon le rôle
   const getNavItems = () => {
     // Utilisateur non connecté
