@@ -3,6 +3,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════
+   SAFE AREA - Support pour iOS notch et Android status bar
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+/* Classe utilitaire pour padding-top safe */
+.pt-safe {
+  padding-top: var(--safe-area-inset-top);
+}
+
+/* Classe utilitaire pour padding-bottom safe (futur BottomNav) */
+.pb-safe {
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+
+/* Classe pour le header avec safe area intégré */
+.header-safe {
+  padding-top: var(--safe-area-inset-top);
+}
+
+/* Support viewport-fit pour iOS */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .header-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
 @keyframes scroll {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
