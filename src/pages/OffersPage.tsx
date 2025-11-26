@@ -763,19 +763,14 @@ export default function OffersPage() {
         setIsGeolocating(false);
       },
       (error) => {
-        console.warn("Géolocalisation échouée:", error);
+        console.error("Géolocalisation échouée:", error);
         setIsGeolocating(false);
-        // Fallback: utiliser la position existante si disponible
-        if (Number.isFinite(userLocation[0]) && Number.isFinite(userLocation[1])) {
-          setViewMode("nearby");
-          if (mapRef.current) {
-            mapRef.current.flyTo({
-              center: userLocation,
-              zoom: 13,
-              essential: true,
-            });
-          }
-        }
+
+        // Afficher un message d'erreur en turc, NE PAS centrer la carte
+        alert("Konum alınamadı. Lütfen konum izni verin ve tekrar deneyin.");
+
+        // Rester en mode "all" si la géoloc échoue
+        setViewMode("all");
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -976,9 +971,10 @@ export default function OffersPage() {
                   ? "bg-white text-[#00A690] shadow"
                   : "text-gray-500 hover:text-[#00A690]"
               }`}
-              onClick={() => handleViewModeChange("nearby")}
+              onClick={handleNearbyClick}
+              disabled={isGeolocating}
             >
-              📍 Yakındaki Teklifler
+              {isGeolocating ? "📍 Konum alınıyor..." : "📍 Yakındaki Teklifler"}
             </button>
             <button
               className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
