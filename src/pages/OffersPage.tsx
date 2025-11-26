@@ -708,7 +708,18 @@ export default function OffersPage() {
 
       if (!hasPermission) {
         console.warn("Permission de géolocalisation refusée:", permission);
-        alert("Konum izni verilmedi. Lütfen ayarlardan izin verin.\n\n(Location permission denied. Please grant permission in settings.)");
+
+        // Proposer d'ouvrir les paramètres de l'app
+        const openSettings = window.confirm(
+          "Konum izni gerekli. Ayarları açmak ister misiniz?\n\n" +
+          "(Location permission required. Open settings?)"
+        );
+
+        if (openSettings) {
+          // Ouvrir les paramètres de l'app Android
+          window.open('app-settings:', '_system');
+        }
+
         setIsGeolocating(false);
         return;
       }
@@ -716,10 +727,10 @@ export default function OffersPage() {
       console.log("Permission granted, getting position...");
 
       try {
-        // Obtenir la position via le plugin Capacitor
+        // Obtenir la position via le plugin Capacitor (timeout 10 secondes)
         const position = await Geolocation.getCurrentPosition({
           enableHighAccuracy: true,
-          timeout: 30000,
+          timeout: 10000,
         });
 
         console.log("Position received:", JSON.stringify(position.coords));
@@ -731,7 +742,6 @@ export default function OffersPage() {
 
         if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
           console.error("Invalid coordinates!");
-          alert("Geçersiz konum verisi alındı. Lütfen tekrar deneyin.");
           setIsGeolocating(false);
           return;
         }
@@ -761,19 +771,36 @@ export default function OffersPage() {
       } catch (positionError: any) {
         console.error("=== POSITION ERROR ===", positionError);
 
-        // Message d'erreur clair pour l'utilisateur
-        alert(
-          "Konum alınamadı. Lütfen GPS'inizi açın ve tekrar deneyin.\n\n" +
-          "(Could not get location. Please turn on GPS and try again.)"
+        // GPS désactivé → Proposer d'ouvrir les paramètres de localisation
+        const openSettings = window.confirm(
+          "GPS kapalı. Konum ayarlarını açmak ister misiniz?\n\n" +
+          "(GPS is off. Would you like to open location settings?)"
         );
+
+        if (openSettings) {
+          // Ouvrir les paramètres de localisation Android
+          try {
+            // Méthode Android : intent pour ouvrir les paramètres de localisation
+            window.location.href = 'intent://settings/location_source#Intent;scheme=android-app;package=com.android.settings;end';
+          } catch (e) {
+            console.log("Intent failed, trying app-settings");
+            window.open('app-settings:', '_system');
+          }
+        }
       }
 
     } catch (error) {
       console.error("=== GEOLOCATION ERROR ===", error);
-      alert(
-        "Konum servisi hatası. Lütfen tekrar deneyin.\n\n" +
-        "(Location service error. Please try again.)"
+
+      // Erreur générale → Proposer d'ouvrir les paramètres
+      const openSettings = window.confirm(
+        "Konum servisi hatası. Ayarları kontrol etmek ister misiniz?\n\n" +
+        "(Location service error. Check settings?)"
       );
+
+      if (openSettings) {
+        window.open('app-settings:', '_system');
+      }
     } finally {
       console.log("=== GEOLOCATION END ===");
       setIsGeolocating(false);
