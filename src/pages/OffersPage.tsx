@@ -48,9 +48,9 @@ const customMapboxCSS = `
     box-shadow: none !important;
   }
 
-  /* Geocoder positionné en haut, centré */
+  /* Geocoder positionné en haut, sous le header */
   .mapboxgl-ctrl-top-right {
-    top: 10px !important;
+    top: 70px !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
@@ -76,7 +76,7 @@ const customMapboxCSS = `
     left: 12px !important;
   }
 
-  /* Mobile : Geocoder pleine largeur */
+  /* Mobile : Geocoder pleine largeur, sous le header */
   @media (max-width: 768px) {
     .mapboxgl-ctrl-top-right {
       top: 10px !important;
@@ -727,10 +727,9 @@ export default function OffersPage() {
       (error) => {
         console.error("Erreur géolocalisation:", error);
         setIsGeolocating(false);
-        // En cas d'erreur, on reste sur la position actuelle mais on passe en mode nearby
-        setViewMode("nearby");
+        // En cas d'erreur, on ne fait rien - l'utilisateur peut utiliser la barre de recherche
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
     );
   };
 
