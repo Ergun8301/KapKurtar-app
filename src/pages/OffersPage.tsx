@@ -77,12 +77,12 @@ const customMapboxCSS = `
     left: 12px !important;
   }
 
-  /* Mobile : Geocoder pleine largeur, sous le header */
+  /* Mobile : Geocoder pleine largeur, sous le header (header = ~90px sur mobile natif) */
   @media (max-width: 768px) {
     .mapboxgl-ctrl-top-right {
       top: 10px !important;
-      left: 10px !important;
-      right: 10px !important;
+      left: 12px !important;
+      right: 12px !important;
       transform: none !important;
     }
 
@@ -195,6 +195,12 @@ export default function OffersPage() {
     styleTag.innerHTML = customMapboxCSS;
     document.head.appendChild(styleTag);
     return () => document.head.removeChild(styleTag);
+  }, []);
+
+  // Debug: vérifier que le plugin Geolocation est disponible
+  useEffect(() => {
+    console.log("🔍 Capacitor Geolocation plugin available:", !!Geolocation);
+    console.log("🔍 Geolocation methods:", Object.keys(Geolocation));
   }, []);
 
   useEffect(() => {
@@ -688,17 +694,25 @@ export default function OffersPage() {
 
   // 📍 Fonction de géolocalisation pour le bouton Yakında (utilise Capacitor plugin)
   const handleGeolocate = async () => {
+    console.log("=== GEOLOCATION START ===");
     setIsGeolocating(true);
 
     try {
       // Demander la permission via le plugin Capacitor
+      console.log("Requesting permissions...");
       const permission = await Geolocation.requestPermissions();
+      console.log("Permission result:", JSON.stringify(permission));
 
-      if (permission.location !== 'granted') {
-        console.warn("Permission de géolocalisation refusée");
+      // Vérifier si au moins une permission est accordée
+      const hasPermission = permission.location === 'granted' || permission.coarseLocation === 'granted';
+
+      if (!hasPermission) {
+        console.warn("Permission de géolocalisation refusée:", permission);
         setIsGeolocating(false);
         return;
       }
+
+      console.log("Permission granted, getting position...");
 
       // Obtenir la position via le plugin Capacitor
       const position = await Geolocation.getCurrentPosition({
@@ -706,21 +720,28 @@ export default function OffersPage() {
         timeout: 30000,
       });
 
+      console.log("Position received:", JSON.stringify(position.coords));
+
       const lng = position.coords.longitude;
       const lat = position.coords.latitude;
 
+      console.log("Coordinates - lng:", lng, "lat:", lat);
+
       if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+        console.error("Invalid coordinates!");
         setIsGeolocating(false);
         return;
       }
 
       // Mettre à jour la position AVANT de changer le mode
+      console.log("Updating state: userLocation, center, viewMode...");
       setUserLocation([lng, lat]);
       setCenter([lng, lat]);
       setViewMode("nearby");
 
       // Fly to position
       if (mapRef.current) {
+        console.log("Flying to position...");
         mapRef.current.flyTo({
           center: [lng, lat],
           zoom: 13,
@@ -732,10 +753,13 @@ export default function OffersPage() {
       const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
       if (input) input.value = "";
 
+      console.log("=== GEOLOCATION SUCCESS ===");
+
     } catch (error) {
-      console.error("Erreur géolocalisation Capacitor:", error);
+      console.error("=== GEOLOCATION ERROR ===", error);
       // En cas d'erreur, on ne fait rien - l'utilisateur peut utiliser la barre de recherche
     } finally {
+      console.log("=== GEOLOCATION END ===");
       setIsGeolocating(false);
     }
   };
