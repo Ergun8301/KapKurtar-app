@@ -4,6 +4,7 @@ import mapboxgl, { Map, Marker } from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
+import { Geolocation } from "@capacitor/geolocation";
 import { Clock } from "lucide-react";
 import SEO from "../components/SEO";
 import { supabase } from "../lib/supabaseClient";
@@ -685,52 +686,58 @@ export default function OffersPage() {
     localStorage.setItem("radiusKm", String(val));
   };
 
-  // 📍 Fonction de géolocalisation pour le bouton Yakında
-  const handleGeolocate = () => {
-    if (!navigator.geolocation) {
-      console.warn("Géolocalisation non disponible");
-      return;
-    }
-
+  // 📍 Fonction de géolocalisation pour le bouton Yakında (utilise Capacitor plugin)
+  const handleGeolocate = async () => {
     setIsGeolocating(true);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lng = position.coords.longitude;
-        const lat = position.coords.latitude;
+    try {
+      // Demander la permission via le plugin Capacitor
+      const permission = await Geolocation.requestPermissions();
 
-        if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
-          setIsGeolocating(false);
-          return;
-        }
-
-        // Mettre à jour la position AVANT de changer le mode
-        setUserLocation([lng, lat]);
-        setCenter([lng, lat]);
-        setViewMode("nearby");
-
-        // Fly to position
-        if (mapRef.current) {
-          mapRef.current.flyTo({
-            center: [lng, lat],
-            zoom: 13,
-            essential: true,
-          });
-        }
-
-        // Effacer le champ de recherche
-        const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
-        if (input) input.value = "";
-
+      if (permission.location !== 'granted') {
+        console.warn("Permission de géolocalisation refusée");
         setIsGeolocating(false);
-      },
-      (error) => {
-        console.error("Erreur géolocalisation:", error);
+        return;
+      }
+
+      // Obtenir la position via le plugin Capacitor
+      const position = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 30000,
+      });
+
+      const lng = position.coords.longitude;
+      const lat = position.coords.latitude;
+
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
         setIsGeolocating(false);
-        // En cas d'erreur, on ne fait rien - l'utilisateur peut utiliser la barre de recherche
-      },
-      { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
-    );
+        return;
+      }
+
+      // Mettre à jour la position AVANT de changer le mode
+      setUserLocation([lng, lat]);
+      setCenter([lng, lat]);
+      setViewMode("nearby");
+
+      // Fly to position
+      if (mapRef.current) {
+        mapRef.current.flyTo({
+          center: [lng, lat],
+          zoom: 13,
+          essential: true,
+        });
+      }
+
+      // Effacer le champ de recherche
+      const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+      if (input) input.value = "";
+
+    } catch (error) {
+      console.error("Erreur géolocalisation Capacitor:", error);
+      // En cas d'erreur, on ne fait rien - l'utilisateur peut utiliser la barre de recherche
+    } finally {
+      setIsGeolocating(false);
+    }
   };
 
   if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
