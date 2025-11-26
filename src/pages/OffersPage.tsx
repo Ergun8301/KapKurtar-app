@@ -4,7 +4,7 @@ import mapboxgl, { Map, Marker } from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
-import { Clock } from "lucide-react";
+import { Clock, Navigation, Globe, Loader2 } from "lucide-react";
 import SEO from "../components/SEO";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
@@ -720,6 +720,67 @@ export default function OffersPage() {
     localStorage.setItem("radiusKm", String(val));
   };
 
+  // Fonction pour déclencher la géolocalisation GPS et passer en mode nearby
+  const handleNearbyClick = () => {
+    if (!navigator.geolocation) {
+      alert("Géolocalisation non disponible sur cet appareil");
+      return;
+    }
+
+    setIsGeolocating(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        // Mettre à jour la position utilisateur
+        setUserLocation([longitude, latitude]);
+        setCenter([longitude, latitude]);
+        setViewMode("nearby");
+
+        // Centrer la carte sur la position
+        if (mapRef.current && Number.isFinite(longitude) && Number.isFinite(latitude)) {
+          mapRef.current.flyTo({
+            center: [longitude, latitude],
+            zoom: 13,
+            essential: true,
+          });
+        }
+
+        // Sauvegarder en base si client connecté
+        if (clientId) {
+          try {
+            await supabase.rpc("update_client_location", {
+              p_client_id: clientId,
+              p_lat: latitude,
+              p_lng: longitude,
+            });
+          } catch (error) {
+            console.error("Erreur mise à jour position:", error);
+          }
+        }
+
+        setIsGeolocating(false);
+      },
+      (error) => {
+        console.warn("Géolocalisation échouée:", error);
+        setIsGeolocating(false);
+        // Fallback: utiliser la position existante si disponible
+        if (Number.isFinite(userLocation[0]) && Number.isFinite(userLocation[1])) {
+          setViewMode("nearby");
+          if (mapRef.current) {
+            mapRef.current.flyTo({
+              center: userLocation,
+              zoom: 13,
+              essential: true,
+            });
+          }
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
   if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
     console.warn("🧭 Map skipped render: invalid center", center);
     return (
@@ -854,44 +915,53 @@ export default function OffersPage() {
         <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
           <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* Toggle mobile : Yakındaki / Tüm Teklifler */}
-        <div className="absolute bottom-28 md:bottom-4 left-1/2 -translate-x-1/2 z-[900] flex flex-col items-center gap-2">
-          {/* Toggle viewMode - visible sur mobile */}
-          <div className="md:hidden flex bg-white rounded-full shadow-lg overflow-hidden border-2 border-[#00A690]/20">
+        {/* Barre de contrôle mobile - pleine largeur au-dessus de BottomNav */}
+        <div className="md:hidden fixed bottom-[105px] left-0 right-0 z-[900] bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
+          {/* Toggle Yakında / Tümü */}
+          <div className="flex">
             <button
-              className={`px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+              className={`flex-1 py-3.5 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${
                 viewMode === "nearby"
                   ? "bg-[#00A690] text-white"
-                  : "text-gray-600 hover:text-[#00A690]"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
               }`}
-              onClick={() => handleViewModeChange("nearby")}
+              onClick={handleNearbyClick}
+              disabled={isGeolocating}
             >
-              📍 Yakında
+              {isGeolocating ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Navigation className="w-4 h-4" />
+              )}
+              {isGeolocating ? "Konum alınıyor..." : "Yakında"}
             </button>
+            <div className="w-px bg-gray-200" />
             <button
-              className={`px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+              className={`flex-1 py-3.5 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${
                 viewMode === "all"
                   ? "bg-[#00A690] text-white"
-                  : "text-gray-600 hover:text-[#00A690]"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
               }`}
               onClick={() => handleViewModeChange("all")}
             >
-              🌍 Tümü
+              <Globe className="w-4 h-4" />
+              Tümü
             </button>
           </div>
 
           {/* Slider de rayon - visible seulement en mode nearby */}
           {viewMode === "nearby" && (
-            <div className="bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-[#00A690]/20">
+            <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-4">
+              <span className="text-xs text-gray-500 whitespace-nowrap">Yarıçap:</span>
               <input
                 type="range"
                 min={1}
                 max={30}
                 value={radiusKm}
                 onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
-                className="w-32 md:w-36 accent-[#00A690] cursor-pointer focus:outline-none"
+                className="flex-1 accent-[#00A690] cursor-pointer focus:outline-none h-2"
               />
-              <span className="text-sm text-gray-900 font-bold whitespace-nowrap">{radiusKm} km</span>
+              <span className="text-sm text-[#00A690] font-bold whitespace-nowrap min-w-[50px] text-right">{radiusKm} km</span>
             </div>
           )}
         </div>
