@@ -49,13 +49,14 @@ const customMapboxCSS = `
     box-shadow: none !important;
   }
 
+  /* Desktop : contrôles en haut à droite */
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
     right: 10px !important;
     display: flex !important;
     align-items: center !important;
-    gap: 0px !important;
-    transform: translateX(-55%) !important;
+    gap: 8px !important;
+    z-index: 100 !important;
   }
 
   .mapboxgl-ctrl-geocoder {
@@ -63,23 +64,48 @@ const customMapboxCSS = `
     max-width: 80% !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    height: 32px !important;
+    height: 36px !important;
     font-size: 14px !important;
   }
 
-  @media (max-width: 640px) {
+  .mapboxgl-ctrl-geolocate {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* Mobile : contrôles visibles et bien positionnés */
+  @media (max-width: 768px) {
     .mapboxgl-ctrl-top-right {
-      top: 8px !important;
-      right: 50% !important;
-      transform: translateX(50%) !important;
+      top: 10px !important;
+      right: 10px !important;
+      left: auto !important;
+      transform: none !important;
       flex-direction: row !important;
-      justify-content: center !important;
-      gap: 6px !important;
+      gap: 8px !important;
+      z-index: 100 !important;
     }
 
     .mapboxgl-ctrl-geocoder {
-      width: 80% !important;
-      height: 36px !important;
+      width: 200px !important;
+      max-width: 55vw !important;
+      height: 40px !important;
+      font-size: 14px !important;
+    }
+
+    .mapboxgl-ctrl-geocoder input {
+      height: 40px !important;
+      padding: 6px 35px !important;
+    }
+
+    .mapboxgl-ctrl-geolocate {
+      width: 40px !important;
+      height: 40px !important;
+      border-radius: 8px !important;
+    }
+
+    .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon {
+      width: 24px !important;
+      height: 24px !important;
     }
   }
 
@@ -832,8 +858,9 @@ export default function OffersPage() {
         <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
           <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
+        {/* Slider desktop - visible seulement en mode nearby sur desktop */}
         {viewMode === "nearby" && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[900] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-[#00A690]/20">
+          <div className="hidden md:flex absolute bottom-4 left-1/2 -translate-x-1/2 z-[900] bg-white rounded-full shadow-lg px-4 py-2.5 items-center space-x-3 border-2 border-[#00A690]/20">
             <input
               type="range"
               min={1}
@@ -845,6 +872,63 @@ export default function OffersPage() {
             <span className="text-sm text-gray-900 font-bold whitespace-nowrap">{radiusKm} km</span>
           </div>
         )}
+
+        {/* 📱 CONTRÔLES MOBILES - Toggle nearby/all + Slider */}
+        <div className="md:hidden absolute bottom-4 left-0 right-0 z-[901] px-3">
+          {/* Toggle Yakında / Tümü */}
+          <div className="bg-white rounded-xl shadow-lg mb-2 flex overflow-hidden border border-gray-100">
+            <button
+              onClick={() => {
+                setViewMode("nearby");
+                // Déclencher la géolocalisation Mapbox
+                const geolocateBtn = document.querySelector('.mapboxgl-ctrl-geolocate') as HTMLButtonElement;
+                if (geolocateBtn) geolocateBtn.click();
+              }}
+              className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${
+                viewMode === "nearby"
+                  ? "bg-[#00A690] text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              📍 Yakında
+            </button>
+            <button
+              onClick={() => setViewMode("all")}
+              className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${
+                viewMode === "all"
+                  ? "bg-[#00A690] text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              🌍 Tümü
+            </button>
+          </div>
+
+          {/* Slider de rayon - visible seulement en mode nearby */}
+          {viewMode === "nearby" && (
+            <div className="bg-white rounded-xl shadow-lg p-3 flex items-center gap-3 border border-gray-100">
+              <span className="text-xs text-gray-500 whitespace-nowrap">Yarıçap:</span>
+              <input
+                type="range"
+                min={1}
+                max={50}
+                value={radiusKm}
+                onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
+                className="flex-1 accent-[#00A690] cursor-pointer"
+              />
+              <span className="text-sm font-bold text-[#00A690] min-w-[50px] text-right">
+                {radiusKm} km
+              </span>
+            </div>
+          )}
+
+          {/* Badge nombre d'offres */}
+          <div className="mt-2 flex justify-center">
+            <span className="bg-[#00A690]/10 text-[#00A690] text-xs font-semibold px-3 py-1 rounded-full">
+              {offers.length} teklif bulundu
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="hidden md:block md:w-1/2 overflow-y-auto bg-gray-50 p-4">
