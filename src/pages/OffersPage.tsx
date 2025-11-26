@@ -132,6 +132,7 @@ export default function OffersPage() {
   const { user } = useAuth();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
+  const geolocateControlRef = useRef<mapboxgl.GeolocateControl | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [userLocation, setUserLocation] = useState<[number, number]>(DEFAULT_LOCATION);
   const [center, setCenter] = useState<[number, number]>(DEFAULT_LOCATION);
@@ -358,14 +359,18 @@ export default function OffersPage() {
     mapRef.current = map;
 
     const geolocate = new mapboxgl.GeolocateControl({
-      positionOptions: { 
+      positionOptions: {
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 0
       },
-      trackUserLocation: false,
+      trackUserLocation: true,
       showUserHeading: true,
     });
+
+    // Stocker la référence pour pouvoir l'utiliser dans handleNearbyClick
+    geolocateControlRef.current = geolocate;
+
     map.addControl(geolocate, "top-right");
 
     geolocate.on("geolocate", (e) => {
@@ -375,15 +380,18 @@ export default function OffersPage() {
       setUserLocation([lng, lat]);
       setCenter([lng, lat]);
       setViewMode("nearby");
-      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
-      
+      setIsGeolocating(false);
+      map.flyTo({ center: [lng, lat], zoom: 13, essential: true });
+
       const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
       if (input) input.value = "";
     });
 
     geolocate.on("error", (e) => {
       console.error("❌ Erreur géolocalisation:", e);
-      // 🔧 FIX : Pas d'alerte, gérer silencieusement
+      setIsGeolocating(false);
+      // Rester en mode "all" si erreur
+      setViewMode("all");
     });
 
     const geocoder = new MapboxGeocoder({
@@ -720,60 +728,16 @@ export default function OffersPage() {
     localStorage.setItem("radiusKm", String(val));
   };
 
-  // Fonction pour déclencher la géolocalisation GPS et passer en mode nearby
+  // Fonction pour déclencher la géolocalisation via le GeolocateControl Mapbox
   const handleNearbyClick = () => {
-    if (!navigator.geolocation) {
-      alert("Géolocalisation non disponible sur cet appareil");
-      return;
+    if (geolocateControlRef.current) {
+      setIsGeolocating(true);
+      // Déclencher le GeolocateControl Mapbox (affiche la vraie popup de permission)
+      geolocateControlRef.current.trigger();
+    } else {
+      console.error("GeolocateControl non disponible");
+      alert("Konum servisi kullanılamıyor. Lütfen sayfayı yenileyin.");
     }
-
-    setIsGeolocating(true);
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-
-        // Mettre à jour la position utilisateur
-        setUserLocation([longitude, latitude]);
-        setCenter([longitude, latitude]);
-        setViewMode("nearby");
-
-        // Centrer la carte sur la position
-        if (mapRef.current && Number.isFinite(longitude) && Number.isFinite(latitude)) {
-          mapRef.current.flyTo({
-            center: [longitude, latitude],
-            zoom: 13,
-            essential: true,
-          });
-        }
-
-        // Sauvegarder en base si client connecté
-        if (clientId) {
-          try {
-            await supabase.rpc("update_client_location", {
-              p_client_id: clientId,
-              p_lat: latitude,
-              p_lng: longitude,
-            });
-          } catch (error) {
-            console.error("Erreur mise à jour position:", error);
-          }
-        }
-
-        setIsGeolocating(false);
-      },
-      (error) => {
-        console.error("Géolocalisation échouée:", error);
-        setIsGeolocating(false);
-
-        // Afficher un message d'erreur en turc, NE PAS centrer la carte
-        alert("Konum alınamadı. Lütfen konum izni verin ve tekrar deneyin.");
-
-        // Rester en mode "all" si la géoloc échoue
-        setViewMode("all");
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
   };
 
   if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
