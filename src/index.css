@@ -51,6 +51,18 @@ html, body {
   overflow-x: hidden;
 }
 
+/* Mobile natif (Capacitor) : bloquer le scroll par défaut */
+html.native-app, html.native-app body, html.native-app #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Pages qui ont besoin de scroll sur mobile natif */
+.scrollable-page {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Forcer les éléments fixed à rester absolument fixes */
 .fixed {
   transform: translateZ(0);

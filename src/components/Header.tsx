@@ -128,7 +128,7 @@ const Header = () => {
       style={{ paddingTop: isNative ? '25px' : '0px' }}
     >
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className={`flex items-center h-16 ${isOnAuthPage && isNative ? 'justify-center' : 'justify-between'}`}>
           <a href="/" className="flex items-center space-x-3">
             <img
               src="https://zhabjdyzawffsmvziojl.supabase.co/storage/v1/object/public/logos/KK%20fond%20vert%20(6).png"
@@ -136,23 +136,28 @@ const Header = () => {
               className="h-12 w-auto"
             />
           </a>
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
-              {navigation.map((item) => (
-                <a key={item.name} href={item.href} className="text-[#FFFFF0] hover:text-[#F75C00] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">
-                  {item.name}
-                </a>
-              ))}
-              <button
-                onClick={() => setShowDownloadModal(true)}
-                className="bg-[#00A690] text-white hover:bg-[#F75C00] px-4 py-2 rounded-md text-sm font-medium transition-colors duration-300 border border-white/20 flex items-center space-x-2"
-              >
-                <Download className="w-4 h-4" />
-                <span>Uygulamayı İndir</span>
-              </button>
+          {/* Menu desktop - caché sur pages d'auth en natif */}
+          {!(isOnAuthPage && isNative) && (
+            <div className="hidden md:block">
+              <div className="ml-10 flex items-baseline space-x-8">
+                {navigation.map((item) => (
+                  <a key={item.name} href={item.href} className="text-[#FFFFF0] hover:text-[#F75C00] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">
+                    {item.name}
+                  </a>
+                ))}
+                <button
+                  onClick={() => setShowDownloadModal(true)}
+                  className="bg-[#00A690] text-white hover:bg-[#F75C00] px-4 py-2 rounded-md text-sm font-medium transition-colors duration-300 border border-white/20 flex items-center space-x-2"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Uygulamayı İndir</span>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
+          {/* Section droite - cachée sur pages d'auth en natif */}
+          {!(isOnAuthPage && isNative) && (
           <div className="flex items-center space-x-4">
             {loading ? (
               <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
@@ -245,6 +250,7 @@ const Header = () => {
               </button>
             )}
           </div>
+          )}
         </div>
       </nav>
 

@@ -121,11 +121,21 @@ function App() {
   // Détecter si on est sur mobile natif (Android/iOS via Capacitor)
   const isNative = Capacitor.isNativePlatform();
 
+  // Ajouter classe native-app sur html pour CSS global
+  useEffect(() => {
+    if (isNative) {
+      document.documentElement.classList.add('native-app');
+    }
+    return () => {
+      document.documentElement.classList.remove('native-app');
+    };
+  }, [isNative]);
+
   return (
     <HelmetProvider>
       <AddProductProvider>
         <Router>
-          <div className="flex flex-col min-h-screen bg-white">
+          <div className={`flex flex-col bg-white ${isNative ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
             <Header />
             {/* Spacer pour compenser le header fixe (64px + 25px safe area sur natif) */}
             <div style={{ height: isNative ? '89px' : '64px' }} />
