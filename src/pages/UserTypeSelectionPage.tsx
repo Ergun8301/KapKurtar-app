@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { ShoppingCart, Store } from "lucide-react";
 
 /**
  * Page de sélection du type d'utilisateur
@@ -11,45 +12,54 @@ const UserTypeSelectionPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col justify-between px-6 py-12"
-      style={{ backgroundColor: "#F7F2E7" }}
+      className="h-screen overflow-hidden flex flex-col px-6 py-8"
+      style={{ backgroundColor: "#00A690" }}
     >
-      {/* HAUT - Logo et bienvenue */}
-      <div className="text-center pt-8">
-        <h1 className="text-5xl font-bold mb-4">
-          <span style={{ color: "#00A690" }}>KAP</span>
-          <span style={{ color: "#F75C00" }}>KURTAR</span>
+      {/* HAUT - Logo et messages */}
+      <div className="text-center pt-4 pb-6">
+        {/* Logo texte */}
+        <h1 className="text-4xl font-bold mb-2">
+          <span style={{ color: "#F75C00" }}>KAP</span>
+          <span style={{ color: "#F7F2E7" }}>KURTAR</span>
         </h1>
-        <p className="text-2xl font-semibold" style={{ color: "#00A690" }}>
+        <p className="text-xl font-semibold text-white mb-1">
           Hoş Geldiniz!
         </p>
-      </div>
-
-      {/* MILIEU - Message principal */}
-      <div className="text-center">
-        <p className="text-xl font-medium mb-2" style={{ color: "#00615F" }}>
+        <p className="text-sm" style={{ color: "#E0F2F1" }}>
           Gıda israfını birlikte önleyelim
         </p>
-        <p className="text-gray-600">
-          Nasıl devam etmek istersiniz?
-        </p>
       </div>
 
-      {/* BAS - Boutons */}
-      <div className="space-y-4 pb-8">
+      {/* MILIEU + BAS - Boutons */}
+      <div className="flex-1 flex flex-col justify-center gap-4 pb-8">
+        {/* Bouton Client */}
         <button
           onClick={() => navigate("/customer/auth")}
-          className="w-full py-5 rounded-xl text-white text-lg font-semibold transition-all duration-200 hover:opacity-90 active:scale-95"
-          style={{ backgroundColor: "#00A690" }}
+          className="flex-1 max-h-[160px] rounded-2xl shadow-lg flex flex-col items-center justify-center transition-transform active:scale-[0.98]"
+          style={{ backgroundColor: "#F7F2E7" }}
         >
-          🛒 Müşteriyim
+          <ShoppingCart size={40} style={{ color: "#00A690" }} />
+          <span className="text-2xl font-bold mt-2" style={{ color: "#00615F" }}>
+            Müşteriyim
+          </span>
+          <span className="text-sm text-gray-500 mt-1">
+            Fırsatları keşfet ve tasarruf et
+          </span>
         </button>
+
+        {/* Bouton Marchand */}
         <button
           onClick={() => navigate("/merchant/auth")}
-          className="w-full py-5 rounded-xl text-white text-lg font-semibold transition-all duration-200 hover:opacity-90 active:scale-95"
-          style={{ backgroundColor: "#F75C00" }}
+          className="flex-1 max-h-[160px] rounded-2xl shadow-lg flex flex-col items-center justify-center transition-transform active:scale-[0.98] border-2"
+          style={{ backgroundColor: "#FFFFFF", borderColor: "#F75C00" }}
         >
-          🏪 İşletmeyim
+          <Store size={40} style={{ color: "#F75C00" }} />
+          <span className="text-2xl font-bold mt-2" style={{ color: "#00615F" }}>
+            İşletmeyim
+          </span>
+          <span className="text-sm text-gray-500 mt-1">
+            Ürünlerini sat, israfı önle
+          </span>
         </button>
       </div>
     </div>
