@@ -5,7 +5,7 @@ import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { Geolocation } from "@capacitor/geolocation";
-import { Clock } from "lucide-react";
+import { Clock, Search, MapPin, Globe, Loader2 } from "lucide-react";
 import SEO from "../components/SEO";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
@@ -77,25 +77,11 @@ const customMapboxCSS = `
     left: 12px !important;
   }
 
-  /* Mobile : Geocoder pleine largeur, sous le header (header = ~90px sur mobile natif) */
+  /* Mobile : Cacher le Geocoder Mapbox (on utilise notre propre barre de recherche) */
   @media (max-width: 768px) {
+    .mapboxgl-ctrl-geocoder,
     .mapboxgl-ctrl-top-right {
-      top: 10px !important;
-      left: 12px !important;
-      right: 12px !important;
-      transform: none !important;
-    }
-
-    .mapboxgl-ctrl-geocoder {
-      width: 100% !important;
-      max-width: 100% !important;
-      height: 48px !important;
-      font-size: 16px !important;
-    }
-
-    .mapboxgl-ctrl-geocoder input {
-      height: 48px !important;
-      padding: 10px 44px !important;
+      display: none !important;
     }
   }
 
@@ -141,6 +127,7 @@ export default function OffersPage() {
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
   const [merchantOffers, setMerchantOffers] = useState<Offer[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [searchAddress, setSearchAddress] = useState("");
 
   const getDiscountPercent = (before: number, after: number) => {
     if (!before || before === 0) return 0;
@@ -807,6 +794,40 @@ export default function OffersPage() {
     }
   };
 
+  // 🔍 Fonction de recherche d'adresse
+  const handleAddressSearch = async () => {
+    if (!searchAddress.trim()) return;
+
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchAddress)}.json?access_token=${mapboxgl.accessToken}&limit=1&language=tr`
+      );
+      const data = await response.json();
+
+      if (data.features && data.features.length > 0) {
+        const [lng, lat] = data.features[0].center;
+
+        setCenter([lng, lat]);
+        setUserLocation([lng, lat]);
+        setViewMode("nearby");
+        setSearchAddress(""); // Effacer le champ après recherche
+
+        if (mapRef.current) {
+          mapRef.current.flyTo({
+            center: [lng, lat],
+            zoom: 13,
+            duration: 1500
+          });
+        }
+      } else {
+        alert("Adres bulunamadı. Lütfen farklı bir adres deneyin.\n\n(Address not found. Please try a different address.)");
+      }
+    } catch (error) {
+      console.error("Adres arama hatası:", error);
+      alert("Adres arama hatası. Lütfen tekrar deneyin.");
+    }
+  };
+
   if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
     console.warn("🧭 Map skipped render: invalid center", center);
     return (
@@ -956,36 +977,67 @@ export default function OffersPage() {
           </div>
         )}
 
-        {/* 📱 CONTRÔLES MOBILES - Toggle nearby/all + Slider */}
-        <div className="md:hidden absolute bottom-4 left-0 right-0 z-[901] px-3">
-          {/* Toggle Yakında / Tümü */}
-          <div className="bg-white rounded-xl shadow-lg mb-2 flex overflow-hidden border border-gray-100">
+        {/* 📱 CONTRÔLES MOBILES - Recherche + Boutons + Slider */}
+        <div className="md:hidden absolute bottom-4 left-0 right-0 z-[901] px-3 space-y-2">
+
+          {/* Barre de recherche d'adresse */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Adres ara... (örn: Kadıköy, İstanbul)"
+              className="w-full py-3 px-4 pl-11 bg-white rounded-xl shadow-lg text-sm border border-gray-100 focus:ring-2 focus:ring-[#00A690] focus:outline-none focus:border-transparent"
+              value={searchAddress}
+              onChange={(e) => setSearchAddress(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleAddressSearch();
+                }
+              }}
+            />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            {searchAddress && (
+              <button
+                onClick={handleAddressSearch}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#00A690] text-white px-3 py-1.5 rounded-lg text-xs font-medium"
+              >
+                Ara
+              </button>
+            )}
+          </div>
+
+          {/* Boutons Yakında / Tümü */}
+          <div className="bg-white rounded-xl shadow-lg p-1 flex border border-gray-100">
             <button
               onClick={handleGeolocate}
               disabled={isGeolocating}
-              className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${
+              className={`flex-1 py-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-all ${
                 viewMode === "nearby"
                   ? "bg-[#00A690] text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50"
+                  : "bg-transparent text-gray-600"
               } ${isGeolocating ? "opacity-70" : ""}`}
             >
               {isGeolocating ? (
                 <>
-                  <span className="animate-spin">⏳</span> Konum alınıyor...
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">Konum alınıyor...</span>
                 </>
               ) : (
-                <>📍 Yakında</>
+                <>
+                  <MapPin className="w-4 h-4" />
+                  <span className="text-sm">Yakında</span>
+                </>
               )}
             </button>
             <button
               onClick={() => handleViewModeChange("all")}
-              className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${
+              className={`flex-1 py-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-all ${
                 viewMode === "all"
                   ? "bg-[#00A690] text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50"
+                  : "bg-transparent text-gray-600"
               }`}
             >
-              🌍 Tümü
+              <Globe className="w-4 h-4" />
+              <span className="text-sm">Tümü</span>
             </button>
           </div>
 
