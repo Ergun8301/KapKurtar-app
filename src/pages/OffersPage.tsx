@@ -49,37 +49,59 @@ const customMapboxCSS = `
     box-shadow: none !important;
   }
 
+  /* Desktop: contrôles en haut à droite */
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
     right: 10px !important;
     display: flex !important;
     align-items: center !important;
-    gap: 0px !important;
-    transform: translateX(-55%) !important;
+    gap: 8px !important;
   }
 
   .mapboxgl-ctrl-geocoder {
     width: 280px !important;
-    max-width: 80% !important;
+    max-width: 300px !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    height: 32px !important;
+    height: 36px !important;
     font-size: 14px !important;
   }
 
+  /* Bouton de géolocalisation - style amélioré */
+  .mapboxgl-ctrl-geolocate {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+  }
+
+  /* Mobile: barre de recherche centrée en haut, géolocalisation en bas à droite */
   @media (max-width: 640px) {
     .mapboxgl-ctrl-top-right {
-      top: 8px !important;
-      right: 50% !important;
-      transform: translateX(50%) !important;
+      top: 10px !important;
+      left: 50% !important;
+      right: auto !important;
+      transform: translateX(-50%) !important;
       flex-direction: row !important;
       justify-content: center !important;
-      gap: 6px !important;
+      gap: 8px !important;
+      width: 90% !important;
+      max-width: 360px !important;
     }
 
     .mapboxgl-ctrl-geocoder {
-      width: 80% !important;
-      height: 36px !important;
+      flex: 1 !important;
+      width: 100% !important;
+      max-width: none !important;
+      height: 40px !important;
+      font-size: 15px !important;
+    }
+
+    /* Bouton géolocalisation à côté de la recherche sur mobile */
+    .mapboxgl-ctrl-geolocate {
+      width: 40px !important;
+      height: 40px !important;
+      flex-shrink: 0 !important;
     }
   }
 
@@ -832,19 +854,47 @@ export default function OffersPage() {
         <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
           <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {viewMode === "nearby" && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[900] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-[#00A690]/20">
-            <input
-              type="range"
-              min={1}
-              max={30}
-              value={radiusKm}
-              onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
-              className="w-32 md:w-36 accent-[#00A690] cursor-pointer focus:outline-none"
-            />
-            <span className="text-sm text-gray-900 font-bold whitespace-nowrap">{radiusKm} km</span>
+        {/* Toggle mobile : Yakındaki / Tüm Teklifler */}
+        <div className="absolute bottom-28 md:bottom-4 left-1/2 -translate-x-1/2 z-[900] flex flex-col items-center gap-2">
+          {/* Toggle viewMode - visible sur mobile */}
+          <div className="md:hidden flex bg-white rounded-full shadow-lg overflow-hidden border-2 border-[#00A690]/20">
+            <button
+              className={`px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+                viewMode === "nearby"
+                  ? "bg-[#00A690] text-white"
+                  : "text-gray-600 hover:text-[#00A690]"
+              }`}
+              onClick={() => handleViewModeChange("nearby")}
+            >
+              📍 Yakında
+            </button>
+            <button
+              className={`px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+                viewMode === "all"
+                  ? "bg-[#00A690] text-white"
+                  : "text-gray-600 hover:text-[#00A690]"
+              }`}
+              onClick={() => handleViewModeChange("all")}
+            >
+              🌍 Tümü
+            </button>
           </div>
-        )}
+
+          {/* Slider de rayon - visible seulement en mode nearby */}
+          {viewMode === "nearby" && (
+            <div className="bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-[#00A690]/20">
+              <input
+                type="range"
+                min={1}
+                max={30}
+                value={radiusKm}
+                onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
+                className="w-32 md:w-36 accent-[#00A690] cursor-pointer focus:outline-none"
+              />
+              <span className="text-sm text-gray-900 font-bold whitespace-nowrap">{radiusKm} km</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="hidden md:block md:w-1/2 overflow-y-auto bg-gray-50 p-4">
