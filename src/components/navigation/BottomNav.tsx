@@ -26,8 +26,9 @@ const BottomNav: React.FC = () => {
   const location = useLocation();
   const { user, userType } = useAuthStore();
 
-  // Cacher la BottomNav sur la page de sélection (route "/")
-  if (location.pathname === "/") {
+  // Cacher la BottomNav sur la page de sélection ET les pages d'auth
+  const hiddenPaths = ["/", "/customer/auth", "/merchant/auth"];
+  if (hiddenPaths.includes(location.pathname)) {
     return null;
   }
 

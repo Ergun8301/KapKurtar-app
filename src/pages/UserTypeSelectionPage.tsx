@@ -28,6 +28,10 @@ const UserTypeSelectionPage: React.FC = () => {
         <p className="text-sm" style={{ color: "#E0F2F1" }}>
           Gıda israfını birlikte önleyelim
         </p>
+        {/* Illustration food */}
+        <div className="text-3xl pt-4 opacity-70">
+          🍎 🍕 🥕 🥬 🍞
+        </div>
       </div>
 
       {/* MILIEU + BAS - Boutons */}
