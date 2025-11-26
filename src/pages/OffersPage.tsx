@@ -708,56 +708,72 @@ export default function OffersPage() {
 
       if (!hasPermission) {
         console.warn("Permission de géolocalisation refusée:", permission);
+        alert("Konum izni verilmedi. Lütfen ayarlardan izin verin.\n\n(Location permission denied. Please grant permission in settings.)");
         setIsGeolocating(false);
         return;
       }
 
       console.log("Permission granted, getting position...");
 
-      // Obtenir la position via le plugin Capacitor
-      const position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 30000,
-      });
-
-      console.log("Position received:", JSON.stringify(position.coords));
-
-      const lng = position.coords.longitude;
-      const lat = position.coords.latitude;
-
-      console.log("Coordinates - lng:", lng, "lat:", lat);
-
-      if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
-        console.error("Invalid coordinates!");
-        setIsGeolocating(false);
-        return;
-      }
-
-      // Mettre à jour la position AVANT de changer le mode
-      console.log("Updating state: userLocation, center, viewMode...");
-      setUserLocation([lng, lat]);
-      setCenter([lng, lat]);
-      setViewMode("nearby");
-
-      // Fly to position
-      if (mapRef.current) {
-        console.log("Flying to position...");
-        mapRef.current.flyTo({
-          center: [lng, lat],
-          zoom: 13,
-          essential: true,
+      try {
+        // Obtenir la position via le plugin Capacitor
+        const position = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 30000,
         });
+
+        console.log("Position received:", JSON.stringify(position.coords));
+
+        const lng = position.coords.longitude;
+        const lat = position.coords.latitude;
+
+        console.log("Coordinates - lng:", lng, "lat:", lat);
+
+        if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+          console.error("Invalid coordinates!");
+          alert("Geçersiz konum verisi alındı. Lütfen tekrar deneyin.");
+          setIsGeolocating(false);
+          return;
+        }
+
+        // Mettre à jour la position AVANT de changer le mode
+        console.log("Updating state: userLocation, center, viewMode...");
+        setUserLocation([lng, lat]);
+        setCenter([lng, lat]);
+        setViewMode("nearby");
+
+        // Fly to position
+        if (mapRef.current) {
+          console.log("Flying to position...");
+          mapRef.current.flyTo({
+            center: [lng, lat],
+            zoom: 13,
+            essential: true,
+          });
+        }
+
+        // Effacer le champ de recherche
+        const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+        if (input) input.value = "";
+
+        console.log("=== GEOLOCATION SUCCESS ===");
+
+      } catch (positionError: any) {
+        console.error("=== POSITION ERROR ===", positionError);
+
+        // Message d'erreur clair pour l'utilisateur
+        alert(
+          "Konum alınamadı. Lütfen GPS'inizi açın ve tekrar deneyin.\n\n" +
+          "(Could not get location. Please turn on GPS and try again.)"
+        );
       }
-
-      // Effacer le champ de recherche
-      const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
-      if (input) input.value = "";
-
-      console.log("=== GEOLOCATION SUCCESS ===");
 
     } catch (error) {
       console.error("=== GEOLOCATION ERROR ===", error);
-      // En cas d'erreur, on ne fait rien - l'utilisateur peut utiliser la barre de recherche
+      alert(
+        "Konum servisi hatası. Lütfen tekrar deneyin.\n\n" +
+        "(Location service error. Please try again.)"
+      );
     } finally {
       console.log("=== GEOLOCATION END ===");
       setIsGeolocating(false);
