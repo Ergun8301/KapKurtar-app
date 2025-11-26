@@ -113,6 +113,11 @@ const Header = () => {
 
   if (user && isMerchant === null) return null;
 
+  // Cacher le header sur la page de sélection (mobile natif uniquement)
+  if (Capacitor.isNativePlatform() && location.pathname === "/") {
+    return null;
+  }
+
   return (
     <header
       className="bg-[#00A690] shadow-sm border-b border-[#00A690] fixed top-0 left-0 right-0 z-40"
