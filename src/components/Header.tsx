@@ -111,6 +111,10 @@ const Header = () => {
     { name: "İşletmeler İçin", href: "/for-merchants" },
   ];
 
+  // Détecter si on est sur une page d'auth (pour cacher le bouton Giriş Yap)
+  const authPaths = ["/customer/auth", "/merchant/auth"];
+  const isOnAuthPage = authPaths.includes(location.pathname);
+
   if (user && isMerchant === null) return null;
 
   // Cacher le header sur la page de sélection (mobile natif uniquement)
@@ -210,27 +214,29 @@ const Header = () => {
                 </div>
               </>
             ) : (
-              <div className="relative" ref={userMenuRef}>
-                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="bg-[#FFFFF0] text-[#00A690] px-3 py-2 rounded-lg text-sm font-bold hover:bg-[#F75C00] hover:text-white transition-colors duration-300 inline-flex items-center whitespace-nowrap">
-                  Giriş Yap
-                  <ChevronDown className="w-4 h-4 ml-1" />
-                </button>
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                    <div className="px-4 py-2 text-xs text-gray-500 uppercase tracking-wide font-semibold">Hesap Türünü Seçin</div>
-                    <button onClick={() => { setIsUserMenuOpen(false); navigate("/customer/auth"); }} className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
-                      <User className="w-4 h-4 mr-3" />
-                      Müşteri Girişi
-                      <ArrowRight className="w-4 h-4 ml-auto" />
-                    </button>
-                    <button onClick={() => { setIsUserMenuOpen(false); navigate("/merchant/auth"); }} className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
-                      <Store className="w-4 h-4 mr-3" />
-                      İşletme Girişi
-                      <ArrowRight className="w-4 h-4 ml-auto" />
-                    </button>
-                  </div>
-                )}
-              </div>
+              !isOnAuthPage && (
+                <div className="relative" ref={userMenuRef}>
+                  <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="bg-[#FFFFF0] text-[#00A690] px-3 py-2 rounded-lg text-sm font-bold hover:bg-[#F75C00] hover:text-white transition-colors duration-300 inline-flex items-center whitespace-nowrap">
+                    Giriş Yap
+                    <ChevronDown className="w-4 h-4 ml-1" />
+                  </button>
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                      <div className="px-4 py-2 text-xs text-gray-500 uppercase tracking-wide font-semibold">Hesap Türünü Seçin</div>
+                      <button onClick={() => { setIsUserMenuOpen(false); navigate("/customer/auth"); }} className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
+                        <User className="w-4 h-4 mr-3" />
+                        Müşteri Girişi
+                        <ArrowRight className="w-4 h-4 ml-auto" />
+                      </button>
+                      <button onClick={() => { setIsUserMenuOpen(false); navigate("/merchant/auth"); }} className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
+                        <Store className="w-4 h-4 mr-3" />
+                        İşletme Girişi
+                        <ArrowRight className="w-4 h-4 ml-auto" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
             )}
             {/* Bouton hamburger visible uniquement sur web mobile (pas sur natif) */}
             {!isNative && (
@@ -268,7 +274,7 @@ const Header = () => {
               <span>Uygulamayı İndir</span>
             </button>
 
-            {!user && (
+            {!user && !isOnAuthPage && (
               <>
                 <hr className="border-white/20 my-2" />
                 <a
