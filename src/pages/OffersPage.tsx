@@ -43,69 +43,58 @@ const DEFAULT_LOCATION: [number, number] = [35.2433, 38.9637]; // Centre Turquie
 const DEFAULT_ZOOM = 6; // Zoom pour voir toute la Turquie
 
 const customMapboxCSS = `
-  .mapboxgl-ctrl-geolocate:focus,
   .mapboxgl-ctrl-geocoder input:focus {
     outline: none !important;
     box-shadow: none !important;
   }
 
-  /* Desktop : contrôles en haut à droite */
+  /* Geocoder positionné en haut, centré */
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
-    right: 10px !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
     z-index: 100 !important;
   }
 
   .mapboxgl-ctrl-geocoder {
-    width: 280px !important;
-    max-width: 80% !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    height: 36px !important;
-    font-size: 14px !important;
+    width: 320px !important;
+    max-width: 90vw !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+    height: 44px !important;
+    font-size: 15px !important;
   }
 
-  .mapboxgl-ctrl-geolocate {
-    width: 36px !important;
-    height: 36px !important;
+  .mapboxgl-ctrl-geocoder input {
+    height: 44px !important;
+    padding: 8px 40px !important;
   }
 
-  /* Mobile : contrôles visibles et bien positionnés */
+  .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon-search {
+    top: 12px !important;
+    left: 12px !important;
+  }
+
+  /* Mobile : Geocoder pleine largeur */
   @media (max-width: 768px) {
     .mapboxgl-ctrl-top-right {
       top: 10px !important;
+      left: 10px !important;
       right: 10px !important;
-      left: auto !important;
       transform: none !important;
-      flex-direction: row !important;
-      gap: 8px !important;
-      z-index: 100 !important;
     }
 
     .mapboxgl-ctrl-geocoder {
-      width: 200px !important;
-      max-width: 55vw !important;
-      height: 40px !important;
-      font-size: 14px !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: 48px !important;
+      font-size: 16px !important;
     }
 
     .mapboxgl-ctrl-geocoder input {
-      height: 40px !important;
-      padding: 6px 35px !important;
-    }
-
-    .mapboxgl-ctrl-geolocate {
-      width: 40px !important;
-      height: 40px !important;
-      border-radius: 8px !important;
-    }
-
-    .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon {
-      width: 24px !important;
-      height: 24px !important;
+      height: 48px !important;
+      padding: 10px 44px !important;
     }
   }
 
@@ -361,35 +350,7 @@ export default function OffersPage() {
 
     mapRef.current = map;
 
-    const geolocate = new mapboxgl.GeolocateControl({
-      positionOptions: { 
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      },
-      trackUserLocation: false,
-      showUserHeading: true,
-    });
-    map.addControl(geolocate, "top-right");
-
-    geolocate.on("geolocate", (e) => {
-      const lng = e.coords.longitude;
-      const lat = e.coords.latitude;
-      if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
-      setUserLocation([lng, lat]);
-      setCenter([lng, lat]);
-      setViewMode("nearby");
-      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
-      
-      const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
-      if (input) input.value = "";
-    });
-
-    geolocate.on("error", (e) => {
-      console.error("❌ Erreur géolocalisation:", e);
-      // 🔧 FIX : Pas d'alerte, gérer silencieusement
-    });
-
+    // Geocoder (barre de recherche) - seul contrôle Mapbox conservé
     const geocoder = new MapboxGeocoder({
       accessToken: mapboxgl.accessToken,
       mapboxgl,
@@ -724,6 +685,55 @@ export default function OffersPage() {
     localStorage.setItem("radiusKm", String(val));
   };
 
+  // 📍 Fonction de géolocalisation pour le bouton Yakında
+  const handleGeolocate = () => {
+    if (!navigator.geolocation) {
+      console.warn("Géolocalisation non disponible");
+      return;
+    }
+
+    setIsGeolocating(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lng = position.coords.longitude;
+        const lat = position.coords.latitude;
+
+        if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+          setIsGeolocating(false);
+          return;
+        }
+
+        // Mettre à jour la position AVANT de changer le mode
+        setUserLocation([lng, lat]);
+        setCenter([lng, lat]);
+        setViewMode("nearby");
+
+        // Fly to position
+        if (mapRef.current) {
+          mapRef.current.flyTo({
+            center: [lng, lat],
+            zoom: 13,
+            essential: true,
+          });
+        }
+
+        // Effacer le champ de recherche
+        const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+        if (input) input.value = "";
+
+        setIsGeolocating(false);
+      },
+      (error) => {
+        console.error("Erreur géolocalisation:", error);
+        setIsGeolocating(false);
+        // En cas d'erreur, on reste sur la position actuelle mais on passe en mode nearby
+        setViewMode("nearby");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
   if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
     console.warn("🧭 Map skipped render: invalid center", center);
     return (
@@ -878,22 +888,24 @@ export default function OffersPage() {
           {/* Toggle Yakında / Tümü */}
           <div className="bg-white rounded-xl shadow-lg mb-2 flex overflow-hidden border border-gray-100">
             <button
-              onClick={() => {
-                setViewMode("nearby");
-                // Déclencher la géolocalisation Mapbox
-                const geolocateBtn = document.querySelector('.mapboxgl-ctrl-geolocate') as HTMLButtonElement;
-                if (geolocateBtn) geolocateBtn.click();
-              }}
+              onClick={handleGeolocate}
+              disabled={isGeolocating}
               className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${
                 viewMode === "nearby"
                   ? "bg-[#00A690] text-white"
                   : "bg-white text-gray-600 hover:bg-gray-50"
-              }`}
+              } ${isGeolocating ? "opacity-70" : ""}`}
             >
-              📍 Yakında
+              {isGeolocating ? (
+                <>
+                  <span className="animate-spin">⏳</span> Konum alınıyor...
+                </>
+              ) : (
+                <>📍 Yakında</>
+              )}
             </button>
             <button
-              onClick={() => setViewMode("all")}
+              onClick={() => handleViewModeChange("all")}
               className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${
                 viewMode === "all"
                   ? "bg-[#00A690] text-white"
@@ -921,13 +933,6 @@ export default function OffersPage() {
               </span>
             </div>
           )}
-
-          {/* Badge nombre d'offres */}
-          <div className="mt-2 flex justify-center">
-            <span className="bg-[#00A690]/10 text-[#00A690] text-xs font-semibold px-3 py-1 rounded-full">
-              {offers.length} teklif bulundu
-            </span>
-          </div>
         </div>
       </div>
 
