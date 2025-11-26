@@ -4,7 +4,7 @@ import mapboxgl, { Map, Marker } from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
-import { Clock, Navigation, Globe, Loader2 } from "lucide-react";
+import { Clock } from "lucide-react";
 import SEO from "../components/SEO";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
@@ -49,59 +49,37 @@ const customMapboxCSS = `
     box-shadow: none !important;
   }
 
-  /* Desktop: contrôles en haut à droite */
   .mapboxgl-ctrl-top-right {
     top: 10px !important;
     right: 10px !important;
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 0px !important;
+    transform: translateX(-55%) !important;
   }
 
   .mapboxgl-ctrl-geocoder {
     width: 280px !important;
-    max-width: 300px !important;
+    max-width: 80% !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    height: 36px !important;
+    height: 32px !important;
     font-size: 14px !important;
   }
 
-  /* Bouton de géolocalisation - style amélioré */
-  .mapboxgl-ctrl-geolocate {
-    width: 36px !important;
-    height: 36px !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
-  }
-
-  /* Mobile: barre de recherche centrée en haut, géolocalisation en bas à droite */
   @media (max-width: 640px) {
     .mapboxgl-ctrl-top-right {
-      top: 10px !important;
-      left: 50% !important;
-      right: auto !important;
-      transform: translateX(-50%) !important;
+      top: 8px !important;
+      right: 50% !important;
+      transform: translateX(50%) !important;
       flex-direction: row !important;
       justify-content: center !important;
-      gap: 8px !important;
-      width: 90% !important;
-      max-width: 360px !important;
+      gap: 6px !important;
     }
 
     .mapboxgl-ctrl-geocoder {
-      flex: 1 !important;
-      width: 100% !important;
-      max-width: none !important;
-      height: 40px !important;
-      font-size: 15px !important;
-    }
-
-    /* Bouton géolocalisation à côté de la recherche sur mobile */
-    .mapboxgl-ctrl-geolocate {
-      width: 40px !important;
-      height: 40px !important;
-      flex-shrink: 0 !important;
+      width: 80% !important;
+      height: 36px !important;
     }
   }
 
@@ -132,7 +110,6 @@ export default function OffersPage() {
   const { user } = useAuth();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
-  const geolocateControlRef = useRef<mapboxgl.GeolocateControl | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [userLocation, setUserLocation] = useState<[number, number]>(DEFAULT_LOCATION);
   const [center, setCenter] = useState<[number, number]>(DEFAULT_LOCATION);
@@ -359,18 +336,14 @@ export default function OffersPage() {
     mapRef.current = map;
 
     const geolocate = new mapboxgl.GeolocateControl({
-      positionOptions: {
+      positionOptions: { 
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 0
       },
-      trackUserLocation: true,
+      trackUserLocation: false,
       showUserHeading: true,
     });
-
-    // Stocker la référence pour pouvoir l'utiliser dans handleNearbyClick
-    geolocateControlRef.current = geolocate;
-
     map.addControl(geolocate, "top-right");
 
     geolocate.on("geolocate", (e) => {
@@ -380,18 +353,15 @@ export default function OffersPage() {
       setUserLocation([lng, lat]);
       setCenter([lng, lat]);
       setViewMode("nearby");
-      setIsGeolocating(false);
-      map.flyTo({ center: [lng, lat], zoom: 13, essential: true });
-
+      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
+      
       const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
       if (input) input.value = "";
     });
 
     geolocate.on("error", (e) => {
       console.error("❌ Erreur géolocalisation:", e);
-      setIsGeolocating(false);
-      // Rester en mode "all" si erreur
-      setViewMode("all");
+      // 🔧 FIX : Pas d'alerte, gérer silencieusement
     });
 
     const geocoder = new MapboxGeocoder({
@@ -728,18 +698,6 @@ export default function OffersPage() {
     localStorage.setItem("radiusKm", String(val));
   };
 
-  // Fonction pour déclencher la géolocalisation via le GeolocateControl Mapbox
-  const handleNearbyClick = () => {
-    if (geolocateControlRef.current) {
-      setIsGeolocating(true);
-      // Déclencher le GeolocateControl Mapbox (affiche la vraie popup de permission)
-      geolocateControlRef.current.trigger();
-    } else {
-      console.error("GeolocateControl non disponible");
-      alert("Konum servisi kullanılamıyor. Lütfen sayfayı yenileyin.");
-    }
-  };
-
   if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
     console.warn("🧭 Map skipped render: invalid center", center);
     return (
@@ -874,56 +832,19 @@ export default function OffersPage() {
         <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
           <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* Barre de contrôle mobile - pleine largeur au-dessus de BottomNav */}
-        <div className="md:hidden fixed bottom-[105px] left-0 right-0 z-[900] bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
-          {/* Toggle Yakında / Tümü */}
-          <div className="flex">
-            <button
-              className={`flex-1 py-3.5 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${
-                viewMode === "nearby"
-                  ? "bg-[#00A690] text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50"
-              }`}
-              onClick={handleNearbyClick}
-              disabled={isGeolocating}
-            >
-              {isGeolocating ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Navigation className="w-4 h-4" />
-              )}
-              {isGeolocating ? "Konum alınıyor..." : "Yakında"}
-            </button>
-            <div className="w-px bg-gray-200" />
-            <button
-              className={`flex-1 py-3.5 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${
-                viewMode === "all"
-                  ? "bg-[#00A690] text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50"
-              }`}
-              onClick={() => handleViewModeChange("all")}
-            >
-              <Globe className="w-4 h-4" />
-              Tümü
-            </button>
+        {viewMode === "nearby" && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[900] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-[#00A690]/20">
+            <input
+              type="range"
+              min={1}
+              max={30}
+              value={radiusKm}
+              onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
+              className="w-32 md:w-36 accent-[#00A690] cursor-pointer focus:outline-none"
+            />
+            <span className="text-sm text-gray-900 font-bold whitespace-nowrap">{radiusKm} km</span>
           </div>
-
-          {/* Slider de rayon - visible seulement en mode nearby */}
-          {viewMode === "nearby" && (
-            <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-4">
-              <span className="text-xs text-gray-500 whitespace-nowrap">Yarıçap:</span>
-              <input
-                type="range"
-                min={1}
-                max={30}
-                value={radiusKm}
-                onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
-                className="flex-1 accent-[#00A690] cursor-pointer focus:outline-none h-2"
-              />
-              <span className="text-sm text-[#00A690] font-bold whitespace-nowrap min-w-[50px] text-right">{radiusKm} km</span>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       <div className="hidden md:block md:w-1/2 overflow-y-auto bg-gray-50 p-4">
@@ -935,10 +856,9 @@ export default function OffersPage() {
                   ? "bg-white text-[#00A690] shadow"
                   : "text-gray-500 hover:text-[#00A690]"
               }`}
-              onClick={handleNearbyClick}
-              disabled={isGeolocating}
+              onClick={() => handleViewModeChange("nearby")}
             >
-              {isGeolocating ? "📍 Konum alınıyor..." : "📍 Yakındaki Teklifler"}
+              📍 Yakındaki Teklifler
             </button>
             <button
               className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
