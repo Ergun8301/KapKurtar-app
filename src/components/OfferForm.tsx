@@ -310,14 +310,14 @@ export const OfferForm: React.FC<OfferFormProps> = ({
     formData.available_until;
 
   return (
-    <div 
-  className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-  onClick={onCancel}
->
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 pt-[100px] pb-[120px]"
+      onClick={onCancel}
+    >
       {toast && (
         <div
           className={
-            'fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg ' +
+            'fixed top-4 right-4 z-[10000] px-6 py-3 rounded-lg shadow-lg ' +
             (toast.type === 'success' ? 'bg-[#00A690]' : 'bg-red-500') +
             ' text-white'
           }
@@ -326,10 +326,10 @@ export const OfferForm: React.FC<OfferFormProps> = ({
         </div>
       )}
 
-      <div 
-  className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto"
-  onClick={(e) => e.stopPropagation()}
->
+      <div
+        className="bg-white rounded-lg max-w-2xl w-full max-h-full overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
             {mode === 'create' ? 'Yeni Ürün Ekle' : 'Ürünü Düzenle'}
