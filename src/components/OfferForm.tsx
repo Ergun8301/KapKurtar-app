@@ -340,6 +340,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
         </div>
 
         <div className="p-6 space-y-4">
+          {/* 1. Ürün Adı */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Ürün Adı</label>
             <input
@@ -352,6 +353,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
             />
           </div>
 
+          {/* 2. Açıklama */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Açıklama</label>
             <textarea
@@ -364,6 +366,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
             />
           </div>
 
+          {/* 3. Ürün Fotoğrafı */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               📸 Ürün Fotoğrafı
@@ -402,8 +405,9 @@ export const OfferForm: React.FC<OfferFormProps> = ({
             </div>
           </div>
 
+          {/* 4. Orijinal Fiyat | İndirimli Fiyat (50/50) */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div className="flex flex-col">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Orijinal Fiyat (₺)
               </label>
@@ -418,8 +422,10 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">İndirimli Fiyat (₺)</label>
+            <div className="flex flex-col">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                İndirimli Fiyat (₺)
+              </label>
               <input
                 type="number"
                 name="price_after"
@@ -433,6 +439,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
             </div>
           </div>
 
+          {/* Discount display */}
           {formData.price_before && formData.price_after && parseFloat(formData.price_before) > 0 && (
             <div className="bg-green-100 border border-green-300 rounded-lg p-3 text-center">
               <span className="text-lg font-bold text-[#00A690]">
@@ -441,6 +448,7 @@ export const OfferForm: React.FC<OfferFormProps> = ({
             </div>
           )}
 
+          {/* 5. Mevcut Miktar */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Mevcut Miktar
@@ -456,9 +464,11 @@ export const OfferForm: React.FC<OfferFormProps> = ({
             />
           </div>
 
+          {/* CREATE MODE: 6. Şimdi Başla + 7. Süre + 8. Dates */}
           {mode === 'create' && (
-            <div className="border-t pt-4">
-              <div className="flex items-center mb-3">
+            <div className="border-t pt-4 space-y-4">
+              {/* 6. Şimdi Başla (checkbox) */}
+              <div className="flex items-center">
                 <input
                   type="checkbox"
                   id="startNow"
@@ -467,38 +477,11 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                   className="w-4 h-4 text-[#00A690] rounded focus:ring-[#00A690]"
                 />
                 <label htmlFor="startNow" className="ml-2 text-sm font-medium text-gray-700">
-                  Başlangıç: Şimdi
+                  Şimdi Başla
                 </label>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Başlangıç Tarihi ve Saati
-                  </label>
-                  <input
-                    type="datetime-local"
-                    name="available_from"
-                    value={formData.available_from}
-                    onChange={handleInputChange}
-                    disabled={formData.startNow}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bitiş Tarihi ve Saati
-                  </label>
-                  <input
-                    type="datetime-local"
-                    name="available_until"
-                    value={formData.available_until}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
-                  />
-                </div>
-              </div>
-
+              {/* 7. Süre (dropdown) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Süre</label>
                 <select
@@ -516,8 +499,9 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                 </select>
               </div>
 
+              {/* Custom duration if needed */}
               {formData.duration === 'custom' && (
-                <div className="mt-3">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Özel Süre (dakika)
                   </label>
@@ -532,39 +516,71 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                   />
                 </div>
               )}
+
+              {/* 8. Başlangıç | Bitiş (50/50) */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Başlangıç Tarihi
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="available_from"
+                    value={formData.available_from}
+                    onChange={handleInputChange}
+                    disabled={formData.startNow}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bitiş Tarihi
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="available_until"
+                    value={formData.available_until}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
+                  />
+                </div>
+              </div>
             </div>
           )}
 
+          {/* EDIT MODE: Dates side by side */}
           {mode === 'edit' && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Başlangıç
-                </label>
-                <input
-                  type="datetime-local"
-                  name="available_from"
-                  value={formData.available_from}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
-                />
+            <div className="border-t pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Başlangıç Tarihi
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="available_from"
+                    value={formData.available_from}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bitiş Tarihi
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="available_until"
+                    value={formData.available_until}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
+                  />
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bitiş
-                </label>
-                <input
-                  type="datetime-local"
-                  name="available_until"
-                  value={formData.available_until}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
-                />
-              </div>
-            </>
+            </div>
           )}
 
+          {/* 9. Submit button */}
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || !isFormValid}
