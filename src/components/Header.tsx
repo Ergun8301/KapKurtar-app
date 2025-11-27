@@ -32,6 +32,7 @@ const Header = () => {
   const [isMerchant, setIsMerchant] = useState<boolean | null>(null);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [isNative, setIsNative] = useState(false);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const hasCheckedRef = useRef(false);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -55,13 +56,13 @@ const Header = () => {
 
   useEffect(() => {
     if (!user || hasCheckedRef.current) return;
-    
+
     const checkUserType = async () => {
       hasCheckedRef.current = true;
 
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, profile_photo_url")
         .eq("auth_id", user.id)
         .maybeSingle();
 
@@ -72,11 +73,19 @@ const Header = () => {
 
       const { data: merchantData } = await supabase
         .from("merchants")
-        .select("id")
+        .select("id, logo_url")
         .eq("profile_id", profileData.id)
         .maybeSingle();
 
-      setIsMerchant(!!merchantData);
+      if (merchantData) {
+        setIsMerchant(true);
+        // For merchants, use logo_url
+        setProfilePhotoUrl(merchantData.logo_url || null);
+      } else {
+        setIsMerchant(false);
+        // For customers, use profile_photo_url
+        setProfilePhotoUrl(profileData.profile_photo_url || null);
+      }
     };
 
     checkUserType();
@@ -104,6 +113,14 @@ const Header = () => {
   };
 
   const getUserDisplayName = () => user?.email?.split("@")[0] || "User";
+
+  const getUserInitials = () => {
+    const name = getUserDisplayName();
+    if (name.length >= 2) {
+      return name.substring(0, 2).toUpperCase();
+    }
+    return name.charAt(0).toUpperCase();
+  };
 
   const navigation = [
     { name: "Teklifleri Keşfet", href: "/offers" },
@@ -165,8 +182,21 @@ const Header = () => {
                 <NotificationBell userType={isMerchant ? "merchant" : "client"} />
                 <div className="relative" ref={userMenuRef}>
                   <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center space-x-2 text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300">
-                    <div className="w-8 h-8 bg-[#FFFFF0] rounded-full flex items-center justify-center">
-                      {isMerchant ? <Store className="w-4 h-4 text-[#00A690]" /> : <User className="w-4 h-4 text-[#00A690]" />}
+                    <div className="w-8 h-8 bg-[#FFFFF0] rounded-full flex items-center justify-center overflow-hidden">
+                      {profilePhotoUrl ? (
+                        <img
+                          src={profilePhotoUrl}
+                          alt="Profil"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <span className={`text-xs font-bold text-[#00A690] ${profilePhotoUrl ? 'hidden' : ''}`}>
+                        {getUserInitials()}
+                      </span>
                     </div>
                     <span className="hidden sm:block font-medium">{getUserDisplayName()}</span>
                     <ChevronDown className="w-4 h-4" />

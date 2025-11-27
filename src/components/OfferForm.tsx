@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload } from 'lucide-react';
+import { X, Upload, Camera, Image } from 'lucide-react';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 interface Offer {
   id: string;
@@ -59,6 +61,8 @@ export const OfferForm: React.FC<OfferFormProps> = ({
   });
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
     if (mode === 'edit' && initialData) {
@@ -296,6 +300,78 @@ export const OfferForm: React.FC<OfferFormProps> = ({
     reader.readAsDataURL(processedFile);
   };
 
+  const handleCameraCapture = async () => {
+    setShowImagePicker(false);
+    try {
+      const photo = await CapacitorCamera.getPhoto({
+        quality: 85,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+        correctOrientation: true,
+      });
+
+      if (photo.dataUrl) {
+        // Convert dataUrl to File
+        const response = await fetch(photo.dataUrl);
+        const blob = await response.blob();
+        const file = new File([blob], `camera_${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+        setFormData((prev) => ({
+          ...prev,
+          image: file,
+          imagePreview: photo.dataUrl || '',
+        }));
+      }
+    } catch (error: any) {
+      // User cancelled or error
+      if (error?.message !== 'User cancelled photos app') {
+        console.error('Camera error:', error);
+        setToast({
+          message: 'Kamera erişimi başarısız oldu.',
+          type: 'error',
+        });
+      }
+    }
+  };
+
+  const handleGalleryPick = async () => {
+    setShowImagePicker(false);
+    if (isNative) {
+      try {
+        const photo = await CapacitorCamera.getPhoto({
+          quality: 85,
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Photos,
+          correctOrientation: true,
+        });
+
+        if (photo.dataUrl) {
+          const response = await fetch(photo.dataUrl);
+          const blob = await response.blob();
+          const file = new File([blob], `gallery_${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+          setFormData((prev) => ({
+            ...prev,
+            image: file,
+            imagePreview: photo.dataUrl || '',
+          }));
+        }
+      } catch (error: any) {
+        if (error?.message !== 'User cancelled photos app') {
+          console.error('Gallery error:', error);
+          setToast({
+            message: 'Galeri erişimi başarısız oldu.',
+            type: 'error',
+          });
+        }
+      }
+    } else {
+      // Trigger file input for web
+      const input = document.getElementById('file-input') as HTMLInputElement;
+      if (input) input.click();
+    }
+  };
+
   const handleSubmit = async () => {
     await onSubmit(formData);
   };
@@ -387,20 +463,48 @@ export const OfferForm: React.FC<OfferFormProps> = ({
                   </button>
                 </div>
               ) : (
-                <label className="cursor-pointer">
-                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                <div className="space-y-3">
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto" />
                   <p className="text-sm text-gray-600">
                     {mode === 'create'
                       ? 'Fotoğraf çek veya görsel seç'
                       : 'Fotoğrafı değiştir (isteğe bağlı)'}
                   </p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </label>
+
+                  {/* Camera/Gallery buttons for native */}
+                  {isNative ? (
+                    <div className="flex gap-3 justify-center">
+                      <button
+                        type="button"
+                        onClick={handleCameraCapture}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#00A690] text-white rounded-lg hover:bg-[#008C7A] transition-colors"
+                      >
+                        <Camera className="w-4 h-4" />
+                        <span className="text-sm">Fotoğraf Çek</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleGalleryPick}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                      >
+                        <Image className="w-4 h-4" />
+                        <span className="text-sm">Galeriden Seç</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                      <Image className="w-4 h-4" />
+                      <span className="text-sm">Görsel Seç</span>
+                      <input
+                        id="file-input"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
               )}
             </div>
           </div>
