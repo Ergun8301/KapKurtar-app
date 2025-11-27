@@ -10,6 +10,7 @@ import {
   ClipboardList,
   LogIn,
   Store,
+  MapPin,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import BottomNavItem from "./BottomNavItem";
@@ -39,6 +40,7 @@ const BottomNav: React.FC = () => {
       return [
         { icon: Home, label: "Ana Sayfa", path: "/" },
         { icon: Search, label: "Teklifler", path: "/offers" },
+        { icon: MapPin, label: "Konum", path: "/search-location" },
         { icon: LogIn, label: "Giriş", path: "/customer/auth" },
         { icon: Store, label: "İşletmeler", path: "/for-merchants" },
       ];
@@ -58,6 +60,7 @@ const BottomNav: React.FC = () => {
     return [
       { icon: Home, label: "Ana Sayfa", path: "/" },
       { icon: Search, label: "Teklifler", path: "/offers" },
+      { icon: MapPin, label: "Konum", path: "/search-location" },
       { icon: Package, label: "Rezervasyonlar", path: "/customer/dashboard" },
       { icon: User, label: "Profil", path: "/client/profile" },
     ];
