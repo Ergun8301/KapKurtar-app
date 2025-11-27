@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, ArrowLeft, Store } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuthFlow } from "../hooks/useAuthFlow";
+import { getRedirectUrl } from "../lib/appConfig";
 
 type AuthMode = "login" | "register";
 
@@ -144,7 +145,7 @@ const MerchantAuthPage = () => {
       console.log("🎟️ Flow token créé :", flow.token);
 
       // 🔹 Redirection Google avec rôle et token dans l'URL
-      const redirectUrl = `${window.location.origin}/auth/callback?role=merchant&flow_token=${flow.token}`;
+      const redirectUrl = getRedirectUrl(`/auth/callback?role=merchant&flow_token=${flow.token}`);
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
