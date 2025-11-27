@@ -159,7 +159,7 @@ const ClientProfilePage = () => {
     JSON.stringify(profile) !== JSON.stringify(editedProfile);
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 pb-40">
+    <div className="min-h-screen bg-gray-50 pt-24 pb-40">
       <div className="max-w-3xl mx-auto px-4">
         {/* Toast */}
         {toast && (
@@ -299,34 +299,33 @@ const ClientProfilePage = () => {
               </div>
             </div>
 
-            {/* Eylem butonları */}
-            {hasChanges && (
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button
-                  onClick={handleCancel}
-                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
-                >
-                  İptal
-                </button>
-                <button
-                  onClick={handleSaveChanges}
-                  disabled={isSaving}
-                  className="flex-1 px-4 py-2.5 bg-[#00A690] text-white rounded-lg hover:bg-[#F75C00] transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                >
-                  {isSaving ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Kaydediliyor...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Kaydet
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
+            {/* Eylem butonları - toujours visibles */}
+            <div className="flex gap-3 pt-4 border-t border-gray-200">
+              <button
+                onClick={handleCancel}
+                disabled={!hasChanges}
+                className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleSaveChanges}
+                disabled={!hasChanges || isSaving}
+                className="flex-1 px-4 py-2.5 bg-[#00A690] text-white rounded-lg hover:bg-[#F75C00] transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Kaydediliyor...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Kaydet
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
