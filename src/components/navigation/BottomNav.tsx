@@ -5,25 +5,26 @@ import {
   Package,
   User,
   LayoutDashboard,
-  ShoppingBag,
-  ClipboardList,
+  PlusCircle,
   LogIn,
   Store,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
+import { useAddProduct } from "../../contexts/AddProductContext";
 import BottomNavItem from "./BottomNavItem";
 
 /**
  * Barre de navigation inférieure pour mobile natif
- * Affiche 3-4 onglets selon le rôle de l'utilisateur :
+ * Affiche 2-3 onglets selon le rôle de l'utilisateur :
  * - Non connecté : Teklifler, Giriş, İşletmeler (3)
  * - Client : Teklifler, Rezervasyonlar, Profil (3)
- * - Marchand : Panel, Tekliflerim, Siparişler, Profil (4)
+ * - Marchand : Panel, Teklif Ekle (2)
  */
 const BottomNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userType } = useAuthStore();
+  const { openAddProductModal } = useAddProduct();
 
   // Cacher la BottomNav sur la page de sélection ET les pages d'auth
   const hiddenPaths = ["/", "/customer/auth", "/merchant/auth"];
@@ -42,13 +43,11 @@ const BottomNav: React.FC = () => {
       ];
     }
 
-    // Marchand connecté
+    // Marchand connecté - 2 onglets seulement
     if (userType === "merchant") {
       return [
         { icon: LayoutDashboard, label: "Panel", path: "/merchant/dashboard" },
-        { icon: ShoppingBag, label: "Tekliflerim", path: "/merchant/dashboard?tab=offers" },
-        { icon: ClipboardList, label: "Siparişler", path: "/merchant/dashboard?tab=orders" },
-        { icon: User, label: "Profil", path: "/merchant/dashboard?tab=profile" },
+        { icon: PlusCircle, label: "Teklif Ekle", path: "/merchant/dashboard", action: "openAddProduct" },
       ];
     }
 
@@ -89,7 +88,17 @@ const BottomNav: React.FC = () => {
     return currentPath === basePath || currentPath.startsWith(basePath + "/");
   };
 
-  const handleNavigation = (path: string) => {
+  const handleNavigation = (path: string, action?: string) => {
+    // Si action spéciale, exécuter l'action au lieu de naviguer
+    if (action === "openAddProduct") {
+      // S'assurer d'être sur le dashboard avant d'ouvrir la modale
+      if (location.pathname !== "/merchant/dashboard") {
+        navigate("/merchant/dashboard");
+      }
+      // Ouvrir la modale avec un petit délai pour permettre la navigation
+      setTimeout(() => openAddProductModal(), 100);
+      return;
+    }
     navigate(path);
   };
 
@@ -107,8 +116,8 @@ const BottomNav: React.FC = () => {
             key={index}
             icon={item.icon}
             label={item.label}
-            isActive={isActive(item.path)}
-            onClick={() => handleNavigation(item.path)}
+            isActive={!item.action && isActive(item.path)}
+            onClick={() => handleNavigation(item.path, item.action)}
           />
         ))}
       </div>
