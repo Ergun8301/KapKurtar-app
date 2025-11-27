@@ -4,6 +4,7 @@ import mapboxgl, { Map, Marker } from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
+import { Clock } from "lucide-react";
 import SEO from "../components/SEO";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
@@ -42,62 +43,43 @@ const DEFAULT_LOCATION: [number, number] = [35.2433, 38.9637]; // Centre Turquie
 const DEFAULT_ZOOM = 6; // Zoom pour voir toute la Turquie
 
 const customMapboxCSS = `
+  .mapboxgl-ctrl-geolocate:focus,
   .mapboxgl-ctrl-geocoder input:focus {
     outline: none !important;
     box-shadow: none !important;
   }
 
-  /* Geocoder positionné en haut, sous le header */
   .mapboxgl-ctrl-top-right {
-    top: 70px !important;
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%) !important;
-    z-index: 100 !important;
+    top: 10px !important;
+    right: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0px !important;
+    transform: translateX(-55%) !important;
   }
 
   .mapboxgl-ctrl-geocoder {
-    width: 320px !important;
-    max-width: 90vw !important;
-    border-radius: 12px !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
-    height: 44px !important;
-    font-size: 15px !important;
+    width: 280px !important;
+    max-width: 80% !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    height: 32px !important;
+    font-size: 14px !important;
   }
 
-  .mapboxgl-ctrl-geocoder input {
-    height: 44px !important;
-    padding: 8px 40px !important;
-  }
-
-  .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon-search {
-    top: 12px !important;
-    left: 12px !important;
-  }
-
-  /* Mobile : Cacher le Geocoder, afficher GeolocateControl en bas à droite */
-  @media (max-width: 768px) {
-    .mapboxgl-ctrl-geocoder,
+  @media (max-width: 640px) {
     .mapboxgl-ctrl-top-right {
-      display: none !important;
+      top: 8px !important;
+      right: 50% !important;
+      transform: translateX(50%) !important;
+      flex-direction: row !important;
+      justify-content: center !important;
+      gap: 6px !important;
     }
 
-    /* Bouton GPS Mapbox en bas à droite, au-dessus de la BottomNav */
-    .mapboxgl-ctrl-bottom-right {
-      bottom: 180px !important;
-      right: 16px !important;
-    }
-
-    .mapboxgl-ctrl-geolocate {
-      width: 48px !important;
-      height: 48px !important;
-      border-radius: 50% !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
-    }
-
-    .mapboxgl-ctrl-icon {
-      width: 24px !important;
-      height: 24px !important;
+    .mapboxgl-ctrl-geocoder {
+      width: 80% !important;
+      height: 36px !important;
     }
   }
 
@@ -353,13 +335,41 @@ export default function OffersPage() {
 
     mapRef.current = map;
 
-    // Geocoder (barre de recherche) - visible sur desktop
+    const geolocate = new mapboxgl.GeolocateControl({
+      positionOptions: { 
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      },
+      trackUserLocation: false,
+      showUserHeading: true,
+    });
+    map.addControl(geolocate, "top-right");
+
+    geolocate.on("geolocate", (e) => {
+      const lng = e.coords.longitude;
+      const lat = e.coords.latitude;
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+      setUserLocation([lng, lat]);
+      setCenter([lng, lat]);
+      setViewMode("nearby");
+      map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
+      
+      const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+      if (input) input.value = "";
+    });
+
+    geolocate.on("error", (e) => {
+      console.error("❌ Erreur géolocalisation:", e);
+      // 🔧 FIX : Pas d'alerte, gérer silencieusement
+    });
+
     const geocoder = new MapboxGeocoder({
       accessToken: mapboxgl.accessToken,
       mapboxgl,
       marker: false,
-      placeholder: "Adres veya yer ara...",
-      language: "tr",
+      placeholder: "Rechercher une adresse ou un lieu...",
+      language: "fr",
     });
     map.addControl(geocoder);
 
@@ -367,31 +377,8 @@ export default function OffersPage() {
       const [lng, lat] = e.result.center;
       if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
       setCenter([lng, lat]);
-      setUserLocation([lng, lat]);
       setViewMode("nearby");
       map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
-    });
-
-    // GeolocateControl natif Mapbox - visible sur mobile en bas à droite
-    const geolocate = new mapboxgl.GeolocateControl({
-      positionOptions: {
-        enableHighAccuracy: true
-      },
-      trackUserLocation: true,
-      showUserHeading: true,
-      showAccuracyCircle: false
-    });
-    map.addControl(geolocate, 'bottom-right');
-
-    // Quand la géolocalisation réussit, centrer et passer en mode nearby
-    geolocate.on('geolocate', (e: any) => {
-      const lng = e.coords.longitude;
-      const lat = e.coords.latitude;
-      if (Number.isFinite(lng) && Number.isFinite(lat)) {
-        setUserLocation([lng, lat]);
-        setCenter([lng, lat]);
-        setViewMode("nearby");
-      }
     });
 
     return () => map.remove();
@@ -711,30 +698,6 @@ export default function OffersPage() {
     localStorage.setItem("radiusKm", String(val));
   };
 
-  // Vérifier si une localisation a été sélectionnée depuis SearchLocationPage
-  useEffect(() => {
-    const selectedLocation = localStorage.getItem("selectedLocation");
-    if (selectedLocation) {
-      try {
-        const { lng, lat } = JSON.parse(selectedLocation);
-        if (Number.isFinite(lng) && Number.isFinite(lat)) {
-          setCenter([lng, lat]);
-          setUserLocation([lng, lat]);
-          setViewMode("nearby");
-
-          if (mapRef.current) {
-            mapRef.current.flyTo({ center: [lng, lat], zoom: 13 });
-          }
-        }
-        // Nettoyer après utilisation
-        localStorage.removeItem("selectedLocation");
-      } catch (e) {
-        console.warn("Erreur parsing selectedLocation:", e);
-        localStorage.removeItem("selectedLocation");
-      }
-    }
-  }, []);
-
   if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
     console.warn("🧭 Map skipped render: invalid center", center);
     return (
@@ -869,9 +832,8 @@ export default function OffersPage() {
         <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
           <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-        {/* Slider desktop - visible seulement en mode nearby sur desktop */}
         {viewMode === "nearby" && (
-          <div className="hidden md:flex absolute bottom-4 left-1/2 -translate-x-1/2 z-[900] bg-white rounded-full shadow-lg px-4 py-2.5 items-center space-x-3 border-2 border-[#00A690]/20">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[900] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-[#00A690]/20">
             <input
               type="range"
               min={1}
@@ -881,26 +843,6 @@ export default function OffersPage() {
               className="w-32 md:w-36 accent-[#00A690] cursor-pointer focus:outline-none"
             />
             <span className="text-sm text-gray-900 font-bold whitespace-nowrap">{radiusKm} km</span>
-          </div>
-        )}
-
-        {/* 📱 Slider de rayon mobile - discret en bas de la carte */}
-        {viewMode === "nearby" && (
-          <div className="md:hidden absolute bottom-[120px] left-4 right-20 z-[800]">
-            <div className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg flex items-center gap-3">
-              <span className="text-xs text-gray-600">Yarıçap:</span>
-              <input
-                type="range"
-                min="1"
-                max="50"
-                value={radiusKm}
-                onChange={(e) => handleRadiusChange(Number(e.target.value))}
-                className="flex-1 accent-[#00A690] h-1"
-              />
-              <span className="text-sm font-semibold text-[#00A690] min-w-[40px]">
-                {radiusKm} km
-              </span>
-            </div>
           </div>
         )}
       </div>
