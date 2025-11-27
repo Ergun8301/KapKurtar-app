@@ -4,8 +4,6 @@ import mapboxgl, { Map, Marker } from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
-import { Geolocation } from "@capacitor/geolocation";
-import { Clock, Search, MapPin, Globe, Loader2 } from "lucide-react";
 import SEO from "../components/SEO";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
@@ -77,11 +75,29 @@ const customMapboxCSS = `
     left: 12px !important;
   }
 
-  /* Mobile : Cacher le Geocoder Mapbox (on utilise notre propre barre de recherche) */
+  /* Mobile : Cacher le Geocoder, afficher GeolocateControl en bas à droite */
   @media (max-width: 768px) {
     .mapboxgl-ctrl-geocoder,
     .mapboxgl-ctrl-top-right {
       display: none !important;
+    }
+
+    /* Bouton GPS Mapbox en bas à droite, au-dessus de la BottomNav */
+    .mapboxgl-ctrl-bottom-right {
+      bottom: 180px !important;
+      right: 16px !important;
+    }
+
+    .mapboxgl-ctrl-geolocate {
+      width: 48px !important;
+      height: 48px !important;
+      border-radius: 50% !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+    }
+
+    .mapboxgl-ctrl-icon {
+      width: 24px !important;
+      height: 24px !important;
     }
   }
 
@@ -127,7 +143,6 @@ export default function OffersPage() {
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
   const [merchantOffers, setMerchantOffers] = useState<Offer[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchAddress, setSearchAddress] = useState("");
 
   const getDiscountPercent = (before: number, after: number) => {
     if (!before || before === 0) return 0;
@@ -182,12 +197,6 @@ export default function OffersPage() {
     styleTag.innerHTML = customMapboxCSS;
     document.head.appendChild(styleTag);
     return () => document.head.removeChild(styleTag);
-  }, []);
-
-  // Debug: vérifier que le plugin Geolocation est disponible
-  useEffect(() => {
-    console.log("🔍 Capacitor Geolocation plugin available:", !!Geolocation);
-    console.log("🔍 Geolocation methods:", Object.keys(Geolocation));
   }, []);
 
   useEffect(() => {
@@ -344,13 +353,13 @@ export default function OffersPage() {
 
     mapRef.current = map;
 
-    // Geocoder (barre de recherche) - seul contrôle Mapbox conservé
+    // Geocoder (barre de recherche) - visible sur desktop
     const geocoder = new MapboxGeocoder({
       accessToken: mapboxgl.accessToken,
       mapboxgl,
       marker: false,
-      placeholder: "Rechercher une adresse ou un lieu...",
-      language: "fr",
+      placeholder: "Adres veya yer ara...",
+      language: "tr",
     });
     map.addControl(geocoder);
 
@@ -358,8 +367,31 @@ export default function OffersPage() {
       const [lng, lat] = e.result.center;
       if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
       setCenter([lng, lat]);
+      setUserLocation([lng, lat]);
       setViewMode("nearby");
       map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
+    });
+
+    // GeolocateControl natif Mapbox - visible sur mobile en bas à droite
+    const geolocate = new mapboxgl.GeolocateControl({
+      positionOptions: {
+        enableHighAccuracy: true
+      },
+      trackUserLocation: true,
+      showUserHeading: true,
+      showAccuracyCircle: false
+    });
+    map.addControl(geolocate, 'bottom-right');
+
+    // Quand la géolocalisation réussit, centrer et passer en mode nearby
+    geolocate.on('geolocate', (e: any) => {
+      const lng = e.coords.longitude;
+      const lat = e.coords.latitude;
+      if (Number.isFinite(lng) && Number.isFinite(lat)) {
+        setUserLocation([lng, lat]);
+        setCenter([lng, lat]);
+        setViewMode("nearby");
+      }
     });
 
     return () => map.remove();
@@ -679,154 +711,29 @@ export default function OffersPage() {
     localStorage.setItem("radiusKm", String(val));
   };
 
-  // 📍 Fonction de géolocalisation pour le bouton Yakında (utilise Capacitor plugin)
-  const handleGeolocate = async () => {
-    console.log("=== GEOLOCATION START ===");
-    setIsGeolocating(true);
-
-    try {
-      // Demander la permission via le plugin Capacitor
-      console.log("Requesting permissions...");
-      const permission = await Geolocation.requestPermissions();
-      console.log("Permission result:", JSON.stringify(permission));
-
-      // Vérifier si au moins une permission est accordée
-      const hasPermission = permission.location === 'granted' || permission.coarseLocation === 'granted';
-
-      if (!hasPermission) {
-        console.warn("Permission de géolocalisation refusée:", permission);
-
-        // Proposer d'ouvrir les paramètres de l'app
-        const openSettings = window.confirm(
-          "Konum izni gerekli. Ayarları açmak ister misiniz?\n\n" +
-          "(Location permission required. Open settings?)"
-        );
-
-        if (openSettings) {
-          // Ouvrir les paramètres de l'app Android
-          window.open('app-settings:', '_system');
-        }
-
-        setIsGeolocating(false);
-        return;
-      }
-
-      console.log("Permission granted, getting position...");
-
+  // Vérifier si une localisation a été sélectionnée depuis SearchLocationPage
+  useEffect(() => {
+    const selectedLocation = localStorage.getItem("selectedLocation");
+    if (selectedLocation) {
       try {
-        // Obtenir la position via le plugin Capacitor (timeout 10 secondes)
-        const position = await Geolocation.getCurrentPosition({
-          enableHighAccuracy: true,
-          timeout: 10000,
-        });
+        const { lng, lat } = JSON.parse(selectedLocation);
+        if (Number.isFinite(lng) && Number.isFinite(lat)) {
+          setCenter([lng, lat]);
+          setUserLocation([lng, lat]);
+          setViewMode("nearby");
 
-        console.log("Position received:", JSON.stringify(position.coords));
-
-        const lng = position.coords.longitude;
-        const lat = position.coords.latitude;
-
-        console.log("Coordinates - lng:", lng, "lat:", lat);
-
-        if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
-          console.error("Invalid coordinates!");
-          setIsGeolocating(false);
-          return;
-        }
-
-        // Mettre à jour la position AVANT de changer le mode
-        console.log("Updating state: userLocation, center, viewMode...");
-        setUserLocation([lng, lat]);
-        setCenter([lng, lat]);
-        setViewMode("nearby");
-
-        // Fly to position
-        if (mapRef.current) {
-          console.log("Flying to position...");
-          mapRef.current.flyTo({
-            center: [lng, lat],
-            zoom: 13,
-            essential: true,
-          });
-        }
-
-        // Effacer le champ de recherche
-        const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
-        if (input) input.value = "";
-
-        console.log("=== GEOLOCATION SUCCESS ===");
-
-      } catch (positionError: any) {
-        console.error("=== POSITION ERROR ===", positionError);
-
-        // GPS désactivé → Proposer d'ouvrir les paramètres de localisation
-        const openSettings = window.confirm(
-          "GPS kapalı. Konum ayarlarını açmak ister misiniz?\n\n" +
-          "(GPS is off. Would you like to open location settings?)"
-        );
-
-        if (openSettings) {
-          // Ouvrir les paramètres de localisation Android
-          try {
-            // Méthode Android : intent pour ouvrir les paramètres de localisation
-            window.location.href = 'intent://settings/location_source#Intent;scheme=android-app;package=com.android.settings;end';
-          } catch (e) {
-            console.log("Intent failed, trying app-settings");
-            window.open('app-settings:', '_system');
+          if (mapRef.current) {
+            mapRef.current.flyTo({ center: [lng, lat], zoom: 13 });
           }
         }
+        // Nettoyer après utilisation
+        localStorage.removeItem("selectedLocation");
+      } catch (e) {
+        console.warn("Erreur parsing selectedLocation:", e);
+        localStorage.removeItem("selectedLocation");
       }
-
-    } catch (error) {
-      console.error("=== GEOLOCATION ERROR ===", error);
-
-      // Erreur générale → Proposer d'ouvrir les paramètres
-      const openSettings = window.confirm(
-        "Konum servisi hatası. Ayarları kontrol etmek ister misiniz?\n\n" +
-        "(Location service error. Check settings?)"
-      );
-
-      if (openSettings) {
-        window.open('app-settings:', '_system');
-      }
-    } finally {
-      console.log("=== GEOLOCATION END ===");
-      setIsGeolocating(false);
     }
-  };
-
-  // 🔍 Fonction de recherche d'adresse
-  const handleAddressSearch = async () => {
-    if (!searchAddress.trim()) return;
-
-    try {
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchAddress)}.json?access_token=${mapboxgl.accessToken}&limit=1&language=tr`
-      );
-      const data = await response.json();
-
-      if (data.features && data.features.length > 0) {
-        const [lng, lat] = data.features[0].center;
-
-        setCenter([lng, lat]);
-        setUserLocation([lng, lat]);
-        setViewMode("nearby");
-        setSearchAddress(""); // Effacer le champ après recherche
-
-        if (mapRef.current) {
-          mapRef.current.flyTo({
-            center: [lng, lat],
-            zoom: 13,
-            duration: 1500
-          });
-        }
-      } else {
-        alert("Adres bulunamadı. Lütfen farklı bir adres deneyin.\n\n(Address not found. Please try a different address.)");
-      }
-    } catch (error) {
-      console.error("Adres arama hatası:", error);
-      alert("Adres arama hatası. Lütfen tekrar deneyin.");
-    }
-  };
+  }, []);
 
   if (!center || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
     console.warn("🧭 Map skipped render: invalid center", center);
@@ -977,88 +884,25 @@ export default function OffersPage() {
           </div>
         )}
 
-        {/* 📱 CONTRÔLES MOBILES - Recherche + Boutons + Slider */}
-        <div className="md:hidden absolute bottom-4 left-0 right-0 z-[901] px-3 space-y-2">
-
-          {/* Barre de recherche d'adresse */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Adres ara... (örn: Kadıköy, İstanbul)"
-              className="w-full py-3 px-4 pl-11 bg-white rounded-xl shadow-lg text-sm border border-gray-100 focus:ring-2 focus:ring-[#00A690] focus:outline-none focus:border-transparent"
-              value={searchAddress}
-              onChange={(e) => setSearchAddress(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleAddressSearch();
-                }
-              }}
-            />
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            {searchAddress && (
-              <button
-                onClick={handleAddressSearch}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#00A690] text-white px-3 py-1.5 rounded-lg text-xs font-medium"
-              >
-                Ara
-              </button>
-            )}
-          </div>
-
-          {/* Boutons Yakında / Tümü */}
-          <div className="bg-white rounded-xl shadow-lg p-1 flex border border-gray-100">
-            <button
-              onClick={handleGeolocate}
-              disabled={isGeolocating}
-              className={`flex-1 py-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-all ${
-                viewMode === "nearby"
-                  ? "bg-[#00A690] text-white"
-                  : "bg-transparent text-gray-600"
-              } ${isGeolocating ? "opacity-70" : ""}`}
-            >
-              {isGeolocating ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm">Konum alınıyor...</span>
-                </>
-              ) : (
-                <>
-                  <MapPin className="w-4 h-4" />
-                  <span className="text-sm">Yakında</span>
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => handleViewModeChange("all")}
-              className={`flex-1 py-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-all ${
-                viewMode === "all"
-                  ? "bg-[#00A690] text-white"
-                  : "bg-transparent text-gray-600"
-              }`}
-            >
-              <Globe className="w-4 h-4" />
-              <span className="text-sm">Tümü</span>
-            </button>
-          </div>
-
-          {/* Slider de rayon - visible seulement en mode nearby */}
-          {viewMode === "nearby" && (
-            <div className="bg-white rounded-xl shadow-lg p-3 flex items-center gap-3 border border-gray-100">
-              <span className="text-xs text-gray-500 whitespace-nowrap">Yarıçap:</span>
+        {/* 📱 Slider de rayon mobile - discret en bas de la carte */}
+        {viewMode === "nearby" && (
+          <div className="md:hidden absolute bottom-[120px] left-4 right-20 z-[800]">
+            <div className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg flex items-center gap-3">
+              <span className="text-xs text-gray-600">Yarıçap:</span>
               <input
                 type="range"
-                min={1}
-                max={50}
+                min="1"
+                max="50"
                 value={radiusKm}
-                onInput={(e) => handleRadiusChange(Number((e.target as HTMLInputElement).value))}
-                className="flex-1 accent-[#00A690] cursor-pointer"
+                onChange={(e) => handleRadiusChange(Number(e.target.value))}
+                className="flex-1 accent-[#00A690] h-1"
               />
-              <span className="text-sm font-bold text-[#00A690] min-w-[50px] text-right">
+              <span className="text-sm font-semibold text-[#00A690] min-w-[40px]">
                 {radiusKm} km
               </span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="hidden md:block md:w-1/2 overflow-y-auto bg-gray-50 p-4">

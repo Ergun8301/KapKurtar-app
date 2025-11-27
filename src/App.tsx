@@ -36,6 +36,7 @@ import FavoritesPage from "./pages/FavoritesPage";
 import ReviewsPage from "./pages/ReviewsPage";
 import DownloadPage from "./pages/DownloadPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import SearchLocationPage from "./pages/SearchLocationPage";
 
 // ✅ Pages marketing
 import FAQPage from "./pages/FAQPage";
@@ -152,6 +153,9 @@ function App() {
 
               {/* 🗺️ Offres */}
               <Route path="/offers" element={<OffersPage />} />
+
+              {/* 📍 Recherche de localisation */}
+              <Route path="/search-location" element={<SearchLocationPage />} />
 
               {/* 👤 Profils clients */}
               <Route path="/client/profile" element={<ClientProfilePage />} />
