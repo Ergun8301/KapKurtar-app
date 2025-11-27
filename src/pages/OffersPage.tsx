@@ -69,25 +69,42 @@ const customMapboxCSS = `
 
   @media (max-width: 640px) {
     .mapboxgl-ctrl-top-right {
-      top: 60px !important;
-      right: 10px !important;
-      left: auto !important;
+      top: auto !important;
+      bottom: 70px !important;
+      right: 0 !important;
+      left: 0 !important;
       transform: none !important;
-      flex-direction: column !important;
-      align-items: flex-end !important;
-      gap: 8px !important;
+      flex-direction: row !important;
+      justify-content: center !important;
+      align-items: center !important;
+      gap: 10px !important;
       z-index: 1000 !important;
+      padding: 0 10px !important;
     }
 
     .mapboxgl-ctrl-geocoder {
-      width: 200px !important;
-      max-width: 200px !important;
-      height: 36px !important;
+      width: 250px !important;
+      max-width: 60% !important;
+      height: 40px !important;
+      border-radius: 20px !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+    }
+
+    .mapboxgl-ctrl-geocoder input {
+      height: 40px !important;
+      padding: 0 35px 0 35px !important;
     }
 
     .mapboxgl-ctrl-geolocate {
-      width: 36px !important;
-      height: 36px !important;
+      width: 40px !important;
+      height: 40px !important;
+      border-radius: 50% !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+    }
+
+    .mapboxgl-ctrl-group {
+      border-radius: 50% !important;
+      overflow: hidden !important;
     }
   }
 
@@ -840,34 +857,8 @@ export default function OffersPage() {
         <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
           <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
-          {/* Toggle viewMode - Mobile only */}
-          <div className="md:hidden absolute top-2 left-1/2 -translate-x-1/2 z-[1000]">
-            <div className="flex bg-white rounded-full overflow-hidden shadow-lg border border-gray-200">
-              <button
-                className={`px-3 py-1.5 text-xs font-semibold transition-all ${
-                  viewMode === "nearby"
-                    ? "bg-[#00A690] text-white"
-                    : "text-gray-600"
-                }`}
-                onClick={() => handleViewModeChange("nearby")}
-              >
-                📍 Yakın
-              </button>
-              <button
-                className={`px-3 py-1.5 text-xs font-semibold transition-all ${
-                  viewMode === "all"
-                    ? "bg-[#00A690] text-white"
-                    : "text-gray-600"
-                }`}
-                onClick={() => handleViewModeChange("all")}
-              >
-                🌍 Tümü
-              </button>
-            </div>
-          </div>
-
         {viewMode === "nearby" && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[900] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-[#00A690]/20">
+          <div className="absolute bottom-[130px] md:bottom-4 left-1/2 -translate-x-1/2 z-[900] bg-white rounded-full shadow-lg px-4 py-2.5 flex items-center space-x-3 border-2 border-[#00A690]/20">
             <input
               type="range"
               min={1}
