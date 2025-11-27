@@ -768,68 +768,109 @@ export default function OffersPage() {
         return;
       }
 
-      console.log("Permission granted, checking GPS status first...");
+      console.log("Permission granted, getting position...");
 
-      // 🚀 NOUVEAU : Vérifier si le GPS est activé AVANT de tenter la géoloc
-      // Cela affiche la popup système immédiatement si le GPS est désactivé
+      try {
+        // Obtenir la position via le plugin Capacitor (timeout 10 secondes)
+        const position = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 10000,
+        });
+
+        console.log("Position received:", JSON.stringify(position.coords));
+
+        const lng = position.coords.longitude;
+        const lat = position.coords.latitude;
+
+        console.log("Coordinates - lng:", lng, "lat:", lat);
+
+        if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+          console.error("Invalid coordinates!");
+          setIsGeolocating(false);
+          return;
+        }
+
+        // Mettre à jour la position AVANT de changer le mode
+        console.log("Updating state: userLocation, center, viewMode...");
+        setUserLocation([lng, lat]);
+        setCenter([lng, lat]);
+        setViewMode("nearby");
+
+        // Fly to position
+        if (mapRef.current) {
+          console.log("Flying to position...");
+          mapRef.current.flyTo({
+            center: [lng, lat],
+            zoom: 13,
+            essential: true,
+          });
+        }
+
+        // Effacer le champ de recherche
+        const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+        if (input) input.value = "";
+
+        console.log("=== GEOLOCATION SUCCESS ===");
+
+      } catch (positionError: any) {
+        console.error("=== POSITION ERROR ===", positionError);
+
+        // GPS désactivé → Essayer d'afficher la popup système native Android
+        console.log("GPS disabled, trying native popup...");
+
+        const gpsEnabled = await requestLocationAccuracy();
+
+        if (gpsEnabled) {
+          // GPS activé via la popup → Réessayer d'obtenir la position
+          console.log("GPS enabled via popup, retrying position...");
+          try {
+            const position = await Geolocation.getCurrentPosition({
+              enableHighAccuracy: true,
+              timeout: 10000,
+            });
+
+            const lng = position.coords.longitude;
+            const lat = position.coords.latitude;
+
+            if (Number.isFinite(lng) && Number.isFinite(lat)) {
+              setUserLocation([lng, lat]);
+              setCenter([lng, lat]);
+              setViewMode("nearby");
+
+              if (mapRef.current) {
+                mapRef.current.flyTo({
+                  center: [lng, lat],
+                  zoom: 13,
+                  essential: true,
+                });
+              }
+
+              const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+              if (input) input.value = "";
+
+              console.log("=== GEOLOCATION SUCCESS (after popup) ===");
+            }
+          } catch (retryError) {
+            console.error("Position error after GPS enable:", retryError);
+            await openLocationSettings();
+          }
+        } else {
+          // L'utilisateur a refusé ou la popup native n'est pas disponible
+          // → Ouvrir les paramètres de localisation
+          console.log("User refused or popup not available, opening settings...");
+          await openLocationSettings();
+        }
+      }
+
+    } catch (error) {
+      console.error("=== GEOLOCATION ERROR ===", error);
+
+      // Erreur générale → Essayer la popup native, sinon ouvrir les paramètres
       const gpsEnabled = await requestLocationAccuracy();
 
       if (!gpsEnabled) {
-        // L'utilisateur a refusé ou la popup n'est pas disponible → ouvrir les paramètres
-        console.log("GPS not enabled after prompt, opening settings...");
         await openLocationSettings();
-        setIsGeolocating(false);
-        return;
       }
-
-      console.log("GPS is enabled, getting position...");
-
-      // Obtenir la position via le plugin Capacitor (timeout réduit à 5 secondes)
-      const position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 5000,
-      });
-
-      console.log("Position received:", JSON.stringify(position.coords));
-
-      const lng = position.coords.longitude;
-      const lat = position.coords.latitude;
-
-      console.log("Coordinates - lng:", lng, "lat:", lat);
-
-      if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
-        console.error("Invalid coordinates!");
-        setIsGeolocating(false);
-        return;
-      }
-
-      // Mettre à jour la position AVANT de changer le mode
-      console.log("Updating state: userLocation, center, viewMode...");
-      setUserLocation([lng, lat]);
-      setCenter([lng, lat]);
-      setViewMode("nearby");
-
-      // Fly to position
-      if (mapRef.current) {
-        console.log("Flying to position...");
-        mapRef.current.flyTo({
-          center: [lng, lat],
-          zoom: 13,
-          essential: true,
-        });
-      }
-
-      // Effacer le champ de recherche
-      const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
-      if (input) input.value = "";
-
-      console.log("=== GEOLOCATION SUCCESS ===");
-
-    } catch (error: any) {
-      console.error("=== GEOLOCATION ERROR ===", error);
-
-      // Erreur → Ouvrir les paramètres de localisation comme fallback
-      await openLocationSettings();
     } finally {
       console.log("=== GEOLOCATION END ===");
       setIsGeolocating(false);
@@ -1142,7 +1183,7 @@ export default function OffersPage() {
             <button
               onClick={handleGeolocate}
               disabled={isGeolocating}
-              className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 font-medium transition-all ${
+              className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 font-medium transition-all ${
                 viewMode === "nearby"
                   ? "bg-[#00A690] text-white"
                   : "bg-transparent text-gray-600"
@@ -1162,7 +1203,7 @@ export default function OffersPage() {
             </button>
             <button
               onClick={() => handleViewModeChange("all")}
-              className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 font-medium transition-all ${
+              className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 font-medium transition-all ${
                 viewMode === "all"
                   ? "bg-[#00A690] text-white"
                   : "bg-transparent text-gray-600"
