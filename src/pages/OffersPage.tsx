@@ -5,7 +5,27 @@ import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { Geolocation } from "@capacitor/geolocation";
+import { NativeSettings, AndroidSettings, IOSSettings } from "capacitor-native-settings";
 import { Clock, Search, MapPin, Globe, Loader2 } from "lucide-react";
+
+// Cordova plugin for native GPS enable popup (Android)
+declare global {
+  interface Window {
+    cordova?: {
+      plugins?: {
+        locationAccuracy?: {
+          request: (success: (code: number) => void, error: (err: any) => void, accuracy: number) => void;
+          canRequest: (callback: (canRequest: boolean) => void) => void;
+          isRequesting: (callback: (isRequesting: boolean) => void) => void;
+          REQUEST_PRIORITY_HIGH_ACCURACY: number;
+          SUCCESS_SETTINGS_SATISFIED: number;
+          SUCCESS_USER_AGREED: number;
+          ERROR_USER_DISAGREED: number;
+        };
+      };
+    };
+  }
+}
 import SEO from "../components/SEO";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
@@ -682,6 +702,50 @@ export default function OffersPage() {
     localStorage.setItem("radiusKm", String(val));
   };
 
+  // 📍 Helper: Try to show native Android GPS enable popup
+  const requestLocationAccuracy = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const locationAccuracy = window.cordova?.plugins?.locationAccuracy;
+
+      if (!locationAccuracy) {
+        console.log("cordova-plugin-request-location-accuracy not available");
+        resolve(false);
+        return;
+      }
+
+      console.log("Requesting location accuracy via native popup...");
+
+      locationAccuracy.request(
+        (success) => {
+          console.log("Location accuracy request SUCCESS:", success);
+          // SUCCESS_SETTINGS_SATISFIED or SUCCESS_USER_AGREED
+          resolve(true);
+        },
+        (error) => {
+          console.warn("Location accuracy request FAILED:", error);
+          // User refused or error
+          resolve(false);
+        },
+        locationAccuracy.REQUEST_PRIORITY_HIGH_ACCURACY
+      );
+    });
+  };
+
+  // 📍 Helper: Open native location settings
+  const openLocationSettings = async () => {
+    try {
+      console.log("Opening native location settings...");
+      await NativeSettings.open({
+        optionAndroid: AndroidSettings.Location,
+        optionIOS: IOSSettings.LocationServices,
+      });
+    } catch (e) {
+      console.warn("Failed to open native settings:", e);
+      // Fallback: alert message
+      alert("Lütfen GPS'i açın");
+    }
+  };
+
   // 📍 Fonction de géolocalisation pour le bouton Yakında (utilise Capacitor plugin)
   const handleGeolocate = async () => {
     console.log("=== GEOLOCATION START ===");
@@ -698,15 +762,8 @@ export default function OffersPage() {
 
       if (!hasPermission) {
         console.warn("Permission de géolocalisation refusée:", permission);
-
-        // Proposer d'ouvrir les paramètres de l'app
-        const openSettings = window.confirm("Lütfen GPS'i açın");
-
-        if (openSettings) {
-          // Ouvrir les paramètres de l'app Android
-          window.open('app-settings:', '_system');
-        }
-
+        // Ouvrir les paramètres de l'app
+        await openLocationSettings();
         setIsGeolocating(false);
         return;
       }
@@ -758,29 +815,61 @@ export default function OffersPage() {
       } catch (positionError: any) {
         console.error("=== POSITION ERROR ===", positionError);
 
-        // GPS désactivé → Proposer d'ouvrir les paramètres de localisation
-        const openSettings = window.confirm("Lütfen GPS'i açın");
+        // GPS désactivé → Essayer d'afficher la popup système native Android
+        console.log("GPS disabled, trying native popup...");
 
-        if (openSettings) {
-          // Ouvrir les paramètres de localisation Android
+        const gpsEnabled = await requestLocationAccuracy();
+
+        if (gpsEnabled) {
+          // GPS activé via la popup → Réessayer d'obtenir la position
+          console.log("GPS enabled via popup, retrying position...");
           try {
-            // Méthode Android : intent pour ouvrir les paramètres de localisation
-            window.location.href = 'intent://settings/location_source#Intent;scheme=android-app;package=com.android.settings;end';
-          } catch (e) {
-            console.log("Intent failed, trying app-settings");
-            window.open('app-settings:', '_system');
+            const position = await Geolocation.getCurrentPosition({
+              enableHighAccuracy: true,
+              timeout: 10000,
+            });
+
+            const lng = position.coords.longitude;
+            const lat = position.coords.latitude;
+
+            if (Number.isFinite(lng) && Number.isFinite(lat)) {
+              setUserLocation([lng, lat]);
+              setCenter([lng, lat]);
+              setViewMode("nearby");
+
+              if (mapRef.current) {
+                mapRef.current.flyTo({
+                  center: [lng, lat],
+                  zoom: 13,
+                  essential: true,
+                });
+              }
+
+              const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+              if (input) input.value = "";
+
+              console.log("=== GEOLOCATION SUCCESS (after popup) ===");
+            }
+          } catch (retryError) {
+            console.error("Position error after GPS enable:", retryError);
+            await openLocationSettings();
           }
+        } else {
+          // L'utilisateur a refusé ou la popup native n'est pas disponible
+          // → Ouvrir les paramètres de localisation
+          console.log("User refused or popup not available, opening settings...");
+          await openLocationSettings();
         }
       }
 
     } catch (error) {
       console.error("=== GEOLOCATION ERROR ===", error);
 
-      // Erreur générale → Proposer d'ouvrir les paramètres
-      const openSettings = window.confirm("Lütfen GPS'i açın");
+      // Erreur générale → Essayer la popup native, sinon ouvrir les paramètres
+      const gpsEnabled = await requestLocationAccuracy();
 
-      if (openSettings) {
-        window.open('app-settings:', '_system');
+      if (!gpsEnabled) {
+        await openLocationSettings();
       }
     } finally {
       console.log("=== GEOLOCATION END ===");
