@@ -24,7 +24,7 @@ const ClientProfilePage = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
-  // Charger le profil
+  // Profili yükle
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) {
@@ -46,8 +46,8 @@ const ClientProfilePage = () => {
           setPhotoPreview(data.profile_photo_url);
         }
       } catch (error) {
-        console.error('Erreur chargement profil:', error);
-        setToast({ message: 'Erreur chargement profil', type: 'error' });
+        console.error('Profil yükleme hatası:', error);
+        setToast({ message: 'Profil yükleme hatası', type: 'error' });
       } finally {
         setLoading(false);
       }
@@ -58,7 +58,7 @@ const ClientProfilePage = () => {
     }
   }, [user, authLoading]);
 
-  // Toast auto-hide
+  // Toast otomatik gizleme
   useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => setToast(null), 3000);
@@ -79,12 +79,12 @@ const ClientProfilePage = () => {
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/avif'];
 
     if (file.size > MAX_SIZE) {
-      setToast({ message: 'Photo trop volumineuse (max. 5 Mo)', type: 'error' });
+      setToast({ message: 'Fotoğraf çok büyük (maks. 5 MB)', type: 'error' });
       return;
     }
 
     if (!validTypes.includes(file.type.toLowerCase())) {
-      setToast({ message: 'Format non pris en charge', type: 'error' });
+      setToast({ message: 'Desteklenmeyen format', type: 'error' });
       return;
     }
 
@@ -103,10 +103,10 @@ const ClientProfilePage = () => {
       setPhotoPreview(photoUrl);
       setProfile((prev) => (prev ? { ...prev, profile_photo_url: photoUrl } : null));
       setEditedProfile((prev) => (prev ? { ...prev, profile_photo_url: photoUrl } : null));
-      setToast({ message: '✅ Photo mise à jour', type: 'success' });
+      setToast({ message: 'Fotoğraf güncellendi', type: 'success' });
     } catch (error: any) {
-      console.error('Erreur upload photo:', error);
-      setToast({ message: error.message || 'Erreur upload photo', type: 'error' });
+      console.error('Fotoğraf yükleme hatası:', error);
+      setToast({ message: error.message || 'Fotoğraf yükleme hatası', type: 'error' });
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -116,7 +116,7 @@ const ClientProfilePage = () => {
     if (!user || !editedProfile) return;
 
     if (!editedProfile.first_name?.trim() || !editedProfile.last_name?.trim()) {
-      setToast({ message: 'Prénom et nom sont obligatoires', type: 'error' });
+      setToast({ message: 'Ad ve soyad zorunludur', type: 'error' });
       return;
     }
 
@@ -134,10 +134,10 @@ const ClientProfilePage = () => {
       if (error) throw error;
 
       setProfile(editedProfile);
-      setToast({ message: '✅ Profil mis à jour', type: 'success' });
+      setToast({ message: 'Profil güncellendi', type: 'success' });
     } catch (error: any) {
-      console.error('Erreur mise à jour profil:', error);
-      setToast({ message: error.message || 'Erreur mise à jour', type: 'error' });
+      console.error('Güncelleme hatası:', error);
+      setToast({ message: error.message || 'Güncelleme hatası', type: 'error' });
     } finally {
       setIsSaving(false);
     }
@@ -159,12 +159,12 @@ const ClientProfilePage = () => {
     JSON.stringify(profile) !== JSON.stringify(editedProfile);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 pb-32 overflow-y-auto">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-4 pb-32">
+      <div className="max-w-3xl mx-auto px-4">
         {/* Toast */}
         {toast && (
           <div
-            className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+            className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm ${
               toast.type === 'success' ? 'bg-[#00A690]' : 'bg-red-500'
             } text-white`}
           >
@@ -172,44 +172,44 @@ const ClientProfilePage = () => {
           </div>
         )}
 
-        {/* Bouton retour */}
+        {/* Geri butonu */}
         <button
           onClick={() => navigate('/offers')}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors duration-300"
+          className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Retour aux offres
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          <span className="text-sm">Tekliflere Dön</span>
         </button>
 
-        {/* Profil principal */}
-        <div className="bg-white rounded-lg shadow-md p-8">
+        {/* Ana profil kartı */}
+        <div className="bg-white rounded-lg shadow-md p-5">
           {/* Header */}
-          <div className="flex items-center mb-8">
-            <div className="w-12 h-12 bg-[#FFFFF0] rounded-full flex items-center justify-center mr-4">
-              <User className="w-6 h-6 text-[#00A690]" />
+          <div className="flex items-center mb-4">
+            <div className="w-10 h-10 bg-[#FFFFF0] rounded-full flex items-center justify-center mr-3">
+              <User className="w-5 h-5 text-[#00A690]" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Profilim</h1>
           </div>
 
-          {/* Photo de profil */}
-          <div className="flex flex-col items-center mb-8">
+          {/* Profil fotoğrafı */}
+          <div className="flex flex-col items-center mb-4">
             <div className="relative">
-              <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
                 {photoPreview ? (
                   <img src={photoPreview} alt="Profil" className="w-full h-full object-cover" />
                 ) : (
-                  <User className="w-16 h-16 text-gray-400" />
+                  <User className="w-10 h-10 text-gray-400" />
                 )}
               </div>
               <label
-                className={`absolute bottom-0 right-0 bg-[#00A690] rounded-full p-2 cursor-pointer hover:bg-[#F75C00] transition-colors duration-300 shadow-lg ${
+                className={`absolute bottom-0 right-0 bg-[#00A690] rounded-full p-1.5 cursor-pointer hover:bg-[#F75C00] transition-colors shadow-lg ${
                   isUploadingPhoto ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
                 {isUploadingPhoto ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <Camera className="w-5 h-5 text-white" />
+                  <Camera className="w-4 h-4 text-white" />
                 )}
                 <input
                   type="file"
@@ -220,105 +220,108 @@ const ClientProfilePage = () => {
                 />
               </label>
             </div>
-            <p className="text-sm text-gray-500 mt-3">Cliquez sur l'icône pour changer la photo</p>
+            <p className="text-xs text-gray-500 mt-2">Fotoğrafı değiştirmek için simgeye tıklayın</p>
           </div>
 
-          {/* Formulaire */}
-          <div className="space-y-6">
-            {/* Email (lecture seule) */}
+          {/* Form */}
+          <div className="space-y-4">
+            {/* E-posta (salt okunur) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="email"
                   value={editedProfile?.email || ''}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
                   disabled
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-1">L'email ne peut pas être modifié</p>
+              <p className="text-xs text-gray-400 mt-1">E-posta değiştirilemez</p>
             </div>
 
-            {/* Prénom */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Prénom <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  name="first_name"
-                  value={editedProfile?.first_name || ''}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
-                  placeholder="Prénom"
-                  required
-                />
+            {/* Ad ve Soyad - aynı satırda */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Ad */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ad <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    name="first_name"
+                    value={editedProfile?.first_name || ''}
+                    onChange={handleInputChange}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
+                    placeholder="Ad"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Soyad */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Soyad <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    name="last_name"
+                    value={editedProfile?.last_name || ''}
+                    onChange={handleInputChange}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
+                    placeholder="Soyad"
+                    required
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Nom */}
+            {/* Telefon */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nom <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Telefon <span className="text-gray-400 text-xs">(isteğe bağlı)</span>
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  name="last_name"
-                  value={editedProfile?.last_name || ''}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
-                  placeholder="Nom"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Téléphone */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Téléphone <span className="text-gray-400 text-xs">(optionnel)</span>
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="tel"
                   name="phone"
                   value={editedProfile?.phone || ''}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
-                  placeholder="Ex: 06 12 34 56 78"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A690] focus:border-transparent"
+                  placeholder="Örn: 0532 123 45 67"
                 />
               </div>
             </div>
 
-            {/* Boutons d'action */}
+            {/* Eylem butonları */}
             {hasChanges && (
-              <div className="flex gap-4 pt-6 border-t border-gray-200">
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
                 <button
                   onClick={handleCancel}
-                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-300 font-medium"
+                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
                 >
-                  Annuler
+                  İptal
                 </button>
                 <button
                   onClick={handleSaveChanges}
                   disabled={isSaving}
-                  className="flex-1 px-6 py-3 bg-[#00A690] text-white rounded-lg hover:bg-[#F75C00] transition-colors duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="flex-1 px-4 py-2.5 bg-[#00A690] text-white rounded-lg hover:bg-[#F75C00] transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {isSaving ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Enregistrement...
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Kaydediliyor...
                     </>
                   ) : (
                     <>
-                      <Save className="w-5 h-5 mr-2" />
-                      Enregistrer
+                      <Save className="w-4 h-4 mr-2" />
+                      Kaydet
                     </>
                   )}
                 </button>
