@@ -54,7 +54,7 @@ const BottomNav: React.FC = () => {
 
     // Client connecté (par défaut)
     return [
-      { icon: Search, label: "Harita", path: "/offers" },
+      { icon: Search, label: "Teklifler", path: "/offers" },
       { icon: Package, label: "Rezervasyonlar", path: "/customer/dashboard" },
       { icon: User, label: "Profil", path: "/client/profile" },
     ];
