@@ -46,7 +46,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation "org.apache.cordova:framework:$cordovaAndroidVersion"
     // SUB-PROJECT DEPENDENCIES START
-
+    implementation "com.google.android.gms:play-services-location:16.+"
     // SUB-PROJECT DEPENDENCIES END
 }
 
