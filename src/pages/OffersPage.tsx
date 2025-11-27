@@ -700,10 +700,7 @@ export default function OffersPage() {
         console.warn("Permission de géolocalisation refusée:", permission);
 
         // Proposer d'ouvrir les paramètres de l'app
-        const openSettings = window.confirm(
-          "Konum izni gerekli. Ayarları açmak ister misiniz?\n\n" +
-          "(Location permission required. Open settings?)"
-        );
+        const openSettings = window.confirm("Lütfen GPS'i açın");
 
         if (openSettings) {
           // Ouvrir les paramètres de l'app Android
@@ -762,10 +759,7 @@ export default function OffersPage() {
         console.error("=== POSITION ERROR ===", positionError);
 
         // GPS désactivé → Proposer d'ouvrir les paramètres de localisation
-        const openSettings = window.confirm(
-          "GPS kapalı. Konum ayarlarını açmak ister misiniz?\n\n" +
-          "(GPS is off. Would you like to open location settings?)"
-        );
+        const openSettings = window.confirm("Lütfen GPS'i açın");
 
         if (openSettings) {
           // Ouvrir les paramètres de localisation Android
@@ -783,10 +777,7 @@ export default function OffersPage() {
       console.error("=== GEOLOCATION ERROR ===", error);
 
       // Erreur générale → Proposer d'ouvrir les paramètres
-      const openSettings = window.confirm(
-        "Konum servisi hatası. Ayarları kontrol etmek ister misiniz?\n\n" +
-        "(Location service error. Check settings?)"
-      );
+      const openSettings = window.confirm("Lütfen GPS'i açın");
 
       if (openSettings) {
         window.open('app-settings:', '_system');
@@ -807,7 +798,7 @@ export default function OffersPage() {
 
     try {
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&limit=5&language=tr&country=tr`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&limit=5&language=tr`
       );
       const data = await response.json();
 
