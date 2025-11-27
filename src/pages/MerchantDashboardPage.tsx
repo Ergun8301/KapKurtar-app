@@ -57,7 +57,8 @@ interface MerchantReservation {
   available_until: string;
 }
 
-const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaGptNTlvMzAxMjUya3F5YXc0Z2hjdngifQ.wgpZMAaxvM3NvGUJqdbvCA';
+// 🔧 FIX: Utiliser la même clé Mapbox que OffersPage (qui fonctionne)
+const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueXgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g';
 mapboxgl.accessToken = MAPBOX_TOKEN;
 
 const MerchantDashboardPage = () => {
@@ -231,11 +232,13 @@ const MerchantDashboardPage = () => {
     return () => window.removeEventListener('openMerchantProfileModal', handleOpenProfileModal);
   }, [merchantProfile]);
 
+  // 🔧 FIX: Amélioration du timing d'initialisation Mapbox dans la modale
   useEffect(() => {
     if (!showOnboardingModal || !modalReady || !mapContainerRef.current) {
       return;
     }
 
+    // Nettoyer l'ancienne carte si elle existe
     if (mapRef.current) {
       mapRef.current.remove();
       mapRef.current = null;
@@ -243,74 +246,129 @@ const MerchantDashboardPage = () => {
       setMapLoaded(false);
     }
 
+    // 🔧 FIX: Fonction pour vérifier que le conteneur a des dimensions valides
+    const waitForContainerDimensions = (callback: () => void, maxAttempts = 20) => {
+      let attempts = 0;
+
+      const checkDimensions = () => {
+        attempts++;
+        const container = mapContainerRef.current;
+
+        if (container) {
+          const rect = container.getBoundingClientRect();
+          console.log(`🗺️ Mapbox container dimensions (attempt ${attempts}):`, rect.width, 'x', rect.height);
+
+          // Si le conteneur a des dimensions valides (> 0)
+          if (rect.width > 0 && rect.height > 0) {
+            callback();
+            return;
+          }
+        }
+
+        // Réessayer si on n'a pas atteint le max
+        if (attempts < maxAttempts) {
+          requestAnimationFrame(checkDimensions);
+        } else {
+          console.warn('⚠️ Mapbox container dimensions check timeout, initializing anyway');
+          callback();
+        }
+      };
+
+      // Utiliser requestAnimationFrame pour attendre le prochain frame de rendu
+      requestAnimationFrame(checkDimensions);
+    };
+
+    // 🔧 FIX: Délai initial augmenté à 600ms pour laisser le temps à la modale de s'afficher
     const timer = setTimeout(() => {
       if (!mapContainerRef.current) return;
 
-      try {
-        const map = new mapboxgl.Map({
-          container: mapContainerRef.current,
-          style: 'mapbox://styles/mapbox/streets-v12',
-          center: [onboardingData.longitude, onboardingData.latitude],
-          zoom: 13,
-        });
+      waitForContainerDimensions(() => {
+        if (!mapContainerRef.current) return;
 
-        mapRef.current = map;
+        try {
+          console.log('🗺️ Initializing Mapbox map in modal...');
 
-        map.on('load', () => {
-          setMapLoaded(true);
-          setTimeout(() => {
-            if (map) map.resize();
-          }, 300);
-        });
+          const map = new mapboxgl.Map({
+            container: mapContainerRef.current,
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: [onboardingData.longitude, onboardingData.latitude],
+            zoom: 13,
+            // 🔧 FIX: Options supplémentaires pour améliorer le chargement
+            attributionControl: false,
+            preserveDrawingBuffer: true,
+          });
 
-        map.on('error', (e) => {
-          console.error('❌ Erreur Mapbox:', e);
+          mapRef.current = map;
+
+          map.on('load', () => {
+            console.log('✅ Mapbox map loaded successfully');
+            setMapLoaded(true);
+
+            // 🔧 FIX: Multiple resize calls pour s'assurer que la carte a les bonnes dimensions
+            setTimeout(() => {
+              if (map) {
+                map.resize();
+                console.log('🗺️ Map resized (1st)');
+              }
+            }, 100);
+
+            setTimeout(() => {
+              if (map) {
+                map.resize();
+                console.log('🗺️ Map resized (2nd)');
+              }
+            }, 500);
+          });
+
+          map.on('error', (e) => {
+            console.error('❌ Erreur Mapbox:', e);
+            setMapLoaded(false);
+          });
+
+          const marker = new mapboxgl.Marker({
+            draggable: true,
+            color: '#16a34a',
+          })
+            .setLngLat([onboardingData.longitude, onboardingData.latitude])
+            .addTo(map);
+
+          markerRef.current = marker;
+
+          marker.on('dragend', () => {
+            const lngLat = marker.getLngLat();
+            setOnboardingData((prev) => ({
+              ...prev,
+              latitude: lngLat.lat,
+              longitude: lngLat.lng,
+            }));
+          });
+
+          const geocoder = new MapboxGeocoder({
+            accessToken: MAPBOX_TOKEN,
+            mapboxgl: mapboxgl,
+            marker: false,
+            placeholder: 'Adres ara...',
+            language: 'tr',
+            types: 'address,poi',
+          });
+
+          map.addControl(geocoder, 'top-left');
+
+          geocoder.on('result', (e) => {
+            const { center } = e.result;
+            marker.setLngLat(center);
+            setOnboardingData((prev) => ({
+              ...prev,
+              latitude: center[1],
+              longitude: center[0],
+            }));
+          });
+        } catch (error) {
+          console.error('❌ Erreur initialisation Mapbox:', error);
           setMapLoaded(false);
-        });
-
-        const marker = new mapboxgl.Marker({
-          draggable: true,
-          color: '#16a34a',
-        })
-          .setLngLat([onboardingData.longitude, onboardingData.latitude])
-          .addTo(map);
-
-        markerRef.current = marker;
-
-        marker.on('dragend', () => {
-          const lngLat = marker.getLngLat();
-          setOnboardingData((prev) => ({
-            ...prev,
-            latitude: lngLat.lat,
-            longitude: lngLat.lng,
-          }));
-        });
-
-        const geocoder = new MapboxGeocoder({
-          accessToken: MAPBOX_TOKEN,
-          mapboxgl: mapboxgl,
-          marker: false,
-          placeholder: 'Adres ara...',
-          language: 'tr',
-          types: 'address,poi',
-        });
-
-        map.addControl(geocoder, 'top-left');
-
-        geocoder.on('result', (e) => {
-          const { center } = e.result;
-          marker.setLngLat(center);
-          setOnboardingData((prev) => ({
-            ...prev,
-            latitude: center[1],
-            longitude: center[0],
-          }));
-        });
-      } catch (error) {
-        console.error('❌ Erreur initialisation Mapbox:', error);
-        setMapLoaded(false);
-      }
-    }, 500);
+        }
+      });
+    }, 600);
 
     return () => {
       clearTimeout(timer);
@@ -1296,9 +1354,12 @@ const MerchantDashboardPage = () => {
               <div className="space-y-4">
                 <p className="text-sm font-medium text-gray-700">📍 Haritada konumunuzu belirleyin</p>
 
+                {/* 🔧 FIX: Ne pas utiliser 'hidden' car cela empêche la carte de calculer ses dimensions
+                    Utiliser 'opacity-0' à la place pour que la carte charge en arrière-plan */}
                 <div className="relative">
+                  {/* Spinner de chargement - positionné absolument AU-DESSUS de la carte */}
                   {!mapLoaded && (
-                    <div className="w-full h-[400px] rounded-xl bg-gray-100 flex items-center justify-center">
+                    <div className="absolute inset-0 z-10 rounded-xl bg-gray-100 flex items-center justify-center">
                       <div className="text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00A690] mx-auto mb-2"></div>
                         <p className="text-sm text-gray-500">Harita yükleniyor...</p>
@@ -1306,9 +1367,11 @@ const MerchantDashboardPage = () => {
                     </div>
                   )}
 
+                  {/* 🔧 FIX: La carte est TOUJOURS présente avec ses dimensions, juste invisible avec opacity-0
+                      Cela permet à Mapbox de calculer les dimensions et de charger correctement */}
                   <div
                     ref={mapContainerRef}
-                    className={`w-full h-[400px] rounded-xl shadow-lg overflow-hidden ${!mapLoaded ? 'hidden' : 'block'}`}
+                    className={`w-full h-[400px] rounded-xl shadow-lg overflow-hidden transition-opacity duration-300 ${!mapLoaded ? 'opacity-0' : 'opacity-100'}`}
                     style={{ position: 'relative' }}
                   ></div>
 
