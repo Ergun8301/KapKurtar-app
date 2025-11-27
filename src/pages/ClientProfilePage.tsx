@@ -159,7 +159,7 @@ const ClientProfilePage = () => {
     JSON.stringify(profile) !== JSON.stringify(editedProfile);
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-40">
+    <div className="min-h-screen bg-gray-50 pt-28 pb-40">
       <div className="max-w-3xl mx-auto px-4">
         {/* Toast */}
         {toast && (
