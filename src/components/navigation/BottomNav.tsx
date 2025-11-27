@@ -16,8 +16,8 @@ import BottomNavItem from "./BottomNavItem";
 /**
  * Barre de navigation inférieure pour mobile natif
  * Affiche 3-4 onglets selon le rôle de l'utilisateur :
- * - Non connecté : Harita, Giriş, İşletmeler (3)
- * - Client : Harita, Rezervasyonlar, Profil (3)
+ * - Non connecté : Teklifler, Giriş, İşletmeler (3)
+ * - Client : Teklifler, Rezervasyonlar, Profil (3)
  * - Marchand : Panel, Tekliflerim, Siparişler, Profil (4)
  */
 const BottomNav: React.FC = () => {
@@ -36,7 +36,7 @@ const BottomNav: React.FC = () => {
     // Utilisateur non connecté
     if (!user) {
       return [
-        { icon: Search, label: "Harita", path: "/offers" },
+        { icon: Search, label: "Teklifler", path: "/offers" },
         { icon: LogIn, label: "Giriş", path: "/customer/auth" },
         { icon: Store, label: "İşletmeler", path: "/for-merchants" },
       ];
