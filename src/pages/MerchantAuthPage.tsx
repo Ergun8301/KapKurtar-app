@@ -51,7 +51,7 @@ const MerchantAuthPage = () => {
             .limit(1);
 
           if (!offers || offers.length === 0) {
-            navigate("/merchant/add-product");
+            navigate("/merchant/dashboard");
             return;
           }
         }

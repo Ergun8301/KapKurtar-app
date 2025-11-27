@@ -143,7 +143,7 @@ function App() {
             {/* Main avec padding-bottom pour la BottomNav sur mobile natif */}
             <main
               className="flex-grow"
-              style={{ paddingBottom: isNative ? '95px' : '0px' }}
+              style={{ paddingBottom: isNative ? '110px' : '0px' }}
             >
               <SessionRedirect />
               <Routes>
