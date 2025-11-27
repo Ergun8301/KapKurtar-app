@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Home,
   Search,
   Package,
   User,
@@ -16,10 +15,10 @@ import BottomNavItem from "./BottomNavItem";
 
 /**
  * Barre de navigation inférieure pour mobile natif
- * Affiche 4 onglets selon le rôle de l'utilisateur :
- * - Non connecté : Accueil, Offres, Connexion, Marchands
- * - Client : Accueil, Offres, Réservations, Profil
- * - Marchand : Dashboard, Mes Offres, Commandes, Profil
+ * Affiche 3-4 onglets selon le rôle de l'utilisateur :
+ * - Non connecté : Harita, Giriş, İşletmeler (3)
+ * - Client : Harita, Rezervasyonlar, Profil (3)
+ * - Marchand : Panel, Tekliflerim, Siparişler, Profil (4)
  */
 const BottomNav: React.FC = () => {
   const navigate = useNavigate();
@@ -37,8 +36,7 @@ const BottomNav: React.FC = () => {
     // Utilisateur non connecté
     if (!user) {
       return [
-        { icon: Home, label: "Ana Sayfa", path: "/" },
-        { icon: Search, label: "Teklifler", path: "/offers" },
+        { icon: Search, label: "Harita", path: "/offers" },
         { icon: LogIn, label: "Giriş", path: "/customer/auth" },
         { icon: Store, label: "İşletmeler", path: "/for-merchants" },
       ];
@@ -56,8 +54,7 @@ const BottomNav: React.FC = () => {
 
     // Client connecté (par défaut)
     return [
-      { icon: Home, label: "Ana Sayfa", path: "/" },
-      { icon: Search, label: "Teklifler", path: "/offers" },
+      { icon: Search, label: "Harita", path: "/offers" },
       { icon: Package, label: "Rezervasyonlar", path: "/customer/dashboard" },
       { icon: User, label: "Profil", path: "/client/profile" },
     ];
