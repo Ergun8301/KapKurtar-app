@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 import { logoutNoNav } from '../lib/logout';
+import { getRedirectUrl } from '../lib/appConfig';
 
 // ---------- Email / Password ----------
 
@@ -26,7 +27,7 @@ export const signInWithGoogleForRole = async (role: 'client' | 'merchant') => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback?role=${role}`,
+      redirectTo: getRedirectUrl(`/auth/callback?role=${role}`),
     },
   });
   return { data, error };
@@ -56,7 +57,7 @@ export const signOut = async () => {
 export const resetPassword = async (email: string) => {
   try {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`,
+      redirectTo: getRedirectUrl('/update-password'),
     });
     return { data, error };
   } catch (err: any) {

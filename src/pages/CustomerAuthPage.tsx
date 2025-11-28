@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuthFlow } from '../hooks/useAuthFlow';
+import { getRedirectUrl } from '../lib/appConfig';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
 
 type AuthMode = 'login' | 'register';
@@ -90,7 +91,7 @@ const CustomerAuthPage = () => {
             data: {
               role: 'client',
             },
-            emailRedirectTo: `${window.location.origin}/auth/callback?role=client`,
+            emailRedirectTo: getRedirectUrl('/auth/callback?role=client'),
           },
         });
         if (error) throw error;
@@ -112,7 +113,7 @@ const CustomerAuthPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?role=client`,
+          redirectTo: getRedirectUrl('/auth/callback?role=client'),
         },
       });
       if (error) throw error;

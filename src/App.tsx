@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import { Capacitor } from "@capacitor/core";
+import { App as CapacitorApp } from "@capacitor/app";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
@@ -54,6 +55,52 @@ import BlogArticle7 from "./pages/BlogArticle7";
 import BlogArticle8 from "./pages/BlogArticle8";
 import BlogArticle9 from "./pages/BlogArticle9";
 import BlogArticle10 from "./pages/BlogArticle10";
+
+/* 🔗 Gère les deep links sur mobile natif */
+function DeepLinkHandler() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Ne configurer que sur les plateformes natives
+    if (!Capacitor.isNativePlatform()) return;
+
+    // Écouter les deep links entrants
+    const setupDeepLinks = async () => {
+      // Gérer l'URL qui a lancé l'app (si ouverte via deep link)
+      const appUrlOpen = await CapacitorApp.getLaunchUrl();
+      if (appUrlOpen?.url) {
+        handleDeepLink(appUrlOpen.url);
+      }
+
+      // Écouter les deep links pendant que l'app est ouverte
+      CapacitorApp.addListener('appUrlOpen', (event) => {
+        console.log('🔗 Deep link reçu:', event.url);
+        handleDeepLink(event.url);
+      });
+    };
+
+    const handleDeepLink = (url: string) => {
+      try {
+        const urlObj = new URL(url);
+        // Extraire le chemin et les paramètres
+        const path = urlObj.pathname + urlObj.search;
+        console.log('🔗 Navigation vers:', path);
+        navigate(path);
+      } catch (error) {
+        console.error('❌ Erreur parsing deep link:', error);
+      }
+    };
+
+    setupDeepLinks();
+
+    // Cleanup listener
+    return () => {
+      CapacitorApp.removeAllListeners();
+    };
+  }, [navigate]);
+
+  return null;
+}
 
 /* 🔁 Vérifie la session et redirige selon le rôle */
 function SessionRedirect() {
@@ -140,6 +187,8 @@ function App() {
             {/* Spacer pour compenser le header fixe (64px + 25px safe area sur natif) */}
             <div style={{ height: isNative ? '89px' : '64px' }} />
             <ScrollToTop />
+            {/* 🔗 Handler pour les deep links sur mobile */}
+            <DeepLinkHandler />
             {/* Main avec padding-bottom pour la BottomNav sur mobile natif */}
             <main
               className="flex-grow"
