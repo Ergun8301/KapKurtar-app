@@ -113,6 +113,7 @@ const MerchantDashboardPage = () => {
   const [isFromSettings, setIsFromSettings] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [modalReady, setModalReady] = useState(false);
+  const [mapContainerReady, setMapContainerReady] = useState(false);
 
   // States pour les réservations
   const [reservations, setReservations] = useState<MerchantReservation[]>([]);
@@ -189,6 +190,7 @@ const MerchantDashboardPage = () => {
             console.log('⚠️ Profil incomplet → ouverture modale');
             setIsFromSettings(false);
             setShowOnboardingModal(true);
+            setMapContainerReady(false); // Reset le state du container
             setTimeout(() => setModalReady(true), 100);
             setOnboardingData({
               company_name: merchantData.company_name || '',
@@ -214,7 +216,9 @@ const MerchantDashboardPage = () => {
     const handleOpenProfileModal = () => {
       setIsFromSettings(true);
       setShowOnboardingModal(true);
-      setModalReady(true);
+      setMapContainerReady(false); // Reset le state du container
+      // 🔧 FIX: Délai pour laisser le DOM se rendre avant d'initialiser la carte
+      setTimeout(() => setModalReady(true), 100);
       if (merchantProfile) {
         setOnboardingData({
           company_name: merchantProfile.company_name || '',
@@ -234,7 +238,9 @@ const MerchantDashboardPage = () => {
 
   // 🔧 FIX: Amélioration du timing d'initialisation Mapbox dans la modale
   useEffect(() => {
-    if (!showOnboardingModal || !modalReady || !mapContainerRef.current) {
+    // 🔧 FIX: Utiliser mapContainerReady (state) au lieu de mapContainerRef.current
+    // Les refs ne déclenchent pas de re-render, donc on utilise un state
+    if (!showOnboardingModal || !modalReady || !mapContainerReady) {
       return;
     }
 
@@ -379,7 +385,7 @@ const MerchantDashboardPage = () => {
       markerRef.current = null;
       setMapLoaded(false);
     };
-  }, [showOnboardingModal, modalReady]);
+  }, [showOnboardingModal, modalReady, mapContainerReady]);
 
   useEffect(() => {
     const checkExpiredOffers = async () => {
@@ -1370,7 +1376,14 @@ const MerchantDashboardPage = () => {
                   {/* 🔧 FIX: La carte est TOUJOURS présente avec ses dimensions, juste invisible avec opacity-0
                       Cela permet à Mapbox de calculer les dimensions et de charger correctement */}
                   <div
-                    ref={mapContainerRef}
+                    ref={(el) => {
+                      mapContainerRef.current = el;
+                      // 🔧 FIX: Mettre à jour le state quand le container est monté
+                      // Cela déclenche le useEffect qui initialise la carte
+                      if (el && !mapContainerReady) {
+                        setMapContainerReady(true);
+                      }
+                    }}
                     className={`w-full h-[400px] rounded-xl shadow-lg overflow-hidden transition-opacity duration-300 ${!mapLoaded ? 'opacity-0' : 'opacity-100'}`}
                     style={{ position: 'relative' }}
                   ></div>
