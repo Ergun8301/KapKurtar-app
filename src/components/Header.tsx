@@ -33,7 +33,7 @@ const Header = () => {
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [isNative, setIsNative] = useState(false);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
-  const hasCheckedRef = useRef(false);
+  const [lastCheckedUserId, setLastCheckedUserId] = useState<string | null>(null);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -55,10 +55,19 @@ const Header = () => {
   }, []);
 
   useEffect(() => {
-    if (!user || hasCheckedRef.current) return;
+    // Reset state when user logs out
+    if (!user) {
+      setLastCheckedUserId(null);
+      setIsMerchant(null);
+      setProfilePhotoUrl(null);
+      return;
+    }
+
+    // Skip if we already checked this user
+    if (lastCheckedUserId === user.id) return;
 
     const checkUserType = async () => {
-      hasCheckedRef.current = true;
+      setLastCheckedUserId(user.id);
 
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
@@ -89,7 +98,7 @@ const Header = () => {
     };
 
     checkUserType();
-  }, [user]);
+  }, [user, lastCheckedUserId]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
