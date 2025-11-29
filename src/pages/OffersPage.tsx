@@ -750,26 +750,14 @@ export default function OffersPage() {
     setIsGeolocating(true);
 
     try {
-      // Demander la permission via le plugin Capacitor
+      // Demander la permission via le plugin Capacitor (affiche la popup si nécessaire)
       console.log("Requesting permissions...");
-      const permission = await Geolocation.requestPermissions();
-      console.log("Permission result:", JSON.stringify(permission));
+      await Geolocation.requestPermissions();
+      console.log("Permission request completed, attempting to get position...");
 
-      // Vérifier si au moins une permission est accordée
-      const hasPermission = permission.location === 'granted' || permission.coarseLocation === 'granted';
-
-      if (!hasPermission) {
-        console.warn("Permission de géolocalisation refusée:", permission);
-        // Ouvrir les paramètres de l'app
-        await openLocationSettings();
-        setIsGeolocating(false);
-        return;
-      }
-
-      console.log("Permission granted, getting position...");
-
+      // Toujours essayer d'obtenir la position après la demande de permission
+      // (le résultat de requestPermissions peut ne pas être fiable immédiatement)
       try {
-        // Obtenir la position via le plugin Capacitor (timeout 10 secondes)
         const position = await Geolocation.getCurrentPosition({
           enableHighAccuracy: true,
           timeout: 10000,
@@ -788,13 +776,12 @@ export default function OffersPage() {
           return;
         }
 
-        // Mettre à jour la position AVANT de changer le mode
+        // Mettre à jour la position et centrer la carte
         console.log("Updating state: userLocation, center, viewMode...");
         setUserLocation([lng, lat]);
         setCenter([lng, lat]);
         setViewMode("nearby");
 
-        // Fly to position
         if (mapRef.current) {
           console.log("Flying to position...");
           mapRef.current.flyTo({
@@ -813,62 +800,65 @@ export default function OffersPage() {
       } catch (positionError: any) {
         console.error("=== POSITION ERROR ===", positionError);
 
-        // GPS désactivé → Essayer d'afficher la popup système native Android
-        console.log("GPS disabled, trying native popup...");
+        // Vérifier si c'est un problème de permission ou de GPS désactivé
+        const currentPermission = await Geolocation.checkPermissions();
+        const hasPermission = currentPermission.location === 'granted' || currentPermission.coarseLocation === 'granted';
 
-        const gpsEnabled = await requestLocationAccuracy();
+        if (!hasPermission) {
+          // Permission refusée → Ouvrir les paramètres
+          console.log("Permission denied, opening settings...");
+          await openLocationSettings();
+        } else {
+          // Permission OK mais GPS désactivé → Essayer la popup native Android
+          console.log("GPS disabled, trying native popup...");
+          const gpsEnabled = await requestLocationAccuracy();
 
-        if (gpsEnabled) {
-          // GPS activé via la popup → Réessayer d'obtenir la position
-          console.log("GPS enabled via popup, retrying position...");
-          try {
-            const position = await Geolocation.getCurrentPosition({
-              enableHighAccuracy: true,
-              timeout: 10000,
-            });
+          if (gpsEnabled) {
+            // GPS activé via la popup → Réessayer d'obtenir la position
+            console.log("GPS enabled via popup, retrying position...");
+            try {
+              const position = await Geolocation.getCurrentPosition({
+                enableHighAccuracy: true,
+                timeout: 10000,
+              });
 
-            const lng = position.coords.longitude;
-            const lat = position.coords.latitude;
+              const lng = position.coords.longitude;
+              const lat = position.coords.latitude;
 
-            if (Number.isFinite(lng) && Number.isFinite(lat)) {
-              setUserLocation([lng, lat]);
-              setCenter([lng, lat]);
-              setViewMode("nearby");
+              if (Number.isFinite(lng) && Number.isFinite(lat)) {
+                setUserLocation([lng, lat]);
+                setCenter([lng, lat]);
+                setViewMode("nearby");
 
-              if (mapRef.current) {
-                mapRef.current.flyTo({
-                  center: [lng, lat],
-                  zoom: 13,
-                  essential: true,
-                });
+                if (mapRef.current) {
+                  mapRef.current.flyTo({
+                    center: [lng, lat],
+                    zoom: 13,
+                    essential: true,
+                  });
+                }
+
+                const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
+                if (input) input.value = "";
+
+                console.log("=== GEOLOCATION SUCCESS (after GPS enable) ===");
               }
-
-              const input = document.querySelector(".mapboxgl-ctrl-geocoder input") as HTMLInputElement;
-              if (input) input.value = "";
-
-              console.log("=== GEOLOCATION SUCCESS (after popup) ===");
+            } catch (retryError) {
+              console.error("Position error after GPS enable:", retryError);
+              await openLocationSettings();
             }
-          } catch (retryError) {
-            console.error("Position error after GPS enable:", retryError);
+          } else {
+            // L'utilisateur a refusé ou la popup native n'est pas disponible
+            console.log("User refused or popup not available, opening settings...");
             await openLocationSettings();
           }
-        } else {
-          // L'utilisateur a refusé ou la popup native n'est pas disponible
-          // → Ouvrir les paramètres de localisation
-          console.log("User refused or popup not available, opening settings...");
-          await openLocationSettings();
         }
       }
 
     } catch (error) {
       console.error("=== GEOLOCATION ERROR ===", error);
-
-      // Erreur générale → Essayer la popup native, sinon ouvrir les paramètres
-      const gpsEnabled = await requestLocationAccuracy();
-
-      if (!gpsEnabled) {
-        await openLocationSettings();
-      }
+      // Erreur générale → Ouvrir les paramètres
+      await openLocationSettings();
     } finally {
       console.log("=== GEOLOCATION END ===");
       setIsGeolocating(false);
