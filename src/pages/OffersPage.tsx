@@ -252,96 +252,94 @@ export default function OffersPage() {
     if (!clientId || isGeolocating || hasGeolocated) return;
 
     const geolocateClient = async () => {
-      if (!navigator.geolocation) {
-        console.warn("Géolocalisation non disponible sur cet appareil");
-        setUserLocation(DEFAULT_LOCATION);
-        setCenter(DEFAULT_LOCATION);
-        setHasGeolocated(true);
-        return;
-      }
-
+      console.log("=== AUTO GEOLOCATION START ===");
       setIsGeolocating(true);
 
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
+      try {
+        // Demander la permission via le plugin Capacitor
+        console.log("Requesting geolocation permissions...");
+        const permission = await Geolocation.requestPermissions();
+        console.log("Permission result:", JSON.stringify(permission));
 
-          try {
-            await supabase.rpc("update_client_location", {
-              p_client_id: clientId,
-              p_lat: latitude,
-              p_lng: longitude,
+        const hasPermission = permission.location === 'granted' || permission.coarseLocation === 'granted';
+
+        if (!hasPermission) {
+          console.warn("Permission de géolocalisation refusée");
+          setUserLocation(DEFAULT_LOCATION);
+          setCenter(DEFAULT_LOCATION);
+          if (mapRef.current) {
+            mapRef.current.flyTo({
+              center: DEFAULT_LOCATION,
+              zoom: DEFAULT_ZOOM,
+              essential: true,
             });
-
-            setUserLocation([longitude, latitude]);
-            setCenter([longitude, latitude]);
-
-            if (mapRef.current && Number.isFinite(longitude) && Number.isFinite(latitude)) {
-              mapRef.current.flyTo({
-                center: [longitude, latitude],
-                zoom: 12,
-                essential: true,
-              });
-            }
-          } catch (error) {
-            console.error("Erreur lors de la mise à jour de la position:", error);
-          } finally {
-            setIsGeolocating(false);
-            setHasGeolocated(true);
           }
-        },
-        (error) => {
-          console.warn("Géolocalisation haute précision échouée, tentative en mode économique...", error);
-          
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              const { latitude, longitude } = position.coords;
+          setIsGeolocating(false);
+          setHasGeolocated(true);
+          return;
+        }
 
-              try {
-                await supabase.rpc("update_client_location", {
-                  p_client_id: clientId,
-                  p_lat: latitude,
-                  p_lng: longitude,
-                });
+        console.log("Permission granted, getting position...");
 
-                setUserLocation([longitude, latitude]);
-                setCenter([longitude, latitude]);
+        // Obtenir la position via le plugin Capacitor
+        const position = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 10000,
+        });
 
-                if (mapRef.current && Number.isFinite(longitude) && Number.isFinite(latitude)) {
-                  mapRef.current.flyTo({
-                    center: [longitude, latitude],
-                    zoom: 12,
-                    essential: true,
-                  });
-                }
-              } catch (error) {
-                console.error("Erreur lors de la mise à jour de la position:", error);
-              } finally {
-                setIsGeolocating(false);
-                setHasGeolocated(true);
-              }
-            },
-            (fallbackError) => {
-              console.warn("Géolocalisation impossible:", fallbackError);
-              // 🔧 FIX : Pas d'alerte, juste utiliser la position par défaut
-              setUserLocation(DEFAULT_LOCATION);
-              setCenter(DEFAULT_LOCATION);
+        const { latitude, longitude } = position.coords;
+        console.log("Position received - lat:", latitude, "lng:", longitude);
 
-              if (mapRef.current) {
-                mapRef.current.flyTo({
-                  center: DEFAULT_LOCATION,
-                  zoom: DEFAULT_ZOOM,
-                  essential: true,
-                });
-              }
-              setIsGeolocating(false);
-              setHasGeolocated(true);
-            },
-            { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
-          );
-        },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-      );
+        if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) {
+          console.error("Invalid coordinates received");
+          setUserLocation(DEFAULT_LOCATION);
+          setCenter(DEFAULT_LOCATION);
+          setIsGeolocating(false);
+          setHasGeolocated(true);
+          return;
+        }
+
+        // Mettre à jour la position dans Supabase
+        try {
+          await supabase.rpc("update_client_location", {
+            p_client_id: clientId,
+            p_lat: latitude,
+            p_lng: longitude,
+          });
+        } catch (error) {
+          console.error("Erreur lors de la mise à jour de la position:", error);
+        }
+
+        setUserLocation([longitude, latitude]);
+        setCenter([longitude, latitude]);
+
+        if (mapRef.current) {
+          mapRef.current.flyTo({
+            center: [longitude, latitude],
+            zoom: 12,
+            essential: true,
+          });
+        }
+
+        console.log("=== AUTO GEOLOCATION SUCCESS ===");
+
+      } catch (error) {
+        console.error("=== AUTO GEOLOCATION ERROR ===", error);
+        // Fallback : utiliser la position par défaut
+        setUserLocation(DEFAULT_LOCATION);
+        setCenter(DEFAULT_LOCATION);
+
+        if (mapRef.current) {
+          mapRef.current.flyTo({
+            center: DEFAULT_LOCATION,
+            zoom: DEFAULT_ZOOM,
+            essential: true,
+          });
+        }
+      } finally {
+        setIsGeolocating(false);
+        setHasGeolocated(true);
+      }
     };
 
     geolocateClient();
