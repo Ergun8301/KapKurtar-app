@@ -120,7 +120,11 @@ const MerchantAuthPage = () => {
           });
         if (signUpError) throw signUpError;
 
-        alert("✅ Hesabınızı doğrulamak için e-postanızı kontrol edin.");
+        // Email confirmation is disabled - redirect directly
+        if (signUpData.user) {
+          await refetchProfile();
+          await goToMerchantHome();
+        }
       }
     } catch (err) {
       setError((err as Error).message);
