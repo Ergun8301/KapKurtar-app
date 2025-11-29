@@ -182,19 +182,18 @@ const Header = () => {
                 <NotificationBell userType={isMerchant ? "merchant" : "client"} />
                 <div className="relative" ref={userMenuRef}>
                   <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center space-x-2 text-[#FFFFF0] hover:text-[#F75C00] transition-colors duration-300">
-                    <div className="w-8 h-8 bg-[#FFFFF0] rounded-full flex items-center justify-center overflow-hidden">
-                      {profilePhotoUrl ? (
+                    <div className="w-8 h-8 bg-[#FFFFF0] rounded-full flex items-center justify-center overflow-hidden relative">
+                      {profilePhotoUrl && (
                         <img
                           src={profilePhotoUrl}
                           alt="Profil"
-                          className="w-full h-full object-cover"
+                          className="absolute inset-0 w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
                           }}
                         />
-                      ) : null}
-                      <span className={`text-xs font-bold text-[#00A690] ${profilePhotoUrl ? 'hidden' : ''}`}>
+                      )}
+                      <span className="text-xs font-bold text-[#00A690]">
                         {getUserInitials()}
                       </span>
                     </div>

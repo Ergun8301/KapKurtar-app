@@ -96,9 +96,11 @@ const CustomerAuthPage = () => {
         });
         if (error) throw error;
 
-        alert(
-          '✅ Bir onay e-postası gönderildi. Hesabınızı etkinleştirmek için lütfen bağlantıya tıklayın.'
-        );
+        // Email confirmation is disabled - check profile completion
+        if (data.user) {
+          await refetchProfile();
+          // useEffect will handle redirection and profile completion check
+        }
       }
     } catch (err) {
       setError((err as Error).message);
