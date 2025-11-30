@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabaseClient";
 import { logoutNoNav } from "../lib/logout"; // ✅ inchangé
+import { initPushNotifications } from "../services/pushNotifications";
 
 interface AuthState {
   user: User | null;
@@ -87,6 +88,11 @@ supabase.auth.onAuthStateChange((_event, session) => {
 
   if (session?.user) {
     useAuthStore.getState().checkUserType();
+
+    // Initialiser les push notifications après connexion
+    initPushNotifications().catch((err) => {
+      console.warn('⚠️ Erreur initialisation push notifications:', err);
+    });
   } else {
     useAuthStore.getState().setUserType(null);
   }
