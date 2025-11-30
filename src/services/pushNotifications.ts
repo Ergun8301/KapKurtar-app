@@ -12,6 +12,41 @@ import { supabase } from '../lib/supabaseClient';
 // Variable pour éviter les initialisations multiples
 let isInitialized = false;
 
+// Variable pour stocker le dernier token (pour debug)
+let lastToken: string | null = null;
+
+// Variable pour stocker les logs de debug
+const debugLogs: string[] = [];
+
+/**
+ * Ajoute un log de debug et affiche une alerte visuelle
+ */
+function debugLog(message: string, showAlert = true): void {
+  const timestamp = new Date().toLocaleTimeString();
+  const logMessage = `[${timestamp}] ${message}`;
+  debugLogs.push(logMessage);
+  console.log(`🔔 PUSH DEBUG: ${logMessage}`);
+
+  if (showAlert && Capacitor.isNativePlatform()) {
+    // Utilise alert pour être visible sur le téléphone
+    window.alert(`PUSH DEBUG:\n${message}`);
+  }
+}
+
+/**
+ * Récupère tous les logs de debug
+ */
+export function getDebugLogs(): string[] {
+  return [...debugLogs];
+}
+
+/**
+ * Récupère le dernier token connu
+ */
+export function getLastToken(): string | null {
+  return lastToken;
+}
+
 /**
  * Récupère le profile_id de l'utilisateur connecté
  */
@@ -24,13 +59,13 @@ async function getProfileId(authId: string): Promise<string | null> {
       .single();
 
     if (error) {
-      console.error('❌ Erreur récupération profile_id:', error);
+      debugLog(`Erreur récupération profile_id: ${error.message}`, false);
       return null;
     }
 
     return data?.id || null;
   } catch (error) {
-    console.error('❌ Exception récupération profile_id:', error);
+    debugLog(`Exception récupération profile_id: ${error}`, false);
     return null;
   }
 }
@@ -39,22 +74,28 @@ async function getProfileId(authId: string): Promise<string | null> {
  * Enregistre ou met à jour le token FCM dans Supabase
  */
 async function saveTokenToSupabase(token: string): Promise<boolean> {
+  debugLog(`Tentative sauvegarde token...`, false);
+
   try {
     // Récupérer l'utilisateur connecté
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      console.error('❌ Utilisateur non connecté:', authError);
+      debugLog(`Utilisateur non connecté: ${authError?.message || 'no user'}`, true);
       return false;
     }
 
     const authId = user.id;
+    debugLog(`User auth_id: ${authId.substring(0, 8)}...`, false);
+
     const profileId = await getProfileId(authId);
 
     if (!profileId) {
-      console.error('❌ Impossible de trouver le profile_id pour auth_id:', authId);
+      debugLog(`Profile_id non trouvé pour auth_id`, true);
       return false;
     }
+
+    debugLog(`Profile_id: ${profileId.substring(0, 8)}...`, false);
 
     // Déterminer la plateforme
     const platform = Capacitor.getPlatform() as 'android' | 'ios';
@@ -77,14 +118,14 @@ async function saveTokenToSupabase(token: string): Promise<boolean> {
       );
 
     if (error) {
-      console.error('❌ Erreur enregistrement token:', error);
+      debugLog(`ERREUR Supabase: ${error.message}\nCode: ${error.code}`, true);
       return false;
     }
 
-    console.log('✅ Token FCM enregistré avec succès');
+    debugLog(`TOKEN SAUVEGARDÉ AVEC SUCCÈS !`, true);
     return true;
   } catch (error) {
-    console.error('❌ Exception enregistrement token:', error);
+    debugLog(`EXCEPTION sauvegarde: ${error}`, true);
     return false;
   }
 }
@@ -114,13 +155,9 @@ export async function deactivatePushToken(): Promise<void> {
  */
 function handleNotificationReceived(notification: PushNotificationSchema): void {
   console.log('📬 Notification reçue (app ouverte):', notification);
+  debugLog(`Notification reçue: ${notification.title}`, true);
 
-  // Vous pouvez ici afficher un toast ou une alerte in-app
-  // Par exemple avec une bibliothèque de notifications UI
-
-  // Les données de la notification sont dans notification.data
   const { title, body, data } = notification;
-
   console.log('📬 Titre:', title);
   console.log('📬 Corps:', body);
   console.log('📬 Données:', data);
@@ -131,18 +168,16 @@ function handleNotificationReceived(notification: PushNotificationSchema): void 
  */
 function handleNotificationAction(action: ActionPerformed): void {
   console.log('👆 Notification tapée:', action);
+  debugLog(`Notification tapée: ${action.notification.title}`, false);
 
   const data = action.notification.data;
 
   // Navigation basée sur le type de notification
   if (data?.type === 'offer' || data?.type === 'offer_nearby') {
-    // Rediriger vers les offres
     window.location.href = '/offers';
   } else if (data?.type === 'reservation') {
-    // Rediriger vers le dashboard marchand
     window.location.href = '/merchant/dashboard';
   } else if (data?.offer_id) {
-    // Si on a un offer_id, aller aux offres
     window.location.href = '/offers';
   }
 }
@@ -152,53 +187,65 @@ function handleNotificationAction(action: ActionPerformed): void {
  * Doit être appelé après la connexion de l'utilisateur
  */
 export async function initPushNotifications(): Promise<boolean> {
+  debugLog(`=== INIT PUSH START ===`, true);
+  debugLog(`Platform: ${Capacitor.getPlatform()}`, false);
+  debugLog(`isNative: ${Capacitor.isNativePlatform()}`, false);
+
   // Ne pas initialiser sur web
   if (!Capacitor.isNativePlatform()) {
-    console.log('ℹ️ Push notifications non disponibles sur web');
+    debugLog(`NON NATIF - Abandon`, true);
     return false;
   }
 
   // Éviter les initialisations multiples
   if (isInitialized) {
-    console.log('ℹ️ Push notifications déjà initialisées');
+    debugLog(`Déjà initialisé - Token: ${lastToken?.substring(0, 20)}...`, true);
     return true;
   }
 
   try {
     // Vérifier si l'utilisateur est connecté
+    debugLog(`Vérification utilisateur...`, false);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.log('ℹ️ Utilisateur non connecté, push notifications non initialisées');
+      debugLog(`UTILISATEUR NON CONNECTÉ`, true);
       return false;
     }
+    debugLog(`User OK: ${user.email}`, false);
 
     // Vérifier la permission actuelle
+    debugLog(`Check permissions...`, false);
     let permStatus = await PushNotifications.checkPermissions();
-    console.log('📱 Permission push actuelle:', permStatus.receive);
+    debugLog(`Permission actuelle: ${permStatus.receive}`, true);
 
     // Demander la permission si nécessaire
     if (permStatus.receive === 'prompt') {
+      debugLog(`Demande permission...`, false);
       permStatus = await PushNotifications.requestPermissions();
+      debugLog(`Résultat demande: ${permStatus.receive}`, true);
     }
 
     if (permStatus.receive !== 'granted') {
-      console.log('❌ Permission push refusée');
+      debugLog(`PERMISSION REFUSÉE: ${permStatus.receive}`, true);
       return false;
     }
 
-    console.log('✅ Permission push accordée');
+    debugLog(`Permission ACCORDÉE`, false);
 
     // Configurer les listeners AVANT de s'enregistrer
+    debugLog(`Configuration listeners...`, false);
 
     // Quand on reçoit le token
     await PushNotifications.addListener('registration', async (token: Token) => {
-      console.log('🔑 Token FCM reçu:', token.value);
-      await saveTokenToSupabase(token.value);
+      lastToken = token.value;
+      debugLog(`TOKEN REÇU: ${token.value.substring(0, 30)}...`, true);
+      const saved = await saveTokenToSupabase(token.value);
+      debugLog(`Sauvegarde: ${saved ? 'OK' : 'ÉCHEC'}`, true);
     });
 
     // En cas d'erreur d'enregistrement
     await PushNotifications.addListener('registrationError', (error) => {
-      console.error('❌ Erreur enregistrement push:', error);
+      debugLog(`ERREUR REGISTRATION: ${JSON.stringify(error)}`, true);
     });
 
     // Notification reçue (app au premier plan)
@@ -212,15 +259,94 @@ export async function initPushNotifications(): Promise<boolean> {
     });
 
     // S'enregistrer pour recevoir les notifications
+    debugLog(`Appel PushNotifications.register()...`, false);
     await PushNotifications.register();
+    debugLog(`register() appelé - attente token...`, true);
 
     isInitialized = true;
-    console.log('✅ Push notifications initialisées avec succès');
+    debugLog(`=== INIT PUSH TERMINÉ ===`, false);
     return true;
   } catch (error) {
-    console.error('❌ Erreur initialisation push notifications:', error);
+    debugLog(`EXCEPTION: ${error}`, true);
     return false;
   }
+}
+
+/**
+ * Version de test avec alertes forcées - pour diagnostic manuel
+ */
+export async function testPushNotifications(): Promise<{
+  success: boolean;
+  platform: string;
+  isNative: boolean;
+  token: string | null;
+  logs: string[];
+  error?: string;
+}> {
+  const result = {
+    success: false,
+    platform: Capacitor.getPlatform(),
+    isNative: Capacitor.isNativePlatform(),
+    token: lastToken,
+    logs: [] as string[],
+    error: undefined as string | undefined,
+  };
+
+  try {
+    // Reset pour forcer une nouvelle tentative
+    isInitialized = false;
+    debugLogs.length = 0;
+
+    result.logs.push(`Platform: ${result.platform}`);
+    result.logs.push(`isNative: ${result.isNative}`);
+
+    if (!result.isNative) {
+      result.error = 'Non native platform';
+      result.logs.push('ERREUR: Pas sur plateforme native');
+      return result;
+    }
+
+    // Vérifier l'utilisateur
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      result.error = 'User not logged in';
+      result.logs.push('ERREUR: Utilisateur non connecté');
+      return result;
+    }
+    result.logs.push(`User: ${user.email}`);
+
+    // Vérifier permissions
+    const permStatus = await PushNotifications.checkPermissions();
+    result.logs.push(`Permission: ${permStatus.receive}`);
+
+    if (permStatus.receive === 'prompt') {
+      const newPerm = await PushNotifications.requestPermissions();
+      result.logs.push(`Nouvelle permission: ${newPerm.receive}`);
+    }
+
+    // Tenter l'initialisation
+    const initResult = await initPushNotifications();
+    result.success = initResult;
+    result.token = lastToken;
+    result.logs.push(`Init result: ${initResult}`);
+    result.logs.push(`Token: ${lastToken ? lastToken.substring(0, 30) + '...' : 'null'}`);
+
+    // Attendre un peu pour le token
+    if (!lastToken) {
+      result.logs.push('Attente 3s pour token...');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      result.token = lastToken;
+      result.logs.push(`Token après attente: ${lastToken ? 'OUI' : 'NON'}`);
+    }
+
+    result.logs = [...result.logs, ...debugLogs];
+
+  } catch (error) {
+    result.error = String(error);
+    result.logs.push(`EXCEPTION: ${error}`);
+  }
+
+  return result;
 }
 
 /**
