@@ -71,21 +71,67 @@ async function getProfileId(authId: string): Promise<string | null> {
 }
 
 /**
+ * Attend que la session Supabase soit prête (avec retry)
+ * @param maxAttempts Nombre maximum de tentatives
+ * @param delayMs Délai entre chaque tentative en ms
+ * @returns La session si trouvée, null sinon
+ */
+async function waitForSession(maxAttempts = 3, delayMs = 1000): Promise<{
+  session: { access_token: string; user: { id: string } } | null;
+  attempt: number;
+}> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    debugLog(`Tentative session ${attempt}/${maxAttempts}...`, false);
+
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error) {
+      debugLog(`Erreur getSession: ${error.message}`, false);
+    }
+
+    // Vérifier que la session ET l'access_token existent
+    if (session?.access_token && session?.user?.id) {
+      debugLog(`Session ACTIVE trouvée (tentative ${attempt})`, false);
+      return { session, attempt };
+    }
+
+    debugLog(`Session non prête (attempt ${attempt}): session=${!!session}, token=${!!session?.access_token}`, false);
+
+    // Attendre avant la prochaine tentative (sauf si dernière)
+    if (attempt < maxAttempts) {
+      debugLog(`Attente ${delayMs}ms avant retry...`, false);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+      // Augmenter le délai progressivement (backoff)
+      delayMs = Math.min(delayMs * 1.5, 3000);
+    }
+  }
+
+  return { session: null, attempt: maxAttempts };
+}
+
+/**
  * Enregistre ou met à jour le token FCM dans Supabase
+ * Utilise getSession() pour garantir une session authentifiée
  */
 async function saveTokenToSupabase(token: string): Promise<boolean> {
-  debugLog(`Tentative sauvegarde token...`, false);
+  debugLog(`=== SAUVEGARDE TOKEN START ===`, false);
 
   try {
-    // Récupérer l'utilisateur connecté
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // IMPORTANT: Utiliser getSession() au lieu de getUser()
+    // getUser() peut réussir même si le client n'a pas de session active
+    // getSession() garantit qu'on a un access_token pour authentifier les requêtes
+    const { session, attempt } = await waitForSession(3, 1000);
 
-    if (authError || !user) {
-      debugLog(`Utilisateur non connecté: ${authError?.message || 'no user'}`, true);
+    if (!session) {
+      debugLog(`ÉCHEC: Pas de session active après 3 tentatives`, true);
+      debugLog(`Le client Supabase n'est pas authentifié (rôle anon)`, true);
       return false;
     }
 
-    const authId = user.id;
+    debugLog(`Session OK après ${attempt} tentative(s)`, false);
+    debugLog(`Access token: ${session.access_token.substring(0, 20)}...`, false);
+
+    const authId = session.user.id;
     debugLog(`User auth_id: ${authId.substring(0, 8)}...`, false);
 
     const profileId = await getProfileId(authId);
@@ -99,6 +145,15 @@ async function saveTokenToSupabase(token: string): Promise<boolean> {
 
     // Déterminer la plateforme
     const platform = Capacitor.getPlatform() as 'android' | 'ios';
+
+    // Double vérification: s'assurer que la session est toujours active
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    if (!currentSession?.access_token) {
+      debugLog(`ERREUR: Session perdue avant upsert!`, true);
+      return false;
+    }
+
+    debugLog(`Session toujours active, exécution upsert...`, false);
 
     // Upsert le token (insert ou update si déjà existant)
     const { error } = await supabase
@@ -118,11 +173,15 @@ async function saveTokenToSupabase(token: string): Promise<boolean> {
       );
 
     if (error) {
-      debugLog(`ERREUR Supabase: ${error.message}\nCode: ${error.code}`, true);
+      debugLog(`ERREUR Supabase: ${error.message}`, true);
+      debugLog(`Code: ${error.code}`, true);
+      if (error.code === '42501') {
+        debugLog(`RLS VIOLATION: La session n'est probablement pas authentifiée côté serveur`, true);
+      }
       return false;
     }
 
-    debugLog(`TOKEN SAUVEGARDÉ AVEC SUCCÈS !`, true);
+    debugLog(`✅ TOKEN SAUVEGARDÉ AVEC SUCCÈS !`, true);
     return true;
   } catch (error) {
     debugLog(`EXCEPTION sauvegarde: ${error}`, true);
