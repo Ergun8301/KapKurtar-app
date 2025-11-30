@@ -1,10 +1,15 @@
 import { supabase } from './supabaseClient';
+import { deactivatePushToken, cleanupPushNotifications } from '../services/pushNotifications';
 
 /**
  * Déconnexion complète avec redirection (pour les composants React avec navigate)
  */
 export async function logoutUser(navigate: (to: string) => void) {
   try {
+    // 0️⃣ Désactiver le token push avant la déconnexion
+    await deactivatePushToken();
+    await cleanupPushNotifications();
+
     // 1️⃣ Détruit la session active
     await supabase.auth.signOut();
   } catch (err) {
@@ -29,6 +34,10 @@ export async function logoutUser(navigate: (to: string) => void) {
  */
 export async function logoutNoNav() {
   try {
+    // Désactiver le token push avant la déconnexion
+    await deactivatePushToken();
+    await cleanupPushNotifications();
+
     await supabase.auth.signOut();
   } catch (err) {
     console.warn('⚠️ Erreur Supabase lors du signOut (ignorée) :', err);
