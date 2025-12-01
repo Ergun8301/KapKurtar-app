@@ -127,49 +127,24 @@ function DeepLinkHandler() {
 
         console.log('🔗 [DeepLink] Parsed - path:', path, 'search:', search, 'hash:', hash ? 'present (tokens)' : 'empty');
 
-        // 🔐 Si le hash contient des tokens OAuth, établir la session Supabase
+        // 🔐 Si le hash contient des tokens OAuth, rediriger vers /auth/callback avec les tokens
+        // AuthCallbackPage se chargera d'établir la session (plus fiable car dans un contexte React normal)
         if (hash && hash.includes('access_token')) {
-          console.log('🔗 [DeepLink] Tokens OAuth détectés, extraction...');
+          console.log('🔗 [DeepLink] Tokens OAuth détectés, redirection vers /auth/callback...');
 
-          // Extraire les tokens du hash (#access_token=xxx&refresh_token=yyy&...)
-          const hashParams = new URLSearchParams(hash.substring(1)); // Retirer le #
-          const accessToken = hashParams.get('access_token');
-          const refreshToken = hashParams.get('refresh_token');
-
-          console.log('🔗 [DeepLink] access_token présent:', !!accessToken);
-          console.log('🔗 [DeepLink] refresh_token présent:', !!refreshToken);
-
-          if (accessToken) {
-            console.log('🔗 [DeepLink] Appel setSession...');
-
-            // Établir la session Supabase avec les tokens
-            const { data, error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken || '',
-            });
-
-            console.log('🔗 [DeepLink] setSession terminé');
-
-            if (error) {
-              console.error('🔗 [DeepLink] Erreur setSession:', error.message);
-            } else {
-              console.log('🔗 [DeepLink] ✅ Session établie pour:', data.user?.email);
-
-              // Fermer le browser in-app
-              try {
-                console.log('🔗 [DeepLink] Fermeture browser...');
-                await Browser.close();
-                console.log('🔗 [DeepLink] Browser fermé');
-              } catch {
-                // Ignorer si le browser n'était pas ouvert
-              }
-
-              // 🔄 Forcer un rechargement complet pour rafraîchir l'état auth
-              console.log('🔗 [DeepLink] Redirection vers /auth/callback...');
-              window.location.href = '/auth/callback' + search;
-              return;
-            }
+          // Fermer le browser in-app d'abord
+          try {
+            await Browser.close();
+          } catch {
+            // Ignorer
           }
+
+          // Rediriger vers /auth/callback avec le hash contenant les tokens
+          // AuthCallbackPage va extraire les tokens et établir la session
+          const callbackUrl = '/auth/callback' + search + hash;
+          console.log('🔗 [DeepLink] Redirection vers:', callbackUrl);
+          window.location.href = callbackUrl;
+          return;
         }
 
         // Fermer le browser pour les autres deep links

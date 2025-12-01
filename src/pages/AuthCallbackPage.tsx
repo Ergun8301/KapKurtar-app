@@ -17,6 +17,41 @@ const AuthCallbackPage = () => {
         const flowToken = searchParams.get("flow_token");
         console.log("🔁 OAuth callback → rôle URL:", urlRole, "| flow_token:", flowToken);
 
+        // 🔐 Vérifier si les tokens OAuth sont dans le hash (deep link mobile)
+        const hash = window.location.hash;
+        console.log("🔁 OAuth callback → hash présent:", !!hash && hash.includes('access_token'));
+
+        if (hash && hash.includes('access_token')) {
+          console.log("🔐 Tokens détectés dans le hash, extraction...");
+
+          // Extraire les tokens du hash
+          const hashParams = new URLSearchParams(hash.substring(1));
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+
+          console.log("🔐 access_token présent:", !!accessToken);
+          console.log("🔐 refresh_token présent:", !!refreshToken);
+
+          if (accessToken) {
+            console.log("🔐 Appel setSession...");
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || '',
+            });
+
+            if (sessionError) {
+              console.error("🔐 Erreur setSession:", sessionError.message);
+              setError("Erreur lors de l'établissement de la session: " + sessionError.message);
+              setLoading(false);
+              return;
+            }
+            console.log("🔐 ✅ Session établie via setSession");
+
+            // Nettoyer le hash de l'URL pour éviter les problèmes
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          }
+        }
+
         // 🔹 Attendre session valide
         let session = null;
         for (let i = 0; i < 10; i++) {
@@ -25,7 +60,8 @@ const AuthCallbackPage = () => {
             session = data.session;
             break;
           }
-          await new Promise((r) => setTimeout(r, 1000));
+          console.log("🔁 Attente session... tentative", i + 1);
+          await new Promise((r) => setTimeout(r, 500));
         }
 
         if (!session) {
