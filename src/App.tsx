@@ -148,12 +148,14 @@ function DeepLinkHandler() {
               refresh_token: refreshToken || '',
             });
 
+            console.log('🔗 [DeepLink] setSession terminé');
+
             if (error) {
               console.error('🔗 [DeepLink] Erreur setSession:', error.message);
             } else {
               console.log('🔗 [DeepLink] ✅ Session établie pour:', data.user?.email);
 
-              // Fermer le browser in-app APRÈS avoir établi la session
+              // Fermer le browser in-app
               try {
                 console.log('🔗 [DeepLink] Fermeture browser...');
                 await Browser.close();
@@ -162,9 +164,9 @@ function DeepLinkHandler() {
                 // Ignorer si le browser n'était pas ouvert
               }
 
-              // Naviguer vers le callback pour finaliser (rôle, profil, etc.)
-              console.log('🔗 [DeepLink] Navigation vers /auth/callback');
-              navigate('/auth/callback' + search);
+              // 🔄 Forcer un rechargement complet pour rafraîchir l'état auth
+              console.log('🔗 [DeepLink] Redirection vers /auth/callback...');
+              window.location.href = '/auth/callback' + search;
               return;
             }
           }
