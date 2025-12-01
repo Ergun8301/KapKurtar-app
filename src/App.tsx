@@ -93,7 +93,7 @@ function DeepLinkHandler() {
 
     const handleDeepLink = async (url: string) => {
       try {
-        console.log('🔗 Deep link reçu (raw):', url);
+        console.log('🔗 [DeepLink] URL reçue (raw):', url);
 
         // Fermer le browser in-app si ouvert (après OAuth)
         try {
@@ -102,20 +102,15 @@ function DeepLinkHandler() {
           // Ignorer si le browser n'était pas ouvert
         }
 
-        // Gérer le custom scheme (com.kapkurtar.app:/path)
-        // Le format est: com.kapkurtar.app://auth/callback?params ou com.kapkurtar.app:/auth/callback?params
         let path = '';
         let search = '';
         let hash = '';
 
+        // Parser l'URL selon son format
         if (url.startsWith('com.kapkurtar.app:')) {
-          // Custom scheme - extraire le chemin après le scheme
-          // Peut être com.kapkurtar.app://path ou com.kapkurtar.app:/path
+          // Custom scheme
           const withoutScheme = url.replace('com.kapkurtar.app:', '');
-          // Retirer les // initiaux s'il y en a
           const cleanPath = withoutScheme.replace(/^\/+/, '/');
-
-          // Séparer path, search et hash
           const hashIndex = cleanPath.indexOf('#');
           const searchIndex = cleanPath.indexOf('?');
 
@@ -130,21 +125,55 @@ function DeepLinkHandler() {
             path = cleanPath;
           }
         } else {
-          // URL standard (https://...)
+          // URL standard (https://kapkurtar.com/...)
           const urlObj = new URL(url);
           path = urlObj.pathname;
           search = urlObj.search;
           hash = urlObj.hash;
         }
 
-        console.log('🔗 Parsed - path:', path, 'search:', search, 'hash:', hash);
+        console.log('🔗 [DeepLink] Parsed - path:', path, 'search:', search, 'hash:', hash ? 'present (tokens)' : 'empty');
 
-        // Si c'est un callback OAuth, passer le hash à la page pour que Supabase puisse récupérer les tokens
+        // 🔐 Si le hash contient des tokens OAuth, établir la session Supabase
+        if (hash && hash.includes('access_token')) {
+          console.log('🔗 [DeepLink] Tokens OAuth détectés dans le hash, établissement session...');
+
+          // Extraire les tokens du hash (#access_token=xxx&refresh_token=yyy&...)
+          const hashParams = new URLSearchParams(hash.substring(1)); // Retirer le #
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+
+          console.log('🔗 [DeepLink] access_token présent:', !!accessToken);
+          console.log('🔗 [DeepLink] refresh_token présent:', !!refreshToken);
+
+          if (accessToken) {
+            try {
+              // Établir la session Supabase avec les tokens
+              const { data, error } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken || '',
+              });
+
+              if (error) {
+                console.error('🔗 [DeepLink] Erreur setSession:', error.message);
+              } else {
+                console.log('🔗 [DeepLink] ✅ Session établie pour:', data.user?.email);
+                // Naviguer vers le callback pour finaliser (rôle, profil, etc.)
+                navigate('/auth/callback' + search);
+                return;
+              }
+            } catch (err) {
+              console.error('🔗 [DeepLink] Exception setSession:', err);
+            }
+          }
+        }
+
+        // Navigation standard pour les autres deep links
         const fullPath = path + search + hash;
-        console.log('🔗 Navigation vers:', fullPath);
+        console.log('🔗 [DeepLink] Navigation vers:', fullPath);
         navigate(fullPath);
       } catch (error) {
-        console.error('❌ Erreur parsing deep link:', error);
+        console.error('❌ [DeepLink] Erreur parsing:', error);
       }
     };
 
