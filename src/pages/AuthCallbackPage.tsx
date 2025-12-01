@@ -12,10 +12,24 @@ const AuthCallbackPage = () => {
   useEffect(() => {
     const handleOAuthCallback = async () => {
       try {
-        // 🔹 Récupérer les paramètres de l'URL (peuvent être perdus après OAuth)
+        // 🔹 Récupérer les paramètres de l'URL (peuvent être perdus après OAuth sur mobile)
         const urlRole = searchParams.get("role");
-        const flowToken = searchParams.get("flow_token");
-        console.log("🔁 OAuth callback → rôle URL:", urlRole, "| flow_token:", flowToken);
+        const urlFlowToken = searchParams.get("flow_token");
+
+        // 💾 Récupérer depuis localStorage si params URL vides (backup mobile)
+        const pendingRole = localStorage.getItem('pending_auth_role');
+        const pendingFlowToken = localStorage.getItem('pending_flow_token');
+
+        // Utiliser les valeurs URL en priorité, sinon localStorage
+        const effectiveRole = urlRole || pendingRole;
+        const flowToken = urlFlowToken || pendingFlowToken;
+
+        console.log("🔁 OAuth callback → rôle URL:", urlRole, "| localStorage:", pendingRole, "| effectif:", effectiveRole);
+        console.log("🔁 OAuth callback → flow_token URL:", urlFlowToken, "| localStorage:", pendingFlowToken, "| effectif:", flowToken);
+
+        // 🧹 Nettoyer le localStorage après lecture
+        localStorage.removeItem('pending_auth_role');
+        localStorage.removeItem('pending_flow_token');
 
         // 🔐 Vérifier si les tokens OAuth sont dans le hash (deep link mobile)
         const hash = window.location.hash;
@@ -73,8 +87,8 @@ const AuthCallbackPage = () => {
         const user = session.user;
         console.log("✅ Session récupérée pour:", user.email);
 
-        // 1️⃣ Déterminer le rôle RÉEL (priorité: flow_states > URL > défaut)
-        let actualRole = urlRole || "client";
+        // 1️⃣ Déterminer le rôle RÉEL (priorité: flow_states > URL/localStorage > défaut)
+        let actualRole = effectiveRole || "client";
 
         if (flowToken) {
           // 🔹 Récupérer le rôle depuis flow_states (source fiable!)

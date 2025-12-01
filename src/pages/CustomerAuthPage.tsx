@@ -122,6 +122,9 @@ const CustomerAuthPage = () => {
         const redirectUrl = getOAuthRedirectUrl('/auth/callback?role=client');
         console.log('🔍 [OAuth Debug] redirectUrl généré:', redirectUrl);
 
+        // 💾 Sauvegarder le rôle dans localStorage (backup si params perdus)
+        localStorage.setItem('pending_auth_role', 'client');
+
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
