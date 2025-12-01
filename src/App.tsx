@@ -95,13 +95,6 @@ function DeepLinkHandler() {
       try {
         console.log('🔗 [DeepLink] URL reçue (raw):', url);
 
-        // Fermer le browser in-app si ouvert (après OAuth)
-        try {
-          await Browser.close();
-        } catch {
-          // Ignorer si le browser n'était pas ouvert
-        }
-
         let path = '';
         let search = '';
         let hash = '';
@@ -136,7 +129,7 @@ function DeepLinkHandler() {
 
         // 🔐 Si le hash contient des tokens OAuth, établir la session Supabase
         if (hash && hash.includes('access_token')) {
-          console.log('🔗 [DeepLink] Tokens OAuth détectés dans le hash, établissement session...');
+          console.log('🔗 [DeepLink] Tokens OAuth détectés, extraction...');
 
           // Extraire les tokens du hash (#access_token=xxx&refresh_token=yyy&...)
           const hashParams = new URLSearchParams(hash.substring(1)); // Retirer le #
@@ -147,25 +140,41 @@ function DeepLinkHandler() {
           console.log('🔗 [DeepLink] refresh_token présent:', !!refreshToken);
 
           if (accessToken) {
-            try {
-              // Établir la session Supabase avec les tokens
-              const { data, error } = await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken || '',
-              });
+            console.log('🔗 [DeepLink] Appel setSession...');
 
-              if (error) {
-                console.error('🔗 [DeepLink] Erreur setSession:', error.message);
-              } else {
-                console.log('🔗 [DeepLink] ✅ Session établie pour:', data.user?.email);
-                // Naviguer vers le callback pour finaliser (rôle, profil, etc.)
-                navigate('/auth/callback' + search);
-                return;
+            // Établir la session Supabase avec les tokens
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || '',
+            });
+
+            if (error) {
+              console.error('🔗 [DeepLink] Erreur setSession:', error.message);
+            } else {
+              console.log('🔗 [DeepLink] ✅ Session établie pour:', data.user?.email);
+
+              // Fermer le browser in-app APRÈS avoir établi la session
+              try {
+                console.log('🔗 [DeepLink] Fermeture browser...');
+                await Browser.close();
+                console.log('🔗 [DeepLink] Browser fermé');
+              } catch {
+                // Ignorer si le browser n'était pas ouvert
               }
-            } catch (err) {
-              console.error('🔗 [DeepLink] Exception setSession:', err);
+
+              // Naviguer vers le callback pour finaliser (rôle, profil, etc.)
+              console.log('🔗 [DeepLink] Navigation vers /auth/callback');
+              navigate('/auth/callback' + search);
+              return;
             }
           }
+        }
+
+        // Fermer le browser pour les autres deep links
+        try {
+          await Browser.close();
+        } catch {
+          // Ignorer
         }
 
         // Navigation standard pour les autres deep links
