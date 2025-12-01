@@ -10,13 +10,11 @@ import {
   Archive,
   X,
   CheckCircle,
-  XCircle,
-  Bell
+  XCircle
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useClientNotifications } from '../hooks/useClientNotifications';
-import { testPushNotifications, getLastToken, getDebugLogs } from '../services/pushNotifications';
 
 interface Reservation {
   reservation_id: string;
@@ -52,42 +50,8 @@ const ClientDashboardPage = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [cancelConfirm, setCancelConfirm] = useState<string | null>(null);
 
-  // DEBUG: État pour le test push notifications
-  const [pushTestResult, setPushTestResult] = useState<{
-    testing: boolean;
-    result: {
-      success: boolean;
-      platform: string;
-      isNative: boolean;
-      token: string | null;
-      logs: string[];
-      error?: string;
-    } | null;
-  }>({ testing: false, result: null });
-
   // Ref pour le canal Realtime des réservations uniquement
   const reservationsChannelRef = useRef<any>(null);
-
-  // DEBUG: Fonction de test push notifications
-  const handleTestPush = async () => {
-    setPushTestResult({ testing: true, result: null });
-    try {
-      const result = await testPushNotifications();
-      setPushTestResult({ testing: false, result });
-    } catch (error) {
-      setPushTestResult({
-        testing: false,
-        result: {
-          success: false,
-          platform: 'unknown',
-          isNative: false,
-          token: null,
-          logs: [`Exception: ${error}`],
-          error: String(error),
-        },
-      });
-    }
-  };
 
   useEffect(() => {
     const fetchClientId = async () => {
@@ -616,76 +580,6 @@ const ClientDashboardPage = () => {
               <h1 className="text-lg font-bold text-gray-900">Hesabım</h1>
               <p className="text-sm text-gray-600">{user?.email}</p>
             </div>
-          </div>
-        </div>
-
-        {/* DEBUG: Bouton de test Push Notifications */}
-        <div className="bg-yellow-50 rounded-lg shadow-sm border-2 border-yellow-400 p-4 mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Bell className="w-5 h-5 text-yellow-600" />
-            <h2 className="text-base font-bold text-yellow-800">DEBUG: Push Notifications Test</h2>
-          </div>
-
-          <button
-            onClick={handleTestPush}
-            disabled={pushTestResult.testing}
-            className={`w-full py-3 rounded-lg font-bold text-white transition-colors ${
-              pushTestResult.testing
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-yellow-600 hover:bg-yellow-700'
-            }`}
-          >
-            {pushTestResult.testing ? 'Test en cours...' : 'Tester Push Notifications'}
-          </button>
-
-          {/* Résultats du test */}
-          {pushTestResult.result && (
-            <div className="mt-4 p-3 bg-white rounded-lg border border-yellow-300">
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold">Status:</span>
-                  <span className={pushTestResult.result.success ? 'text-green-600' : 'text-red-600'}>
-                    {pushTestResult.result.success ? 'SUCCESS' : 'FAILED'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold">Platform:</span>
-                  <span>{pushTestResult.result.platform}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold">isNative:</span>
-                  <span className={pushTestResult.result.isNative ? 'text-green-600' : 'text-red-600'}>
-                    {pushTestResult.result.isNative ? 'TRUE' : 'FALSE'}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="font-bold">Token:</span>
-                  <span className="text-xs break-all bg-gray-100 p-2 rounded">
-                    {pushTestResult.result.token || 'NULL - Aucun token recu'}
-                  </span>
-                </div>
-                {pushTestResult.result.error && (
-                  <div className="flex flex-col gap-1">
-                    <span className="font-bold text-red-600">Error:</span>
-                    <span className="text-xs text-red-600">{pushTestResult.result.error}</span>
-                  </div>
-                )}
-                <div className="flex flex-col gap-1">
-                  <span className="font-bold">Logs ({pushTestResult.result.logs.length}):</span>
-                  <div className="text-xs bg-gray-900 text-green-400 p-2 rounded max-h-48 overflow-y-auto font-mono">
-                    {pushTestResult.result.logs.map((log, i) => (
-                      <div key={i}>{log}</div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Afficher le dernier token connu */}
-          <div className="mt-3 text-xs text-gray-500">
-            <span className="font-bold">Dernier token connu: </span>
-            <span className="break-all">{getLastToken() || 'Aucun'}</span>
           </div>
         </div>
 

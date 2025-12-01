@@ -12,41 +12,6 @@ import { supabase } from '../lib/supabaseClient';
 // Variable pour éviter les initialisations multiples
 let isInitialized = false;
 
-// Variable pour stocker le dernier token (pour debug)
-let lastToken: string | null = null;
-
-// Variable pour stocker les logs de debug
-const debugLogs: string[] = [];
-
-/**
- * Ajoute un log de debug et affiche une alerte visuelle
- */
-function debugLog(message: string, showAlert = true): void {
-  const timestamp = new Date().toLocaleTimeString();
-  const logMessage = `[${timestamp}] ${message}`;
-  debugLogs.push(logMessage);
-  console.log(`🔔 PUSH DEBUG: ${logMessage}`);
-
-  if (showAlert && Capacitor.isNativePlatform()) {
-    // Utilise alert pour être visible sur le téléphone
-    window.alert(`PUSH DEBUG:\n${message}`);
-  }
-}
-
-/**
- * Récupère tous les logs de debug
- */
-export function getDebugLogs(): string[] {
-  return [...debugLogs];
-}
-
-/**
- * Récupère le dernier token connu
- */
-export function getLastToken(): string | null {
-  return lastToken;
-}
-
 /**
  * Récupère le profile_id de l'utilisateur connecté
  */
@@ -59,13 +24,13 @@ async function getProfileId(authId: string): Promise<string | null> {
       .single();
 
     if (error) {
-      debugLog(`Erreur récupération profile_id: ${error.message}`, false);
+      console.error('❌ Erreur récupération profile_id:', error.message);
       return null;
     }
 
     return data?.id || null;
   } catch (error) {
-    debugLog(`Exception récupération profile_id: ${error}`, false);
+    console.error('❌ Exception récupération profile_id:', error);
     return null;
   }
 }
@@ -81,25 +46,19 @@ async function waitForSession(maxAttempts = 3, delayMs = 1000): Promise<{
   attempt: number;
 }> {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    debugLog(`Tentative session ${attempt}/${maxAttempts}...`, false);
-
     const { data: { session }, error } = await supabase.auth.getSession();
 
     if (error) {
-      debugLog(`Erreur getSession: ${error.message}`, false);
+      console.warn('⚠️ Erreur getSession:', error.message);
     }
 
     // Vérifier que la session ET l'access_token existent
     if (session?.access_token && session?.user?.id) {
-      debugLog(`Session ACTIVE trouvée (tentative ${attempt})`, false);
       return { session, attempt };
     }
 
-    debugLog(`Session non prête (attempt ${attempt}): session=${!!session}, token=${!!session?.access_token}`, false);
-
     // Attendre avant la prochaine tentative (sauf si dernière)
     if (attempt < maxAttempts) {
-      debugLog(`Attente ${delayMs}ms avant retry...`, false);
       await new Promise(resolve => setTimeout(resolve, delayMs));
       // Augmenter le délai progressivement (backoff)
       delayMs = Math.min(delayMs * 1.5, 3000);
@@ -114,34 +73,24 @@ async function waitForSession(maxAttempts = 3, delayMs = 1000): Promise<{
  * Utilise getSession() pour garantir une session authentifiée
  */
 async function saveTokenToSupabase(token: string): Promise<boolean> {
-  debugLog(`=== SAUVEGARDE TOKEN START ===`, false);
-
   try {
     // IMPORTANT: Utiliser getSession() au lieu de getUser()
     // getUser() peut réussir même si le client n'a pas de session active
     // getSession() garantit qu'on a un access_token pour authentifier les requêtes
-    const { session, attempt } = await waitForSession(3, 1000);
+    const { session } = await waitForSession(3, 1000);
 
     if (!session) {
-      debugLog(`ÉCHEC: Pas de session active après 3 tentatives`, true);
-      debugLog(`Le client Supabase n'est pas authentifié (rôle anon)`, true);
+      console.error('❌ Pas de session active après 3 tentatives');
       return false;
     }
 
-    debugLog(`Session OK après ${attempt} tentative(s)`, false);
-    debugLog(`Access token: ${session.access_token.substring(0, 20)}...`, false);
-
     const authId = session.user.id;
-    debugLog(`User auth_id: ${authId.substring(0, 8)}...`, false);
-
     const profileId = await getProfileId(authId);
 
     if (!profileId) {
-      debugLog(`Profile_id non trouvé pour auth_id`, true);
+      console.error('❌ Profile_id non trouvé pour auth_id');
       return false;
     }
-
-    debugLog(`Profile_id: ${profileId.substring(0, 8)}...`, false);
 
     // Déterminer la plateforme
     const platform = Capacitor.getPlatform() as 'android' | 'ios';
@@ -149,11 +98,9 @@ async function saveTokenToSupabase(token: string): Promise<boolean> {
     // Double vérification: s'assurer que la session est toujours active
     const { data: { session: currentSession } } = await supabase.auth.getSession();
     if (!currentSession?.access_token) {
-      debugLog(`ERREUR: Session perdue avant upsert!`, true);
+      console.error('❌ Session perdue avant upsert');
       return false;
     }
-
-    debugLog(`Session toujours active, exécution upsert...`, false);
 
     // Upsert le token (insert ou update si déjà existant)
     const { error } = await supabase
@@ -173,18 +120,14 @@ async function saveTokenToSupabase(token: string): Promise<boolean> {
       );
 
     if (error) {
-      debugLog(`ERREUR Supabase: ${error.message}`, true);
-      debugLog(`Code: ${error.code}`, true);
-      if (error.code === '42501') {
-        debugLog(`RLS VIOLATION: La session n'est probablement pas authentifiée côté serveur`, true);
-      }
+      console.error('❌ Erreur sauvegarde token:', error.message, error.code);
       return false;
     }
 
-    debugLog(`✅ TOKEN SAUVEGARDÉ AVEC SUCCÈS !`, true);
+    console.log('✅ Token push sauvegardé');
     return true;
   } catch (error) {
-    debugLog(`EXCEPTION sauvegarde: ${error}`, true);
+    console.error('❌ Exception sauvegarde token:', error);
     return false;
   }
 }
@@ -213,21 +156,14 @@ export async function deactivatePushToken(): Promise<void> {
  * Gère une notification reçue quand l'app est ouverte
  */
 function handleNotificationReceived(notification: PushNotificationSchema): void {
-  console.log('📬 Notification reçue (app ouverte):', notification);
-  debugLog(`Notification reçue: ${notification.title}`, true);
-
-  const { title, body, data } = notification;
-  console.log('📬 Titre:', title);
-  console.log('📬 Corps:', body);
-  console.log('📬 Données:', data);
+  console.log('📬 Notification reçue:', notification.title);
 }
 
 /**
  * Gère le tap sur une notification
  */
 function handleNotificationAction(action: ActionPerformed): void {
-  console.log('👆 Notification tapée:', action);
-  debugLog(`Notification tapée: ${action.notification.title}`, false);
+  console.log('👆 Notification tapée:', action.notification.title);
 
   const data = action.notification.data;
 
@@ -246,65 +182,47 @@ function handleNotificationAction(action: ActionPerformed): void {
  * Doit être appelé après la connexion de l'utilisateur
  */
 export async function initPushNotifications(): Promise<boolean> {
-  debugLog(`=== INIT PUSH START ===`, true);
-  debugLog(`Platform: ${Capacitor.getPlatform()}`, false);
-  debugLog(`isNative: ${Capacitor.isNativePlatform()}`, false);
-
   // Ne pas initialiser sur web
   if (!Capacitor.isNativePlatform()) {
-    debugLog(`NON NATIF - Abandon`, true);
     return false;
   }
 
   // Éviter les initialisations multiples
   if (isInitialized) {
-    debugLog(`Déjà initialisé - Token: ${lastToken?.substring(0, 20)}...`, true);
     return true;
   }
 
   try {
     // Vérifier si l'utilisateur est connecté
-    debugLog(`Vérification utilisateur...`, false);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      debugLog(`UTILISATEUR NON CONNECTÉ`, true);
       return false;
     }
-    debugLog(`User OK: ${user.email}`, false);
 
     // Vérifier la permission actuelle
-    debugLog(`Check permissions...`, false);
     let permStatus = await PushNotifications.checkPermissions();
-    debugLog(`Permission actuelle: ${permStatus.receive}`, true);
 
     // Demander la permission si nécessaire
     if (permStatus.receive === 'prompt') {
-      debugLog(`Demande permission...`, false);
       permStatus = await PushNotifications.requestPermissions();
-      debugLog(`Résultat demande: ${permStatus.receive}`, true);
     }
 
     if (permStatus.receive !== 'granted') {
-      debugLog(`PERMISSION REFUSÉE: ${permStatus.receive}`, true);
+      console.warn('⚠️ Permission push notifications refusée');
       return false;
     }
 
-    debugLog(`Permission ACCORDÉE`, false);
-
     // Configurer les listeners AVANT de s'enregistrer
-    debugLog(`Configuration listeners...`, false);
 
     // Quand on reçoit le token
     await PushNotifications.addListener('registration', async (token: Token) => {
-      lastToken = token.value;
-      debugLog(`TOKEN REÇU: ${token.value.substring(0, 30)}...`, true);
-      const saved = await saveTokenToSupabase(token.value);
-      debugLog(`Sauvegarde: ${saved ? 'OK' : 'ÉCHEC'}`, true);
+      console.log('🔔 Token FCM reçu');
+      await saveTokenToSupabase(token.value);
     });
 
     // En cas d'erreur d'enregistrement
     await PushNotifications.addListener('registrationError', (error) => {
-      debugLog(`ERREUR REGISTRATION: ${JSON.stringify(error)}`, true);
+      console.error('❌ Erreur registration push:', error);
     });
 
     // Notification reçue (app au premier plan)
@@ -318,94 +236,15 @@ export async function initPushNotifications(): Promise<boolean> {
     });
 
     // S'enregistrer pour recevoir les notifications
-    debugLog(`Appel PushNotifications.register()...`, false);
     await PushNotifications.register();
-    debugLog(`register() appelé - attente token...`, true);
 
     isInitialized = true;
-    debugLog(`=== INIT PUSH TERMINÉ ===`, false);
+    console.log('✅ Push notifications initialisées');
     return true;
   } catch (error) {
-    debugLog(`EXCEPTION: ${error}`, true);
+    console.error('❌ Exception init push:', error);
     return false;
   }
-}
-
-/**
- * Version de test avec alertes forcées - pour diagnostic manuel
- */
-export async function testPushNotifications(): Promise<{
-  success: boolean;
-  platform: string;
-  isNative: boolean;
-  token: string | null;
-  logs: string[];
-  error?: string;
-}> {
-  const result = {
-    success: false,
-    platform: Capacitor.getPlatform(),
-    isNative: Capacitor.isNativePlatform(),
-    token: lastToken,
-    logs: [] as string[],
-    error: undefined as string | undefined,
-  };
-
-  try {
-    // Reset pour forcer une nouvelle tentative
-    isInitialized = false;
-    debugLogs.length = 0;
-
-    result.logs.push(`Platform: ${result.platform}`);
-    result.logs.push(`isNative: ${result.isNative}`);
-
-    if (!result.isNative) {
-      result.error = 'Non native platform';
-      result.logs.push('ERREUR: Pas sur plateforme native');
-      return result;
-    }
-
-    // Vérifier l'utilisateur
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      result.error = 'User not logged in';
-      result.logs.push('ERREUR: Utilisateur non connecté');
-      return result;
-    }
-    result.logs.push(`User: ${user.email}`);
-
-    // Vérifier permissions
-    const permStatus = await PushNotifications.checkPermissions();
-    result.logs.push(`Permission: ${permStatus.receive}`);
-
-    if (permStatus.receive === 'prompt') {
-      const newPerm = await PushNotifications.requestPermissions();
-      result.logs.push(`Nouvelle permission: ${newPerm.receive}`);
-    }
-
-    // Tenter l'initialisation
-    const initResult = await initPushNotifications();
-    result.success = initResult;
-    result.token = lastToken;
-    result.logs.push(`Init result: ${initResult}`);
-    result.logs.push(`Token: ${lastToken ? lastToken.substring(0, 30) + '...' : 'null'}`);
-
-    // Attendre un peu pour le token
-    if (!lastToken) {
-      result.logs.push('Attente 3s pour token...');
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      result.token = lastToken;
-      result.logs.push(`Token après attente: ${lastToken ? 'OUI' : 'NON'}`);
-    }
-
-    result.logs = [...result.logs, ...debugLogs];
-
-  } catch (error) {
-    result.error = String(error);
-    result.logs.push(`EXCEPTION: ${error}`);
-  }
-
-  return result;
 }
 
 /**
