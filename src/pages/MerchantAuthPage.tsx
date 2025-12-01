@@ -153,6 +153,10 @@ const MerchantAuthPage = () => {
         // 📱 Mobile natif : utiliser In-App Browser avec custom scheme
         const redirectUrl = getOAuthRedirectUrl(`/auth/callback?role=merchant&flow_token=${flow.token}`);
 
+        // 💾 Sauvegarder le rôle et flow_token dans localStorage (backup si params perdus)
+        localStorage.setItem('pending_auth_role', 'merchant');
+        localStorage.setItem('pending_flow_token', flow.token);
+
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
