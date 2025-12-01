@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
+import { Browser } from '@capacitor/browser';
 import { supabase } from '../lib/supabaseClient';
 import { useAuthFlow } from '../hooks/useAuthFlow';
-import { getRedirectUrl } from '../lib/appConfig';
+import { getRedirectUrl, getOAuthRedirectUrl, isNativePlatform } from '../lib/appConfig';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
 
 type AuthMode = 'login' | 'register';
@@ -112,13 +113,30 @@ const CustomerAuthPage = () => {
   // ✅ 5. Auth Google (rôle client)
   const handleGoogleAuth = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: getRedirectUrl('/auth/callback?role=client'),
-        },
-      });
-      if (error) throw error;
+      if (isNativePlatform()) {
+        // 📱 Mobile natif : utiliser In-App Browser avec custom scheme
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: getOAuthRedirectUrl('/auth/callback?role=client'),
+            skipBrowserRedirect: true, // Ne pas ouvrir automatiquement le navigateur
+          },
+        });
+        if (error) throw error;
+        if (data?.url) {
+          // Ouvrir dans un In-App Browser (Custom Tab Android / SFSafariViewController iOS)
+          await Browser.open({ url: data.url });
+        }
+      } else {
+        // 🌐 Web : comportement inchangé
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: getRedirectUrl('/auth/callback?role=client'),
+          },
+        });
+        if (error) throw error;
+      }
     } catch (err) {
       setError((err as Error).message);
     }

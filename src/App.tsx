@@ -10,6 +10,7 @@ import {
 import { HelmetProvider } from 'react-helmet-async';
 import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
+import { Browser } from "@capacitor/browser";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
@@ -79,13 +80,58 @@ function DeepLinkHandler() {
       });
     };
 
-    const handleDeepLink = (url: string) => {
+    const handleDeepLink = async (url: string) => {
       try {
-        const urlObj = new URL(url);
-        // Extraire le chemin et les paramètres
-        const path = urlObj.pathname + urlObj.search;
-        console.log('🔗 Navigation vers:', path);
-        navigate(path);
+        console.log('🔗 Deep link reçu (raw):', url);
+
+        // Fermer le browser in-app si ouvert (après OAuth)
+        try {
+          await Browser.close();
+        } catch {
+          // Ignorer si le browser n'était pas ouvert
+        }
+
+        // Gérer le custom scheme (com.kapkurtar.app:/path)
+        // Le format est: com.kapkurtar.app://auth/callback?params ou com.kapkurtar.app:/auth/callback?params
+        let path = '';
+        let search = '';
+        let hash = '';
+
+        if (url.startsWith('com.kapkurtar.app:')) {
+          // Custom scheme - extraire le chemin après le scheme
+          // Peut être com.kapkurtar.app://path ou com.kapkurtar.app:/path
+          const withoutScheme = url.replace('com.kapkurtar.app:', '');
+          // Retirer les // initiaux s'il y en a
+          const cleanPath = withoutScheme.replace(/^\/+/, '/');
+
+          // Séparer path, search et hash
+          const hashIndex = cleanPath.indexOf('#');
+          const searchIndex = cleanPath.indexOf('?');
+
+          if (hashIndex !== -1) {
+            hash = cleanPath.substring(hashIndex);
+            path = searchIndex !== -1 ? cleanPath.substring(0, searchIndex) : cleanPath.substring(0, hashIndex);
+            search = searchIndex !== -1 && searchIndex < hashIndex ? cleanPath.substring(searchIndex, hashIndex) : '';
+          } else if (searchIndex !== -1) {
+            path = cleanPath.substring(0, searchIndex);
+            search = cleanPath.substring(searchIndex);
+          } else {
+            path = cleanPath;
+          }
+        } else {
+          // URL standard (https://...)
+          const urlObj = new URL(url);
+          path = urlObj.pathname;
+          search = urlObj.search;
+          hash = urlObj.hash;
+        }
+
+        console.log('🔗 Parsed - path:', path, 'search:', search, 'hash:', hash);
+
+        // Si c'est un callback OAuth, passer le hash à la page pour que Supabase puisse récupérer les tokens
+        const fullPath = path + search + hash;
+        console.log('🔗 Navigation vers:', fullPath);
+        navigate(fullPath);
       } catch (error) {
         console.error('❌ Erreur parsing deep link:', error);
       }
