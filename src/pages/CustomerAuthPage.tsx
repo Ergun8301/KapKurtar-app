@@ -113,22 +113,33 @@ const CustomerAuthPage = () => {
   // ✅ 5. Auth Google (rôle client)
   const handleGoogleAuth = async () => {
     try {
-      if (isNativePlatform()) {
+      // 🔍 DEBUG: Vérifier isNativePlatform
+      const isNative = isNativePlatform();
+      console.log('🔍 [OAuth Debug] isNativePlatform():', isNative);
+
+      if (isNative) {
         // 📱 Mobile natif : utiliser In-App Browser avec custom scheme
+        const redirectUrl = getOAuthRedirectUrl('/auth/callback?role=client');
+        console.log('🔍 [OAuth Debug] redirectUrl généré:', redirectUrl);
+
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: getOAuthRedirectUrl('/auth/callback?role=client'),
+            redirectTo: redirectUrl,
             skipBrowserRedirect: true, // Ne pas ouvrir automatiquement le navigateur
           },
         });
         if (error) throw error;
+
+        console.log('🔍 [OAuth Debug] URL Supabase retournée:', data?.url);
+
         if (data?.url) {
           // Ouvrir dans un In-App Browser (Custom Tab Android / SFSafariViewController iOS)
           await Browser.open({ url: data.url });
         }
       } else {
         // 🌐 Web : comportement inchangé
+        console.log('🔍 [OAuth Debug] Mode WEB détecté');
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
@@ -138,6 +149,7 @@ const CustomerAuthPage = () => {
         if (error) throw error;
       }
     } catch (err) {
+      console.error('🔍 [OAuth Debug] Erreur:', err);
       setError((err as Error).message);
     }
   };
