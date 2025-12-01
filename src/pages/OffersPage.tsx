@@ -151,6 +151,15 @@ export default function OffersPage() {
   const [addressSuggestions, setAddressSuggestions] = useState<Array<{ place_name: string; center: [number, number] }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' } | null>(null);
+
+  // Auto-hide toast after 4 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const getDiscountPercent = (before: number, after: number) => {
     if (!before || before === 0) return 0;
@@ -582,31 +591,79 @@ export default function OffersPage() {
 
   useEffect(() => {
     const offerId = searchParams.get('offer_id');
-    
-    if (!offerId || !mapRef.current || offers.length === 0) return;
+    const notificationId = searchParams.get('notification_id');
 
-    const targetOffer = offers.find(o => o.offer_id === offerId);
-    
-    if (!targetOffer) {
-      console.warn('🔍 Offre non trouvée:', offerId);
-      return;
+    if (!offerId || !mapRef.current) return;
+
+    // Chercher d'abord dans la liste locale
+    let targetOffer = offers.find(o => o.offer_id === offerId);
+
+    if (targetOffer) {
+      // ✅ Offre trouvée dans la liste locale → afficher
+      console.log('🎯 Centrage sur offre via notification:', targetOffer.title);
+
+      if (Number.isFinite(targetOffer.offer_lng) && Number.isFinite(targetOffer.offer_lat)) {
+        mapRef.current.flyTo({
+          center: [targetOffer.offer_lng, targetOffer.offer_lat],
+          zoom: 15,
+          essential: true,
+          duration: 1500
+        });
+
+        setTimeout(() => {
+          setSelectedOffer(targetOffer!);
+          setSearchParams({}, { replace: true });
+        }, 1600);
+      }
+    } else if (offers.length > 0) {
+      // ❌ Offre NON trouvée et les offres sont chargées → vérifier si elle existe dans la DB
+      (async () => {
+        console.log('🔍 Offre non trouvée dans la liste locale, vérification dans la DB...');
+
+        const { data: offerData, error } = await supabase
+          .from('offers')
+          .select('id, is_active, expired_at, quantity')
+          .eq('id', offerId)
+          .maybeSingle();
+
+        if (error) {
+          console.error('❌ Erreur vérification offre:', error);
+        }
+
+        // L'offre n'existe pas ou n'est plus active
+        const isExpiredOrUnavailable = !offerData ||
+          !offerData.is_active ||
+          (offerData.expired_at && new Date(offerData.expired_at) < new Date()) ||
+          (offerData.quantity !== null && offerData.quantity <= 0);
+
+        if (isExpiredOrUnavailable) {
+          console.log('😢 Offre expirée ou indisponible');
+
+          // Afficher le toast style "Too Good To Go"
+          setToast({
+            message: "Maalesef bu fırsat kaçtı! 😢 Bir dahaki sefere daha hızlı olun!",
+            type: 'warning'
+          });
+
+          // Supprimer la notification de la DB si on a son ID
+          if (notificationId) {
+            await supabase
+              .from('notifications')
+              .delete()
+              .eq('id', notificationId);
+            console.log('🗑️ Notification supprimée:', notificationId);
+          }
+
+          // Nettoyer l'URL
+          setSearchParams({}, { replace: true });
+        } else {
+          // L'offre existe mais n'est pas dans le rayon actuel → juste nettoyer l'URL
+          console.log('⚠️ Offre existe mais hors du rayon actuel');
+          setSearchParams({}, { replace: true });
+        }
+      })();
     }
-
-    console.log('🎯 Centrage sur offre via notification:', targetOffer.title);
-
-    if (Number.isFinite(targetOffer.offer_lng) && Number.isFinite(targetOffer.offer_lat)) {
-      mapRef.current.flyTo({
-        center: [targetOffer.offer_lng, targetOffer.offer_lat],
-        zoom: 15,
-        essential: true,
-        duration: 1500
-      });
-
-      setTimeout(() => {
-        setSelectedOffer(targetOffer);
-        setSearchParams({}, { replace: true });
-      }, 1600);
-    }
+    // Si offers.length === 0, on attend que les offres soient chargées (le useEffect se re-exécutera)
   }, [searchParams, offers]);
 
   useEffect(() => {
@@ -1096,6 +1153,31 @@ export default function OffersPage() {
         canonical="/offers"
         keywords="indirimli yemek, ucuz yemek harita, yakındaki fırsatlar, fazla gıda"
       />
+
+      {/* Toast pour les offres expirées */}
+      {toast && (
+        <div
+          className={`fixed top-20 left-1/2 -translate-x-1/2 z-[9999] px-6 py-4 rounded-xl shadow-2xl text-white text-center max-w-sm animate-bounce-in ${
+            toast.type === 'success' ? 'bg-[#00A690]' :
+            toast.type === 'warning' ? 'bg-gradient-to-r from-orange-500 to-red-500' :
+            'bg-red-500'
+          }`}
+        >
+          <p className="font-semibold text-base">{toast.message}</p>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes bounce-in {
+          0% { transform: translateX(-50%) scale(0.8) translateY(-20px); opacity: 0; }
+          50% { transform: translateX(-50%) scale(1.05) translateY(0); }
+          100% { transform: translateX(-50%) scale(1) translateY(0); opacity: 1; }
+        }
+        .animate-bounce-in {
+          animation: bounce-in 0.4s ease-out forwards;
+        }
+      `}</style>
+
       <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
         <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
           <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />

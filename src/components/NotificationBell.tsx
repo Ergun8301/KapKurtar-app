@@ -94,7 +94,8 @@ export function NotificationBell({ userType }: NotificationBellProps) {
         notification.data?.offer_id
       ) {
         setOpen(false);
-        navigate(`/offers?offer_id=${notification.data.offer_id}`);
+        // Passer aussi notification_id pour pouvoir la supprimer si l'offre n'existe plus
+        navigate(`/offers?offer_id=${notification.data.offer_id}&notification_id=${notification.id}`);
       }
     } else {
       // MARCHAND
