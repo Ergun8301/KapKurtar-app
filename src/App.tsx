@@ -63,21 +63,32 @@ function DeepLinkHandler() {
 
   useEffect(() => {
     // Ne configurer que sur les plateformes natives
-    if (!Capacitor.isNativePlatform()) return;
+    if (!Capacitor.isNativePlatform()) {
+      console.log('🔗 [DeepLink] Pas une plateforme native, skip');
+      return;
+    }
+
+    console.log('🔗 [DeepLink] Configuration des listeners...');
 
     // Écouter les deep links entrants
     const setupDeepLinks = async () => {
       // Gérer l'URL qui a lancé l'app (si ouverte via deep link)
+      console.log('🔗 [DeepLink] Vérification getLaunchUrl...');
       const appUrlOpen = await CapacitorApp.getLaunchUrl();
+      console.log('🔗 [DeepLink] getLaunchUrl résultat:', appUrlOpen);
       if (appUrlOpen?.url) {
+        console.log('🔗 [DeepLink] App lancée via deep link:', appUrlOpen.url);
         handleDeepLink(appUrlOpen.url);
       }
 
       // Écouter les deep links pendant que l'app est ouverte
+      console.log('🔗 [DeepLink] Ajout listener appUrlOpen...');
       CapacitorApp.addListener('appUrlOpen', (event) => {
-        console.log('🔗 Deep link reçu:', event.url);
+        console.log('🔗 [DeepLink] EVENT appUrlOpen reçu:', event.url);
         handleDeepLink(event.url);
       });
+
+      console.log('🔗 [DeepLink] Setup terminé');
     };
 
     const handleDeepLink = async (url: string) => {
