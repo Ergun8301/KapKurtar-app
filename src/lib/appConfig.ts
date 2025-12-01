@@ -36,3 +36,24 @@ export const isNativePlatform = (): boolean => {
  * URL de base de l'application
  */
 export const APP_BASE_URL = APP_URL;
+
+/**
+ * Custom URL scheme pour les deep links OAuth sur mobile natif
+ */
+export const CUSTOM_URL_SCHEME = 'com.kapkurtar.app';
+
+/**
+ * Génère une URL de redirection OAuth spécifique pour mobile natif
+ * Utilise le custom URL scheme pour permettre le retour dans l'app
+ *
+ * @param path - Le chemin de redirection (ex: '/auth/callback?role=client')
+ * @returns L'URL avec custom scheme pour mobile
+ */
+export const getOAuthRedirectUrl = (path: string): string => {
+  if (Capacitor.isNativePlatform()) {
+    // Sur mobile natif, utiliser le custom scheme pour revenir dans l'app
+    return `${CUSTOM_URL_SCHEME}:/${path}`;
+  }
+  // Sur web, utiliser l'origine actuelle (comportement inchangé)
+  return `${window.location.origin}${path}`;
+};

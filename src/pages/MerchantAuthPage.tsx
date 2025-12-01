@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, ArrowLeft, Store } from "lucide-react";
+import { Browser } from "@capacitor/browser";
 import { supabase } from "../lib/supabaseClient";
 import { useAuthFlow } from "../hooks/useAuthFlow";
-import { getRedirectUrl } from "../lib/appConfig";
+import { getRedirectUrl, getOAuthRedirectUrl, isNativePlatform } from "../lib/appConfig";
 
 type AuthMode = "login" | "register";
 
@@ -148,17 +149,36 @@ const MerchantAuthPage = () => {
 
       console.log("🎟️ Flow token créé :", flow.token);
 
-      // 🔹 Redirection Google avec rôle et token dans l'URL
-      const redirectUrl = getRedirectUrl(`/auth/callback?role=merchant&flow_token=${flow.token}`);
+      if (isNativePlatform()) {
+        // 📱 Mobile natif : utiliser In-App Browser avec custom scheme
+        const redirectUrl = getOAuthRedirectUrl(`/auth/callback?role=merchant&flow_token=${flow.token}`);
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: redirectUrl,
-        },
-      });
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: redirectUrl,
+            skipBrowserRedirect: true, // Ne pas ouvrir automatiquement le navigateur
+          },
+        });
 
-      if (error) throw error;
+        if (error) throw error;
+        if (data?.url) {
+          // Ouvrir dans un In-App Browser (Custom Tab Android / SFSafariViewController iOS)
+          await Browser.open({ url: data.url });
+        }
+      } else {
+        // 🌐 Web : comportement inchangé
+        const redirectUrl = getRedirectUrl(`/auth/callback?role=merchant&flow_token=${flow.token}`);
+
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: redirectUrl,
+          },
+        });
+
+        if (error) throw error;
+      }
     } catch (err) {
       console.error("Erreur OAuth marchand :", err);
       setError((err as Error).message);
