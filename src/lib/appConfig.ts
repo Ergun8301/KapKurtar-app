@@ -17,7 +17,7 @@ const APP_URL = 'https://kapkurtar.com';
  * @returns L'URL complète de redirection
  */
 export const getRedirectUrl = (path: string): string => {
-  if (Capacitor.isNativePlatform()) {
+  if (isNativePlatform()) {
     // Sur mobile natif, utiliser l'URL web pour que les emails fonctionnent
     return `${APP_URL}${path}`;
   }
@@ -27,9 +27,41 @@ export const getRedirectUrl = (path: string): string => {
 
 /**
  * Vérifie si l'app tourne sur une plateforme native (Android/iOS)
+ * Utilise plusieurs méthodes de détection pour plus de fiabilité en release
  */
 export const isNativePlatform = (): boolean => {
-  return Capacitor.isNativePlatform();
+  // Méthode 1: Capacitor officiel
+  const capacitorNative = Capacitor.isNativePlatform();
+
+  // Méthode 2: Vérifier le platform directement
+  const platform = Capacitor.getPlatform();
+  const platformIsNative = platform === 'android' || platform === 'ios';
+
+  // Méthode 3: Vérifier window.Capacitor (backup)
+  const windowCapacitor = typeof (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor !== 'undefined';
+
+  // Méthode 4: Vérifier l'origine (capacitor:// sur mobile)
+  const originIsCapacitor = window.location.origin.includes('capacitor://') ||
+                            window.location.origin.includes('localhost');
+
+  // Méthode 5: Vérifier androidBridge directement
+  const hasAndroidBridge = typeof (window as unknown as { androidBridge?: unknown }).androidBridge !== 'undefined';
+
+  // Log diagnostic pour debug
+  console.log('🔍 [Platform Detection]', {
+    capacitorNative,
+    platform,
+    platformIsNative,
+    windowCapacitor,
+    originIsCapacitor,
+    hasAndroidBridge,
+    userAgent: navigator.userAgent,
+    origin: window.location.origin
+  });
+
+  // Retourner true si AU MOINS UNE méthode indique native
+  // Priorité à platformIsNative car plus fiable
+  return platformIsNative || capacitorNative || hasAndroidBridge;
 };
 
 /**

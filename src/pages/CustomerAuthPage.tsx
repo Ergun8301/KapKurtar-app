@@ -113,36 +113,45 @@ const CustomerAuthPage = () => {
   // ✅ 5. Auth Google (rôle client)
   const handleGoogleAuth = async () => {
     try {
-      // 🔍 DEBUG: Vérifier isNativePlatform
+      // 🔍 DEBUG: Vérifier isNativePlatform avec tous les détails
+      console.log('🔍 [OAuth Debug] ========== GOOGLE AUTH START ==========');
       const isNative = isNativePlatform();
-      console.log('🔍 [OAuth Debug] isNativePlatform():', isNative);
+      console.log('🔍 [OAuth Debug] isNativePlatform() final result:', isNative);
 
+      // 📱 Utiliser le chemin mobile si on est dans Capacitor
       if (isNative) {
-        // 📱 Mobile natif : utiliser In-App Browser avec custom scheme
         const redirectUrl = getOAuthRedirectUrl('/auth/callback?role=client');
-        console.log('🔍 [OAuth Debug] redirectUrl généré:', redirectUrl);
+        console.log('🔍 [OAuth Debug] Mode NATIVE - redirectUrl:', redirectUrl);
 
         // 💾 Sauvegarder le rôle dans localStorage (backup si params perdus)
         localStorage.setItem('pending_auth_role', 'client');
+        console.log('🔍 [OAuth Debug] Role sauvegardé: client');
 
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
             redirectTo: redirectUrl,
-            skipBrowserRedirect: true, // Ne pas ouvrir automatiquement le navigateur
+            skipBrowserRedirect: true,
           },
         });
-        if (error) throw error;
 
-        console.log('🔍 [OAuth Debug] URL Supabase retournée:', data?.url);
+        if (error) {
+          console.error('🔍 [OAuth Debug] Erreur signInWithOAuth:', error);
+          throw error;
+        }
+
+        console.log('🔍 [OAuth Debug] URL Supabase:', data?.url);
 
         if (data?.url) {
-          // Ouvrir dans un In-App Browser (Custom Tab Android / SFSafariViewController iOS)
+          console.log('🔍 [OAuth Debug] Appel Browser.open()...');
           await Browser.open({ url: data.url });
+          console.log('🔍 [OAuth Debug] Browser.open() OK');
+        } else {
+          console.error('🔍 [OAuth Debug] ERREUR: data.url vide!');
         }
       } else {
         // 🌐 Web : comportement inchangé
-        console.log('🔍 [OAuth Debug] Mode WEB détecté');
+        console.log('🔍 [OAuth Debug] Mode WEB - flow standard');
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
@@ -152,7 +161,7 @@ const CustomerAuthPage = () => {
         if (error) throw error;
       }
     } catch (err) {
-      console.error('🔍 [OAuth Debug] Erreur:', err);
+      console.error('🔍 [OAuth Debug] ERREUR:', err);
       setError((err as Error).message);
     }
   };
