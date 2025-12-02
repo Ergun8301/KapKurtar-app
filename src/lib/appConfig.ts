@@ -46,14 +46,14 @@ export const CUSTOM_URL_SCHEME = 'com.kapkurtar.app';
  * Génère une URL de redirection OAuth spécifique pour mobile natif
  * Utilise le custom URL scheme pour permettre le retour dans l'app
  *
+ * Note: On force toujours le custom scheme car cette fonction n'est appelée
+ * que depuis le code mobile (après vérification isNativePlatform dans les pages auth)
+ *
  * @param path - Le chemin de redirection (ex: '/auth/callback?role=client')
  * @returns L'URL avec custom scheme pour mobile
  */
 export const getOAuthRedirectUrl = (path: string): string => {
-  if (Capacitor.isNativePlatform()) {
-    // Sur mobile natif, utiliser le custom scheme pour revenir dans l'app
-    return `${CUSTOM_URL_SCHEME}:/${path}`;
-  }
-  // Sur web, utiliser l'origine actuelle (comportement inchangé)
-  return `${window.location.origin}${path}`;
+  // Toujours utiliser le custom scheme pour OAuth mobile
+  // Cette fonction n'est appelée que si isNativePlatform() est true dans les pages auth
+  return `${CUSTOM_URL_SCHEME}:/${path}`;
 };
