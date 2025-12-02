@@ -60,38 +60,23 @@ import BlogArticle10 from "./pages/BlogArticle10";
 /* 🔗 Gère les deep links sur mobile natif */
 function DeepLinkHandler() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // Ne configurer que sur les plateformes natives
-    if (!Capacitor.isNativePlatform()) {
-      console.log('🔗 [DeepLink] Pas une plateforme native, skip');
-      return;
-    }
-
+    // Toujours configurer les listeners (même si on ne sait pas encore si c'est natif)
+    // Le check se fait côté natif, pas besoin de vérifier isNativePlatform() ici
     console.log('🔗 [DeepLink] Configuration des listeners...');
 
-    // Écouter les deep links entrants
-    const setupDeepLinks = async () => {
-      // Gérer l'URL qui a lancé l'app (si ouverte via deep link)
-      console.log('🔗 [DeepLink] Vérification getLaunchUrl...');
-      const appUrlOpen = await CapacitorApp.getLaunchUrl();
-      console.log('🔗 [DeepLink] getLaunchUrl résultat:', appUrlOpen);
-      if (appUrlOpen?.url) {
-        console.log('🔗 [DeepLink] App lancée via deep link:', appUrlOpen.url);
-        handleDeepLink(appUrlOpen.url);
-      }
-
-      // Écouter les deep links pendant que l'app est ouverte
-      console.log('🔗 [DeepLink] Ajout listener appUrlOpen...');
-      CapacitorApp.addListener('appUrlOpen', (event) => {
-        console.log('🔗 [DeepLink] EVENT appUrlOpen reçu:', event.url);
-        handleDeepLink(event.url);
-      });
-
-      console.log('🔗 [DeepLink] Setup terminé');
-    };
+    let isHandlingDeepLink = false;
 
     const handleDeepLink = async (url: string) => {
+      // Éviter les doubles traitements
+      if (isHandlingDeepLink) {
+        console.log('🔗 [DeepLink] Déjà en cours de traitement, skip');
+        return;
+      }
+      isHandlingDeepLink = true;
+
       try {
         console.log('🔗 [DeepLink] URL reçue (raw):', url);
 
@@ -119,47 +104,84 @@ function DeepLinkHandler() {
           }
         } else {
           // URL standard (https://kapkurtar.com/...)
-          const urlObj = new URL(url);
-          path = urlObj.pathname;
-          search = urlObj.search;
-          hash = urlObj.hash;
+          try {
+            const urlObj = new URL(url);
+            path = urlObj.pathname;
+            search = urlObj.search;
+            hash = urlObj.hash;
+          } catch {
+            console.error('🔗 [DeepLink] URL invalide:', url);
+            isHandlingDeepLink = false;
+            return;
+          }
         }
 
         console.log('🔗 [DeepLink] Parsed - path:', path, 'search:', search, 'hash:', hash ? 'present (tokens)' : 'empty');
 
-        // 🔐 Si le hash contient des tokens OAuth, rediriger vers /auth/callback avec les tokens
-        // AuthCallbackPage se chargera d'établir la session (plus fiable car dans un contexte React normal)
-        if (hash && hash.includes('access_token')) {
-          console.log('🔗 [DeepLink] Tokens OAuth détectés, redirection vers /auth/callback...');
-
-          // Fermer le browser in-app d'abord
-          try {
-            await Browser.close();
-          } catch {
-            // Ignorer
-          }
-
-          // Rediriger vers /auth/callback avec le hash contenant les tokens
-          // AuthCallbackPage va extraire les tokens et établir la session
-          const callbackUrl = '/auth/callback' + search + hash;
-          console.log('🔗 [DeepLink] Redirection vers:', callbackUrl);
-          window.location.href = callbackUrl;
-          return;
-        }
-
-        // Fermer le browser pour les autres deep links
+        // Fermer le browser in-app d'abord
         try {
           await Browser.close();
+          console.log('🔗 [DeepLink] Browser fermé');
         } catch {
-          // Ignorer
+          // Ignorer - le browser n'était peut-être pas ouvert
+        }
+
+        // 🔐 Si le hash contient des tokens OAuth, naviguer vers /auth/callback avec les tokens
+        if (hash && hash.includes('access_token')) {
+          console.log('🔗 [DeepLink] Tokens OAuth détectés, navigation vers /auth/callback...');
+
+          // Utiliser navigate() au lieu de window.location.href pour éviter le rechargement
+          const callbackPath = '/auth/callback' + search;
+          console.log('🔗 [DeepLink] Navigation vers:', callbackPath, 'avec hash');
+
+          // Passer le hash via state car navigate() ne supporte pas les hash fragments
+          navigate(callbackPath, {
+            state: { oauthHash: hash },
+            replace: true
+          });
+          return;
         }
 
         // Navigation standard pour les autres deep links
         const fullPath = path + search + hash;
         console.log('🔗 [DeepLink] Navigation vers:', fullPath);
-        navigate(fullPath);
+        navigate(fullPath, { replace: true });
       } catch (error) {
         console.error('❌ [DeepLink] Erreur parsing:', error);
+      } finally {
+        // Reset après un court délai pour permettre les nouveaux deep links
+        setTimeout(() => {
+          isHandlingDeepLink = false;
+        }, 1000);
+      }
+    };
+
+    // Écouter les deep links entrants
+    const setupDeepLinks = async () => {
+      // Vérifier si l'app a été lancée via deep link (cold start)
+      console.log('🔗 [DeepLink] Vérification getLaunchUrl...');
+      try {
+        const appUrlOpen = await CapacitorApp.getLaunchUrl();
+        console.log('🔗 [DeepLink] getLaunchUrl résultat:', appUrlOpen);
+        if (appUrlOpen?.url) {
+          console.log('🔗 [DeepLink] App lancée via deep link (cold start):', appUrlOpen.url);
+          // Petit délai pour s'assurer que React Router est prêt
+          setTimeout(() => handleDeepLink(appUrlOpen.url), 100);
+        }
+      } catch (error) {
+        console.log('🔗 [DeepLink] getLaunchUrl non disponible (probablement web):', error);
+      }
+
+      // Écouter les deep links pendant que l'app est ouverte (warm start)
+      console.log('🔗 [DeepLink] Ajout listener appUrlOpen...');
+      try {
+        CapacitorApp.addListener('appUrlOpen', (event) => {
+          console.log('🔗 [DeepLink] EVENT appUrlOpen reçu:', event.url);
+          handleDeepLink(event.url);
+        });
+        console.log('🔗 [DeepLink] Setup terminé');
+      } catch (error) {
+        console.log('🔗 [DeepLink] addListener non disponible (probablement web):', error);
       }
     };
 
@@ -167,9 +189,13 @@ function DeepLinkHandler() {
 
     // Cleanup listener
     return () => {
-      CapacitorApp.removeAllListeners();
+      try {
+        CapacitorApp.removeAllListeners();
+      } catch {
+        // Ignorer sur web
+      }
     };
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   return null;
 }
