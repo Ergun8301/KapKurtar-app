@@ -4,4 +4,5 @@
     <string name="title_activity_main">KapKurtar</string>
     <string name="package_name">com.kapkurtar.app</string>
     <string name="custom_url_scheme">com.kapkurtar.app</string>
+    <string name="server_client_id">545174199519-ld327isies201hffeb16ae03hidn0fre.apps.googleusercontent.com</string>
 </resources>

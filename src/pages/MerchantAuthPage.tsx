@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, ArrowLeft, Store } from "lucide-react";
-import { Browser } from "@capacitor/browser";
+import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 import { supabase } from "../lib/supabaseClient";
 import { useAuthFlow } from "../hooks/useAuthFlow";
-import { getRedirectUrl, getOAuthRedirectUrl, isNativePlatform } from "../lib/appConfig";
+import { getRedirectUrl, isNativePlatform } from "../lib/appConfig";
 
 type AuthMode = "login" | "register";
 
@@ -136,42 +136,76 @@ const MerchantAuthPage = () => {
 
   // ---------- Google OAuth marchand ----------
   const handleGoogleAuth = async () => {
+    setIsLoading(true);
+    setError("");
+
     try {
-      // 🔹 Crée un flow_state avec rôle marchand avant OAuth
-      const { data: flow, error: flowError } = await supabase
-        .from("flow_states")
-        .insert({ desired_role: "merchant" })
-        .select("token")
-        .single();
+      const isNative = isNativePlatform();
+      console.log("🔍 [OAuth Debug] ========== GOOGLE AUTH MERCHANT START ==========");
+      console.log("🔍 [OAuth Debug] isNativePlatform():", isNative);
 
-      if (flowError || !flow)
-        throw flowError || new Error("Flow state oluşturulamadı");
+      if (isNative) {
+        // 📱 Mode NATIVE: Utiliser Google Auth plugin (Google Play Services)
+        console.log("🔍 [OAuth Debug] Mode NATIVE - GoogleAuth.signIn()");
 
-      console.log("🎟️ Flow token créé :", flow.token);
+        // Connexion Google native via Google Play Services
+        const googleUser = await GoogleAuth.signIn();
+        console.log("🔍 [OAuth Debug] GoogleAuth.signIn() OK:", googleUser.email);
 
-      if (isNativePlatform()) {
-        // 📱 Mobile natif : utiliser In-App Browser avec custom scheme
-        const redirectUrl = getOAuthRedirectUrl(`/auth/callback?role=merchant&flow_token=${flow.token}`);
+        // Récupérer l'idToken pour Supabase
+        const idToken = googleUser.authentication.idToken;
+        if (!idToken) {
+          throw new Error("Impossible de récupérer le token Google");
+        }
+        console.log("🔍 [OAuth Debug] idToken obtenu, longueur:", idToken.length);
 
-        // 💾 Sauvegarder le rôle et flow_token dans localStorage (backup si params perdus)
-        localStorage.setItem('pending_auth_role', 'merchant');
-        localStorage.setItem('pending_flow_token', flow.token);
-
-        const { data, error } = await supabase.auth.signInWithOAuth({
+        // Authentifier avec Supabase via idToken
+        const { data, error } = await supabase.auth.signInWithIdToken({
           provider: "google",
-          options: {
-            redirectTo: redirectUrl,
-            skipBrowserRedirect: true, // Ne pas ouvrir automatiquement le navigateur
-          },
+          token: idToken,
         });
 
-        if (error) throw error;
-        if (data?.url) {
-          // Ouvrir dans un In-App Browser (Custom Tab Android / SFSafariViewController iOS)
-          await Browser.open({ url: data.url });
+        if (error) {
+          console.error("🔍 [OAuth Debug] Erreur signInWithIdToken:", error);
+          throw error;
+        }
+
+        if (data.user) {
+          console.log("✅ [OAuth Debug] Supabase signInWithIdToken OK:", data.user.email);
+
+          // Créer/mettre à jour le profil avec le rôle MERCHANT
+          const { error: profileError } = await supabase.from("profiles").upsert(
+            {
+              auth_id: data.user.id,
+              email: data.user.email,
+              role: "merchant",
+            },
+            { onConflict: "auth_id" }
+          );
+
+          if (profileError) {
+            console.warn("⚠️ [OAuth Debug] Erreur profil:", profileError.message);
+          }
+
+          await refetchProfile();
+          await goToMerchantHome();
         }
       } else {
-        // 🌐 Web : comportement inchangé
+        // 🌐 Web : comportement OAuth standard avec flow_state
+        console.log("🔍 [OAuth Debug] Mode WEB - flow OAuth standard");
+
+        // 🔹 Crée un flow_state avec rôle marchand avant OAuth (uniquement pour le web)
+        const { data: flow, error: flowError } = await supabase
+          .from("flow_states")
+          .insert({ desired_role: "merchant" })
+          .select("token")
+          .single();
+
+        if (flowError || !flow)
+          throw flowError || new Error("Flow state oluşturulamadı");
+
+        console.log("🎟️ Flow token créé :", flow.token);
+
         const redirectUrl = getRedirectUrl(`/auth/callback?role=merchant&flow_token=${flow.token}`);
 
         const { error } = await supabase.auth.signInWithOAuth({
@@ -184,8 +218,10 @@ const MerchantAuthPage = () => {
         if (error) throw error;
       }
     } catch (err) {
-      console.error("Erreur OAuth marchand :", err);
+      console.error("🔍 [OAuth Debug] ERREUR:", err);
       setError((err as Error).message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
