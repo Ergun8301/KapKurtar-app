@@ -148,6 +148,14 @@ const MerchantAuthPage = () => {
         // 📱 Mode NATIVE: Utiliser Google Auth plugin (Google Play Services)
         console.log("🔍 [OAuth Debug] Mode NATIVE - GoogleAuth.signIn()");
 
+        // Initialiser le plugin Google Auth
+        await GoogleAuth.initialize({
+          clientId: "545174199519-ld327isies201hffeb16ae03hidn0fre.apps.googleusercontent.com",
+          scopes: ["profile", "email"],
+          grantOfflineAccess: true,
+        });
+        console.log("🔍 [OAuth Debug] GoogleAuth.initialize() OK");
+
         // Connexion Google native via Google Play Services
         const googleUser = await GoogleAuth.signIn();
         console.log("🔍 [OAuth Debug] GoogleAuth.signIn() OK:", googleUser.email);
