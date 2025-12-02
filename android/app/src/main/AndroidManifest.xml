@@ -77,12 +77,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Queries pour Custom Tabs (In-App Browser) - Requis Android 11+ -->
-    <queries tools:node="merge">
-        <intent tools:node="merge">
-            <action android:name="android.support.customtabs.action.CustomTabsService" tools:node="merge" />
+    <queries tools:node="replace">
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
         </intent>
-        <package android:name="com.android.chrome" tools:node="merge" />
-        <package android:name="com.chrome.beta" tools:node="merge" />
-        <package android:name="com.chrome.dev" tools:node="merge" />
+        <package android:name="com.android.chrome" />
+        <package android:name="com.chrome.beta" />
+        <package android:name="com.chrome.dev" />
     </queries>
 </manifest>
