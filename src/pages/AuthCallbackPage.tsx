@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
 const AuthCallbackPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -32,8 +33,10 @@ const AuthCallbackPage = () => {
         localStorage.removeItem('pending_flow_token');
 
         // 🔐 Vérifier si les tokens OAuth sont dans le hash (deep link mobile)
-        const hash = window.location.hash;
-        console.log("🔁 OAuth callback → hash présent:", !!hash && hash.includes('access_token'));
+        // Le hash peut venir de window.location.hash OU de location.state (navigation depuis DeepLinkHandler)
+        const stateHash = (location.state as { oauthHash?: string } | null)?.oauthHash;
+        const hash = stateHash || window.location.hash;
+        console.log("🔁 OAuth callback → hash présent:", !!hash && hash.includes('access_token'), "| source:", stateHash ? "state" : "window");
 
         if (hash && hash.includes('access_token')) {
           console.log("🔐 Tokens détectés dans le hash, extraction...");
@@ -168,7 +171,7 @@ const AuthCallbackPage = () => {
     };
 
     handleOAuthCallback();
-  }, [navigate, searchParams]);
+  }, [navigate, searchParams, location.state]);
 
   if (loading || isRedirecting) {
     return (
