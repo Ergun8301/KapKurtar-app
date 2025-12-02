@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
-import { Browser } from '@capacitor/browser';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { supabase } from '../lib/supabaseClient';
 import { useAuthFlow } from '../hooks/useAuthFlow';
-import { getRedirectUrl, getOAuthRedirectUrl, isNativePlatform } from '../lib/appConfig';
+import { getRedirectUrl, isNativePlatform } from '../lib/appConfig';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
 
 type AuthMode = 'login' | 'register';
@@ -112,46 +112,63 @@ const CustomerAuthPage = () => {
 
   // ✅ 5. Auth Google (rôle client)
   const handleGoogleAuth = async () => {
+    setIsLoading(true);
+    setError('');
+
     try {
-      // 🔍 DEBUG: Vérifier isNativePlatform avec tous les détails
-      console.log('🔍 [OAuth Debug] ========== GOOGLE AUTH START ==========');
       const isNative = isNativePlatform();
-      console.log('🔍 [OAuth Debug] isNativePlatform() final result:', isNative);
+      console.log('🔍 [OAuth Debug] ========== GOOGLE AUTH START ==========');
+      console.log('🔍 [OAuth Debug] isNativePlatform():', isNative);
 
-      // 📱 Utiliser le chemin mobile si on est dans Capacitor
       if (isNative) {
-        const redirectUrl = getOAuthRedirectUrl('/auth/callback?role=client');
-        console.log('🔍 [OAuth Debug] Mode NATIVE - redirectUrl:', redirectUrl);
+        // 📱 Mode NATIVE: Utiliser Google Auth plugin (Google Play Services)
+        console.log('🔍 [OAuth Debug] Mode NATIVE - GoogleAuth.signIn()');
 
-        // 💾 Sauvegarder le rôle dans localStorage (backup si params perdus)
-        localStorage.setItem('pending_auth_role', 'client');
-        console.log('🔍 [OAuth Debug] Role sauvegardé: client');
+        // Connexion Google native via Google Play Services
+        const googleUser = await GoogleAuth.signIn();
+        console.log('🔍 [OAuth Debug] GoogleAuth.signIn() OK:', googleUser.email);
 
-        const { data, error } = await supabase.auth.signInWithOAuth({
+        // Récupérer l'idToken pour Supabase
+        const idToken = googleUser.authentication.idToken;
+        if (!idToken) {
+          throw new Error('Impossible de récupérer le token Google');
+        }
+        console.log('🔍 [OAuth Debug] idToken obtenu, longueur:', idToken.length);
+
+        // Authentifier avec Supabase via idToken
+        const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
-          options: {
-            redirectTo: redirectUrl,
-            skipBrowserRedirect: true,
-          },
+          token: idToken,
         });
 
         if (error) {
-          console.error('🔍 [OAuth Debug] Erreur signInWithOAuth:', error);
+          console.error('🔍 [OAuth Debug] Erreur signInWithIdToken:', error);
           throw error;
         }
 
-        console.log('🔍 [OAuth Debug] URL Supabase:', data?.url);
+        if (data.user) {
+          console.log('✅ [OAuth Debug] Supabase signInWithIdToken OK:', data.user.email);
 
-        if (data?.url) {
-          console.log('🔍 [OAuth Debug] Appel Browser.open()...');
-          await Browser.open({ url: data.url });
-          console.log('🔍 [OAuth Debug] Browser.open() OK');
-        } else {
-          console.error('🔍 [OAuth Debug] ERREUR: data.url vide!');
+          // Créer/mettre à jour le profil avec le rôle client
+          const { error: profileError } = await supabase.from('profiles').upsert(
+            {
+              auth_id: data.user.id,
+              email: data.user.email,
+              role: 'client',
+            },
+            { onConflict: 'auth_id' }
+          );
+
+          if (profileError) {
+            console.warn('⚠️ [OAuth Debug] Erreur profil:', profileError.message);
+          }
+
+          await refetchProfile();
+          // useEffect will handle redirection and profile completion check
         }
       } else {
-        // 🌐 Web : comportement inchangé
-        console.log('🔍 [OAuth Debug] Mode WEB - flow standard');
+        // 🌐 Web : comportement OAuth standard
+        console.log('🔍 [OAuth Debug] Mode WEB - flow OAuth standard');
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
@@ -163,6 +180,8 @@ const CustomerAuthPage = () => {
     } catch (err) {
       console.error('🔍 [OAuth Debug] ERREUR:', err);
       setError((err as Error).message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
