@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:allowBackup="true"
@@ -76,12 +77,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Queries pour Custom Tabs (In-App Browser) - Requis Android 11+ -->
-    <queries>
-        <intent>
-            <action android:name="android.support.customtabs.action.CustomTabsService" />
+    <queries tools:node="merge">
+        <intent tools:node="merge">
+            <action android:name="android.support.customtabs.action.CustomTabsService" tools:node="merge" />
         </intent>
-        <package android:name="com.android.chrome" />
-        <package android:name="com.chrome.beta" />
-        <package android:name="com.chrome.dev" />
+        <package android:name="com.android.chrome" tools:node="merge" />
+        <package android:name="com.chrome.beta" tools:node="merge" />
+        <package android:name="com.chrome.dev" tools:node="merge" />
     </queries>
 </manifest>
