@@ -51,7 +51,7 @@ const FavoritesPage: React.FC = () => {
   if (!user) {
     return (
       <div className="p-6 text-center">
-        <p>Veuillez vous connecter pour voir vos favoris ❤️</p>
+        <p>Favorilerinizi görmek için giriş yapın ❤️</p>
       </div>
     );
   }
@@ -59,7 +59,7 @@ const FavoritesPage: React.FC = () => {
   if (loading) {
     return (
       <div className="p-6 text-center">
-        <p>Chargement de vos favoris...</p>
+        <p>Favorileriniz yükleniyor...</p>
       </div>
     );
   }
@@ -67,9 +67,9 @@ const FavoritesPage: React.FC = () => {
   if (favorites.length === 0) {
     return (
       <div className="p-6 text-center">
-        <p>Vous n'avez encore aucun favori.</p>
+        <p>Henüz favoriniz yok.</p>
         <Link to="/offers/map" className="text-[#00A690] underline">
-          Explorer les commerces
+          İşletmeleri keşfedin
         </Link>
       </div>
     );
@@ -78,7 +78,7 @@ const FavoritesPage: React.FC = () => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-        <Heart className="w-6 h-6 text-red-500" /> Mes Favoris
+        <Heart className="w-6 h-6 text-red-500" /> Favorilerim
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -101,7 +101,7 @@ const FavoritesPage: React.FC = () => {
                 className="text-sm text-[#00A690] flex items-center gap-1 hover:underline"
               >
                 <MapPin className="w-4 h-4" />
-                Voir la fiche
+                Detayları gör
               </Link>
             </div>
           </div>
