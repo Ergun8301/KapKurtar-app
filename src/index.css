@@ -51,10 +51,10 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Mobile natif (Capacitor) : bloquer le scroll par défaut */
+/* Mobile natif (Capacitor) : bloquer le scroll horizontal par défaut */
 html.native-app, html.native-app body, html.native-app #root {
   height: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 /* Pages qui ont besoin de scroll sur mobile natif */
