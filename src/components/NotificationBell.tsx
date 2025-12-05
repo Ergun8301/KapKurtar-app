@@ -234,7 +234,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
               )}
             </div>
 
-            <div className="max-h-[500px] overflow-y-auto">
+            <div className="max-h-[500px] overflow-y-auto rounded-b-xl">
               {notifications.length === 0 ? (
                 <div className="text-center py-12">
                   <Bell className="w-16 h-16 text-gray-300 mx-auto mb-3" />
