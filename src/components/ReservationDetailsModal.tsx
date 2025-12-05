@@ -125,7 +125,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
       className="fixed inset-0 bg-black bg-opacity-50 z-[10000] overflow-y-auto"
       onClick={onClose}
     >
-      <div className="min-h-full flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div
           className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative"
           onClick={(e) => e.stopPropagation()}
