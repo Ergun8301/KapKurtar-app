@@ -2,4 +2,5 @@
 <resources>
     <!-- KapKurtar brand color (teal) for notification accent -->
     <color name="notification_color">#00A690</color>
+    <color name="splash_background">#00A690</color>
 </resources>
