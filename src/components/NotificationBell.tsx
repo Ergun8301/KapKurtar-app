@@ -219,7 +219,7 @@ export function NotificationBell({ userType }: NotificationBellProps) {
         </button>
 
         {open && (
-          <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-[9999] overflow-hidden">
+          <div className="absolute right-0 mt-2 w-96 max-w-[calc(100vw-1rem)] bg-white rounded-xl shadow-2xl border border-gray-200 z-[9999]">
             <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100 bg-[#F5E6D3]">
               <h3 className="text-sm font-bold text-gray-800">
                 Bildirimler {unreadCount > 0 && `(${unreadCount})`}
