@@ -122,11 +122,11 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-[3000] flex items-center justify-center px-4 py-24"
+      className="fixed inset-0 bg-black bg-opacity-50 z-[3000] flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[calc(100vh-12rem)] overflow-y-auto relative"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
