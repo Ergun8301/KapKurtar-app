@@ -122,7 +122,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-[3000] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 z-[3000] flex items-center justify-center p-4 pt-20"
       onClick={onClose}
     >
       <div
