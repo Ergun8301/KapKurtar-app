@@ -1063,22 +1063,22 @@ const MerchantDashboardPage = () => {
         <div className="flex items-center justify-between mb-2">
           {isPending && (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#00A690] bg-[#FFFFF0] px-2 py-1 rounded-full">
-              🟠 En attente
+              🟠 Beklemede
             </span>
           )}
           {isCompleted && (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#00A690] bg-[#FFFFF0] px-2 py-1 rounded-full">
-              🟢 Récupérée
+              🟢 Teslim edildi
             </span>
           )}
           {isExpired && (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded-full">
-              ⚫ Expirée
+              ⚫ Süresi doldu
             </span>
           )}
           {isArchived && (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
-              📦 Archivée
+              📦 Arşivlendi
             </span>
           )}
           <span className="text-xs text-gray-500">{formatDate(reservation.created_at)}</span>
@@ -1249,7 +1249,7 @@ const MerchantDashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-y-auto">
       {toast && (
         <div className={'fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg ' + (toast.type === 'success' ? 'bg-[#00A690]' : 'bg-red-500') + ' text-white'}>
           {toast.message}
@@ -1456,7 +1456,7 @@ const MerchantDashboardPage = () => {
       )}
 
       {/* DASHBOARD CONTENT */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
         {/* SECTION RÉSERVATIONS */}
         {reservations.length > 0 && (
           <div ref={reservationsSectionRef} className="mb-6">
