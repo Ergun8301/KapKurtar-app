@@ -122,13 +122,14 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-start justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-[10000] overflow-y-auto"
       onClick={onClose}
     >
-      <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md mt-20 mb-4"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header */}
         <div className="bg-gradient-to-r from-[#00A690] to-[#00615F] p-6 rounded-t-2xl relative">
           <button
@@ -268,6 +269,7 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
