@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
@@ -300,13 +301,15 @@ export function NotificationBell({ userType }: NotificationBellProps) {
         `}</style>
       </div>
 
-      {/* Modal de détails de réservation */}
-      {selectedReservationId && (
-        <ReservationDetailsModal
-          reservationId={selectedReservationId}
-          onClose={() => setSelectedReservationId(null)}
-        />
-      )}
+      {/* Modal de détails de réservation - Portal pour éviter le stacking context du Header */}
+      {selectedReservationId &&
+        ReactDOM.createPortal(
+          <ReservationDetailsModal
+            reservationId={selectedReservationId}
+            onClose={() => setSelectedReservationId(null)}
+          />,
+          document.body
+        )}
     </>
   );
 }
