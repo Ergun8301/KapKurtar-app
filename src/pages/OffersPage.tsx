@@ -1178,8 +1178,8 @@ export default function OffersPage() {
         }
       `}</style>
 
-      <div className="flex flex-col md:flex-row flex-1 min-h-0">
-        <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
+      <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
+        <div className="relative flex-1 min-h-0 border-r border-gray-200 md:w-1/2">
           <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
         {/* Slider desktop - visible seulement en mode nearby sur desktop */}
