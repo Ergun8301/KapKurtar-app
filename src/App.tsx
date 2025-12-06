@@ -289,7 +289,7 @@ function App() {
             <DeepLinkHandler />
             {/* Main avec padding-bottom pour la BottomNav sur mobile natif */}
             <main
-              className={`flex-grow ${isNative ? 'overflow-y-auto' : ''}`}
+              className="flex-grow"
               style={{ paddingBottom: isNative ? '110px' : '0px' }}
             >
               <SessionRedirect />
