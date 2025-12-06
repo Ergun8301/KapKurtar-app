@@ -46,7 +46,8 @@
    ANTI-OVERSCROLL - Désactiver le bounce effect Android/iOS
    ═══════════════════════════════════════════════════════════ */
 
-html, body {
+html, body, #root {
+  height: 100%;
   overscroll-behavior: none;
   overflow-x: hidden;
 }
