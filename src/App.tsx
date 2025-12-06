@@ -280,7 +280,7 @@ function App() {
     <HelmetProvider>
       <AddProductProvider>
         <Router>
-          <div className="flex flex-col h-full bg-white">
+          <div className={`flex flex-col bg-white ${isNative ? 'h-screen' : 'min-h-screen'}`}>
             <Header />
             {/* Spacer pour compenser le header fixe (64px + 25px safe area sur natif) */}
             <div style={{ height: isNative ? '89px' : '64px' }} />
@@ -289,7 +289,7 @@ function App() {
             <DeepLinkHandler />
             {/* Main avec padding-bottom pour la BottomNav sur mobile natif */}
             <main
-              className="flex-1 min-h-0"
+              className="flex-grow"
               style={{ paddingBottom: isNative ? '110px' : '0px' }}
             >
               <SessionRedirect />
