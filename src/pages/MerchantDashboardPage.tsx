@@ -1249,7 +1249,10 @@ const MerchantDashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div
+      className="bg-gray-50 overflow-y-auto"
+      style={{ height: 'calc(100vh - 199px)' }}
+    >
       {toast && (
         <div className={'fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-lg ' + (toast.type === 'success' ? 'bg-[#00A690]' : 'bg-red-500') + ' text-white'}>
           {toast.message}
