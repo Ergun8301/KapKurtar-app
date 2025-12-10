@@ -20,7 +20,8 @@ import { supabase } from "./lib/supabaseClient";
 
 // ✅ Pages principales
 import HomePage from "./pages/HomePage";
-import OffersPage from "./pages/OffersPage";
+import OffersListPage from "./pages/OffersListPage";
+import OffersMapPage from "./pages/OffersMapPage";
 import CustomerAuthPage from "./pages/CustomerAuthPage";
 import MerchantAuthPage from "./pages/MerchantAuthPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
@@ -297,8 +298,11 @@ function App() {
               {/* 🏠 Accueil - Page de sélection sur mobile natif, HomePage sur web */}
               <Route path="/" element={isNative ? <UserTypeSelectionPage /> : <HomePage />} />
 
-              {/* 🗺️ Offres */}
-              <Route path="/offers" element={<OffersPage />} />
+              {/* 📋 Liste d'offres (page principale) */}
+              <Route path="/offers" element={<OffersListPage />} />
+
+              {/* 🗺️ Carte des offres */}
+              <Route path="/map" element={<OffersMapPage />} />
 
               {/* 👤 Profils clients */}
               <Route path="/client/profile" element={<ClientProfilePage />} />

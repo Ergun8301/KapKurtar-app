@@ -8,6 +8,7 @@ import {
   PlusCircle,
   LogIn,
   Store,
+  Map,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useAddProduct } from "../../contexts/AddProductContext";
@@ -15,9 +16,9 @@ import BottomNavItem from "./BottomNavItem";
 
 /**
  * Barre de navigation inférieure pour mobile natif
- * Affiche 2-3 onglets selon le rôle de l'utilisateur :
+ * Affiche 2-4 onglets selon le rôle de l'utilisateur :
  * - Non connecté : Teklifler, Giriş, İşletmeler (3)
- * - Client : Teklifler, Rezervasyonlar, Profil (3)
+ * - Client : Teklifler, Harita, Rezervasyonlar, Profil (4)
  * - Marchand : Panel, Teklif Ekle (2)
  */
 const BottomNav: React.FC = () => {
@@ -51,9 +52,10 @@ const BottomNav: React.FC = () => {
       ];
     }
 
-    // Client connecté (par défaut)
+    // Client connecté (par défaut) - 4 onglets
     return [
       { icon: Search, label: "Teklifler", path: "/offers" },
+      { icon: Map, label: "Harita", path: "/map" },
       { icon: Package, label: "Rezervasyonlar", path: "/customer/dashboard" },
       { icon: User, label: "Profil", path: "/client/profile" },
     ];
