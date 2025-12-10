@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { Geolocation } from "@capacitor/geolocation";
 import { NativeSettings, AndroidSettings } from "capacitor-native-settings";
 import { Clock, Search, MapPin, Globe, Loader2 } from "lucide-react";
@@ -32,6 +33,7 @@ declare global {
 mapboxgl.accessToken = "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRqdDdoazBkOGEycXNhM2E4cjhnMHIifQ.5g3VwT6o3E3FwlcaUBzbCA";
 
 const DEFAULT_LOCATION: [number, number] = [35.2433, 38.9637]; // Centre Turquie
+const isNativePlatform = Capacitor.isNativePlatform();
 
 export default function OffersListPage() {
   useClientNotifications();
@@ -99,37 +101,18 @@ export default function OffersListPage() {
   // 🌍 Géolocalisation automatique au chargement
   // ✅ RÈGLE: Si GPS réussit → Yakında, si GPS échoue → Tümü automatiquement
   useEffect(() => {
-    if (hasGeolocated) return;
-
     console.log("🔍 Capacitor Geolocation plugin available:", !!Geolocation);
 
     const autoGeolocate = async () => {
       try {
-        const permissions = await Geolocation.checkPermissions();
-        console.log("📱 Permissions actuelles:", permissions.location);
-
-        if (permissions.location === "denied") {
-          console.log("⚠️ Permission de localisation refusée → Basculer sur Tümü");
-          setViewMode("all"); // ✅ Fallback automatique sur Tümü
-          setHasGeolocated(true);
-          return;
-        }
-
-        if (permissions.location === "prompt" || permissions.location === "prompt-with-rationale") {
-          console.log("📲 Demande de permission...");
-          const requestResult = await Geolocation.requestPermissions();
-          if (requestResult.location === "denied") {
-            console.log("❌ Permission refusée par l'utilisateur → Basculer sur Tümü");
-            setViewMode("all"); // ✅ Fallback automatique sur Tümü
-            setHasGeolocated(true);
-            return;
-          }
-        }
+        // ✅ Demander les permissions directement
+        console.log("📲 Demande de permissions GPS...");
+        await Geolocation.requestPermissions();
 
         console.log("📍 Récupération de la position GPS...");
         const position = await Geolocation.getCurrentPosition({
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 15000,
         });
 
         const { latitude, longitude } = position.coords;
@@ -197,47 +180,12 @@ export default function OffersListPage() {
     setIsGeolocating(true);
 
     try {
-      const permissions = await Geolocation.requestPermissions();
-
-      if (permissions.location === "denied") {
-        setIsGeolocating(false);
-
-        if (window.cordova?.plugins?.locationAccuracy) {
-          window.cordova.plugins.locationAccuracy.canRequest((canRequest) => {
-            if (canRequest) {
-              window.cordova!.plugins!.locationAccuracy!.request(
-                (code) => {
-                  if (code === window.cordova!.plugins!.locationAccuracy!.SUCCESS_USER_AGREED) {
-                    handleGeolocate();
-                  } else {
-                    // ✅ Si l'utilisateur refuse → Basculer sur Tümü
-                    setViewMode("all");
-                    setToast({ message: "GPS refusé. Affichage de toutes les offres.", type: "warning" });
-                    setTimeout(() => setToast(null), 3000);
-                  }
-                },
-                (err) => {
-                  console.error("locationAccuracy error:", err);
-                  setViewMode("all"); // ✅ Fallback
-                  NativeSettings.open({ optionAndroid: AndroidSettings.Location });
-                },
-                window.cordova.plugins.locationAccuracy.REQUEST_PRIORITY_HIGH_ACCURACY
-              );
-            } else {
-              setViewMode("all"); // ✅ Fallback
-              NativeSettings.open({ optionAndroid: AndroidSettings.Location });
-            }
-          });
-        } else {
-          setViewMode("all"); // ✅ Fallback
-          NativeSettings.open({ optionAndroid: AndroidSettings.Location });
-        }
-        return;
-      }
+      // ✅ Demander les permissions directement
+      await Geolocation.requestPermissions();
 
       const position = await Geolocation.getCurrentPosition({
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 15000,
       });
 
       const { latitude, longitude } = position.coords;
@@ -550,9 +498,17 @@ export default function OffersListPage() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-gray-50">
+      <div
+        className="bg-gray-50 overflow-y-auto"
+        style={{
+          height: isNativePlatform ? 'calc(100vh - 194px)' : 'calc(100vh - 64px)'
+        }}
+      >
         {/* Header Controls */}
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div
+          className="bg-white border-b border-gray-200 sticky"
+          style={{ top: '0px', zIndex: 20 }}
+        >
           <div className="container mx-auto px-4 py-4 space-y-3">
             {/* Search bar */}
             <div className="relative">

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import mapboxgl, { Map, Marker } from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -38,6 +39,7 @@ const MAP_STYLE = "mapbox://styles/kilicergun01/cmh4k0xk6008i01qt4f8p1mas";
 // 🔧 FIX : Centre de la Turquie (au lieu d'Istanbul) pour meilleure UX
 const DEFAULT_LOCATION: [number, number] = [35.2433, 38.9637]; // Centre Turquie
 const DEFAULT_ZOOM = 6; // Zoom pour voir toute la Turquie
+const isNativePlatform = Capacitor.isNativePlatform();
 
 const customMapboxCSS = `
   .mapboxgl-ctrl-geocoder input:focus {
@@ -108,6 +110,7 @@ export default function OffersMapPage() {
   const { user } = useAuth();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
+  const isMapInitialized = useRef(false);
   const [userLocation, setUserLocation] = useState<[number, number]>(DEFAULT_LOCATION);
   const [center, setCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   const [radiusKm, setRadiusKm] = useState<number>(
@@ -342,7 +345,7 @@ export default function OffersMapPage() {
     mapboxgl.accessToken =
       "pk.eyJ1Ijoia2lsaWNlcmd1bjAxIiwiYSI6ImNtaDRoazJsaTFueXgwOHFwaWRzMmU3Y2QifQ.aieAqNwRgY40ydzIDBxc6g";
 
-    if (!mapContainerRef.current) return;
+    if (!mapContainerRef.current || isMapInitialized.current) return;
 
     const safeCenter: [number, number] =
       center && Number.isFinite(center[0]) && Number.isFinite(center[1])
@@ -357,6 +360,7 @@ export default function OffersMapPage() {
     });
 
     mapRef.current = map;
+    isMapInitialized.current = true;
 
     // Geocoder (barre de recherche) - seul contrôle Mapbox conservé
     const geocoder = new MapboxGeocoder({
@@ -376,7 +380,10 @@ export default function OffersMapPage() {
       map.flyTo({ center: [lng, lat], zoom: 12, essential: true });
     });
 
-    return () => map.remove();
+    return () => {
+      map.remove();
+      isMapInitialized.current = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -1048,7 +1055,14 @@ export default function OffersMapPage() {
         }
       `}</style>
 
-      <div className="flex flex-col md:flex-row h-[calc(100vh-100px)]">
+      <div
+        className="flex flex-col md:flex-row"
+        style={{
+          height: isNativePlatform
+            ? 'calc(100vh - 194px)'
+            : 'calc(100vh - 64px)'
+        }}
+      >
         <div className="relative flex-1 border-r border-gray-200 h-1/2 md:h-full">
           <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
 
